@@ -48,7 +48,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Mostrar Nombre en Cabecera</label>
+                        <label class="form-label">Mostrar nombre de la tienda</label>
                         <div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="mostrar_nombre_tienda" id="nombre_si" value="true" {{ App\Models\Configuracion::obtener('mostrar_nombre_tienda', 'true') === 'true' ? 'checked' : '' }}>
