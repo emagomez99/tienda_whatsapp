@@ -1,0 +1,63 @@
+# Laravel
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.backup
+.env.production.backup
+
+# Laravel 4 specific
+bootstrap/compiled.php
+/app/storage
+
+# Laravel 5 & Lumen specific with changed public path
+public_html/storage
+public_html/hot
+
+# Vagrant
+/.vagrant
+Homestead.json
+Homestead.yaml
+
+# IDE
+/.idea
+/.vscode
+/.vs
+*.swp
+*.swo
+*~
+.DS_Store
+.claude
+
+# Testing
+.phpunit.result.cache
+/coverage
+/phpunit.xml
+
+# Docker
+docker-compose.override.yml
+
+# NPM/Yarn
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# PHP
+*.log
+
+# Composer
+composer.lock
+
+# OS
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# IDEs
+.project
+.settings
+*.sublime-project
+*.sublime-workspace
