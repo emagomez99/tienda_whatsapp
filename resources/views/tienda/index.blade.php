@@ -44,7 +44,7 @@
                 <div class="col">
                     <div class="card h-100 producto-card shadow-sm">
                         @if($producto->url_imagen)
-                            <img src="{{ asset('storage/' . $producto->url_imagen) }}" class="card-img-top img-fluid" alt="{{ $producto->descripcion }}" style="height: 250px; object-fit: cover;">
+                            <img src="{{ asset('storage/' . $producto->url_imagen) }}" class="card-img-top" alt="{{ $producto->descripcion }}" style="height: 250px; width: 100%; object-fit: contain; background-color: #f8f9fa;">
                         @else
                             <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center text-white" style="height: 250px;">
                                 <i class="bi bi-image" style="font-size: 3rem;"></i>

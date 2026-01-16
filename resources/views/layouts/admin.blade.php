@@ -36,8 +36,14 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ route('admin.dashboard') }}">
-                <i class="bi bi-gear-fill"></i> Panel de Administración
+            <a class="navbar-brand d-flex align-items-center" href="{{ route('admin.dashboard') }}">
+                @php $logoAdmin = App\Models\Configuracion::logo(); @endphp
+                @if($logoAdmin)
+                    <img src="{{ asset('storage/' . $logoAdmin) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}" style="max-height: 35px;" class="me-2">
+                @else
+                    <i class="bi bi-gear-fill me-2"></i>
+                @endif
+                Panel de Administración
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin">
                 <span class="navbar-toggler-icon"></span>

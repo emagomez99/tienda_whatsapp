@@ -7,8 +7,14 @@
     <div class="row justify-content-center">
         <div class="col-md-5">
             <div class="card shadow">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4 class="mb-0"><i class="bi bi-person-lock"></i> Iniciar Sesión</h4>
+                <div class="card-header navbar-custom text-white text-center py-3">
+                    @php $logoLogin = App\Models\Configuracion::logo(); @endphp
+                    @if($logoLogin)
+                        <img src="{{ asset('storage/' . $logoLogin) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}" style="max-height: 60px;" class="mb-2">
+                        <h4 class="mb-0">Iniciar Sesión</h4>
+                    @else
+                        <h4 class="mb-0"><i class="bi bi-person-lock"></i> Iniciar Sesión</h4>
+                    @endif
                 </div>
                 <div class="card-body p-4">
                     <form method="POST" action="{{ route('login') }}">

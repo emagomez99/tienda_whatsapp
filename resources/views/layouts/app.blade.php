@@ -7,7 +7,11 @@
     <title>@yield('title', config('app.name', 'Tienda MC'))</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    @php $paleta = App\Models\Configuracion::getPaletaActual(); @endphp
     <style>
+        :root {
+            --color-primary: {{ $paleta['primary'] }};
+        }
         .navbar-brand { font-weight: bold; }
         .card-img-top { height: 200px; object-fit: cover; }
         .producto-card { transition: transform 0.2s; }
@@ -16,27 +20,42 @@
         .metadata-list { font-size: 0.85rem; }
         footer { margin-top: auto; }
         body { min-height: 100vh; display: flex; flex-direction: column; }
+        .bg-purple { background-color: #6f42c1 !important; }
+        .btn-primary, .bg-custom-primary {
+            background-color: var(--color-primary) !important;
+            border-color: var(--color-primary) !important;
+        }
+        .btn-primary:hover {
+            background-color: color-mix(in srgb, var(--color-primary) 85%, black) !important;
+            border-color: color-mix(in srgb, var(--color-primary) 85%, black) !important;
+        }
+        .text-primary { color: var(--color-primary) !important; }
+        .navbar-custom { background-color: var(--color-primary) !important; }
     </style>
     @stack('styles')
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('tienda.index') }}">
-                <i class="bi bi-shop"></i> {{ App\Models\Configuracion::obtener('nombre_tienda', 'Tienda MC') }}
+            <a class="navbar-brand d-flex align-items-center" href="{{ route('tienda.index') }}">
+                @php
+                    $logoTienda = App\Models\Configuracion::logo();
+                    $mostrarNombre = App\Models\Configuracion::mostrarNombreTienda();
+                @endphp
+                @if($logoTienda)
+                    <img src="{{ asset('storage/' . $logoTienda) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}" style="max-height: 40px;" class="{{ $mostrarNombre ? 'me-2' : '' }}">
+                @else
+                    <i class="bi bi-shop me-2"></i>
+                @endif
+                @if($mostrarNombre || !$logoTienda)
+                    {{ App\Models\Configuracion::nombreTienda() }}
+                @endif
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tienda.index') ? 'active' : '' }}" href="{{ route('tienda.index') }}">
-                            <i class="bi bi-house"></i> Inicio
-                        </a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('carrito.*') ? 'active' : '' }}" href="{{ route('carrito.index') }}">
                             <i class="bi bi-cart3"></i> Carrito
