@@ -123,7 +123,7 @@
                                 </label>
                             </div>
                         </div>
-                        <small class="text-muted">Si se ocultan, los clientes consultarán por WhatsApp</small>
+                        <small class="text-muted">Si se ocultan, los clientes no verán el precio en ningun lugar de la tienda</small>
                     </div>
 
                     <div class="mb-3">
