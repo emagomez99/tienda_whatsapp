@@ -46,6 +46,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Etiquetas
     Route::resource('etiquetas', EtiquetaController::class);
+    Route::get('/etiquetas/{etiqueta}/valores', [EtiquetaController::class, 'buscarValores'])->name('etiquetas.valores');
+
+    // Autocomplete especificaciones
+    Route::get('/especificaciones/claves', [ProductoController::class, 'buscarEspecificacionClaves'])->name('especificaciones.claves');
+    Route::get('/especificaciones/valores', [ProductoController::class, 'buscarEspecificacionValores'])->name('especificaciones.valores');
 
     // Configuraciones
     Route::get('/configuraciones', [ConfiguracionController::class, 'index'])->name('configuraciones.index');

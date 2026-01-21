@@ -119,15 +119,16 @@
                     <div id="etiquetas-container">
                         <div class="row mb-2 etiqueta-row">
                             <div class="col-md-5">
-                                <select class="form-select" name="etiquetas[0][etiqueta_id]">
+                                <select class="form-select etiqueta-select" name="etiquetas[0][etiqueta_id]" data-index="0">
                                     <option value="">Seleccionar etiqueta</option>
                                     @foreach($etiquetas as $etiqueta)
                                         <option value="{{ $etiqueta->id }}">{{ $etiqueta->nombre }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-5">
-                                <input type="text" class="form-control" name="etiquetas[0][valor]" placeholder="Valor (ej: Filtro, Auto)">
+                            <div class="col-md-5 position-relative">
+                                <input type="text" class="form-control etiqueta-valor" name="etiquetas[0][valor]" placeholder="Valor (ej: Filtro, Auto)" autocomplete="off">
+                                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
                             </div>
                             <div class="col-md-2">
                                 <button type="button" class="btn btn-outline-danger btn-eliminar-etiqueta">
@@ -150,11 +151,13 @@
                 <div class="card-body">
                     <div id="especificaciones-container">
                         <div class="row mb-2 especificacion-row">
-                            <div class="col-md-5">
-                                <input type="text" class="form-control" name="especificaciones[0][clave]" placeholder="Clave (ej: Peso)">
+                            <div class="col-md-5 position-relative">
+                                <input type="text" class="form-control especificacion-clave" name="especificaciones[0][clave]" placeholder="Clave (ej: Peso)" autocomplete="off">
+                                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
                             </div>
-                            <div class="col-md-5">
-                                <input type="text" class="form-control" name="especificaciones[0][valor]" placeholder="Valor (ej: 1.75)">
+                            <div class="col-md-5 position-relative">
+                                <input type="text" class="form-control especificacion-valor" name="especificaciones[0][valor]" placeholder="Valor (ej: 1.75)" autocomplete="off">
+                                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
                             </div>
                             <div class="col-md-2">
                                 <button type="button" class="btn btn-outline-danger btn-eliminar-especificacion">
@@ -182,6 +185,18 @@
     </div>
 </form>
 
+@push('styles')
+<style>
+    .autocomplete-suggestions .list-group-item {
+        cursor: pointer;
+        padding: 0.5rem 0.75rem;
+    }
+    .autocomplete-suggestions .list-group-item:hover {
+        background-color: #e9ecef;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
     let especificacionIndex = 1;
@@ -194,16 +209,176 @@
         @endforeach
     `;
 
+    // Autocompletado para valores de etiquetas
+    let debounceTimer;
+    function setupAutocomplete(input) {
+        input.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const valor = this.value;
+            const row = this.closest('.etiqueta-row');
+            const select = row.querySelector('.etiqueta-select');
+            const etiquetaId = select.value;
+            const suggestionsDiv = row.querySelector('.autocomplete-suggestions');
+
+            if (!etiquetaId || valor.length < 3) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/admin/etiquetas/${etiquetaId}/valores?q=${encodeURIComponent(valor)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestionsDiv.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(item => {
+                                const div = document.createElement('a');
+                                div.href = '#';
+                                div.className = 'list-group-item list-group-item-action';
+                                div.textContent = item;
+                                div.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    input.value = item;
+                                    suggestionsDiv.style.display = 'none';
+                                });
+                                suggestionsDiv.appendChild(div);
+                            });
+                            suggestionsDiv.style.display = 'block';
+                        } else {
+                            suggestionsDiv.style.display = 'none';
+                        }
+                    });
+            }, 300);
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                const suggestionsDiv = this.closest('.etiqueta-row').querySelector('.autocomplete-suggestions');
+                suggestionsDiv.style.display = 'none';
+            }, 200);
+        });
+    }
+
+    // Inicializar autocompletado en campos existentes
+    document.querySelectorAll('.etiqueta-valor').forEach(setupAutocomplete);
+
+    // Autocompletado para especificaciones (claves)
+    let debounceTimerEspecClave;
+    function setupAutocompleteEspecClave(input) {
+        input.addEventListener('input', function() {
+            clearTimeout(debounceTimerEspecClave);
+            const valor = this.value;
+            const suggestionsDiv = this.parentElement.querySelector('.autocomplete-suggestions');
+
+            if (valor.length < 3) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            debounceTimerEspecClave = setTimeout(() => {
+                fetch(`/admin/especificaciones/claves?q=${encodeURIComponent(valor)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestionsDiv.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(item => {
+                                const div = document.createElement('a');
+                                div.href = '#';
+                                div.className = 'list-group-item list-group-item-action';
+                                div.textContent = item;
+                                div.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    input.value = item;
+                                    suggestionsDiv.style.display = 'none';
+                                });
+                                suggestionsDiv.appendChild(div);
+                            });
+                            suggestionsDiv.style.display = 'block';
+                        } else {
+                            suggestionsDiv.style.display = 'none';
+                        }
+                    });
+            }, 300);
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                const suggestionsDiv = this.parentElement.querySelector('.autocomplete-suggestions');
+                suggestionsDiv.style.display = 'none';
+            }, 200);
+        });
+    }
+
+    // Autocompletado para especificaciones (valores)
+    let debounceTimerEspecValor;
+    function setupAutocompleteEspecValor(input) {
+        input.addEventListener('input', function() {
+            clearTimeout(debounceTimerEspecValor);
+            const valor = this.value;
+            const row = this.closest('.especificacion-row');
+            const claveInput = row.querySelector('.especificacion-clave');
+            const clave = claveInput ? claveInput.value : '';
+            const suggestionsDiv = this.parentElement.querySelector('.autocomplete-suggestions');
+
+            if (valor.length < 3) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            debounceTimerEspecValor = setTimeout(() => {
+                let url = `/admin/especificaciones/valores?q=${encodeURIComponent(valor)}`;
+                if (clave) {
+                    url += `&clave=${encodeURIComponent(clave)}`;
+                }
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestionsDiv.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(item => {
+                                const div = document.createElement('a');
+                                div.href = '#';
+                                div.className = 'list-group-item list-group-item-action';
+                                div.textContent = item;
+                                div.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    input.value = item;
+                                    suggestionsDiv.style.display = 'none';
+                                });
+                                suggestionsDiv.appendChild(div);
+                            });
+                            suggestionsDiv.style.display = 'block';
+                        } else {
+                            suggestionsDiv.style.display = 'none';
+                        }
+                    });
+            }, 300);
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                const suggestionsDiv = this.parentElement.querySelector('.autocomplete-suggestions');
+                suggestionsDiv.style.display = 'none';
+            }, 200);
+        });
+    }
+
+    // Inicializar autocompletado en campos de especificaciones existentes
+    document.querySelectorAll('.especificacion-clave').forEach(setupAutocompleteEspecClave);
+    document.querySelectorAll('.especificacion-valor').forEach(setupAutocompleteEspecValor);
+
     document.getElementById('agregar-especificacion').addEventListener('click', function() {
         const container = document.getElementById('especificaciones-container');
         const newRow = document.createElement('div');
         newRow.className = 'row mb-2 especificacion-row';
         newRow.innerHTML = `
-            <div class="col-md-5">
-                <input type="text" class="form-control" name="especificaciones[${especificacionIndex}][clave]" placeholder="Clave (ej: Peso)">
+            <div class="col-md-5 position-relative">
+                <input type="text" class="form-control especificacion-clave" name="especificaciones[${especificacionIndex}][clave]" placeholder="Clave (ej: Peso)" autocomplete="off">
+                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
             </div>
-            <div class="col-md-5">
-                <input type="text" class="form-control" name="especificaciones[${especificacionIndex}][valor]" placeholder="Valor (ej: 1.75)">
+            <div class="col-md-5 position-relative">
+                <input type="text" class="form-control especificacion-valor" name="especificaciones[${especificacionIndex}][valor]" placeholder="Valor (ej: 1.75)" autocomplete="off">
+                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
             </div>
             <div class="col-md-2">
                 <button type="button" class="btn btn-outline-danger btn-eliminar-especificacion">
@@ -212,6 +387,8 @@
             </div>
         `;
         container.appendChild(newRow);
+        setupAutocompleteEspecClave(newRow.querySelector('.especificacion-clave'));
+        setupAutocompleteEspecValor(newRow.querySelector('.especificacion-valor'));
         especificacionIndex++;
     });
 
@@ -221,12 +398,13 @@
         newRow.className = 'row mb-2 etiqueta-row';
         newRow.innerHTML = `
             <div class="col-md-5">
-                <select class="form-select" name="etiquetas[${etiquetaIndex}][etiqueta_id]">
+                <select class="form-select etiqueta-select" name="etiquetas[${etiquetaIndex}][etiqueta_id]" data-index="${etiquetaIndex}">
                     ${etiquetasOptions}
                 </select>
             </div>
-            <div class="col-md-5">
-                <input type="text" class="form-control" name="etiquetas[${etiquetaIndex}][valor]" placeholder="Valor (ej: Filtro, Auto)">
+            <div class="col-md-5 position-relative">
+                <input type="text" class="form-control etiqueta-valor" name="etiquetas[${etiquetaIndex}][valor]" placeholder="Valor (ej: Filtro, Auto)" autocomplete="off">
+                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
             </div>
             <div class="col-md-2">
                 <button type="button" class="btn btn-outline-danger btn-eliminar-etiqueta">
@@ -235,6 +413,7 @@
             </div>
         `;
         container.appendChild(newRow);
+        setupAutocomplete(newRow.querySelector('.etiqueta-valor'));
         etiquetaIndex++;
     });
 

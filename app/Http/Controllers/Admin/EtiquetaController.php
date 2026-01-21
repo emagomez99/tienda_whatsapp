@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Etiqueta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class EtiquetaController extends Controller
 {
@@ -68,5 +69,19 @@ class EtiquetaController extends Controller
 
         return redirect()->route('admin.etiquetas.index')
             ->with('success', 'Etiqueta eliminada correctamente');
+    }
+
+    public function buscarValores(Request $request, Etiqueta $etiqueta)
+    {
+        $buscar = $request->get('q', '');
+
+        $valores = DB::table('producto_etiqueta')
+            ->where('etiqueta_id', $etiqueta->id)
+            ->where('valor', 'like', "%{$buscar}%")
+            ->distinct()
+            ->pluck('valor')
+            ->take(10);
+
+        return response()->json($valores);
     }
 }

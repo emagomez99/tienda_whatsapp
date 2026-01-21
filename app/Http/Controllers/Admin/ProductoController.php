@@ -190,4 +190,34 @@ class ProductoController extends Controller
 
         $producto->etiquetas()->sync($syncData);
     }
+
+    public function buscarEspecificacionClaves(Request $request)
+    {
+        $buscar = $request->get('q', '');
+
+        $claves = ProductoEspecificacion::where('clave', 'like', "%{$buscar}%")
+            ->distinct()
+            ->pluck('clave')
+            ->take(10);
+
+        return response()->json($claves);
+    }
+
+    public function buscarEspecificacionValores(Request $request)
+    {
+        $buscar = $request->get('q', '');
+        $clave = $request->get('clave', '');
+
+        $query = ProductoEspecificacion::where('valor', 'like', "%{$buscar}%");
+
+        if (!empty($clave)) {
+            $query->where('clave', $clave);
+        }
+
+        $valores = $query->distinct()
+            ->pluck('valor')
+            ->take(10);
+
+        return response()->json($valores);
+    }
 }
