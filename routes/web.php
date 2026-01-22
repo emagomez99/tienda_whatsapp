@@ -6,6 +6,7 @@ use App\Http\Controllers\TiendaController;
 use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EtiquetaController;
+use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\ProveedorController;
 use App\Http\Controllers\Admin\UserController;
@@ -55,4 +56,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Configuraciones
     Route::get('/configuraciones', [ConfiguracionController::class, 'index'])->name('configuraciones.index');
     Route::put('/configuraciones', [ConfiguracionController::class, 'update'])->name('configuraciones.update');
+
+    // Menús
+    Route::resource('menus', MenuController::class);
+    Route::post('/menus/reordenar', [MenuController::class, 'reordenar'])->name('menus.reordenar');
+    Route::get('/menus/categoria/{categoria}/valores', [MenuController::class, 'valoresCategoria'])->name('menus.categoria.valores');
 });

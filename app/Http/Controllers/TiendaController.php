@@ -32,7 +32,7 @@ class TiendaController extends Controller
             });
         }
 
-        // Filtro por etiqueta
+        // Filtro por etiqueta (legacy)
         if ($request->filled('etiqueta')) {
             $query->whereHas('etiquetas', function ($q) use ($request) {
                 $q->where('etiquetas.id', $request->etiqueta);
@@ -42,6 +42,27 @@ class TiendaController extends Controller
         // Filtro por proveedor
         if ($request->filled('proveedor')) {
             $query->where('proveedor_id', $request->proveedor);
+        }
+
+        // Filtro por categoría (desde menú dinámico)
+        if ($request->filled('categoria')) {
+            $categoriaId = $request->categoria;
+            $categoriaValor = $request->categoria_valor;
+
+            $query->whereHas('etiquetas', function ($q) use ($categoriaId, $categoriaValor) {
+                $q->where('etiquetas.id', $categoriaId);
+                if ($categoriaValor) {
+                    $q->where('producto_etiqueta.valor', $categoriaValor);
+                }
+            });
+        }
+
+        // Filtro por especificación (desde menú dinámico)
+        if ($request->filled('especificacion')) {
+            $especificacionValor = $request->especificacion;
+            $query->whereHas('especificaciones', function ($q) use ($especificacionValor) {
+                $q->where('valor', 'like', "%{$especificacionValor}%");
+            });
         }
 
         $productos = $query->orderBy('descripcion')->paginate(12);
