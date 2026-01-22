@@ -78,11 +78,12 @@ class Menu extends Model
      */
     public function getEnlaceAttribute()
     {
-        return match ($this->tipo_enlace) {
-            self::TIPO_PROVEEDOR => $this->proveedor,
-            self::TIPO_CATEGORIA => $this->categoria,
-            default => null,
-        };
+        if ($this->tipo_enlace === self::TIPO_PROVEEDOR) {
+            return $this->proveedor;
+        } elseif ($this->tipo_enlace === self::TIPO_CATEGORIA) {
+            return $this->categoria;
+        }
+        return null;
     }
 
     /**
@@ -90,12 +91,14 @@ class Menu extends Model
      */
     public function getUrlAttribute(): string
     {
-        return match ($this->tipo_enlace) {
-            self::TIPO_PROVEEDOR => route('tienda.index', ['proveedor' => $this->enlace_id]),
-            self::TIPO_CATEGORIA => route('tienda.index', ['categoria' => $this->enlace_id, 'categoria_valor' => $this->enlace_valor]),
-            self::TIPO_ESPECIFICACION => route('tienda.index', ['especificacion' => $this->enlace_valor]),
-            default => '#',
-        };
+        if ($this->tipo_enlace === self::TIPO_PROVEEDOR) {
+            return route('tienda.index', ['proveedor' => $this->enlace_id]);
+        } elseif ($this->tipo_enlace === self::TIPO_CATEGORIA) {
+            return route('tienda.index', ['categoria' => $this->enlace_id, 'categoria_valor' => $this->enlace_valor]);
+        } elseif ($this->tipo_enlace === self::TIPO_ESPECIFICACION) {
+            return route('tienda.index', ['especificacion' => $this->enlace_valor]);
+        }
+        return '#';
     }
 
     /**
@@ -157,12 +160,14 @@ class Menu extends Model
      */
     public function getTipoEnlaceDescripcionAttribute(): string
     {
-        return match ($this->tipo_enlace) {
-            self::TIPO_PROVEEDOR => 'Proveedor',
-            self::TIPO_CATEGORIA => 'Categoría',
-            self::TIPO_ESPECIFICACION => 'Especificación',
-            default => 'Contenedor',
-        };
+        if ($this->tipo_enlace === self::TIPO_PROVEEDOR) {
+            return 'Proveedor';
+        } elseif ($this->tipo_enlace === self::TIPO_CATEGORIA) {
+            return 'Categoría';
+        } elseif ($this->tipo_enlace === self::TIPO_ESPECIFICACION) {
+            return 'Especificación';
+        }
+        return 'Contenedor';
     }
 
     /**
@@ -170,12 +175,15 @@ class Menu extends Model
      */
     public function getNombreEnlaceAttribute(): ?string
     {
-        return match ($this->tipo_enlace) {
-            self::TIPO_PROVEEDOR => $this->proveedor?->nombre,
-            self::TIPO_CATEGORIA => $this->categoria?->nombre . ($this->enlace_valor ? ": {$this->enlace_valor}" : ''),
-            self::TIPO_ESPECIFICACION => $this->enlace_valor,
-            default => null,
-        };
+        if ($this->tipo_enlace === self::TIPO_PROVEEDOR) {
+            return $this->proveedor ? $this->proveedor->nombre : null;
+        } elseif ($this->tipo_enlace === self::TIPO_CATEGORIA) {
+            $nombre = $this->categoria ? $this->categoria->nombre : '';
+            return $nombre . ($this->enlace_valor ? ": {$this->enlace_valor}" : '');
+        } elseif ($this->tipo_enlace === self::TIPO_ESPECIFICACION) {
+            return $this->enlace_valor;
+        }
+        return null;
     }
 
     /**
