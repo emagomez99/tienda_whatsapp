@@ -32,29 +32,22 @@ class TiendaController extends Controller
             });
         }
 
-        // Filtro por etiqueta (legacy)
+        // Filtro por etiqueta (con valor opcional)
         if ($request->filled('etiqueta')) {
-            $query->whereHas('etiquetas', function ($q) use ($request) {
-                $q->where('etiquetas.id', $request->etiqueta);
+            $etiquetaId = $request->etiqueta;
+            $etiquetaValor = $request->etiqueta_valor;
+
+            $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $etiquetaValor) {
+                $q->where('etiquetas.id', $etiquetaId);
+                if ($etiquetaValor) {
+                    $q->where('producto_etiqueta.valor', $etiquetaValor);
+                }
             });
         }
 
         // Filtro por proveedor
         if ($request->filled('proveedor')) {
             $query->where('proveedor_id', $request->proveedor);
-        }
-
-        // Filtro por categoría (desde menú dinámico)
-        if ($request->filled('categoria')) {
-            $categoriaId = $request->categoria;
-            $categoriaValor = $request->categoria_valor;
-
-            $query->whereHas('etiquetas', function ($q) use ($categoriaId, $categoriaValor) {
-                $q->where('etiquetas.id', $categoriaId);
-                if ($categoriaValor) {
-                    $q->where('producto_etiqueta.valor', $categoriaValor);
-                }
-            });
         }
 
         // Filtro por especificación (desde menú dinámico)

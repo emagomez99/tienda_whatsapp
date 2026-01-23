@@ -14,7 +14,7 @@
     <div class="row">
         <div class="col-md-5">
             @if($producto->url_imagen)
-                <img src="{{ asset('storage/' . $producto->url_imagen) }}" class="img-fluid rounded shadow" alt="{{ $producto->descripcion }}">
+                <img src="{{ $producto->imagen_url }}" class="img-fluid rounded shadow" alt="{{ $producto->descripcion }}">
             @else
                 <div class="bg-secondary rounded d-flex align-items-center justify-content-center text-white" style="height: 400px;">
                     <i class="bi bi-image" style="font-size: 5rem;"></i>

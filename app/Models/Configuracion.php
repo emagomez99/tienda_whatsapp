@@ -125,4 +125,14 @@ class Configuracion extends Model
         $paletaSeleccionada = self::paleta();
         return $paletas[$paletaSeleccionada] ?? $paletas['azul'];
     }
+
+    public static function posicionMenu()
+    {
+        return self::obtener('posicion_menu', 'superior');
+    }
+
+    public static function menuEnSidebar()
+    {
+        return self::posicionMenu() === 'lateral';
+    }
 }

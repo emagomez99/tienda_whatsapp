@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre'); // Texto visible del menú
             $table->foreignId('parent_id')->nullable()->constrained('menus')->onDelete('cascade');
-            $table->enum('tipo_enlace', ['ninguno', 'proveedor', 'categoria', 'especificacion'])->default('ninguno');
+            $table->enum('tipo_enlace', ['ninguno', 'proveedor', 'etiqueta', 'especificacion'])->default('ninguno');
             $table->unsignedBigInteger('enlace_id')->nullable(); // ID del elemento relacionado
             $table->string('enlace_valor')->nullable(); // Para especificaciones: valor específico a filtrar
             $table->integer('orden')->default(0);

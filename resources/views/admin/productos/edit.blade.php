@@ -99,18 +99,75 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="url_imagen" class="form-label">Imagen</label>
-                        @if($producto->url_imagen)
-                            <div class="mb-2">
-                                <img src="{{ asset('storage/' . $producto->url_imagen) }}" alt="" style="max-width: 200px;" class="rounded">
+                </div>
+            </div>
+
+            <!-- Card de Imagen -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-image"></i> Imagen del Producto</h5>
+                </div>
+                <div class="card-body">
+                    @if($producto->url_imagen)
+                        <div class="mb-3 p-3 bg-light rounded" id="imagen-actual">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <img src="{{ $producto->imagen_url }}" alt="" style="max-height: 120px;" class="rounded">
+                                </div>
+                                <div class="col">
+                                    <p class="mb-1"><strong>Imagen actual</strong></p>
+                                    @if($producto->esImagenExterna())
+                                        <small class="text-muted"><i class="bi bi-link-45deg"></i> URL externa</small>
+                                    @else
+                                        <small class="text-muted"><i class="bi bi-hdd"></i> Archivo local</small>
+                                    @endif
+                                </div>
+                                <div class="col-auto">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="eliminar_imagen" name="eliminar_imagen" value="1">
+                                        <label class="form-check-label text-danger" for="eliminar_imagen">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
-                        @endif
-                        <input type="file" class="form-control @error('url_imagen') is-invalid @enderror" id="url_imagen" name="url_imagen" accept="image/*">
-                        <small class="text-muted">Deja vacío para mantener la imagen actual</small>
-                        @error('url_imagen')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        </div>
+                        <hr>
+                        <p class="text-muted mb-2"><small>Cambiar imagen:</small></p>
+                    @endif
+
+                    <ul class="nav nav-tabs" id="imagenTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="archivo-tab" data-bs-toggle="tab" data-bs-target="#archivo-panel" type="button" role="tab">
+                                <i class="bi bi-upload"></i> Subir archivo
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="url-tab" data-bs-toggle="tab" data-bs-target="#url-panel" type="button" role="tab">
+                                <i class="bi bi-link-45deg"></i> URL externa
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content pt-3" id="imagenTabsContent">
+                        <div class="tab-pane fade show active" id="archivo-panel" role="tabpanel">
+                            <input type="file" class="form-control @error('imagen_archivo') is-invalid @enderror" id="imagen_archivo" name="imagen_archivo" accept="image/*">
+                            @error('imagen_archivo')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">Formatos: JPG, PNG, GIF. Máximo 2MB.</small>
+                        </div>
+                        <div class="tab-pane fade" id="url-panel" role="tabpanel">
+                            <input type="url" class="form-control @error('imagen_url') is-invalid @enderror" id="imagen_url" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg" value="{{ old('imagen_url') }}">
+                            @error('imagen_url')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">Ingresa la URL completa de la imagen externa.</small>
+                        </div>
+                    </div>
+                    <!-- Preview de nueva imagen -->
+                    <div id="imagen-preview" class="mt-3 text-center" style="display: none;">
+                        <p class="text-muted mb-1"><small>Nueva imagen:</small></p>
+                        <img src="" alt="Preview" class="img-thumbnail" style="max-height: 200px;">
                     </div>
                 </div>
             </div>
@@ -481,6 +538,73 @@
             }
         }
     });
+
+    // Preview de imagen
+    const imagenArchivo = document.getElementById('imagen_archivo');
+    const imagenUrl = document.getElementById('imagen_url');
+    const imagenPreview = document.getElementById('imagen-preview');
+    const imagenPreviewImg = imagenPreview.querySelector('img');
+    const eliminarImagen = document.getElementById('eliminar_imagen');
+
+    function mostrarPreview(src) {
+        if (src) {
+            imagenPreviewImg.src = src;
+            imagenPreview.style.display = 'block';
+        } else {
+            imagenPreview.style.display = 'none';
+        }
+    }
+
+    imagenArchivo.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                mostrarPreview(e.target.result);
+            };
+            reader.readAsDataURL(this.files[0]);
+            // Limpiar URL y desmarcar eliminar
+            imagenUrl.value = '';
+            if (eliminarImagen) eliminarImagen.checked = false;
+        } else {
+            mostrarPreview(null);
+        }
+    });
+
+    let debounceUrl;
+    imagenUrl.addEventListener('input', function() {
+        clearTimeout(debounceUrl);
+        const url = this.value.trim();
+        debounceUrl = setTimeout(() => {
+            if (url && url.startsWith('http')) {
+                mostrarPreview(url);
+                // Limpiar archivo y desmarcar eliminar
+                imagenArchivo.value = '';
+                if (eliminarImagen) eliminarImagen.checked = false;
+            } else {
+                mostrarPreview(null);
+            }
+        }, 500);
+    });
+
+    // Limpiar el otro campo al cambiar de tab
+    document.getElementById('archivo-tab').addEventListener('shown.bs.tab', function() {
+        imagenUrl.value = '';
+    });
+    document.getElementById('url-tab').addEventListener('shown.bs.tab', function() {
+        imagenArchivo.value = '';
+        imagenPreview.style.display = 'none';
+    });
+
+    // Ocultar preview y limpiar campos si se marca eliminar
+    if (eliminarImagen) {
+        eliminarImagen.addEventListener('change', function() {
+            if (this.checked) {
+                imagenArchivo.value = '';
+                imagenUrl.value = '';
+                imagenPreview.style.display = 'none';
+            }
+        });
+    }
 </script>
 @endpush
 @endsection

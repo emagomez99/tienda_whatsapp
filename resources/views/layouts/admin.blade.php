@@ -97,7 +97,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.etiquetas.*') ? 'active' : '' }}" href="{{ route('admin.etiquetas.index') }}">
-                                <i class="bi bi-tags"></i> Categorías
+                                <i class="bi bi-tags"></i> Etiquetas
                             </a>
                         </li>
                         <li class="nav-item">

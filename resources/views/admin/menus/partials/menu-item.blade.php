@@ -18,8 +18,8 @@
                             <span class="badge badge-tipo bg-primary">Proveedor</span>
                             {{ $menu->nombre_enlace }}
                             @break
-                        @case('categoria')
-                            <span class="badge badge-tipo bg-success">Categoría</span>
+                        @case('etiqueta')
+                            <span class="badge badge-tipo bg-success">Etiqueta</span>
                             {{ $menu->nombre_enlace }}
                             @break
                         @case('especificacion')

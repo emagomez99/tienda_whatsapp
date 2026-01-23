@@ -26,9 +26,9 @@ class MenuController extends Controller
     {
         $menusParent = Menu::orderBy('nombre')->get();
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
-        $categorias = Etiqueta::orderBy('nombre')->get();
+        $etiquetas = Etiqueta::orderBy('nombre')->get();
 
-        return view('admin.menus.create', compact('menusParent', 'proveedores', 'categorias'));
+        return view('admin.menus.create', compact('menusParent', 'proveedores', 'etiquetas'));
     }
 
     public function store(Request $request)
@@ -36,7 +36,7 @@ class MenuController extends Controller
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:menus,id',
-            'tipo_enlace' => 'required|in:ninguno,proveedor,categoria,especificacion',
+            'tipo_enlace' => 'required|in:ninguno,proveedor,etiqueta,especificacion',
             'enlace_id' => 'nullable|integer',
             'enlace_valor' => 'nullable|string|max:255',
             'orden' => 'integer|min:0',
@@ -67,9 +67,9 @@ class MenuController extends Controller
             ->orderBy('nombre')
             ->get();
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
-        $categorias = Etiqueta::orderBy('nombre')->get();
+        $etiquetas = Etiqueta::orderBy('nombre')->get();
 
-        return view('admin.menus.edit', compact('menu', 'menusParent', 'proveedores', 'categorias'));
+        return view('admin.menus.edit', compact('menu', 'menusParent', 'proveedores', 'etiquetas'));
     }
 
     public function update(Request $request, Menu $menu)
@@ -77,7 +77,7 @@ class MenuController extends Controller
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:menus,id',
-            'tipo_enlace' => 'required|in:ninguno,proveedor,categoria,especificacion',
+            'tipo_enlace' => 'required|in:ninguno,proveedor,etiqueta,especificacion',
             'enlace_id' => 'nullable|integer',
             'enlace_valor' => 'nullable|string|max:255',
             'orden' => 'integer|min:0',
@@ -138,14 +138,14 @@ class MenuController extends Controller
     }
 
     /**
-     * Obtener valores de categoría para autocompletado
+     * Obtener valores de etiqueta para autocompletado
      */
-    public function valoresCategoria(Request $request, Etiqueta $categoria)
+    public function valoresEtiqueta(Request $request, Etiqueta $etiqueta)
     {
         $buscar = $request->get('q', '');
 
         $valores = \DB::table('producto_etiqueta')
-            ->where('etiqueta_id', $categoria->id)
+            ->where('etiqueta_id', $etiqueta->id)
             ->where('valor', 'like', "%{$buscar}%")
             ->distinct()
             ->pluck('valor')

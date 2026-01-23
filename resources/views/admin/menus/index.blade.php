@@ -51,8 +51,8 @@
                 <small class="text-muted">Filtra productos por proveedor</small>
             </div>
             <div class="col-md-3">
-                <h6><span class="badge bg-success">Categoría</span></h6>
-                <small class="text-muted">Filtra por categoría y opcionalmente por valor</small>
+                <h6><span class="badge bg-success">Etiqueta</span></h6>
+                <small class="text-muted">Filtra por etiqueta y opcionalmente por valor</small>
             </div>
             <div class="col-md-3">
                 <h6><span class="badge bg-info">Especificación</span></h6>

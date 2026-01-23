@@ -18,6 +18,7 @@ class CreateProductosTable extends Migration
             $table->integer('stock')->default(0);
             $table->boolean('por_encargue')->default(false);
             $table->string('url_imagen')->nullable();
+            $table->foreignId('moneda_id')->nullable()->constrained('monedas')->onDelete('set null');
             $table->timestamps();
         });
     }

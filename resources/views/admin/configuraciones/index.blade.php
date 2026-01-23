@@ -65,7 +65,7 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="form-label">Paleta de Colores</label>
                         @php
                             $paletas = App\Models\Configuracion::paletas();
@@ -84,6 +84,30 @@
                                 </div>
                             @endforeach
                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Posici&oacute;n del Men&uacute;</label>
+                        @php $posicionMenu = App\Models\Configuracion::posicionMenu(); @endphp
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="posicion_menu" id="menu_superior" value="superior" {{ $posicionMenu === 'superior' ? 'checked' : '' }}>
+                                    <label class="form-check-label d-flex align-items-center gap-2" for="menu_superior">
+                                        <i class="bi bi-distribute-horizontal"></i> Barra superior
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="posicion_menu" id="menu_lateral" value="lateral" {{ $posicionMenu === 'lateral' ? 'checked' : '' }}>
+                                    <label class="form-check-label d-flex align-items-center gap-2" for="menu_lateral">
+                                        <i class="bi bi-layout-sidebar"></i> Men&uacute; lateral
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-muted">Define la posición del menú de la tienda</small>
                     </div>
                 </div>
             </div>

@@ -59,7 +59,8 @@ class ProductoController extends Controller
             'disponible' => 'boolean',
             'stock' => 'required|integer|min:0',
             'por_encargue' => 'boolean',
-            'url_imagen' => 'nullable|image|max:2048',
+            'imagen_archivo' => 'nullable|image|max:2048',
+            'imagen_url' => 'nullable|url|max:500',
             'etiquetas' => 'nullable|array',
             'etiquetas.*.etiqueta_id' => 'required|exists:etiquetas,id',
             'etiquetas.*.valor' => 'required|string|max:255',
@@ -71,9 +72,11 @@ class ProductoController extends Controller
         $validated['disponible'] = $request->boolean('disponible');
         $validated['por_encargue'] = $request->boolean('por_encargue');
 
-        // Manejar imagen
-        if ($request->hasFile('url_imagen')) {
-            $validated['url_imagen'] = $request->file('url_imagen')->store('productos', 'public');
+        // Manejar imagen (archivo tiene prioridad sobre URL)
+        if ($request->hasFile('imagen_archivo')) {
+            $validated['url_imagen'] = $request->file('imagen_archivo')->store('productos', 'public');
+        } elseif ($request->filled('imagen_url')) {
+            $validated['url_imagen'] = $request->imagen_url;
         }
 
         $producto = Producto::create($validated);
@@ -121,7 +124,9 @@ class ProductoController extends Controller
             'disponible' => 'boolean',
             'stock' => 'required|integer|min:0',
             'por_encargue' => 'boolean',
-            'url_imagen' => 'nullable|image|max:2048',
+            'imagen_archivo' => 'nullable|image|max:2048',
+            'imagen_url' => 'nullable|url|max:500',
+            'eliminar_imagen' => 'boolean',
             'etiquetas' => 'nullable|array',
             'etiquetas.*.etiqueta_id' => 'required|exists:etiquetas,id',
             'etiquetas.*.valor' => 'required|string|max:255',
@@ -133,13 +138,18 @@ class ProductoController extends Controller
         $validated['disponible'] = $request->boolean('disponible');
         $validated['por_encargue'] = $request->boolean('por_encargue');
 
-        // Manejar imagen
-        if ($request->hasFile('url_imagen')) {
-            // Eliminar imagen anterior
-            if ($producto->url_imagen) {
-                Storage::disk('public')->delete($producto->url_imagen);
-            }
-            $validated['url_imagen'] = $request->file('url_imagen')->store('productos', 'public');
+        // Manejar eliminación de imagen
+        if ($request->boolean('eliminar_imagen')) {
+            $this->eliminarImagenLocal($producto);
+            $validated['url_imagen'] = null;
+        }
+        // Manejar nueva imagen (archivo tiene prioridad sobre URL)
+        elseif ($request->hasFile('imagen_archivo')) {
+            $this->eliminarImagenLocal($producto);
+            $validated['url_imagen'] = $request->file('imagen_archivo')->store('productos', 'public');
+        } elseif ($request->filled('imagen_url')) {
+            $this->eliminarImagenLocal($producto);
+            $validated['url_imagen'] = $request->imagen_url;
         }
 
         $producto->update($validated);
@@ -167,15 +177,21 @@ class ProductoController extends Controller
 
     public function destroy(Producto $producto)
     {
-        // Eliminar imagen
-        if ($producto->url_imagen) {
-            Storage::disk('public')->delete($producto->url_imagen);
-        }
-
+        $this->eliminarImagenLocal($producto);
         $producto->delete();
 
         return redirect()->route('admin.productos.index')
             ->with('success', 'Producto eliminado correctamente');
+    }
+
+    /**
+     * Elimina la imagen local si existe (no elimina URLs externas)
+     */
+    private function eliminarImagenLocal(Producto $producto): void
+    {
+        if ($producto->url_imagen && !str_starts_with($producto->url_imagen, 'http')) {
+            Storage::disk('public')->delete($producto->url_imagen);
+        }
     }
 
     private function sincronizarEtiquetas(Producto $producto, array $etiquetas)

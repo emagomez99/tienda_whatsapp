@@ -60,5 +60,5 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Menús
     Route::resource('menus', MenuController::class);
     Route::post('/menus/reordenar', [MenuController::class, 'reordenar'])->name('menus.reordenar');
-    Route::get('/menus/categoria/{categoria}/valores', [MenuController::class, 'valoresCategoria'])->name('menus.categoria.valores');
+    Route::get('/menus/etiqueta/{etiqueta}/valores', [MenuController::class, 'valoresEtiqueta'])->name('menus.etiqueta.valores');
 });

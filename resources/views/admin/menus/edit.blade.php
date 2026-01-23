@@ -10,9 +10,12 @@
     </a>
 </div>
 
-<form action="{{ route('admin.menus.update', $menu) }}" method="POST">
+<form action="{{ route('admin.menus.update', $menu) }}" method="POST" id="menu-form">
     @csrf
     @method('PUT')
+    <input type="hidden" name="enlace_id" id="enlace_id" value="{{ old('enlace_id', $menu->enlace_id) }}">
+    <input type="hidden" name="enlace_valor" id="enlace_valor" value="{{ old('enlace_valor', $menu->enlace_valor) }}">
+
     <div class="row">
         <div class="col-md-8">
             <div class="card">
@@ -77,9 +80,9 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="tipo_enlace" id="tipo_categoria" value="categoria" {{ old('tipo_enlace', $menu->tipo_enlace) == 'categoria' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="tipo_categoria">
-                                        <span class="badge bg-success">Categoría</span>
+                                    <input class="form-check-input" type="radio" name="tipo_enlace" id="tipo_etiqueta" value="etiqueta" {{ old('tipo_enlace', $menu->tipo_enlace) == 'etiqueta' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="tipo_etiqueta">
+                                        <span class="badge bg-success">Etiqueta</span>
                                     </label>
                                 </div>
                             </div>
@@ -97,8 +100,8 @@
                     <!-- Campos dinámicos según tipo -->
                     <div id="campos-proveedor" class="campos-tipo" style="display: none;">
                         <div class="mb-3">
-                            <label for="proveedor_id" class="form-label">Seleccionar Proveedor</label>
-                            <select class="form-select" id="proveedor_id" name="enlace_id">
+                            <label for="proveedor_select" class="form-label">Seleccionar Proveedor</label>
+                            <select class="form-select" id="proveedor_select">
                                 <option value="">Seleccionar...</option>
                                 @foreach($proveedores as $proveedor)
                                     <option value="{{ $proveedor->id }}" {{ old('enlace_id', $menu->tipo_enlace == 'proveedor' ? $menu->enlace_id : '') == $proveedor->id ? 'selected' : '' }}>
@@ -109,34 +112,32 @@
                         </div>
                     </div>
 
-                    <div id="campos-categoria" class="campos-tipo" style="display: none;">
+                    <div id="campos-etiqueta" class="campos-tipo" style="display: none;">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="categoria_id" class="form-label">Seleccionar Categoría</label>
-                                <select class="form-select" id="categoria_id">
+                                <label for="etiqueta_select" class="form-label">Seleccionar Etiqueta</label>
+                                <select class="form-select" id="etiqueta_select">
                                     <option value="">Seleccionar...</option>
-                                    @foreach($categorias as $categoria)
-                                        <option value="{{ $categoria->id }}" {{ old('enlace_id', $menu->tipo_enlace == 'categoria' ? $menu->enlace_id : '') == $categoria->id ? 'selected' : '' }}>
-                                            {{ $categoria->nombre }}
+                                    @foreach($etiquetas as $etiqueta)
+                                        <option value="{{ $etiqueta->id }}" {{ old('enlace_id', $menu->tipo_enlace == 'etiqueta' ? $menu->enlace_id : '') == $etiqueta->id ? 'selected' : '' }}>
+                                            {{ $etiqueta->nombre }}
                                         </option>
                                     @endforeach
                                 </select>
-                                <input type="hidden" name="enlace_id" id="categoria_enlace_id" value="{{ old('enlace_id', $menu->tipo_enlace == 'categoria' ? $menu->enlace_id : '') }}">
                             </div>
                             <div class="col-md-6 mb-3 position-relative">
-                                <label for="categoria_valor" class="form-label">Valor (opcional)</label>
-                                <input type="text" class="form-control" id="categoria_valor" name="enlace_valor" value="{{ old('enlace_valor', $menu->tipo_enlace == 'categoria' ? $menu->enlace_valor : '') }}" placeholder="Ej: Gomitas, Arcor..." autocomplete="off">
+                                <label for="etiqueta_valor_input" class="form-label">Valor (opcional)</label>
+                                <input type="text" class="form-control" id="etiqueta_valor_input" value="{{ old('enlace_valor', $menu->tipo_enlace == 'etiqueta' ? $menu->enlace_valor : '') }}" placeholder="Ej: Gomitas, Arcor..." autocomplete="off">
                                 <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
-                                <small class="text-muted">Filtra por un valor específico de la categoría</small>
+                                <small class="text-muted">Filtra por un valor específico de la etiqueta</small>
                             </div>
                         </div>
                     </div>
 
                     <div id="campos-especificacion" class="campos-tipo" style="display: none;">
                         <div class="mb-3">
-                            <label for="especificacion_valor" class="form-label">Valor de Especificación</label>
-                            <input type="text" class="form-control" id="especificacion_valor" value="{{ old('enlace_valor', $menu->tipo_enlace == 'especificacion' ? $menu->enlace_valor : '') }}" placeholder="Ej: 1kg, Rojo, Grande...">
-                            <input type="hidden" name="enlace_valor" id="especificacion_enlace_valor" value="{{ old('enlace_valor', $menu->tipo_enlace == 'especificacion' ? $menu->enlace_valor : '') }}">
+                            <label for="especificacion_valor_input" class="form-label">Valor de Especificación</label>
+                            <input type="text" class="form-control" id="especificacion_valor_input" value="{{ old('enlace_valor', $menu->tipo_enlace == 'especificacion' ? $menu->enlace_valor : '') }}" placeholder="Ej: 1kg, Rojo, Grande...">
                             <small class="text-muted">Filtra productos que tengan este valor en cualquier especificación</small>
                         </div>
                     </div>
@@ -186,7 +187,7 @@
                 <div class="card-body small">
                     <p><strong>Contenedor:</strong> Agrupa otros menús, no filtra productos.</p>
                     <p><strong>Proveedor:</strong> Muestra productos de un proveedor específico.</p>
-                    <p><strong>Categoría:</strong> Filtra por categoría. Opcionalmente especifica un valor.</p>
+                    <p><strong>Etiqueta:</strong> Filtra por etiqueta. Opcionalmente especifica un valor.</p>
                     <p><strong>Especificación:</strong> Filtra por valor de especificación.</p>
                 </div>
             </div>
@@ -212,6 +213,31 @@
     document.addEventListener('DOMContentLoaded', function() {
         const tipoRadios = document.querySelectorAll('input[name="tipo_enlace"]');
         const camposTipo = document.querySelectorAll('.campos-tipo');
+        const enlaceIdHidden = document.getElementById('enlace_id');
+        const enlaceValorHidden = document.getElementById('enlace_valor');
+
+        // Selectores de cada tipo
+        const proveedorSelect = document.getElementById('proveedor_select');
+        const etiquetaSelect = document.getElementById('etiqueta_select');
+        const etiquetaValorInput = document.getElementById('etiqueta_valor_input');
+        const especificacionValorInput = document.getElementById('especificacion_valor_input');
+
+        function actualizarCamposOcultos() {
+            const tipoSeleccionado = document.querySelector('input[name="tipo_enlace"]:checked').value;
+
+            // Limpiar valores
+            enlaceIdHidden.value = '';
+            enlaceValorHidden.value = '';
+
+            if (tipoSeleccionado === 'proveedor') {
+                enlaceIdHidden.value = proveedorSelect.value;
+            } else if (tipoSeleccionado === 'etiqueta') {
+                enlaceIdHidden.value = etiquetaSelect.value;
+                enlaceValorHidden.value = etiquetaValorInput.value;
+            } else if (tipoSeleccionado === 'especificacion') {
+                enlaceValorHidden.value = especificacionValorInput.value;
+            }
+        }
 
         function mostrarCampos() {
             const tipoSeleccionado = document.querySelector('input[name="tipo_enlace"]:checked').value;
@@ -220,52 +246,48 @@
 
             if (tipoSeleccionado === 'proveedor') {
                 document.getElementById('campos-proveedor').style.display = 'block';
-            } else if (tipoSeleccionado === 'categoria') {
-                document.getElementById('campos-categoria').style.display = 'block';
+            } else if (tipoSeleccionado === 'etiqueta') {
+                document.getElementById('campos-etiqueta').style.display = 'block';
             } else if (tipoSeleccionado === 'especificacion') {
                 document.getElementById('campos-especificacion').style.display = 'block';
             }
+
+            actualizarCamposOcultos();
         }
 
         tipoRadios.forEach(radio => {
             radio.addEventListener('change', mostrarCampos);
         });
 
+        // Eventos para actualizar campos ocultos
+        proveedorSelect.addEventListener('change', actualizarCamposOcultos);
+        etiquetaSelect.addEventListener('change', actualizarCamposOcultos);
+        etiquetaValorInput.addEventListener('input', actualizarCamposOcultos);
+        especificacionValorInput.addEventListener('input', actualizarCamposOcultos);
+
+        // Actualizar antes de enviar el formulario
+        document.getElementById('menu-form').addEventListener('submit', function() {
+            actualizarCamposOcultos();
+        });
+
         mostrarCampos();
 
-        // Sincronizar categoria_id con enlace_id
-        const categoriaSelect = document.getElementById('categoria_id');
-        const categoriaEnlaceId = document.getElementById('categoria_enlace_id');
-
-        categoriaSelect.addEventListener('change', function() {
-            categoriaEnlaceId.value = this.value;
-        });
-
-        // Sincronizar especificacion_valor con enlace_valor
-        const especificacionInput = document.getElementById('especificacion_valor');
-        const especificacionEnlaceValor = document.getElementById('especificacion_enlace_valor');
-
-        especificacionInput.addEventListener('input', function() {
-            especificacionEnlaceValor.value = this.value;
-        });
-
-        // Autocompletado para valores de categoría
+        // Autocompletado para valores de etiqueta
         let debounceTimer;
-        const categoriaValorInput = document.getElementById('categoria_valor');
-        const suggestionsDiv = categoriaValorInput.parentElement.querySelector('.autocomplete-suggestions');
+        const suggestionsDiv = etiquetaValorInput.parentElement.querySelector('.autocomplete-suggestions');
 
-        categoriaValorInput.addEventListener('input', function() {
+        etiquetaValorInput.addEventListener('input', function() {
             clearTimeout(debounceTimer);
             const valor = this.value;
-            const categoriaId = categoriaSelect.value;
+            const etiquetaId = etiquetaSelect.value;
 
-            if (!categoriaId || valor.length < 2) {
+            if (!etiquetaId || valor.length < 2) {
                 suggestionsDiv.style.display = 'none';
                 return;
             }
 
             debounceTimer = setTimeout(() => {
-                fetch(`/admin/menus/categoria/${categoriaId}/valores?q=${encodeURIComponent(valor)}`)
+                fetch(`/admin/menus/etiqueta/${etiquetaId}/valores?q=${encodeURIComponent(valor)}`)
                     .then(response => response.json())
                     .then(data => {
                         suggestionsDiv.innerHTML = '';
@@ -277,7 +299,8 @@
                                 div.textContent = item;
                                 div.addEventListener('click', function(e) {
                                     e.preventDefault();
-                                    categoriaValorInput.value = item;
+                                    etiquetaValorInput.value = item;
+                                    actualizarCamposOcultos();
                                     suggestionsDiv.style.display = 'none';
                                 });
                                 suggestionsDiv.appendChild(div);
@@ -290,7 +313,7 @@
             }, 300);
         });
 
-        categoriaValorInput.addEventListener('blur', function() {
+        etiquetaValorInput.addEventListener('blur', function() {
             setTimeout(() => {
                 suggestionsDiv.style.display = 'none';
             }, 200);

@@ -68,7 +68,7 @@
                             <tr>
                                 <td>
                                     @if($producto->url_imagen)
-                                        <img src="{{ asset('storage/' . $producto->url_imagen) }}" alt="" style="width: 50px; height: 50px; object-fit: cover;" class="rounded">
+                                        <img src="{{ $producto->imagen_url }}" alt="" style="width: 50px; height: 50px; object-fit: cover;" class="rounded">
                                     @else
                                         <div class="bg-secondary rounded d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
                                             <i class="bi bi-image"></i>

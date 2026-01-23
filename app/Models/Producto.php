@@ -62,6 +62,32 @@ class Producto extends Model
         return $this->disponible && ($this->stock > 0 || $this->por_encargue);
     }
 
+    /**
+     * Obtiene la URL completa de la imagen (local o externa)
+     */
+    public function getImagenUrlAttribute(): ?string
+    {
+        if (!$this->url_imagen) {
+            return null;
+        }
+
+        // Si empieza con http, es una URL externa
+        if (str_starts_with($this->url_imagen, 'http')) {
+            return $this->url_imagen;
+        }
+
+        // Es una imagen local en storage
+        return asset('storage/' . $this->url_imagen);
+    }
+
+    /**
+     * Verifica si la imagen es una URL externa
+     */
+    public function esImagenExterna(): bool
+    {
+        return $this->url_imagen && str_starts_with($this->url_imagen, 'http');
+    }
+
     public function scopeDisponibles($query)
     {
         return $query->where('disponible', true)

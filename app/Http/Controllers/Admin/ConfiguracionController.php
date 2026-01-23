@@ -28,6 +28,7 @@ class ConfiguracionController extends Controller
             'nombre_tienda' => 'required|string|max:255',
             'logo' => 'nullable|image|max:2048',
             'paleta' => 'required|in:' . $paletasValidas,
+            'posicion_menu' => 'required|in:superior,lateral',
         ]);
 
         Configuracion::establecer('mostrar_precios', $request->mostrar_precios, 'Mostrar precios en la tienda');
@@ -36,6 +37,7 @@ class ConfiguracionController extends Controller
         Configuracion::establecer('whatsapp_admin', $request->whatsapp_admin, 'Número de WhatsApp del administrador');
         Configuracion::establecer('nombre_tienda', $request->nombre_tienda, 'Nombre de la tienda');
         Configuracion::establecer('paleta', $request->paleta, 'Paleta de colores');
+        Configuracion::establecer('posicion_menu', $request->posicion_menu, 'Posición del menú en la tienda');
 
         // Manejar logo
         if ($request->hasFile('logo')) {

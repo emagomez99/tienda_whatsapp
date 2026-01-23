@@ -10,7 +10,7 @@ class CreateEtiquetasTable extends Migration
     {
         Schema::create('etiquetas', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre')->unique()->comment('Nombre de la etiqueta, ej: Categoria, Modelo');
+            $table->string('nombre')->unique()->comment('Nombre de la etiqueta, ej: Categoria, Rubro, Marca');
             $table->boolean('visible_usuarios')->default(true)->comment('Si es visible para usuarios en tienda');
             $table->timestamps();
         });
