@@ -53,9 +53,32 @@
             const btnLimpiar = document.getElementById('btn-limpiar');
             const textoOpcionVacia = filtrosRequeridos ? 'Seleccionar...' : 'Todos';
 
+            // Elementos de búsqueda
+            const inputBuscar = document.getElementById('buscar-productos');
+            const btnBuscar = document.getElementById('btn-buscar');
+            const btnLimpiarBusqueda = document.getElementById('btn-limpiar-busqueda');
+            const busquedaContexto = document.getElementById('busqueda-contexto');
+
             let cargaInicial = true;
             const cacheValores = {};
             let cargandoProductos = false;
+            let debounceTimer = null;
+
+            // Obtener término de búsqueda
+            function obtenerBusqueda() {
+                return inputBuscar ? inputBuscar.value.trim() : '';
+            }
+
+            // Actualizar UI de búsqueda
+            function actualizarUIBusqueda() {
+                const termino = obtenerBusqueda();
+                if (btnLimpiarBusqueda) {
+                    btnLimpiarBusqueda.style.display = termino ? 'block' : 'none';
+                }
+                if (busquedaContexto) {
+                    busquedaContexto.style.display = (termino && hayFiltrosSeleccionados()) ? 'block' : 'none';
+                }
+            }
 
             // Actualizar estado habilitado/deshabilitado de filtros (modo compuesto)
             function actualizarEstadoFiltros() {
@@ -105,6 +128,8 @@
             async function cargarProductos(pagina = 1) {
                 if (cargandoProductos) return;
 
+                const busqueda = obtenerBusqueda();
+
                 // En modo compuesto, solo cargar si todos están completos
                 if (filtrosRequeridos && !todosLosFiltrosCompletos()) {
                     productosContainer.innerHTML = `
@@ -114,18 +139,23 @@
                     `;
                     contadorResultados.style.display = 'none';
                     btnLimpiar.style.display = hayFiltrosSeleccionados() ? 'inline-block' : 'none';
+                    actualizarUIBusqueda();
                     return;
                 }
 
                 cargandoProductos = true;
 
                 // Mostrar loading
+                const mensajeCarga = busqueda
+                    ? `Buscando "<strong>${busqueda}</strong>" en productos filtrados...`
+                    : 'Buscando productos...';
+
                 productosContainer.innerHTML = `
                     <div class="text-center py-5">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Cargando...</span>
                         </div>
-                        <p class="mt-2 text-muted">Buscando productos...</p>
+                        <p class="mt-2 text-muted">${mensajeCarga}</p>
                     </div>
                 `;
 
@@ -137,6 +167,11 @@
                         params.append(`filtros[${key}]`, value);
                     });
 
+                    // Agregar término de búsqueda
+                    if (busqueda) {
+                        params.append('buscar', busqueda);
+                    }
+
                     const response = await fetch(`/productos/ajax?${params.toString()}`);
                     const data = await response.json();
 
@@ -146,7 +181,10 @@
                     btnLimpiar.style.display = 'inline-block';
 
                     // Actualizar URL sin recargar (para que el usuario pueda compartir/refrescar)
-                    actualizarURL(filtros, pagina);
+                    actualizarURL(filtros, pagina, busqueda);
+
+                    // Actualizar UI de búsqueda
+                    actualizarUIBusqueda();
 
                     // Scroll al inicio del contenedor de productos
                     if (pagina > 1) {
@@ -177,15 +215,16 @@
             });
 
             // Actualizar URL con los filtros actuales
-            function actualizarURL(filtros, pagina = 1) {
+            function actualizarURL(filtros, pagina = 1, busqueda = '') {
                 const url = new URL(window.location);
                 url.searchParams.set('menu', menuId);
 
-                // Limpiar filtros anteriores y página
+                // Limpiar filtros anteriores, página y búsqueda
                 ordenEtiquetas.forEach(id => {
                     url.searchParams.delete('f' + id);
                 });
                 url.searchParams.delete('page');
+                url.searchParams.delete('buscar');
 
                 // Agregar filtros actuales
                 Object.entries(filtros).forEach(([key, value]) => {
@@ -195,6 +234,11 @@
                 // Agregar página si no es la primera
                 if (pagina > 1) {
                     url.searchParams.set('page', pagina);
+                }
+
+                // Agregar búsqueda si existe
+                if (busqueda) {
+                    url.searchParams.set('buscar', busqueda);
                 }
 
                 window.history.replaceState({}, '', url);
@@ -364,11 +408,18 @@
                     }
                 });
 
+                // Limpiar búsqueda
+                if (inputBuscar) {
+                    inputBuscar.value = '';
+                }
+                actualizarUIBusqueda();
+
                 // Limpiar URL
                 const url = new URL(window.location);
                 ordenEtiquetas.forEach(id => {
                     url.searchParams.delete('f' + id);
                 });
+                url.searchParams.delete('buscar');
                 window.history.replaceState({}, '', url);
 
                 // Ocultar contador y botón limpiar
@@ -394,6 +445,43 @@
                     cargarProductos();
                 }
             });
+
+            // ===== BÚSQUEDA =====
+            if (inputBuscar) {
+                // Búsqueda con debounce al escribir
+                inputBuscar.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        cargarProductos(1);
+                    }, 400);
+                });
+
+                // Búsqueda al presionar Enter
+                inputBuscar.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        clearTimeout(debounceTimer);
+                        cargarProductos(1);
+                    }
+                });
+
+                // Botón buscar
+                if (btnBuscar) {
+                    btnBuscar.addEventListener('click', function() {
+                        clearTimeout(debounceTimer);
+                        cargarProductos(1);
+                    });
+                }
+
+                // Botón limpiar búsqueda
+                if (btnLimpiarBusqueda) {
+                    btnLimpiarBusqueda.addEventListener('click', function() {
+                        inputBuscar.value = '';
+                        actualizarUIBusqueda();
+                        cargarProductos(1);
+                    });
+                }
+            }
 
             // Inicialización
             async function inicializar() {
