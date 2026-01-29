@@ -119,8 +119,8 @@
                     </tbody>
                 </table>
             </div>
-            <div class="d-flex justify-content-center">
-                {{ $productos->withQueryString()->links() }}
+            <div class="mt-4">
+                {{ $productos->withQueryString()->links('vendor.pagination.tienda') }}
             </div>
         @endif
     </div>

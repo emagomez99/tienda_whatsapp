@@ -141,8 +141,8 @@
             @endforeach
         </div>
 
-        <div class="d-flex justify-content-center mt-4">
-            {{ $productos->withQueryString()->links() }}
+        <div class="mt-4">
+            {{ $productos->withQueryString()->links('vendor.pagination.tienda') }}
         </div>
     @endif
 @if(!$menuEnSidebar)

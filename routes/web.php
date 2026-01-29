@@ -40,7 +40,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('productos', ProductoController::class);
 
     // Proveedores
-    Route::resource('proveedores', ProveedorController::class);
+    Route::resource('proveedores', ProveedorController::class)->parameters(['proveedores' => 'proveedor']);
 
     // Usuarios
     Route::resource('usuarios', UserController::class);
