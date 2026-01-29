@@ -61,6 +61,11 @@ class Configuracion extends Model
         return self::obtener('logo', null);
     }
 
+    public static function favicon()
+    {
+        return self::obtener('favicon', null);
+    }
+
     public static function mostrarNombreTienda()
     {
         return self::obtener('mostrar_nombre_tienda', 'true') === 'true';

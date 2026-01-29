@@ -40,6 +40,27 @@
                     </div>
 
                     <div class="mb-4">
+                        <label for="favicon" class="form-label">Favicon</label>
+                        @php $faviconActual = App\Models\Configuracion::favicon(); @endphp
+                        @if($faviconActual)
+                            <div class="mb-2 d-flex align-items-center gap-3">
+                                <img src="{{ asset('storage/' . $faviconActual) }}" alt="Favicon actual" style="max-height: 32px;" class="rounded border">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="eliminar_favicon" name="eliminar_favicon" value="1">
+                                    <label class="form-check-label text-danger" for="eliminar_favicon">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </label>
+                                </div>
+                            </div>
+                        @endif
+                        <input type="file" class="form-control @error('favicon') is-invalid @enderror" id="favicon" name="favicon" accept=".ico,.png,.jpg,.jpeg,.svg">
+                        @error('favicon')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">Formatos: ICO, PNG, JPG, SVG. Máx: 512KB. Tamaño recomendado: 32x32 o 64x64</small>
+                    </div>
+
+                    <div class="mb-4">
                         <label for="nombre_tienda" class="form-label">Nombre de la Tienda</label>
                         <input type="text" class="form-control @error('nombre_tienda') is-invalid @enderror" id="nombre_tienda" name="nombre_tienda" value="{{ App\Models\Configuracion::obtener('nombre_tienda', 'Tienda MC') }}">
                         @error('nombre_tienda')

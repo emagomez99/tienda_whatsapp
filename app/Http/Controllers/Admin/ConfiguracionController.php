@@ -27,6 +27,7 @@ class ConfiguracionController extends Controller
             'whatsapp_admin' => 'required|string|max:20',
             'nombre_tienda' => 'required|string|max:255',
             'logo' => 'nullable|image|max:2048',
+            'favicon' => 'nullable|mimes:ico,png,jpg,jpeg,svg|max:512',
             'paleta' => 'required|in:' . $paletasValidas,
             'posicion_menu' => 'required|in:superior,lateral',
         ]);
@@ -57,6 +58,25 @@ class ConfiguracionController extends Controller
                 Storage::disk('public')->delete($logoAnterior);
             }
             Configuracion::establecer('logo', '', 'Logo de la tienda');
+        }
+
+        // Manejar favicon
+        if ($request->hasFile('favicon')) {
+            $faviconAnterior = Configuracion::favicon();
+            if ($faviconAnterior) {
+                Storage::disk('public')->delete($faviconAnterior);
+            }
+            $faviconPath = $request->file('favicon')->store('config', 'public');
+            Configuracion::establecer('favicon', $faviconPath, 'Favicon de la tienda');
+        }
+
+        // Eliminar favicon si se solicita
+        if ($request->has('eliminar_favicon') && $request->eliminar_favicon) {
+            $faviconAnterior = Configuracion::favicon();
+            if ($faviconAnterior) {
+                Storage::disk('public')->delete($faviconAnterior);
+            }
+            Configuracion::establecer('favicon', '', 'Favicon de la tienda');
         }
 
         return redirect()->route('admin.configuraciones.index')
