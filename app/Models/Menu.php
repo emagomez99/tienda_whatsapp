@@ -18,11 +18,15 @@ class Menu extends Model
         'enlace_valor',
         'orden',
         'activo',
+        'filtros_etiquetas',
+        'filtros_requeridos',
     ];
 
     protected $casts = [
         'activo' => 'boolean',
         'orden' => 'integer',
+        'filtros_etiquetas' => 'array',
+        'filtros_requeridos' => 'boolean',
     ];
 
     const TIPO_NINGUNO = 'ninguno';
@@ -91,12 +95,23 @@ class Menu extends Model
      */
     public function getUrlAttribute(): string
     {
+        $params = [];
+
+        // Incluir menu_id si tiene filtros configurados
+        if ($this->tieneFiltros()) {
+            $params['menu'] = $this->id;
+        }
+
         if ($this->tipo_enlace === self::TIPO_PROVEEDOR) {
-            return route('tienda.index', ['proveedor' => $this->enlace_id]);
+            $params['proveedor'] = $this->enlace_id;
+            return route('tienda.index', $params);
         } elseif ($this->tipo_enlace === self::TIPO_ETIQUETA) {
-            return route('tienda.index', ['etiqueta' => $this->enlace_id, 'etiqueta_valor' => $this->enlace_valor]);
+            $params['etiqueta'] = $this->enlace_id;
+            $params['etiqueta_valor'] = $this->enlace_valor;
+            return route('tienda.index', $params);
         } elseif ($this->tipo_enlace === self::TIPO_ESPECIFICACION) {
-            return route('tienda.index', ['especificacion' => $this->enlace_valor]);
+            $params['especificacion'] = $this->enlace_valor;
+            return route('tienda.index', $params);
         }
         return '#';
     }
@@ -115,6 +130,33 @@ class Menu extends Model
     public function esContenedor(): bool
     {
         return $this->tipo_enlace === self::TIPO_NINGUNO;
+    }
+
+    /**
+     * Verificar si tiene filtros configurados
+     * Solo aplica para menús con enlace (no contenedores)
+     */
+    public function tieneFiltros(): bool
+    {
+        // Los contenedores no pueden tener filtros porque no tienen base de productos
+        if ($this->tipo_enlace === self::TIPO_NINGUNO) {
+            return false;
+        }
+
+        return !empty($this->filtros_etiquetas);
+    }
+
+    /**
+     * Obtener las etiquetas configuradas como filtros
+     */
+    public function getEtiquetasFiltro()
+    {
+        if (empty($this->filtros_etiquetas)) {
+            return collect();
+        }
+        return Etiqueta::whereIn('id', $this->filtros_etiquetas)
+            ->orderByRaw('FIELD(id, ' . implode(',', $this->filtros_etiquetas) . ')')
+            ->get();
     }
 
     /**

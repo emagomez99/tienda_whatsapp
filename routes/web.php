@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Route;
 // Rutas públicas de la tienda
 Route::get('/', [TiendaController::class, 'index'])->name('tienda.index');
 Route::get('/producto/{producto}', [TiendaController::class, 'show'])->name('tienda.show');
+Route::get('/filtros/valores', [TiendaController::class, 'filtrosValores'])->name('tienda.filtros.valores');
+Route::get('/productos/ajax', [TiendaController::class, 'productosAjax'])->name('tienda.productos.ajax');
 
 // Rutas del carrito
 Route::prefix('carrito')->name('carrito.')->group(function () {

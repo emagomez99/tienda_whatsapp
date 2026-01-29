@@ -146,6 +146,88 @@
                         <input type="checkbox" class="form-check-input" id="activo" name="activo" value="1" {{ old('activo', $menu->activo) ? 'checked' : '' }}>
                         <label class="form-check-label" for="activo">Menú activo</label>
                     </div>
+
+                    <hr class="mt-4">
+
+                    <div class="mb-3" id="seccion-filtros">
+                        <label class="form-label"><i class="bi bi-funnel"></i> Filtros en Cascada (opcional)</label>
+                        <p class="text-muted small mb-2">Agrega y ordena las etiquetas para filtrar productos en la tienda</p>
+
+                        @php $filtrosActuales = old('filtros_etiquetas', $menu->filtros_etiquetas ?? []); @endphp
+
+                        <div class="row">
+                            {{-- Etiquetas disponibles --}}
+                            <div class="col-md-5">
+                                <label class="form-label small">Etiquetas disponibles</label>
+                                <div class="border rounded p-2 bg-white" style="min-height: 150px;">
+                                    <ul class="list-group list-group-flush" id="etiquetas-disponibles">
+                                        @foreach($etiquetas as $etiqueta)
+                                            @if(!in_array($etiqueta->id, $filtrosActuales))
+                                                <li class="list-group-item list-group-item-action py-2 px-3 d-flex justify-content-between align-items-center" data-id="{{ $etiqueta->id }}" data-nombre="{{ $etiqueta->nombre }}">
+                                                    {{ $etiqueta->nombre }}
+                                                    <button type="button" class="btn btn-sm btn-outline-success btn-agregar-filtro" title="Agregar">
+                                                        <i class="bi bi-plus"></i>
+                                                    </button>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {{-- Botones centrales --}}
+                            <div class="col-md-2 d-flex flex-column justify-content-center align-items-center gap-2">
+                                <i class="bi bi-arrow-right text-muted" style="font-size: 1.5rem;"></i>
+                            </div>
+
+                            {{-- Filtros seleccionados (ordenables) --}}
+                            <div class="col-md-5">
+                                <label class="form-label small">Filtros seleccionados <span class="text-muted">(ordenables)</span></label>
+                                <div class="border rounded p-2 bg-light" style="min-height: 150px;">
+                                    <ul class="list-group list-group-flush" id="filtros-seleccionados">
+                                        @foreach($filtrosActuales as $index => $filtroId)
+                                            @php $etiquetaFiltro = $etiquetas->firstWhere('id', $filtroId); @endphp
+                                            @if($etiquetaFiltro)
+                                                <li class="list-group-item py-2 px-3 d-flex justify-content-between align-items-center" data-id="{{ $etiquetaFiltro->id }}" data-nombre="{{ $etiquetaFiltro->nombre }}">
+                                                    <span>
+                                                        <span class="badge bg-secondary me-2">{{ $index + 1 }}</span>
+                                                        {{ $etiquetaFiltro->nombre }}
+                                                    </span>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button type="button" class="btn btn-outline-secondary btn-subir" title="Subir"><i class="bi bi-arrow-up"></i></button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-bajar" title="Bajar"><i class="bi bi-arrow-down"></i></button>
+                                                        <button type="button" class="btn btn-outline-danger btn-quitar-filtro" title="Quitar"><i class="bi bi-x"></i></button>
+                                                    </div>
+                                                    <input type="hidden" name="filtros_etiquetas[]" value="{{ $etiquetaFiltro->id }}">
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    </ul>
+                                    <div class="text-center text-muted small py-3" id="filtros-vacio" style="{{ count($filtrosActuales) > 0 ? 'display:none;' : '' }}">
+                                        <i class="bi bi-inbox"></i> Sin filtros
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <label class="form-label mb-2"><i class="bi bi-sliders"></i> Modo de Filtrado</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="filtros_requeridos" id="filtros_individual" value="0" {{ !old('filtros_requeridos', $menu->filtros_requeridos) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="filtros_individual">
+                                    <strong>Individual</strong> - Cada filtro actúa por separado
+                                </label>
+                                <small class="d-block text-muted ms-4">Los usuarios pueden seleccionar cualquier combinación de filtros</small>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="radio" name="filtros_requeridos" id="filtros_compuesto" value="1" {{ old('filtros_requeridos', $menu->filtros_requeridos) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="filtros_compuesto">
+                                    <strong>Compuesto</strong> - Todos los filtros son requeridos
+                                </label>
+                                <small class="d-block text-muted ms-4">El usuario debe completar todos los filtros para ver resultados</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -241,6 +323,7 @@
 
         function mostrarCampos() {
             const tipoSeleccionado = document.querySelector('input[name="tipo_enlace"]:checked').value;
+            const seccionFiltros = document.getElementById('seccion-filtros');
 
             camposTipo.forEach(campo => campo.style.display = 'none');
 
@@ -250,6 +333,13 @@
                 document.getElementById('campos-etiqueta').style.display = 'block';
             } else if (tipoSeleccionado === 'especificacion') {
                 document.getElementById('campos-especificacion').style.display = 'block';
+            }
+
+            // Mostrar/ocultar sección de filtros (no disponible para Contenedor)
+            if (tipoSeleccionado === 'ninguno') {
+                seccionFiltros.style.display = 'none';
+            } else {
+                seccionFiltros.style.display = 'block';
             }
 
             actualizarCamposOcultos();
@@ -318,6 +408,120 @@
                 suggestionsDiv.style.display = 'none';
             }, 200);
         });
+
+        // ===== SISTEMA DE FILTROS ORDENABLES =====
+        const listaDisponibles = document.getElementById('etiquetas-disponibles');
+        const listaSeleccionados = document.getElementById('filtros-seleccionados');
+        const filtrosVacio = document.getElementById('filtros-vacio');
+
+        function actualizarNumeracion() {
+            const items = listaSeleccionados.querySelectorAll('li');
+            items.forEach((item, index) => {
+                const badge = item.querySelector('.badge');
+                if (badge) badge.textContent = index + 1;
+            });
+            // Mostrar/ocultar mensaje de vacío
+            filtrosVacio.style.display = items.length === 0 ? 'block' : 'none';
+        }
+
+        function agregarFiltro(li) {
+            const id = li.dataset.id;
+            const nombre = li.dataset.nombre;
+
+            // Crear nuevo item para la lista de seleccionados
+            const nuevoLi = document.createElement('li');
+            nuevoLi.className = 'list-group-item py-2 px-3 d-flex justify-content-between align-items-center';
+            nuevoLi.dataset.id = id;
+            nuevoLi.dataset.nombre = nombre;
+            nuevoLi.innerHTML = `
+                <span>
+                    <span class="badge bg-secondary me-2">0</span>
+                    ${nombre}
+                </span>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-secondary btn-subir" title="Subir"><i class="bi bi-arrow-up"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-bajar" title="Bajar"><i class="bi bi-arrow-down"></i></button>
+                    <button type="button" class="btn btn-outline-danger btn-quitar-filtro" title="Quitar"><i class="bi bi-x"></i></button>
+                </div>
+                <input type="hidden" name="filtros_etiquetas[]" value="${id}">
+            `;
+
+            listaSeleccionados.appendChild(nuevoLi);
+            li.remove();
+            actualizarNumeracion();
+            asignarEventos();
+        }
+
+        function quitarFiltro(li) {
+            const id = li.dataset.id;
+            const nombre = li.dataset.nombre;
+
+            // Crear nuevo item para la lista de disponibles
+            const nuevoLi = document.createElement('li');
+            nuevoLi.className = 'list-group-item list-group-item-action py-2 px-3 d-flex justify-content-between align-items-center';
+            nuevoLi.dataset.id = id;
+            nuevoLi.dataset.nombre = nombre;
+            nuevoLi.innerHTML = `
+                ${nombre}
+                <button type="button" class="btn btn-sm btn-outline-success btn-agregar-filtro" title="Agregar">
+                    <i class="bi bi-plus"></i>
+                </button>
+            `;
+
+            listaDisponibles.appendChild(nuevoLi);
+            li.remove();
+            actualizarNumeracion();
+            asignarEventos();
+        }
+
+        function subirFiltro(li) {
+            const prev = li.previousElementSibling;
+            if (prev) {
+                li.parentNode.insertBefore(li, prev);
+                actualizarNumeracion();
+            }
+        }
+
+        function bajarFiltro(li) {
+            const next = li.nextElementSibling;
+            if (next) {
+                li.parentNode.insertBefore(next, li);
+                actualizarNumeracion();
+            }
+        }
+
+        function asignarEventos() {
+            // Botones agregar
+            document.querySelectorAll('.btn-agregar-filtro').forEach(btn => {
+                btn.onclick = function() {
+                    agregarFiltro(this.closest('li'));
+                };
+            });
+
+            // Botones quitar
+            document.querySelectorAll('.btn-quitar-filtro').forEach(btn => {
+                btn.onclick = function() {
+                    quitarFiltro(this.closest('li'));
+                };
+            });
+
+            // Botones subir
+            document.querySelectorAll('.btn-subir').forEach(btn => {
+                btn.onclick = function() {
+                    subirFiltro(this.closest('li'));
+                };
+            });
+
+            // Botones bajar
+            document.querySelectorAll('.btn-bajar').forEach(btn => {
+                btn.onclick = function() {
+                    bajarFiltro(this.closest('li'));
+                };
+            });
+        }
+
+        asignarEventos();
+        actualizarNumeracion();
     });
 </script>
 @endpush

@@ -41,15 +41,22 @@ class MenuController extends Controller
             'enlace_valor' => 'nullable|string|max:255',
             'orden' => 'integer|min:0',
             'activo' => 'boolean',
+            'filtros_etiquetas' => 'nullable|array',
+            'filtros_etiquetas.*' => 'exists:etiquetas,id',
+            'filtros_requeridos' => 'nullable|boolean',
         ]);
 
         $validated['activo'] = $request->boolean('activo');
         $validated['orden'] = $request->input('orden', 0);
+        $validated['filtros_etiquetas'] = $request->input('filtros_etiquetas', []);
+        $validated['filtros_requeridos'] = $request->boolean('filtros_requeridos');
 
         // Limpiar campos según el tipo
         if ($validated['tipo_enlace'] === 'ninguno') {
             $validated['enlace_id'] = null;
             $validated['enlace_valor'] = null;
+            $validated['filtros_etiquetas'] = []; // Contenedores no pueden tener filtros
+            $validated['filtros_requeridos'] = false;
         } elseif ($validated['tipo_enlace'] === 'especificacion') {
             $validated['enlace_id'] = null;
         }
@@ -82,6 +89,9 @@ class MenuController extends Controller
             'enlace_valor' => 'nullable|string|max:255',
             'orden' => 'integer|min:0',
             'activo' => 'boolean',
+            'filtros_etiquetas' => 'nullable|array',
+            'filtros_etiquetas.*' => 'exists:etiquetas,id',
+            'filtros_requeridos' => 'nullable|boolean',
         ]);
 
         // Evitar que un menú sea su propio padre o descendiente
@@ -90,11 +100,15 @@ class MenuController extends Controller
         }
 
         $validated['activo'] = $request->boolean('activo');
+        $validated['filtros_etiquetas'] = $request->input('filtros_etiquetas', []);
+        $validated['filtros_requeridos'] = $request->boolean('filtros_requeridos');
 
         // Limpiar campos según el tipo
         if ($validated['tipo_enlace'] === 'ninguno') {
             $validated['enlace_id'] = null;
             $validated['enlace_valor'] = null;
+            $validated['filtros_etiquetas'] = []; // Contenedores no pueden tener filtros
+            $validated['filtros_requeridos'] = false;
         } elseif ($validated['tipo_enlace'] === 'especificacion') {
             $validated['enlace_id'] = null;
         }
