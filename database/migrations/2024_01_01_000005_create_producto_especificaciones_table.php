@@ -4,9 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateProductoEspecificacionesTable extends Migration
+return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::create('producto_especificaciones', function (Blueprint $table) {
             $table->id();
@@ -16,11 +16,12 @@ class CreateProductoEspecificacionesTable extends Migration
             $table->timestamps();
 
             $table->unique(['producto_id', 'clave']);
+            $table->index(['producto_id', 'valor']);
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('producto_especificaciones');
     }
-}
+};

@@ -6,30 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('menus', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre'); // Texto visible del menú
-            $table->foreignId('parent_id')->nullable()->constrained('menus')->onDelete('cascade');
+            $table->string('nombre');
+            $table->unsignedBigInteger('parent_id')->nullable();
             $table->enum('tipo_enlace', ['ninguno', 'proveedor', 'etiqueta', 'especificacion'])->default('ninguno');
-            $table->unsignedBigInteger('enlace_id')->nullable(); // ID del elemento relacionado
-            $table->string('enlace_valor')->nullable(); // Para especificaciones: valor específico a filtrar
+            $table->unsignedBigInteger('enlace_id')->nullable();
+            $table->string('enlace_valor')->nullable();
             $table->integer('orden')->default(0);
             $table->boolean('activo')->default(true);
+            $table->json('filtros_etiquetas')->nullable();
+            $table->boolean('filtros_requeridos')->default(false);
             $table->timestamps();
 
+            $table->foreign('parent_id')->references('id')->on('menus')->onDelete('cascade');
             $table->index(['parent_id', 'orden']);
             $table->index(['tipo_enlace', 'enlace_id']);
+            $table->index(['activo', 'orden']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('menus');
