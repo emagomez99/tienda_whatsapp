@@ -46,6 +46,40 @@
                             @enderror
                         </div>
 
+                        <hr class="my-3">
+                        <h6 class="text-muted mb-3"><i class="bi bi-geo-alt"></i> Dirección de envío</h6>
+
+                        <div class="mb-3">
+                            <label for="direccion" class="form-label">Dirección *</label>
+                            <input type="text" class="form-control @error('direccion') is-invalid @enderror" id="direccion" name="direccion" value="{{ old('direccion') }}" placeholder="Ej: Av. Corrientes 1234" required>
+                            @error('direccion')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="localidad" class="form-label">Localidad *</label>
+                                <input type="text" class="form-control @error('localidad') is-invalid @enderror" id="localidad" name="localidad" value="{{ old('localidad') }}" required>
+                                @error('localidad')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="provincia" class="form-label">Provincia *</label>
+                                <input type="text" class="form-control @error('provincia') is-invalid @enderror" id="provincia" name="provincia" value="{{ old('provincia') }}" required>
+                                @error('provincia')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cp" class="form-label">Código Postal *</label>
+                            <input type="text" class="form-control @error('cp') is-invalid @enderror" id="cp" name="cp" value="{{ old('cp') }}" placeholder="Ej: 1414" required>
+                            @error('cp')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i> Al enviar el pedido, serás redirigido a WhatsApp para completar la comunicación con el vendedor.
                         </div>

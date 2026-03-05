@@ -13,6 +13,7 @@ class Producto extends Model
         'proveedor_id',
         'id_proveedor',
         'descripcion',
+        'detalle',
         'precio',
         'moneda_id',
         'disponible',

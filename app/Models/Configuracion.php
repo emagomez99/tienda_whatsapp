@@ -140,4 +140,14 @@ class Configuracion extends Model
     {
         return self::posicionMenu() === 'lateral';
     }
+
+    public static function templateWhatsappDefault()
+    {
+        return "🛒 *NUEVO PEDIDO*\n\n*Cliente:*\nNombre: {nombre} {apellido}\nEmail: {email}\nCelular: {celular}\n\n*Dirección:*\n{direccion}, {localidad}\n{provincia} - CP: {cp}\n\n*Productos:*\n{productos}\n{total}";
+    }
+
+    public static function templateWhatsapp()
+    {
+        return self::obtener('template_whatsapp', self::templateWhatsappDefault());
+    }
 }

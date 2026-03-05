@@ -7,15 +7,19 @@
         @foreach($productos as $producto)
             <div class="col">
                 <div class="card h-100 producto-card shadow-sm">
-                    @if($producto->url_imagen)
-                        <img src="{{ $producto->imagen_url }}" class="card-img-top" alt="{{ $producto->descripcion }}" style="height: 250px; width: 100%; object-fit: contain; background-color: #f8f9fa;">
-                    @else
-                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center text-white" style="height: 250px;">
-                            <i class="bi bi-image" style="font-size: 3rem;"></i>
-                        </div>
-                    @endif
+                    <a href="{{ route('tienda.show', $producto) }}" class="text-decoration-none">
+                        @if($producto->url_imagen)
+                            <img src="{{ $producto->imagen_url }}" class="card-img-top" alt="{{ $producto->descripcion }}" style="height: 250px; width: 100%; object-fit: contain; background-color: #f8f9fa;">
+                        @else
+                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center text-white" style="height: 250px;">
+                                <i class="bi bi-image" style="font-size: 3rem;"></i>
+                            </div>
+                        @endif
+                    </a>
                     <div class="card-body">
-                        <h6 class="card-title">{{ $producto->descripcion }}</h6>
+                        <h6 class="card-title">
+                            <a href="{{ route('tienda.show', $producto) }}" class="text-decoration-none text-dark stretched-link-title">{{ $producto->descripcion }}</a>
+                        </h6>
                         @if($producto->id_proveedor)
                             <small class="text-muted">Cod: {{ $producto->id_proveedor }}</small>
                             <br>
@@ -35,9 +39,9 @@
                         @endif
 
                         @if($producto->etiquetas->where('visible_usuarios', true)->count() > 0)
-                            <div class="mb-2">
+                            <div class="mb-2 d-flex flex-wrap gap-1">
                                 @foreach($producto->etiquetas->where('visible_usuarios', true) as $etiqueta)
-                                    <span class="badge bg-info badge-etiqueta">{{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}</span>
+                                    <span class="badge bg-info text-wrap text-start" style="word-break: break-word; white-space: normal;">{{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}</span>
                                 @endforeach
                             </div>
                         @endif
@@ -45,7 +49,7 @@
                         @if($producto->especificaciones->count() > 0)
                             <div class="especificaciones-list text-muted">
                                 @foreach($producto->especificaciones as $espec)
-                                    <small>{{ $espec->clave }}: {{ $espec->valor }}</small><br>
+                                    <small style="word-break: break-word;">{{ $espec->clave }}: {{ $espec->valor }}</small><br>
                                 @endforeach
                             </div>
                         @endif

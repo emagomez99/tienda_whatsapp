@@ -30,6 +30,7 @@ class ConfiguracionController extends Controller
             'favicon' => 'nullable|mimes:ico,png,jpg,jpeg,svg|max:512',
             'paleta' => 'required|in:' . $paletasValidas,
             'posicion_menu' => 'required|in:superior,lateral',
+            'template_whatsapp' => 'nullable|string|max:2000',
         ]);
 
         Configuracion::establecer('mostrar_precios', $request->mostrar_precios, 'Mostrar precios en la tienda');
@@ -39,6 +40,11 @@ class ConfiguracionController extends Controller
         Configuracion::establecer('nombre_tienda', $request->nombre_tienda, 'Nombre de la tienda');
         Configuracion::establecer('paleta', $request->paleta, 'Paleta de colores');
         Configuracion::establecer('posicion_menu', $request->posicion_menu, 'Posición del menú en la tienda');
+
+        $templateWhatsapp = $request->filled('template_whatsapp')
+            ? $request->template_whatsapp
+            : Configuracion::templateWhatsappDefault();
+        Configuracion::establecer('template_whatsapp', $templateWhatsapp, 'Template del mensaje de WhatsApp');
 
         // Manejar logo
         if ($request->hasFile('logo')) {

@@ -195,6 +195,87 @@
     </div>
 
     <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-whatsapp text-success"></i> Template de Mensaje WhatsApp</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-lg-8">
+                            <label for="template_whatsapp" class="form-label fw-semibold">Mensaje</label>
+                            <textarea
+                                class="form-control font-monospace @error('template_whatsapp') is-invalid @enderror"
+                                id="template_whatsapp"
+                                name="template_whatsapp"
+                                rows="10"
+                                placeholder="{{ App\Models\Configuracion::templateWhatsappDefault() }}"
+                            >{{ App\Models\Configuracion::templateWhatsapp() }}</textarea>
+                            @error('template_whatsapp')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="mt-2 d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-reset-template">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Restaurar default
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <p class="form-label fw-semibold mb-2">Variables disponibles</p>
+                            <div class="list-group list-group-flush small">
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{nombre}</code>
+                                    <span class="text-muted ms-2">Nombre del cliente</span>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{apellido}</code>
+                                    <span class="text-muted ms-2">Apellido del cliente</span>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{email}</code>
+                                    <span class="text-muted ms-2">Email del cliente</span>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{celular}</code>
+                                    <span class="text-muted ms-2">Celular del cliente</span>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{direccion}</code>
+                                    <span class="text-muted ms-2">Dirección</span>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{localidad}</code>
+                                    <span class="text-muted ms-2">Localidad</span>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{provincia}</code>
+                                    <span class="text-muted ms-2">Provincia</span>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{cp}</code>
+                                    <span class="text-muted ms-2">Código postal</span>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{productos}</code>
+                                    <span class="text-muted ms-2">Lista de productos del pedido</span>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{total}</code>
+                                    <span class="text-muted ms-2">Total del pedido (si precios visibles)</span>
+                                </div>
+                            </div>
+                            <p class="text-muted small mt-3 mb-0">
+                                <i class="bi bi-info-circle"></i>
+                                Usá <code>*texto*</code> para <strong>negrita</strong> en WhatsApp.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
         <div class="col-12">
             <div class="d-grid">
                 <button type="submit" class="btn btn-primary btn-lg">
@@ -204,4 +285,12 @@
         </div>
     </div>
 </form>
+
+@push('scripts')
+<script>
+document.getElementById('btn-reset-template').addEventListener('click', function () {
+    document.getElementById('template_whatsapp').value = @json(App\Models\Configuracion::templateWhatsappDefault());
+});
+</script>
+@endpush
 @endsection

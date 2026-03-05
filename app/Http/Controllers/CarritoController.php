@@ -44,6 +44,14 @@ class CarritoController extends Controller
 
         session()->put('carrito', $carrito);
 
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Producto agregado al carrito',
+                'cantidad_carrito' => array_sum(session()->get('carrito', [])),
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Producto agregado al carrito');
     }
 
@@ -110,10 +118,14 @@ class CarritoController extends Controller
     public function enviarPedido(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'celular' => 'required|string|max:50',
+            'nombre'    => 'required|string|max:255',
+            'apellido'  => 'required|string|max:255',
+            'email'     => 'required|email|max:255',
+            'celular'   => 'required|string|max:50',
+            'direccion' => 'required|string|max:255',
+            'localidad' => 'required|string|max:255',
+            'provincia' => 'required|string|max:255',
+            'cp'        => 'required|string|max:20',
         ]);
 
         $carrito = session()->get('carrito', []);
@@ -122,16 +134,9 @@ class CarritoController extends Controller
             return redirect()->route('carrito.index')->with('error', 'El carrito está vacío');
         }
 
-        // Construir mensaje para WhatsApp
-        $mensaje = "🛒 *NUEVO PEDIDO*\n\n";
-        $mensaje .= "*Cliente:*\n";
-        $mensaje .= "Nombre: {$request->nombre} {$request->apellido}\n";
-        $mensaje .= "Email: {$request->email}\n";
-        $mensaje .= "Celular: {$request->celular}\n\n";
-        $mensaje .= "*Productos:*\n";
-
         $total = 0;
         $mostrarPrecios = Configuracion::mostrarPrecios();
+        $productosTexto = '';
 
         foreach ($carrito as $id => $cantidad) {
             $producto = Producto::with(['especificaciones', 'etiquetas'])->find($id);
@@ -139,22 +144,22 @@ class CarritoController extends Controller
                 $subtotal = $producto->precio * $cantidad;
                 $total += $subtotal;
 
-                $mensaje .= "• {$producto->descripcion}";
+                $productosTexto .= "• {$producto->descripcion}";
                 if ($producto->id_proveedor) {
-                    $mensaje .= " ({$producto->id_proveedor})";
+                    $productosTexto .= " ({$producto->id_proveedor})";
                 }
-                $mensaje .= " x{$cantidad}";
+                $productosTexto .= " x{$cantidad}";
                 if ($mostrarPrecios) {
-                    $mensaje .= " - $" . number_format($subtotal, 2);
+                    $productosTexto .= " - $" . number_format($subtotal, 2);
                 }
-                $mensaje .= "\n";
+                $productosTexto .= "\n";
 
                 // Agregar etiquetas
                 if ($producto->etiquetas->count() > 0) {
                     $etiquetasTexto = $producto->etiquetas->map(function ($e) {
                         return "{$e->nombre}={$e->pivot->valor}";
                     })->implode(', ');
-                    $mensaje .= "  Etiquetas: {$etiquetasTexto}\n";
+                    $productosTexto .= "  Etiquetas: {$etiquetasTexto}\n";
                 }
 
                 // Agregar especificaciones
@@ -162,14 +167,20 @@ class CarritoController extends Controller
                     $especificacionesTexto = $producto->especificaciones->map(function ($e) {
                         return "{$e->clave}={$e->valor}";
                     })->implode(', ');
-                    $mensaje .= "  Info: {$especificacionesTexto}\n";
+                    $productosTexto .= "  Info: {$especificacionesTexto}\n";
                 }
             }
         }
 
-        if ($mostrarPrecios) {
-            $mensaje .= "\n*Total: $" . number_format($total, 2) . "*";
-        }
+        $totalTexto = $mostrarPrecios ? "*Total: $" . number_format($total, 2) . "*" : '';
+
+        // Construir mensaje usando el template configurable
+        $template = Configuracion::templateWhatsapp();
+        $mensaje = str_replace(
+            ['{nombre}', '{apellido}', '{email}', '{celular}', '{direccion}', '{localidad}', '{provincia}', '{cp}', '{productos}', '{total}'],
+            [$request->nombre, $request->apellido, $request->email, $request->celular, $request->direccion, $request->localidad, $request->provincia, $request->cp, rtrim($productosTexto), $totalTexto],
+            $template
+        );
 
         // Obtener número de WhatsApp del administrador
         $whatsapp = Configuracion::whatsappAdmin();

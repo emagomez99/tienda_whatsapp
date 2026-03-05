@@ -22,7 +22,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8 mb-3">
-                            <label for="descripcion" class="form-label">Descripción *</label>
+                            <label for="descripcion" class="form-label">Nombre del Producto *</label>
                             <input type="text" class="form-control @error('descripcion') is-invalid @enderror" id="descripcion" name="descripcion" value="{{ old('descripcion', $producto->descripcion) }}" required>
                             @error('descripcion')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -36,6 +36,14 @@
                             @enderror
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label for="detalle" class="form-label">Descripción detallada</label>
+                        <textarea class="form-control @error('detalle') is-invalid @enderror" id="detalle" name="detalle" rows="4" placeholder="Descripción completa del producto, características, usos, etc.">{{ old('detalle', $producto->detalle) }}</textarea>
+                        @error('detalle')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="proveedor_id" class="form-label">Proveedor *</label>

@@ -150,24 +150,26 @@
         </div>
     </nav>
 
-    <main class="flex-grow-1">
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
         @if(session('success'))
-            <div class="container mt-3">
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="toast align-items-center text-bg-success border-0" role="alert" data-bs-autohide="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><i class="bi bi-check-circle me-1"></i> {{ session('success') }}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
         @endif
-
         @if(session('error'))
-            <div class="container mt-3">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="toast align-items-center text-bg-danger border-0" role="alert" data-bs-autohide="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><i class="bi bi-x-circle me-1"></i> {{ session('error') }}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
         @endif
+    </div>
+
+    <main class="flex-grow-1">
 
         @if($menuEnSidebar)
             <div class="container py-4">
@@ -195,6 +197,49 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Inicializar toasts de flash al cargar
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('#toast-container .toast').forEach(function (el) {
+                new bootstrap.Toast(el).show();
+            });
+        });
+
+        // Función global para mostrar toasts desde JS
+        function showToast(message, type) {
+            type = type || 'success';
+            var icons = { success: 'bi-check-circle', danger: 'bi-x-circle', warning: 'bi-exclamation-triangle', info: 'bi-info-circle' };
+            var icon = icons[type] || 'bi-info-circle';
+            var id = 'toast-' + Date.now();
+            var el = document.createElement('div');
+            el.id = id;
+            el.className = 'toast align-items-center text-bg-' + type + ' border-0';
+            el.setAttribute('role', 'alert');
+            el.setAttribute('data-bs-autohide', 'true');
+            el.setAttribute('data-bs-delay', '4000');
+            el.innerHTML = '<div class="d-flex"><div class="toast-body"><i class="bi ' + icon + ' me-1"></i> ' + message + '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
+            document.getElementById('toast-container').appendChild(el);
+            var toast = new bootstrap.Toast(el);
+            toast.show();
+            el.addEventListener('hidden.bs.toast', function () { el.remove(); });
+        }
+
+        // Actualizar badge del carrito
+        function updateCartBadge(cantidad) {
+            var badge = document.querySelector('.nav-link .badge.bg-danger');
+            var cartLink = document.querySelector('a[href="{{ route("carrito.index") }}"]');
+            if (cantidad > 0) {
+                if (badge) {
+                    badge.textContent = cantidad;
+                } else if (cartLink) {
+                    var b = document.createElement('span');
+                    b.className = 'badge bg-danger';
+                    b.textContent = cantidad;
+                    cartLink.appendChild(b);
+                }
+            }
+        }
+    </script>
     <script>
         // Manejo de submenús anidados
         document.addEventListener('DOMContentLoaded', function() {

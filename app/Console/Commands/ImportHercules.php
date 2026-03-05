@@ -26,7 +26,7 @@ class ImportHercules extends Command
     private const ETIQUETA_APLICACION = 2;
     private const ETIQUETA_MODELO = 3;
 
-    private const FABRICANTES = ['Atlas', 'Case'];
+    private const FABRICANTES = ['Atlas', 'Case', 'Ford'];
 
     private $stats = [
         'productos_nuevos' => 0,

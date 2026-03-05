@@ -25,11 +25,18 @@
             <h2>{{ $producto->descripcion }}</h2>
 
             @if($producto->id_proveedor)
-                <p class="text-muted">Código: {{ $producto->id_proveedor }}</p>
+                <p class="text-muted mb-1">Código: {{ $producto->id_proveedor }}</p>
             @endif
 
             @if($producto->proveedor)
-                <p class="text-muted">Proveedor: {{ $producto->proveedor->nombre }}</p>
+                <p class="text-muted mb-1">Proveedor: {{ $producto->proveedor->nombre }}</p>
+            @endif
+
+            @if($producto->detalle)
+                <div class="my-3">
+                    <p class="lead" style="white-space: pre-line;">{{ $producto->detalle }}</p>
+                </div>
+                <hr>
             @endif
 
             @if($mostrarPrecios)
@@ -70,7 +77,7 @@
             </div>
 
             @if($producto->estaDisponible())
-                <form action="{{ route('carrito.agregar', $producto) }}" method="POST" class="d-flex gap-2 mt-4">
+                <form id="form-agregar" class="d-flex gap-2 mt-4">
                     @csrf
                     <input type="number" name="cantidad" value="1" min="1" class="form-control" style="width: 100px;">
                     <button type="submit" class="btn btn-primary btn-lg">
@@ -79,10 +86,34 @@
                 </form>
             @endif
 
-            <a href="{{ route('tienda.index') }}" class="btn btn-outline-secondary mt-3">
+            <button type="button" onclick="history.back()" class="btn btn-outline-secondary mt-3">
                 <i class="bi bi-arrow-left"></i> Volver a la tienda
-            </a>
+            </button>
         </div>
     </div>
 </div>
+@push('scripts')
+<script>
+    var formAgregar = document.getElementById('form-agregar');
+    if (formAgregar) {
+        formAgregar.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            fetch('{{ route('carrito.agregar', $producto) }}', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                showToast(data.message, data.success ? 'success' : 'danger');
+                updateCartBadge(data.cantidad_carrito);
+            })
+            .catch(function () {
+                showToast('Error al agregar el producto', 'danger');
+            });
+        });
+    }
+</script>
+@endpush
 @endsection
