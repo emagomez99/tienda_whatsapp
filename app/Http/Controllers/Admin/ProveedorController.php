@@ -8,6 +8,14 @@ use Illuminate\Http\Request;
 
 class ProveedorController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permiso:proveedores.ver')->only(['index', 'show']);
+        $this->middleware('permiso:proveedores.crear')->only(['create', 'store']);
+        $this->middleware('permiso:proveedores.editar')->only(['edit', 'update']);
+        $this->middleware('permiso:proveedores.eliminar')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
         $query = Proveedor::withCount('productos');
@@ -15,9 +23,9 @@ class ProveedorController extends Controller
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
             $query->where(function ($q) use ($buscar) {
-                $q->where('nombre', 'like', "%{$buscar}%")
-                  ->orWhere('contacto', 'like', "%{$buscar}%")
-                  ->orWhere('email', 'like', "%{$buscar}%");
+                $q->where('nombre', 'ilike', "%{$buscar}%")
+                  ->orWhere('contacto', 'ilike', "%{$buscar}%")
+                  ->orWhere('email', 'ilike', "%{$buscar}%");
             });
         }
 
@@ -34,12 +42,12 @@ class ProveedorController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre'   => 'required|string|max:255',
             'contacto' => 'nullable|string|max:255',
             'telefono' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
-            'notas' => 'nullable|string',
-            'activo' => 'boolean',
+            'email'    => 'nullable|email|max:255',
+            'notas'    => 'nullable|string',
+            'activo'   => 'boolean',
         ]);
 
         $validated['activo'] = $request->boolean('activo');
@@ -58,12 +66,12 @@ class ProveedorController extends Controller
     public function update(Request $request, Proveedor $proveedor)
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre'   => 'required|string|max:255',
             'contacto' => 'nullable|string|max:255',
             'telefono' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
-            'notas' => 'nullable|string',
-            'activo' => 'boolean',
+            'email'    => 'nullable|email|max:255',
+            'notas'    => 'nullable|string',
+            'activo'   => 'boolean',
         ]);
 
         $validated['activo'] = $request->boolean('activo');
@@ -86,4 +94,5 @@ class ProveedorController extends Controller
         return redirect()->route('admin.proveedores.index')
             ->with('success', 'Proveedor eliminado correctamente');
     }
+
 }

@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CarritoController;
+use App\Http\Controllers\TiendaController;
+use App\Http\Controllers\Admin\ConfiguracionController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EtiquetaController;
+use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\PedidoController;
+use App\Http\Controllers\Admin\ProductoController;
+use App\Http\Controllers\Admin\ProveedorController;
+use App\Http\Controllers\Admin\PerfilController;
+use App\Http\Controllers\Admin\UserController;
+use Illuminate\Support\Facades\Route;
+use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+
+// Todas las rutas de la tienda viven aquí.
+// InitializeTenancyByDomain ya se aplica en RouteServiceProvider.
+// PreventAccessFromCentralDomains impide que dominios centrales accedan a rutas de tenant.
+Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
+
+    // Rutas públicas de la tienda
+    Route::get('/', [TiendaController::class, 'index'])->name('tienda.index');
+    Route::get('/producto/{producto}', [TiendaController::class, 'show'])->name('tienda.show');
+    Route::get('/filtros/valores', [TiendaController::class, 'filtrosValores'])->name('tienda.filtros.valores');
+    Route::get('/productos/ajax', [TiendaController::class, 'productosAjax'])->name('tienda.productos.ajax');
+
+    // Rutas del carrito
+    Route::prefix('carrito')->name('carrito.')->group(function () {
+        Route::get('/', [CarritoController::class, 'index'])->name('index');
+        Route::post('/agregar/{producto}', [CarritoController::class, 'agregar'])->name('agregar');
+        Route::put('/actualizar/{producto}', [CarritoController::class, 'actualizar'])->name('actualizar');
+        Route::delete('/eliminar/{producto}', [CarritoController::class, 'eliminar'])->name('eliminar');
+        Route::delete('/vaciar', [CarritoController::class, 'vaciar'])->name('vaciar');
+        Route::get('/checkout', [CarritoController::class, 'checkout'])->name('checkout');
+        Route::post('/enviar', [CarritoController::class, 'enviarPedido'])->name('enviar');
+        Route::get('/stock/{producto}', [CarritoController::class, 'stockProducto'])->name('stock');
+    });
+
+    // Rutas de autenticación
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    // Rutas de administración (protegidas)
+    Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/productos/buscar', [ProductoController::class, 'buscarParaPedido'])->name('productos.buscar');
+        Route::get('/especificaciones/claves', [ProductoController::class, 'buscarEspecificacionClaves'])->name('especificaciones.claves');
+        Route::get('/especificaciones/valores', [ProductoController::class, 'buscarEspecificacionValores'])->name('especificaciones.valores');
+        Route::get('/productos/{producto}/historial', [ProductoController::class, 'historial'])->name('productos.historial');
+        Route::post('/productos/{producto}/ajustar-stock', [ProductoController::class, 'ajustarStock'])->name('productos.ajustar-stock');
+
+        Route::resource('productos', ProductoController::class);
+        Route::resource('proveedores', ProveedorController::class)->parameters(['proveedores' => 'proveedor']);
+        Route::resource('usuarios', UserController::class);
+        Route::resource('perfiles', PerfilController::class)->parameters(['perfiles' => 'perfil']);
+        Route::resource('etiquetas', EtiquetaController::class);
+        Route::get('/etiquetas/{etiqueta}/valores', [EtiquetaController::class, 'buscarValores'])->name('etiquetas.valores');
+
+        Route::get('/configuraciones', [ConfiguracionController::class, 'index'])->name('configuraciones.index');
+        Route::put('/configuraciones', [ConfiguracionController::class, 'update'])->name('configuraciones.update');
+
+        Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
+        Route::get('/pedidos/{pedido}', [PedidoController::class, 'show'])->name('pedidos.show');
+        Route::post('/pedidos/{pedido}/confirmar', [PedidoController::class, 'confirmar'])->name('pedidos.confirmar');
+        Route::post('/pedidos/{pedido}/cancelar', [PedidoController::class, 'cancelar'])->name('pedidos.cancelar');
+        Route::put('/pedidos/{pedido}/productos/{item}', [PedidoController::class, 'updateProducto'])->name('pedidos.productos.update');
+        Route::delete('/pedidos/{pedido}/productos/{item}', [PedidoController::class, 'destroyProducto'])->name('pedidos.productos.destroy');
+        Route::post('/pedidos/{pedido}/productos', [PedidoController::class, 'addProducto'])->name('pedidos.productos.add');
+
+        Route::resource('menus', MenuController::class);
+        Route::post('/menus/reordenar', [MenuController::class, 'reordenar'])->name('menus.reordenar');
+        Route::get('/menus/etiqueta/{etiqueta}/valores', [MenuController::class, 'valoresEtiqueta'])->name('menus.etiqueta.valores');
+    });
+});

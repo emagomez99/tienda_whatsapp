@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'is_admin',
         'activo',
+        'perfil_id',
     ];
 
     /**
@@ -42,12 +43,40 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'is_admin' => 'boolean',
-        'activo' => 'boolean',
+        'is_admin'          => 'boolean',
+        'activo'            => 'boolean',
     ];
+
+    public function perfil()
+    {
+        return $this->belongsTo(Perfil::class);
+    }
 
     public function isAdmin()
     {
         return $this->is_admin;
+    }
+
+    public function esSuperAdmin()
+    {
+        $this->loadMissing('perfil');
+        return $this->perfil && $this->perfil->es_superadmin;
+    }
+
+    // Verifica si el usuario tiene un permiso específico.
+    // Si es admin sin perfil asignado, tiene acceso total (compatibilidad hacia atrás).
+    public function puede($permiso)
+    {
+        if ($this->is_admin && !$this->perfil_id) {
+            return true;
+        }
+
+        if (!$this->perfil_id) {
+            return false;
+        }
+
+        $this->loadMissing('perfil.permisos');
+
+        return $this->perfil->tiene($permiso);
     }
 }

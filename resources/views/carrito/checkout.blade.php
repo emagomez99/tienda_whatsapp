@@ -6,6 +6,20 @@
 <div class="container py-4">
     <h2><i class="bi bi-whatsapp"></i> Finalizar Pedido</h2>
 
+    @php
+        $todosAjustes = array_merge($ajustes ?? [], session('ajustes_stock', []));
+    @endphp
+    @if(!empty($todosAjustes))
+        <div class="alert alert-warning mt-3">
+            <i class="bi bi-exclamation-triangle"></i> <strong>El stock de algunos productos cambió. Tu pedido fue actualizado antes de continuar:</strong>
+            <ul class="mb-0 mt-1">
+                @foreach($todosAjustes as $ajuste)
+                    <li>{{ $ajuste }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="row mt-4">
         <div class="col-md-7">
             <div class="card shadow-sm">
@@ -39,13 +53,10 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="celular" class="form-label">Celular *</label>
-                            <input type="text" class="form-control @error('celular') is-invalid @enderror" id="celular" name="celular" value="{{ old('celular') }}" placeholder="Ej: 11-1234-5678" required>
-                            @error('celular')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            @include('partials.intl-tel-input', ['inputId' => 'celular-input', 'fieldName' => 'celular', 'value' => '', 'required' => true, 'label' => 'Celular'])
                         </div>
 
+                        @if($pedirDireccion)
                         <hr class="my-3">
                         <h6 class="text-muted mb-3"><i class="bi bi-geo-alt"></i> Dirección de envío</h6>
 
@@ -79,6 +90,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        @endif
 
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i> Al enviar el pedido, serás redirigido a WhatsApp para completar la comunicación con el vendedor.
@@ -132,3 +144,4 @@
     </div>
 </div>
 @endsection
+

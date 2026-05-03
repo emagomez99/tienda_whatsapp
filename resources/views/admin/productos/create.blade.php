@@ -12,6 +12,11 @@
 
 <form action="{{ route('admin.productos.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
+    @if($errors->any())
+        <div class="alert alert-danger mb-3">
+            <ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
+    @endif
     <div class="row">
         <div class="col-md-8">
             <div class="card mb-4">
@@ -61,9 +66,9 @@
                         <div class="col-md-6 mb-3">
                             <label for="moneda_id" class="form-label">Moneda</label>
                             <select class="form-select @error('moneda_id') is-invalid @enderror" id="moneda_id" name="moneda_id">
-                                <option value="">Seleccionar moneda</option>
+                                <option value="">Sin moneda</option>
                                 @foreach($monedas as $moneda)
-                                    <option value="{{ $moneda->id }}" {{ old('moneda_id') == $moneda->id ? 'selected' : '' }}>
+                                    <option value="{{ $moneda->id }}" {{ old('moneda_id', $monedaDefaultId) == $moneda->id ? 'selected' : '' }}>
                                         {{ $moneda->nombre }} ({{ $moneda->codigo }})
                                     </option>
                                 @endforeach
@@ -115,34 +120,56 @@
                     <h5 class="mb-0"><i class="bi bi-image"></i> Imagen del Producto</h5>
                 </div>
                 <div class="card-body">
-                    <ul class="nav nav-tabs" id="imagenTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="archivo-tab" data-bs-toggle="tab" data-bs-target="#archivo-panel" type="button" role="tab">
-                                <i class="bi bi-upload"></i> Subir archivo
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="url-tab" data-bs-toggle="tab" data-bs-target="#url-panel" type="button" role="tab">
-                                <i class="bi bi-link-45deg"></i> URL externa
-                            </button>
-                        </li>
-                    </ul>
-                    <div class="tab-content pt-3" id="imagenTabsContent">
-                        <div class="tab-pane fade show active" id="archivo-panel" role="tabpanel">
-                            <input type="file" class="form-control @error('imagen_archivo') is-invalid @enderror" id="imagen_archivo" name="imagen_archivo" accept="image/*">
-                            @error('imagen_archivo')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="text-muted">Formatos: JPG, PNG, GIF. Máximo 2MB.</small>
+                    @php $modoImagen = App\Models\Configuracion::modoImagenProducto(); @endphp
+
+                    @if($modoImagen === 'solo_url')
+                        <input type="url" class="form-control @error('imagen_url') is-invalid @enderror"
+                               id="imagen_url" name="imagen_url"
+                               placeholder="https://ejemplo.com/imagen.jpg" value="{{ old('imagen_url') }}">
+                        @error('imagen_url')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">Ingresa la URL completa de la imagen externa.</small>
+
+                    @elseif($modoImagen === 'solo_archivo')
+                        <input type="file" class="form-control @error('imagen_archivo') is-invalid @enderror"
+                               id="imagen_archivo" name="imagen_archivo" accept="image/*">
+                        @error('imagen_archivo')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">Formatos: JPG, PNG, GIF. Máximo 2MB.</small>
+
+                    @else
+                        <ul class="nav nav-tabs" id="imagenTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="archivo-tab" data-bs-toggle="tab" data-bs-target="#archivo-panel" type="button" role="tab">
+                                    <i class="bi bi-upload"></i> Subir archivo
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="url-tab" data-bs-toggle="tab" data-bs-target="#url-panel" type="button" role="tab">
+                                    <i class="bi bi-link-45deg"></i> URL externa
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content pt-3" id="imagenTabsContent">
+                            <div class="tab-pane fade show active" id="archivo-panel" role="tabpanel">
+                                <input type="file" class="form-control @error('imagen_archivo') is-invalid @enderror" id="imagen_archivo" name="imagen_archivo" accept="image/*">
+                                @error('imagen_archivo')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Formatos: JPG, PNG, GIF. Máximo 2MB.</small>
+                            </div>
+                            <div class="tab-pane fade" id="url-panel" role="tabpanel">
+                                <input type="url" class="form-control @error('imagen_url') is-invalid @enderror" id="imagen_url" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg" value="{{ old('imagen_url') }}">
+                                @error('imagen_url')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Ingresa la URL completa de la imagen externa.</small>
+                            </div>
                         </div>
-                        <div class="tab-pane fade" id="url-panel" role="tabpanel">
-                            <input type="url" class="form-control @error('imagen_url') is-invalid @enderror" id="imagen_url" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg" value="{{ old('imagen_url') }}">
-                            @error('imagen_url')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="text-muted">Ingresa la URL completa de la imagen externa.</small>
-                        </div>
-                    </div>
+                    @endif
+
                     <!-- Preview de imagen -->
                     <div id="imagen-preview" class="mt-3 text-center" style="display: none;">
                         <img src="" alt="Preview" class="img-thumbnail" style="max-height: 200px;">
@@ -179,7 +206,10 @@
                             </div>
                         </div>
                     </div>
-                    <small class="text-muted">Selecciona una etiqueta y asigna un valor especifico para este producto.</small>
+                    <small class="text-muted" id="etiquetas-hint">Selecciona una etiqueta y asigna un valor especifico para este producto.</small>
+                    @error('etiquetas')
+                        <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
@@ -236,6 +266,12 @@
     .autocomplete-suggestions .list-group-item:hover {
         background-color: #e9ecef;
     }
+    .etiqueta-bloqueada {
+        pointer-events: none;
+        background-color: #fff5f5;
+        border-color: #dc3545;
+        color: #495057;
+    }
 </style>
 @endpush
 
@@ -244,12 +280,143 @@
     let especificacionIndex = 1;
     let etiquetaIndex = 1;
 
-    const etiquetasOptions = `
-        <option value="">Seleccionar etiqueta</option>
-        @foreach($etiquetas as $etiqueta)
-            <option value="{{ $etiqueta->id }}">{{ $etiqueta->nombre }}</option>
-        @endforeach
-    `;
+    const etiquetasObligatoriasMapa = @json($etiquetasObligatorias);
+    const etiquetasAplicablesMapa   = @json($etiquetasAplicables);
+    const etiquetasData = @json($etiquetas->map(function ($e) { return ['id' => $e->id, 'nombre' => $e->nombre]; })->values());
+
+    function getSelectedEtiquetaIds(exceptSelect) {
+        var ids = [];
+        document.querySelectorAll('.etiqueta-select').forEach(function(sel) {
+            if (sel !== exceptSelect && sel.value) {
+                ids.push(parseInt(sel.value));
+            }
+        });
+        return ids;
+    }
+
+    function buildOptionsHtml(proveedorId, excludeIds) {
+        excludeIds = excludeIds || [];
+        var html = '<option value="">Seleccionar etiqueta</option>';
+        var config = (proveedorId && etiquetasAplicablesMapa.hasOwnProperty(String(proveedorId)))
+            ? etiquetasAplicablesMapa[String(proveedorId)] : null;
+        var aplicables = (config && config.configured) ? config.ids : null;
+        etiquetasData.forEach(function (e) {
+            if ((aplicables === null || aplicables.indexOf(e.id) !== -1) && excludeIds.indexOf(e.id) === -1) {
+                html += '<option value="' + e.id + '">' + e.nombre + '</option>';
+            }
+        });
+        return html;
+    }
+
+    function crearFilaEtiqueta(preselectedId, proveedorId) {
+        var excludeIds = getSelectedEtiquetaIds(null);
+        const newRow = document.createElement('div');
+        newRow.className = 'row mb-2 etiqueta-row';
+        newRow.innerHTML = `
+            <div class="col-md-5">
+                <select class="form-select etiqueta-select" name="etiquetas[${etiquetaIndex}][etiqueta_id]" data-index="${etiquetaIndex}">
+                    ${buildOptionsHtml(proveedorId || '', excludeIds)}
+                </select>
+            </div>
+            <div class="col-md-5 position-relative">
+                <input type="text" class="form-control etiqueta-valor" name="etiquetas[${etiquetaIndex}][valor]" placeholder="Valor (ej: Filtro, Auto)" autocomplete="off">
+                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-danger btn-eliminar-etiqueta">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+        if (preselectedId) {
+            newRow.querySelector('.etiqueta-select').value = preselectedId;
+        }
+        setupAutocomplete(newRow.querySelector('.etiqueta-valor'));
+        etiquetaIndex++;
+        return newRow;
+    }
+
+    function agregarFilaEtiqueta(preselectedId, proveedorId) {
+        const row = crearFilaEtiqueta(preselectedId, proveedorId);
+        document.getElementById('etiquetas-container').appendChild(row);
+        return row;
+    }
+
+    function limpiarTodasEtiquetas(proveedorId) {
+        document.getElementById('etiquetas-container').innerHTML = '';
+        agregarFilaEtiqueta(null, proveedorId);
+    }
+
+    function marcarObligatoria(row) {
+        row.setAttribute('data-obligatoria', '1');
+        const selectWrapper = row.querySelector('.col-md-5');
+        const select = row.querySelector('.etiqueta-select');
+        select.classList.add('etiqueta-bloqueada');
+        if (!selectWrapper.querySelector('.badge-obligatoria')) {
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-danger badge-obligatoria mt-1 d-inline-block';
+            badge.textContent = 'Obligatoria';
+            selectWrapper.appendChild(badge);
+        }
+        row.querySelector('.btn-eliminar-etiqueta').classList.add('disabled');
+    }
+
+    function limpiarObligatorias() {
+        document.querySelectorAll('.etiqueta-row').forEach(function(row) {
+            row.removeAttribute('data-obligatoria');
+            row.querySelector('.etiqueta-select').classList.remove('etiqueta-bloqueada');
+            var badge = row.querySelector('.badge-obligatoria');
+            if (badge) badge.remove();
+            row.querySelector('.btn-eliminar-etiqueta').classList.remove('disabled');
+        });
+    }
+
+    function actualizarObligatorias(proveedorId) {
+        limpiarObligatorias();
+        if (!proveedorId || !etiquetasObligatoriasMapa[proveedorId] || !etiquetasObligatoriasMapa[proveedorId].length) return;
+
+        const container = document.getElementById('etiquetas-container');
+        var insertAfter = null;
+
+        etiquetasObligatoriasMapa[proveedorId].forEach(function(etiqueta) {
+            var existingRow = null;
+            document.querySelectorAll('.etiqueta-row').forEach(function(row) {
+                if (parseInt(row.querySelector('.etiqueta-select').value) === etiqueta.id) {
+                    existingRow = row;
+                }
+            });
+
+            var targetRow = existingRow || crearFilaEtiqueta(etiqueta.id, proveedorId);
+
+            // Insertar en posición correcta (obligatorias primero, en orden)
+            if (insertAfter === null) {
+                container.insertBefore(targetRow, container.firstChild);
+            } else if (insertAfter.nextSibling) {
+                container.insertBefore(targetRow, insertAfter.nextSibling);
+            } else {
+                container.appendChild(targetRow);
+            }
+
+            targetRow.querySelector('.etiqueta-select').value = etiqueta.id;
+            marcarObligatoria(targetRow);
+            insertAfter = targetRow;
+        });
+    }
+
+    document.getElementById('proveedor_id').addEventListener('change', function() {
+        var proveedorId = this.value;
+        limpiarTodasEtiquetas(proveedorId);
+        actualizarObligatorias(proveedorId);
+    });
+
+    // Si hay proveedor preseleccionado (old() tras error de validación)
+    (function() {
+        var sel = document.getElementById('proveedor_id');
+        if (sel.value) {
+            limpiarTodasEtiquetas(sel.value);
+            actualizarObligatorias(sel.value);
+        }
+    })();
 
     // Autocompletado para valores de etiquetas
     let debounceTimer;
@@ -435,28 +602,8 @@
     });
 
     document.getElementById('agregar-etiqueta').addEventListener('click', function() {
-        const container = document.getElementById('etiquetas-container');
-        const newRow = document.createElement('div');
-        newRow.className = 'row mb-2 etiqueta-row';
-        newRow.innerHTML = `
-            <div class="col-md-5">
-                <select class="form-select etiqueta-select" name="etiquetas[${etiquetaIndex}][etiqueta_id]" data-index="${etiquetaIndex}">
-                    ${etiquetasOptions}
-                </select>
-            </div>
-            <div class="col-md-5 position-relative">
-                <input type="text" class="form-control etiqueta-valor" name="etiquetas[${etiquetaIndex}][valor]" placeholder="Valor (ej: Filtro, Auto)" autocomplete="off">
-                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
-            </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-outline-danger btn-eliminar-etiqueta">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        `;
-        container.appendChild(newRow);
-        setupAutocomplete(newRow.querySelector('.etiqueta-valor'));
-        etiquetaIndex++;
+        var proveedorId = document.getElementById('proveedor_id').value;
+        agregarFilaEtiqueta(null, proveedorId);
     });
 
     document.addEventListener('click', function(e) {
@@ -467,6 +614,8 @@
             }
         }
         if (e.target.closest('.btn-eliminar-etiqueta')) {
+            const btn = e.target.closest('.btn-eliminar-etiqueta');
+            if (btn.classList.contains('disabled')) return;
             const rows = document.querySelectorAll('.etiqueta-row');
             if (rows.length > 1) {
                 e.target.closest('.etiqueta-row').remove();
@@ -489,43 +638,48 @@
         }
     }
 
-    imagenArchivo.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                mostrarPreview(e.target.result);
-            };
-            reader.readAsDataURL(this.files[0]);
-            // Limpiar URL si se selecciona archivo
-            imagenUrl.value = '';
-        } else {
-            mostrarPreview(null);
-        }
-    });
-
-    let debounceUrl;
-    imagenUrl.addEventListener('input', function() {
-        clearTimeout(debounceUrl);
-        const url = this.value.trim();
-        debounceUrl = setTimeout(() => {
-            if (url && url.startsWith('http')) {
-                mostrarPreview(url);
-                // Limpiar archivo si se ingresa URL
-                imagenArchivo.value = '';
+    if (imagenArchivo) {
+        imagenArchivo.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { mostrarPreview(e.target.result); };
+                reader.readAsDataURL(this.files[0]);
+                if (imagenUrl) imagenUrl.value = '';
             } else {
                 mostrarPreview(null);
             }
-        }, 500);
-    });
+        });
+    }
 
-    // Limpiar el otro campo al cambiar de tab
-    document.getElementById('archivo-tab').addEventListener('shown.bs.tab', function() {
-        imagenUrl.value = '';
-    });
-    document.getElementById('url-tab').addEventListener('shown.bs.tab', function() {
-        imagenArchivo.value = '';
-        imagenPreview.style.display = 'none';
-    });
+    let debounceUrl;
+    if (imagenUrl) {
+        imagenUrl.addEventListener('input', function() {
+            clearTimeout(debounceUrl);
+            const url = this.value.trim();
+            debounceUrl = setTimeout(() => {
+                if (url && url.startsWith('http')) {
+                    mostrarPreview(url);
+                    if (imagenArchivo) imagenArchivo.value = '';
+                } else {
+                    mostrarPreview(null);
+                }
+            }, 500);
+        });
+    }
+
+    const archivoTab = document.getElementById('archivo-tab');
+    const urlTab = document.getElementById('url-tab');
+    if (archivoTab) {
+        archivoTab.addEventListener('shown.bs.tab', function() {
+            if (imagenUrl) imagenUrl.value = '';
+        });
+    }
+    if (urlTab) {
+        urlTab.addEventListener('shown.bs.tab', function() {
+            if (imagenArchivo) imagenArchivo.value = '';
+            imagenPreview.style.display = 'none';
+        });
+    }
 </script>
 @endpush
 @endsection

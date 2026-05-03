@@ -10,6 +10,12 @@ use Illuminate\Http\Request;
 
 class MenuController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permiso:menus.ver')->only(['index', 'show', 'valoresEtiqueta']);
+        $this->middleware('permiso:menus.gestionar')->only(['create', 'store', 'edit', 'update', 'destroy', 'reordenar']);
+    }
+
     public function index()
     {
         $menus = Menu::raiz()
@@ -160,7 +166,7 @@ class MenuController extends Controller
 
         $valores = \DB::table('producto_etiqueta')
             ->where('etiqueta_id', $etiqueta->id)
-            ->where('valor', 'like', "%{$buscar}%")
+            ->where('valor', 'ilike', "%{$buscar}%")
             ->distinct()
             ->pluck('valor')
             ->take(20);

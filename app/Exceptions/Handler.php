@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -34,6 +35,10 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
+        $this->renderable(function (TenantCouldNotBeIdentifiedOnDomainException $e) {
+            abort(404);
+        });
+
         $this->reportable(function (Throwable $e) {
             //
         });

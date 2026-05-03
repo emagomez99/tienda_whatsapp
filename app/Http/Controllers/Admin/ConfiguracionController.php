@@ -4,16 +4,24 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Configuracion;
+use App\Models\Moneda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ConfiguracionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permiso:configuraciones.ver')->only(['index']);
+        $this->middleware('permiso:configuraciones.editar')->only(['update']);
+    }
+
     public function index()
     {
         $configuraciones = Configuracion::orderBy('clave')->get();
+        $monedas = Moneda::where('activa', true)->orderBy('nombre')->get();
 
-        return view('admin.configuraciones.index', compact('configuraciones'));
+        return view('admin.configuraciones.index', compact('configuraciones', 'monedas'));
     }
 
     public function update(Request $request)
@@ -21,39 +29,50 @@ class ConfiguracionController extends Controller
         $paletasValidas = implode(',', array_keys(Configuracion::paletas()));
 
         $request->validate([
-            'mostrar_precios' => 'required|in:true,false',
-            'mostrar_productos_sin_stock' => 'required|in:true,false',
-            'mostrar_nombre_tienda' => 'required|in:true,false',
-            'whatsapp_admin' => 'required|string|max:20',
-            'nombre_tienda' => 'required|string|max:255',
-            'logo' => 'nullable|image|max:2048',
-            'favicon' => 'nullable|mimes:ico,png,jpg,jpeg,svg|max:512',
-            'paleta' => 'required|in:' . $paletasValidas,
-            'posicion_menu' => 'required|in:superior,lateral',
-            'template_whatsapp' => 'nullable|string|max:2000',
+            'mostrar_precios'            => 'required|in:true,false',
+            'mostrar_productos_sin_stock'=> 'required|in:true,false',
+            'mostrar_nombre_tienda'      => 'required|in:true,false',
+            'whatsapp_admin'             => 'nullable|string|max:20',
+            'nombre_tienda'              => 'required|string|max:255',
+            'logo'                       => 'nullable|image|max:2048',
+            'favicon'                    => 'nullable|mimes:ico,png,jpg,jpeg,svg|max:512',
+            'paleta'                     => 'required|in:' . $paletasValidas,
+            'posicion_menu'              => 'required|in:superior,lateral',
+            'pedir_direccion_envio'      => 'required|in:true,false',
+            'template_whatsapp'          => 'nullable|string|max:2000',
+            'modo_imagen_producto'       => 'nullable|in:ambos,solo_url,solo_archivo',
+            'moneda_default'             => 'nullable|exists:monedas,id',
         ]);
 
         Configuracion::establecer('mostrar_precios', $request->mostrar_precios, 'Mostrar precios en la tienda');
         Configuracion::establecer('mostrar_productos_sin_stock', $request->mostrar_productos_sin_stock, 'Mostrar productos sin stock');
         Configuracion::establecer('mostrar_nombre_tienda', $request->mostrar_nombre_tienda, 'Mostrar nombre en cabecera');
-        Configuracion::establecer('whatsapp_admin', $request->whatsapp_admin, 'Número de WhatsApp del administrador');
+        Configuracion::establecer('whatsapp_admin', $request->whatsapp_admin ?? '', 'Número de WhatsApp del administrador');
         Configuracion::establecer('nombre_tienda', $request->nombre_tienda, 'Nombre de la tienda');
         Configuracion::establecer('paleta', $request->paleta, 'Paleta de colores');
         Configuracion::establecer('posicion_menu', $request->posicion_menu, 'Posición del menú en la tienda');
+        Configuracion::establecer('pedir_direccion_envio', $request->pedir_direccion_envio, 'Solicitar dirección de envío en el checkout');
 
         $templateWhatsapp = $request->filled('template_whatsapp')
             ? $request->template_whatsapp
             : Configuracion::templateWhatsappDefault();
         Configuracion::establecer('template_whatsapp', $templateWhatsapp, 'Template del mensaje de WhatsApp');
 
+        Configuracion::establecer('moneda_default', $request->input('moneda_default', ''), 'Moneda por defecto para nuevos productos');
+
+        if (auth()->user()->esSuperAdmin() && $request->filled('modo_imagen_producto')) {
+            Configuracion::establecer('modo_imagen_producto', $request->modo_imagen_producto, 'Modo de carga de imágenes de productos');
+        }
+
+        $tenantDir = tenant('id');
+
         // Manejar logo
         if ($request->hasFile('logo')) {
-            // Eliminar logo anterior si existe
             $logoAnterior = Configuracion::logo();
             if ($logoAnterior) {
                 Storage::disk('public')->delete($logoAnterior);
             }
-            $logoPath = $request->file('logo')->store('config', 'public');
+            $logoPath = $request->file('logo')->store($tenantDir . '/config', 'public');
             Configuracion::establecer('logo', $logoPath, 'Logo de la tienda');
         }
 
@@ -72,7 +91,7 @@ class ConfiguracionController extends Controller
             if ($faviconAnterior) {
                 Storage::disk('public')->delete($faviconAnterior);
             }
-            $faviconPath = $request->file('favicon')->store('config', 'public');
+            $faviconPath = $request->file('favicon')->store($tenantDir . '/config', 'public');
             Configuracion::establecer('favicon', $faviconPath, 'Favicon de la tienda');
         }
 

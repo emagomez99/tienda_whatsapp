@@ -24,4 +24,11 @@ class Etiqueta extends Model
                     ->withPivot('valor')
                     ->withTimestamps();
     }
+
+    public function proveedores()
+    {
+        return $this->belongsToMany(Proveedor::class, 'proveedor_etiqueta')
+                    ->withPivot('obligatoria')
+                    ->withTimestamps();
+    }
 }

@@ -38,7 +38,7 @@
                         <tr>
                             <th>Nombre</th>
                             <th>Email</th>
-                            <th>Rol</th>
+                            <th>Perfil</th>
                             <th>Estado</th>
                             <th>Fecha Registro</th>
                             <th>Acciones</th>
@@ -50,10 +50,14 @@
                                 <td><strong>{{ $usuario->name }}</strong></td>
                                 <td>{{ $usuario->email }}</td>
                                 <td>
-                                    @if($usuario->is_admin)
-                                        <span class="badge bg-primary">Administrador</span>
+                                    @if($usuario->perfil)
+                                        <span class="badge {{ $usuario->perfil->es_superadmin ? 'bg-danger' : 'bg-primary' }}">
+                                            {{ $usuario->perfil->nombre }}
+                                        </span>
+                                    @elseif($usuario->is_admin)
+                                        <span class="badge bg-secondary">Admin (sin perfil)</span>
                                     @else
-                                        <span class="badge bg-secondary">Usuario</span>
+                                        <span class="badge bg-light text-dark">Sin perfil</span>
                                     @endif
                                 </td>
                                 <td>

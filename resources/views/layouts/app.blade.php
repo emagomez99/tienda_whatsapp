@@ -7,7 +7,7 @@
     <title>@yield('title', config('app.name', 'Tienda MC'))</title>
     @php $favicon = App\Models\Configuracion::favicon(); @endphp
     @if($favicon)
-        <link rel="icon" href="{{ asset('storage/' . $favicon) }}" type="image/x-icon">
+        <link rel="icon" href="{{ url('storage/' . $favicon) }}" type="image/x-icon">
     @endif
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
@@ -95,7 +95,7 @@
                     $mostrarNombre = App\Models\Configuracion::mostrarNombreTienda();
                 @endphp
                 @if($logoTienda)
-                    <img src="{{ asset('storage/' . $logoTienda) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}" style="max-height: 40px;" class="{{ $mostrarNombre ? 'me-2' : '' }}">
+                    <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}" style="max-height: 40px;" class="{{ $mostrarNombre ? 'me-2' : '' }}">
                 @else
                     <i class="bi bi-shop me-2"></i>
                 @endif
@@ -156,6 +156,14 @@
                 <div class="d-flex">
                     <div class="toast-body"><i class="bi bi-check-circle me-1"></i> {{ session('success') }}</div>
                     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        @endif
+        @if(session('warning'))
+            <div class="toast align-items-center text-bg-warning border-0" role="alert" data-bs-autohide="true" data-bs-delay="5000">
+                <div class="d-flex">
+                    <div class="toast-body"><i class="bi bi-exclamation-triangle me-1"></i> {{ session('warning') }}</div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
         @endif

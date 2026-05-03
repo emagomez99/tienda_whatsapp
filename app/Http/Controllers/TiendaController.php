@@ -30,8 +30,8 @@ class TiendaController extends Controller
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
             $query->where(function ($q) use ($buscar) {
-                $q->where('descripcion', 'like', "%{$buscar}%")
-                  ->orWhere('id_proveedor', 'like', "%{$buscar}%");
+                $q->where('descripcion', 'ilike', "%{$buscar}%")
+                  ->orWhere('id_proveedor', 'ilike', "%{$buscar}%");
             });
         }
 
@@ -57,7 +57,7 @@ class TiendaController extends Controller
         if ($request->filled('especificacion')) {
             $especificacionValor = $request->especificacion;
             $query->whereHas('especificaciones', function ($q) use ($especificacionValor) {
-                $q->where('valor', 'like', "%{$especificacionValor}%");
+                $q->where('valor', 'ilike', "%{$especificacionValor}%");
             });
         }
 
@@ -218,7 +218,7 @@ class TiendaController extends Controller
         if ($request->filled('especificacion')) {
             $especificacionValor = $request->especificacion;
             $query->whereHas('especificaciones', function ($q) use ($especificacionValor) {
-                $q->where('valor', 'like', "%{$especificacionValor}%");
+                $q->where('valor', 'ilike', "%{$especificacionValor}%");
             });
         }
 
@@ -237,8 +237,8 @@ class TiendaController extends Controller
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
             $query->where(function ($q) use ($buscar) {
-                $q->where('descripcion', 'like', "%{$buscar}%")
-                  ->orWhere('id_proveedor', 'like', "%{$buscar}%");
+                $q->where('descripcion', 'ilike', "%{$buscar}%")
+                  ->orWhere('id_proveedor', 'ilike', "%{$buscar}%");
             });
         }
 

@@ -2,8 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Etiqueta;
+use App\Models\Moneda;
 use App\Models\Producto;
 use App\Models\ProductoEspecificacion;
+use App\Models\Proveedor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +15,7 @@ use Illuminate\Support\Facades\File;
 class ImportHercules extends Command
 {
     protected $signature = 'import:hercules
+                            {--tenant= : ID del tenant en el que importar}
                             {--fabricante= : Fabricante específico (Atlas, Case)}
                             {--dry-run : Simular sin guardar en la base de datos}
                             {--refresh : Forzar descarga ignorando caché}
@@ -20,13 +24,14 @@ class ImportHercules extends Command
     protected $description = 'Importa productos desde herculesus.com';
 
     private const PROVEEDOR_NOMBRE = 'Hercules';
-    private const PROVEEDOR_ID = 3;
-    private const MONEDA_ID = 1;
-    private const ETIQUETA_FABRICANTE = 1;
-    private const ETIQUETA_APLICACION = 2;
-    private const ETIQUETA_MODELO = 3;
-
     private const FABRICANTES = ['Atlas', 'Case', 'Ford'];
+
+    // IDs resueltos dinámicamente al inicio (tenant-aware)
+    private $proveedorId;
+    private $monedaId;
+    private $etiquetaFabricanteId;
+    private $etiquetaAplicacionId;
+    private $etiquetaModeloId;
 
     private $stats = [
         'productos_nuevos' => 0,
@@ -43,6 +48,18 @@ class ImportHercules extends Command
 
     public function handle()
     {
+        // --tenant es obligatorio en arquitectura multi-tenant
+        $tenantId = $this->option('tenant');
+        if (!$tenantId) {
+            $this->error('Debes especificar un tenant: --tenant={id}');
+            $this->line('Tenants disponibles: ' . \App\Models\Tenant::pluck('id')->join(', '));
+            return Command::FAILURE;
+        }
+
+        $tenant = \App\Models\Tenant::findOrFail($tenantId);
+        tenancy()->initialize($tenant);
+        $this->info("Tenant: {$tenant->nombre} ({$tenant->id})");
+
         $fabricanteFilter = $this->option('fabricante');
         $dryRun = $this->option('dry-run');
         $this->forceRefresh = $this->option('refresh');
@@ -65,6 +82,20 @@ class ImportHercules extends Command
         if ($this->cacheOnly) {
             $this->info('📦 Modo cache-only - solo usando datos en caché');
         }
+
+        // Resolver IDs dinámicamente según el contexto actual (tenant o central)
+        $proveedor = Proveedor::firstOrCreate(
+            ['nombre' => self::PROVEEDOR_NOMBRE],
+            ['activo' => true]
+        );
+        $this->proveedorId = $proveedor->id;
+
+        $moneda = Moneda::where('codigo', 'USD')->firstOrFail();
+        $this->monedaId = $moneda->id;
+
+        $this->etiquetaFabricanteId = Etiqueta::firstOrCreate(['nombre' => 'Fabricante'])->id;
+        $this->etiquetaAplicacionId = Etiqueta::firstOrCreate(['nombre' => 'Aplicacion'])->id;
+        $this->etiquetaModeloId     = Etiqueta::firstOrCreate(['nombre' => 'Modelo'])->id;
 
         $this->info('Iniciando importación de Hercules...');
         $this->info("Log: {$this->logFile}");
@@ -96,6 +127,8 @@ class ImportHercules extends Command
         $this->log('INFO', "Cache hits: {$this->stats['cache_hits']}");
         $this->log('INFO', "Cache misses: {$this->stats['cache_misses']}");
         $this->log('INFO', '=== FIN DE IMPORTACIÓN ===');
+
+        tenancy()->end();
 
         return Command::SUCCESS;
     }
@@ -420,7 +453,7 @@ class ImportHercules extends Command
     private function guardarProducto(array $data, string $fabricante, string $aplicacion, string $modelo, bool $dryRun): void
     {
         // Verificar si ya existe
-        $existe = Producto::where('proveedor_id', self::PROVEEDOR_ID)
+        $existe = Producto::where('proveedor_id', $this->proveedorId)
             ->where('id_proveedor', $data['id_proveedor'])
             ->exists();
 
@@ -449,22 +482,30 @@ class ImportHercules extends Command
         try {
             DB::transaction(function () use ($data, $fabricante, $aplicacion, $modelo) {
                 $producto = Producto::create([
-                    'proveedor_id' => self::PROVEEDOR_ID,
+                    'proveedor_id' => $this->proveedorId,
                     'id_proveedor' => $data['id_proveedor'],
-                    'descripcion' => $data['descripcion'],
-                    'precio' => $data['precio'],
-                    'moneda_id' => self::MONEDA_ID,
-                    'disponible' => true,
-                    'stock' => 1,
+                    'descripcion'  => $data['descripcion'],
+                    'precio'       => $data['precio'],
+                    'moneda_id'    => $this->monedaId,
+                    'disponible'   => true,
+                    'stock'        => 0,
                     'por_encargue' => true,
-                    'url_imagen' => $data['url_imagen'],
+                    'url_imagen'   => $data['url_imagen'],
                 ]);
+
+                $producto->registrarMovimiento(
+                    1,
+                    \App\Models\StockMovimiento::TIPO_IMPORTACION,
+                    'Importación desde Hercules',
+                    null,
+                    null
+                );
 
                 // Asignar etiquetas
                 $producto->etiquetas()->attach([
-                    self::ETIQUETA_FABRICANTE => ['valor' => $fabricante],
-                    self::ETIQUETA_APLICACION => ['valor' => $aplicacion],
-                    self::ETIQUETA_MODELO => ['valor' => $modelo],
+                    $this->etiquetaFabricanteId => ['valor' => $fabricante],
+                    $this->etiquetaAplicacionId => ['valor' => $aplicacion],
+                    $this->etiquetaModeloId     => ['valor' => $modelo],
                 ]);
             });
 

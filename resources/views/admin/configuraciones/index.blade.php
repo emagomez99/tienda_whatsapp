@@ -23,7 +23,7 @@
                         @php $logoActual = App\Models\Configuracion::logo(); @endphp
                         @if($logoActual)
                             <div class="mb-2 d-flex align-items-center gap-3">
-                                <img src="{{ asset('storage/' . $logoActual) }}" alt="Logo actual" style="max-height: 60px;" class="rounded border">
+                                <img src="{{ url('storage/' . $logoActual) }}" alt="Logo actual" style="max-height: 60px;" class="rounded border">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="eliminar_logo" name="eliminar_logo" value="1">
                                     <label class="form-check-label text-danger" for="eliminar_logo">
@@ -44,7 +44,7 @@
                         @php $faviconActual = App\Models\Configuracion::favicon(); @endphp
                         @if($faviconActual)
                             <div class="mb-2 d-flex align-items-center gap-3">
-                                <img src="{{ asset('storage/' . $faviconActual) }}" alt="Favicon actual" style="max-height: 32px;" class="rounded border">
+                                <img src="{{ url('storage/' . $faviconActual) }}" alt="Favicon actual" style="max-height: 32px;" class="rounded border">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="eliminar_favicon" name="eliminar_favicon" value="1">
                                     <label class="form-check-label text-danger" for="eliminar_favicon">
@@ -62,7 +62,7 @@
 
                     <div class="mb-4">
                         <label for="nombre_tienda" class="form-label">Nombre de la Tienda</label>
-                        <input type="text" class="form-control @error('nombre_tienda') is-invalid @enderror" id="nombre_tienda" name="nombre_tienda" value="{{ App\Models\Configuracion::obtener('nombre_tienda', 'Tienda MC') }}">
+                        <input type="text" class="form-control @error('nombre_tienda') is-invalid @enderror" id="nombre_tienda" name="nombre_tienda" value="{{ old('nombre_tienda', App\Models\Configuracion::obtener('nombre_tienda', 'Tienda MC')) }}">
                         @error('nombre_tienda')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -72,13 +72,13 @@
                         <label class="form-label">Mostrar nombre de la tienda</label>
                         <div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_nombre_tienda" id="nombre_si" value="true" {{ App\Models\Configuracion::obtener('mostrar_nombre_tienda', 'true') === 'true' ? 'checked' : '' }}>
+                                <input class="form-check-input" type="radio" name="mostrar_nombre_tienda" id="nombre_si" value="true" {{ old('mostrar_nombre_tienda', App\Models\Configuracion::obtener('mostrar_nombre_tienda', 'true')) === 'true' ? 'checked' : '' }}>
                                 <label class="form-check-label" for="nombre_si">
                                     <i class="bi bi-eye"></i> Sí
                                 </label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_nombre_tienda" id="nombre_no" value="false" {{ App\Models\Configuracion::obtener('mostrar_nombre_tienda', 'true') === 'false' ? 'checked' : '' }}>
+                                <input class="form-check-input" type="radio" name="mostrar_nombre_tienda" id="nombre_no" value="false" {{ old('mostrar_nombre_tienda', App\Models\Configuracion::obtener('mostrar_nombre_tienda', 'true')) === 'false' ? 'checked' : '' }}>
                                 <label class="form-check-label" for="nombre_no">
                                     <i class="bi bi-eye-slash"></i> No, solo logo
                                 </label>
@@ -96,7 +96,7 @@
                             @foreach($paletas as $clave => $paleta)
                                 <div class="col-6">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="paleta" id="paleta_{{ $clave }}" value="{{ $clave }}" {{ $paletaActual === $clave ? 'checked' : '' }}>
+                                        <input class="form-check-input" type="radio" name="paleta" id="paleta_{{ $clave }}" value="{{ $clave }}" {{ old('paleta', $paletaActual) === $clave ? 'checked' : '' }}>
                                         <label class="form-check-label d-flex align-items-center gap-2" for="paleta_{{ $clave }}">
                                             <span class="rounded-circle d-inline-block border" style="width: 18px; height: 18px; background-color: {{ $paleta['primary'] }};"></span>
                                             {{ $paleta['nombre'] }}
@@ -113,7 +113,7 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="posicion_menu" id="menu_superior" value="superior" {{ $posicionMenu === 'superior' ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="radio" name="posicion_menu" id="menu_superior" value="superior" {{ old('posicion_menu', $posicionMenu) === 'superior' ? 'checked' : '' }}>
                                     <label class="form-check-label d-flex align-items-center gap-2" for="menu_superior">
                                         <i class="bi bi-distribute-horizontal"></i> Barra superior
                                     </label>
@@ -121,7 +121,7 @@
                             </div>
                             <div class="col-6">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="posicion_menu" id="menu_lateral" value="lateral" {{ $posicionMenu === 'lateral' ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="radio" name="posicion_menu" id="menu_lateral" value="lateral" {{ old('posicion_menu', $posicionMenu) === 'lateral' ? 'checked' : '' }}>
                                     <label class="form-check-label d-flex align-items-center gap-2" for="menu_lateral">
                                         <i class="bi bi-layout-sidebar"></i> Men&uacute; lateral
                                     </label>
@@ -144,7 +144,7 @@
                         <label for="whatsapp_admin" class="form-label">Número de WhatsApp</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-whatsapp"></i></span>
-                            <input type="text" class="form-control @error('whatsapp_admin') is-invalid @enderror" id="whatsapp_admin" name="whatsapp_admin" value="{{ App\Models\Configuracion::obtener('whatsapp_admin', '') }}" placeholder="5491112345678">
+                            <input type="text" class="form-control @error('whatsapp_admin') is-invalid @enderror" id="whatsapp_admin" name="whatsapp_admin" value="{{ old('whatsapp_admin', App\Models\Configuracion::obtener('whatsapp_admin', '')) }}" placeholder="5491112345678">
                         </div>
                         @error('whatsapp_admin')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -156,13 +156,13 @@
                         <label class="form-label">Mostrar Precios</label>
                         <div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_precios" id="precios_si" value="true" {{ App\Models\Configuracion::obtener('mostrar_precios', 'true') === 'true' ? 'checked' : '' }}>
+                                <input class="form-check-input" type="radio" name="mostrar_precios" id="precios_si" value="true" {{ old('mostrar_precios', App\Models\Configuracion::obtener('mostrar_precios', 'true')) === 'true' ? 'checked' : '' }}>
                                 <label class="form-check-label" for="precios_si">
                                     <i class="bi bi-eye"></i> Sí
                                 </label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_precios" id="precios_no" value="false" {{ App\Models\Configuracion::obtener('mostrar_precios', 'true') === 'false' ? 'checked' : '' }}>
+                                <input class="form-check-input" type="radio" name="mostrar_precios" id="precios_no" value="false" {{ old('mostrar_precios', App\Models\Configuracion::obtener('mostrar_precios', 'true')) === 'false' ? 'checked' : '' }}>
                                 <label class="form-check-label" for="precios_no">
                                     <i class="bi bi-eye-slash"></i> Ocultar
                                 </label>
@@ -171,17 +171,36 @@
                         <small class="text-muted">Si se ocultan, los clientes no verán el precio en ningun lugar de la tienda</small>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
+                        <label class="form-label">Solicitar Dirección de Envío</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="pedir_direccion_envio" id="direccion_si" value="true" {{ old('pedir_direccion_envio', App\Models\Configuracion::obtener('pedir_direccion_envio', 'true')) === 'true' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="direccion_si">
+                                    <i class="bi bi-geo-alt"></i> Sí
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="pedir_direccion_envio" id="direccion_no" value="false" {{ old('pedir_direccion_envio', App\Models\Configuracion::obtener('pedir_direccion_envio', 'true')) === 'false' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="direccion_no">
+                                    <i class="bi bi-geo-alt-fill"></i> No
+                                </label>
+                            </div>
+                        </div>
+                        <small class="text-muted">Si se desactiva, el cliente no deberá ingresar su dirección al hacer el pedido</small>
+                    </div>
+
+                    <div class="mb-4">
                         <label class="form-label">Mostrar Productos sin Stock</label>
                         <div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_productos_sin_stock" id="sin_stock_si" value="true" {{ App\Models\Configuracion::obtener('mostrar_productos_sin_stock', 'true') === 'true' ? 'checked' : '' }}>
+                                <input class="form-check-input" type="radio" name="mostrar_productos_sin_stock" id="sin_stock_si" value="true" {{ old('mostrar_productos_sin_stock', App\Models\Configuracion::obtener('mostrar_productos_sin_stock', 'true')) === 'true' ? 'checked' : '' }}>
                                 <label class="form-check-label" for="sin_stock_si">
                                     <i class="bi bi-eye"></i> Sí
                                 </label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_productos_sin_stock" id="sin_stock_no" value="false" {{ App\Models\Configuracion::obtener('mostrar_productos_sin_stock', 'true') === 'false' ? 'checked' : '' }}>
+                                <input class="form-check-input" type="radio" name="mostrar_productos_sin_stock" id="sin_stock_no" value="false" {{ old('mostrar_productos_sin_stock', App\Models\Configuracion::obtener('mostrar_productos_sin_stock', 'true')) === 'false' ? 'checked' : '' }}>
                                 <label class="form-check-label" for="sin_stock_no">
                                     <i class="bi bi-eye-slash"></i> Ocultar
                                 </label>
@@ -189,6 +208,26 @@
                         </div>
                         <small class="text-muted">Si se ocultan, solo se verán productos disponibles</small>
                     </div>
+
+                    @if($monedas->isNotEmpty())
+                    <div class="mb-3">
+                        <label for="moneda_default" class="form-label">Moneda por defecto</label>
+                        <select class="form-select @error('moneda_default') is-invalid @enderror"
+                                id="moneda_default" name="moneda_default">
+                            <option value="">Sin moneda por defecto</option>
+                            @foreach($monedas as $moneda)
+                                <option value="{{ $moneda->id }}"
+                                    {{ old('moneda_default', App\Models\Configuracion::monedaDefaultId()) == $moneda->id ? 'selected' : '' }}>
+                                    {{ $moneda->nombre }} ({{ $moneda->simbolo }} {{ $moneda->codigo }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('moneda_default')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">Se preseleccionará al cargar un nuevo producto.</small>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -223,6 +262,10 @@
                         <div class="col-lg-4">
                             <p class="form-label fw-semibold mb-2">Variables disponibles</p>
                             <div class="list-group list-group-flush small">
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{pedido_id}</code>
+                                    <span class="text-muted ms-2">Número de pedido</span>
+                                </div>
                                 <div class="list-group-item px-0 py-2">
                                     <code class="text-success">{nombre}</code>
                                     <span class="text-muted ms-2">Nombre del cliente</span>
@@ -274,6 +317,68 @@
             </div>
         </div>
     </div>
+
+    @if(auth()->user()->esSuperAdmin())
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card border-warning">
+                <div class="card-header bg-warning bg-opacity-10 border-warning d-flex align-items-center gap-2">
+                    <i class="bi bi-star-fill text-warning"></i>
+                    <h5 class="mb-0">Configuración Avanzada <span class="badge bg-warning text-dark ms-1">Superadmin</span></h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold">Modo de imagen de productos</label>
+                        <small class="text-muted d-block mb-3">
+                            Controla qué opciones de imagen tienen disponibles los usuarios al crear o editar un producto.
+                            <strong>Solo URL</strong> no consume espacio en el VPS.
+                        </small>
+                        @php $modoActual = App\Models\Configuracion::modoImagenProducto(); @endphp
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-check card p-3 h-100 {{ $modoActual === 'ambos' ? 'border-primary bg-primary bg-opacity-10' : '' }}">
+                                    <input class="form-check-input" type="radio" name="modo_imagen_producto"
+                                           id="modo_ambos" value="ambos"
+                                           {{ old('modo_imagen_producto', $modoActual) === 'ambos' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="modo_ambos">
+                                        <strong><i class="bi bi-images"></i> Ambos</strong>
+                                        <small class="text-muted d-block mt-1">El usuario puede subir archivo o ingresar una URL externa.</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check card p-3 h-100 {{ $modoActual === 'solo_url' ? 'border-success bg-success bg-opacity-10' : '' }}">
+                                    <input class="form-check-input" type="radio" name="modo_imagen_producto"
+                                           id="modo_solo_url" value="solo_url"
+                                           {{ old('modo_imagen_producto', $modoActual) === 'solo_url' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="modo_solo_url">
+                                        <strong><i class="bi bi-link-45deg text-success"></i> Solo URL</strong>
+                                        <small class="text-muted d-block mt-1">
+                                            Solo se puede ingresar una URL externa. <strong class="text-success">No usa espacio en el VPS.</strong>
+                                        </small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check card p-3 h-100 {{ $modoActual === 'solo_archivo' ? 'border-danger bg-danger bg-opacity-10' : '' }}">
+                                    <input class="form-check-input" type="radio" name="modo_imagen_producto"
+                                           id="modo_solo_archivo" value="solo_archivo"
+                                           {{ old('modo_imagen_producto', $modoActual) === 'solo_archivo' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="modo_solo_archivo">
+                                        <strong><i class="bi bi-upload text-danger"></i> Solo subir archivo</strong>
+                                        <small class="text-muted d-block mt-1">
+                                            Solo se puede subir una imagen al servidor. <strong class="text-danger">Consume espacio en el VPS.</strong>
+                                        </small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <div class="row">
         <div class="col-12">

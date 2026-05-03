@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Support\StockResult;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Producto extends Model
 {
@@ -51,6 +53,44 @@ class Producto extends Model
         return $this->hasMany(ProductoEspecificacion::class);
     }
 
+    public function movimientos()
+    {
+        return $this->hasMany(StockMovimiento::class);
+    }
+
+    /**
+     * Registra un movimiento de stock y actualiza el campo `stock` atómicamente.
+     * Usa lock pesimista para evitar condiciones de carrera concurrentes.
+     *
+     * @throws \UnderflowException si el movimiento resultaría en stock negativo
+     */
+    public function registrarMovimiento($variacion, $tipo, $descripcion = null, $pedidoId = null, $userId = null)
+    {
+        return DB::transaction(function () use ($variacion, $tipo, $descripcion, $pedidoId, $userId) {
+            $stockActual     = static::where('id', $this->id)->lockForUpdate()->value('stock');
+            $stockResultante = $stockActual + $variacion;
+
+            if ($stockResultante < 0) {
+                throw new \UnderflowException(
+                    "El movimiento resultaría en stock negativo para \"{$this->descripcion}\" (actual: {$stockActual}, variación: {$variacion})."
+                );
+            }
+
+            static::where('id', $this->id)->update(['stock' => $stockResultante]);
+            $this->stock = $stockResultante;
+
+            return StockMovimiento::create([
+                'producto_id'      => $this->id,
+                'tipo'             => $tipo,
+                'variacion'        => $variacion,
+                'stock_resultante' => $stockResultante,
+                'descripcion'      => $descripcion,
+                'pedido_id'        => $pedidoId,
+                'user_id'          => $userId,
+            ]);
+        });
+    }
+
     // Accessor para obtener el precio formateado con símbolo de moneda
     public function getPrecioConMonedaAttribute()
     {
@@ -64,6 +104,41 @@ class Producto extends Model
     }
 
     /**
+     * Retorna el límite máximo de unidades que se pueden pedir.
+     * null = sin límite (por encargue o sin control de stock).
+     */
+    public function stockMaximo()
+    {
+        if ($this->por_encargue || $this->stock === null) {
+            return null;
+        }
+        return (int) $this->stock;
+    }
+
+    /**
+     * Evalúa si la cantidad solicitada es satisfacible con el stock actual.
+     * Retorna un StockResult con la cantidad permitida y, si corresponde, el motivo del recorte.
+     */
+    public function evaluarCantidad($solicitada)
+    {
+        $maximo = $this->stockMaximo();
+
+        if ($maximo === null) {
+            return StockResult::ok($solicitada);
+        }
+
+        if ($maximo <= 0) {
+            return StockResult::insuficiente(0, 'Sin stock disponible para "' . $this->descripcion . '".');
+        }
+
+        if ($solicitada > $maximo) {
+            return StockResult::insuficiente($maximo, 'Stock insuficiente para "' . $this->descripcion . '". Disponible: ' . $maximo . '.');
+        }
+
+        return StockResult::ok($solicitada);
+    }
+
+    /**
      * Obtiene la URL completa de la imagen (local o externa)
      */
     public function getImagenUrlAttribute(): ?string
@@ -73,12 +148,14 @@ class Producto extends Model
         }
 
         // Si empieza con http, es una URL externa
-        if (str_starts_with($this->url_imagen, 'http')) {
+        if (strpos($this->url_imagen, 'http') === 0) {
             return $this->url_imagen;
         }
 
-        // Es una imagen local en storage
-        return asset('storage/' . $this->url_imagen);
+        // Es una imagen local en storage. Usamos url() en vez de Storage::disk()->url()
+        // porque Storage usa APP_URL (dominio central) mientras que url() usa el dominio
+        // del request actual (correcto para multi-tenant).
+        return url('storage/' . $this->url_imagen);
     }
 
     /**
@@ -86,7 +163,7 @@ class Producto extends Model
      */
     public function esImagenExterna(): bool
     {
-        return $this->url_imagen && str_starts_with($this->url_imagen, 'http');
+        return $this->url_imagen && strpos($this->url_imagen, 'http') === 0;
     }
 
     public function scopeDisponibles($query)

@@ -65,6 +65,62 @@
 </div>
 @endif
 
+@push('scripts')
+<style>
+.qty-grid::-webkit-outer-spin-button,
+.qty-grid::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+</style>
+<script>
+// +/- del grid (delegado para funcionar con carga dinámica)
+document.addEventListener('click', function (e) {
+    var btnDec = e.target.closest('.btn-dec');
+    var btnInc = e.target.closest('.btn-inc');
+    var btn = btnDec || btnInc;
+    if (!btn) return;
+
+    var form = btn.closest('.form-agregar');
+    var input = form.querySelector('.qty-grid');
+    var maxStock = input.max !== '' ? parseInt(input.max) : null;
+    var val = parseInt(input.value) || 1;
+
+    if (btnDec) val = Math.max(1, val - 1);
+    if (btnInc) val = maxStock !== null ? Math.min(maxStock, val + 1) : val + 1;
+
+    input.value = val;
+    form.querySelector('.btn-dec').disabled = val <= 1;
+    form.querySelector('.btn-inc').disabled = maxStock !== null && val >= maxStock;
+});
+
+document.addEventListener('submit', function (e) {
+    var form = e.target.closest('.form-agregar');
+    if (!form) return;
+    e.preventDefault();
+    var input = form.querySelector('input[name="cantidad"]');
+    var maxStock = input.max !== '' ? parseInt(input.max) : null;
+    var cantidad = parseInt(input.value) || 1;
+    if (maxStock !== null && cantidad > maxStock) {
+        showToast('Stock máximo: ' + maxStock, 'warning');
+        input.value = maxStock;
+        return;
+    }
+    var formData = new FormData(form);
+    fetch(form.dataset.url, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+        showToast(data.message, data.success ? (data.warning ? 'warning' : 'success') : 'danger');
+        updateCartBadge(data.cantidad_carrito);
+    })
+    .catch(function () {
+        showToast('Error al agregar el producto', 'danger');
+    });
+});
+</script>
+@endpush
+
 @if(!$menuActual || !$menuActual->tieneFiltros())
 @push('scripts')
 <script>

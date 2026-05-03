@@ -45,11 +45,26 @@
                             <input type="password" class="form-control" id="password_confirmation" name="password_confirmation">
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label for="perfil_id" class="form-label">Perfil</label>
+                        <select class="form-select @error('perfil_id') is-invalid @enderror" id="perfil_id" name="perfil_id">
+                            <option value="">-- Sin perfil asignado --</option>
+                            @foreach($perfiles as $perfil)
+                                <option value="{{ $perfil->id }}" {{ old('perfil_id', $usuario->perfil_id) == $perfil->id ? 'selected' : '' }}>
+                                    {{ $perfil->nombre }}
+                                    @if($perfil->es_superadmin) (Superadmin) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('perfil_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <div class="form-check form-switch">
                                 <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin" value="1" {{ old('is_admin', $usuario->is_admin) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="is_admin">Es administrador</label>
+                                <label class="form-check-label" for="is_admin">Acceso al panel admin</label>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">

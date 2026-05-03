@@ -1,64 +1,389 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# TiendasApp — Plataforma Multi-tenant
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Plataforma SaaS de tiendas online construida con **Laravel 8** y **stancl/tenancy v3.6**.
+Cada cliente tiene su propia tienda aislada en un schema de PostgreSQL independiente.
 
-## About Laravel
+## Arquitectura
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+```
+PostgreSQL: tiendasapp
+├── schema: public          → tenants, domains (datos de la plataforma)
+├── schema: tenant_demo     → toda la app del tenant "demo"
+├── schema: tenant_arcor    → toda la app del tenant "arcor"
+└── schema: tenant_...
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Identificación**: por dominio (`tienda-juan.com` → tenant `juan`)
+- **Panel central**: `http://plataforma.test` → gestión de tenants
+- **Tienda**: `http://{dominio}` → la tienda del tenant
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Requisitos
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP 7.4+
+- PostgreSQL 13+
+- Composer
+- Node.js + npm (para assets)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Puesta en marcha
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+### 1. Clonar e instalar dependencias
 
-### Premium Partners
+```bash
+git clone <repo> tiendasapp
+cd tiendasapp
+composer install --ignore-platform-req=php
+npm install && npm run dev
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+> `--ignore-platform-req=php` es necesario si la CLI local tiene PHP < 7.4.
+> En el servidor de producción con PHP 7.4+ se puede omitir.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2. Configurar el entorno
 
-## Code of Conduct
+Copiar el archivo de ejemplo:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Security Vulnerabilities
+Editar `.env` con los valores del entorno:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```ini
+APP_NAME="TiendasApp"
+APP_ENV=production          # o local en desarrollo
+APP_URL=http://plataforma.test
 
-## License
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=tiendasapp
+DB_USERNAME=postgres
+DB_PASSWORD=tu_password
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+CACHE_DRIVER=file
+SESSION_DRIVER=database
+QUEUE_CONNECTION=sync
+```
+
+---
+
+### 3. Crear la base de datos en PostgreSQL
+
+```bash
+psql -U postgres -c "CREATE DATABASE tiendasapp;"
+```
+
+O desde psql interactivo:
+
+```sql
+CREATE DATABASE tiendasapp;
+```
+
+---
+
+### 4. Ejecutar migraciones centrales
+
+Esto crea solo las tablas `tenants` y `domains` en el schema `public`:
+
+```bash
+php artisan migrate
+```
+
+Verificar que quedaron solo 2 tablas centrales:
+
+```bash
+php artisan migrate:status
+```
+
+Debe mostrar únicamente:
+- `2019_09_15_000010_create_tenants_table`
+- `2019_09_15_000020_create_domains_table`
+
+---
+
+### 5. Configurar hosts locales (solo desarrollo)
+
+Agregar en `/etc/hosts` (Linux/Mac) o `C:\Windows\System32\drivers\etc\hosts` (Windows):
+
+```
+127.0.0.1  plataforma.test
+127.0.0.1  demo.test
+```
+
+Un registro por cada tenant que se cree localmente.
+
+---
+
+### 6. Crear el primer tenant
+
+```bash
+php artisan tenant:create {slug} "{Nombre}" "{email}" "{dominio}" --seed
+```
+
+**Ejemplo:**
+
+```bash
+php artisan tenant:create demo "Tienda Demo" "demo@test.com" "demo.test" --seed
+```
+
+Esto automáticamente:
+1. Crea el registro en `public.tenants`
+2. Crea el schema `tenant_demo` en PostgreSQL
+3. Ejecuta todas las migraciones de `database/migrations/tenant/`
+4. Con `--seed`: crea el usuario admin, configuraciones base y monedas
+
+**Más ejemplos:**
+
+```bash
+php artisan tenant:create arcor "Arcor SA" "it@arcor.com" "arcor.tiendasapp.com" --seed
+php artisan tenant:create perfumes "Casa Perfumes" "admin@perfumes.com" "perfumes.test" --seed
+```
+
+---
+
+### 7. Verificar
+
+Verificar que se crearon los schemas en PostgreSQL:
+
+```bash
+psql -U postgres -d tiendasapp -c "\dn"
+```
+
+Debe mostrar:
+```
+   Name        |  Owner
+---------------+----------
+ public        | postgres
+ tenant_demo   | postgres
+ tenant_arcor  | postgres
+```
+
+Acceder en el navegador:
+- `http://plataforma.test` → panel central (lista de tenants)
+- `http://demo.test` → tienda del tenant "demo"
+- `http://demo.test/login` → login admin
+- `http://demo.test/admin` → panel de administración
+
+---
+
+## Gestión de tenants
+
+### Crear tenant (CLI)
+
+```bash
+php artisan tenant:create {slug} "{Nombre}" "{email}" "{dominio}" [--seed] [--plan=free]
+```
+
+| Argumento | Descripción |
+|-----------|-------------|
+| `slug` | Identificador único. Se usa como nombre del schema (`tenant_{slug}`). Solo letras, números y guiones. |
+| `nombre` | Nombre visible de la tienda |
+| `email` | Email del tenant (debe ser único) |
+| `dominio` | Dominio completo (ej: `mitienda.com`) |
+| `--seed` | Crea usuario admin + configuraciones + monedas |
+| `--plan` | `free` (default), `basic`, `pro` |
+
+### Crear tenant (panel web)
+
+Acceder a `http://plataforma.test/tenants/create`.
+
+### Listar tenants
+
+```bash
+php artisan tenants:list
+```
+
+### Migrar todos los tenants
+
+Cuando se agregan nuevas migraciones a `database/migrations/tenant/`:
+
+```bash
+php artisan tenants:migrate
+```
+
+Para un tenant específico:
+
+```bash
+php artisan tenants:migrate --tenants=demo
+```
+
+### Ejecutar seed en un tenant
+
+```bash
+php artisan tenants:seed --tenants=demo
+```
+
+### Eliminar tenant
+
+Desde el panel web en `http://plataforma.test/tenants`, o via Tinker:
+
+```bash
+php artisan tinker
+>>> App\Models\Tenant::find('demo')->delete();
+```
+
+Esto elimina el registro y **borra el schema completo** de PostgreSQL.
+
+---
+
+## Importar productos desde Hercules
+
+El comando de importación es tenant-aware. Siempre especificar el tenant:
+
+```bash
+php artisan import:hercules --tenant=demo
+php artisan import:hercules --tenant=demo --fabricante=Atlas
+php artisan import:hercules --tenant=demo --dry-run
+php artisan import:hercules --tenant=demo --refresh
+```
+
+---
+
+## Storage de imágenes
+
+Cada tenant tiene su propio directorio de storage:
+
+```
+storage/app/public/tenant_demo/     → imágenes del tenant "demo"
+storage/app/public/tenant_arcor/    → imágenes del tenant "arcor"
+```
+
+Crear el symlink de storage (solo una vez por servidor):
+
+```bash
+php artisan storage:link
+```
+
+---
+
+## Estructura de archivos relevantes
+
+```
+app/
+├── Console/Commands/
+│   ├── CreateTenant.php          ← crea tenant + schema + dominio
+│   └── ImportHercules.php        ← importa productos (tenant-aware)
+├── Http/Controllers/
+│   ├── Central/
+│   │   └── TenantController.php  ← CRUD de tenants (dominio central)
+│   ├── Admin/                    ← panel admin de cada tienda
+│   └── TiendaController.php      ← tienda pública
+├── Models/
+│   ├── Tenant.php                ← modelo multi-tenant
+│   └── Configuracion.php         ← config con cache tenant-aware
+└── Providers/
+    └── TenancyServiceProvider.php
+
+config/
+└── tenancy.php                   ← configuración del paquete
+
+database/
+├── migrations/                   ← solo tenants + domains (centrales)
+└── migrations/tenant/            ← todas las tablas de la app
+
+routes/
+├── web.php                       ← rutas del panel central
+└── tenant.php                    ← rutas de la tienda (por tenant)
+```
+
+---
+
+## Producción (CentOS + PHP 7.4)
+
+### Instalar extensión pgsql
+
+```bash
+# CentOS/RHEL con Remi
+dnf install php74-php-pgsql
+
+# Verificar
+php -m | grep pgsql
+```
+
+### Permisos de storage
+
+```bash
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+```
+
+### Nginx — Virtual hosts
+
+```nginx
+# Dominio central
+server {
+    listen 80;
+    server_name plataforma.com;
+    root /var/www/tiendasapp/public;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+    }
+}
+
+# Tenants con dominio propio (un bloque por dominio)
+server {
+    listen 80;
+    server_name mitienda.com;
+    root /var/www/tiendasapp/public;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+    }
+}
+
+# Alternativa: wildcard para subdominios (*.tiendasapp.com)
+server {
+    listen 80;
+    server_name *.tiendasapp.com;
+    root /var/www/tiendasapp/public;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+    }
+}
+```
+
+### Caché en producción
+
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+---
+
+## Credenciales por defecto (tras --seed)
+
+| Campo | Valor |
+|-------|-------|
+| Email | `admin@tienda.com` |
+| Password | `password` |
+
+**Cambiar la password inmediatamente tras el primer login.**

@@ -33,11 +33,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="telefono" class="form-label">Teléfono</label>
-                            <input type="text" class="form-control @error('telefono') is-invalid @enderror" id="telefono" name="telefono" value="{{ old('telefono', $proveedor->telefono) }}">
-                            @error('telefono')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            @include('partials.intl-tel-input', ['inputId' => 'telefono-input', 'fieldName' => 'telefono', 'value' => $proveedor->telefono])
                         </div>
                     </div>
                     <div class="mb-3">
@@ -54,6 +50,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+
                     <div class="mb-3">
                         <div class="form-check form-switch">
                             <input type="checkbox" class="form-check-input" id="activo" name="activo" value="1" {{ old('activo', $proveedor->activo) ? 'checked' : '' }}>

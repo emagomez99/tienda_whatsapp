@@ -18,9 +18,17 @@ class Configuracion extends Model
         'descripcion',
     ];
 
+    protected static function cacheKey(string $clave): string
+    {
+        $prefix = (function_exists('tenancy') && tenancy()->initialized)
+            ? 'tenant_' . tenant('id')
+            : 'central';
+        return $prefix . '_config_' . $clave;
+    }
+
     public static function obtener($clave, $default = null)
     {
-        return Cache::remember("config_{$clave}", 3600, function () use ($clave, $default) {
+        return Cache::remember(static::cacheKey($clave), 3600, function () use ($clave, $default) {
             $config = self::where('clave', $clave)->first();
             return $config ? $config->valor : $default;
         });
@@ -32,7 +40,7 @@ class Configuracion extends Model
             ['clave' => $clave],
             ['valor' => $valor, 'descripcion' => $descripcion]
         );
-        Cache::forget("config_{$clave}");
+        Cache::forget(static::cacheKey($clave));
         return $config;
     }
 
@@ -141,13 +149,30 @@ class Configuracion extends Model
         return self::posicionMenu() === 'lateral';
     }
 
+    public static function pedirDireccionEnvio()
+    {
+        return self::obtener('pedir_direccion_envio', 'true') === 'true';
+    }
+
     public static function templateWhatsappDefault()
     {
-        return "🛒 *NUEVO PEDIDO*\n\n*Cliente:*\nNombre: {nombre} {apellido}\nEmail: {email}\nCelular: {celular}\n\n*Dirección:*\n{direccion}, {localidad}\n{provincia} - CP: {cp}\n\n*Productos:*\n{productos}\n{total}";
+        return "🛒 *NUEVO PEDIDO #{pedido_id}*\n\n*Cliente:*\nNombre: {nombre} {apellido}\nEmail: {email}\nCelular: {celular}\n\n*Dirección:*\n{direccion}, {localidad}\n{provincia} - CP: {cp}\n\n*Productos:*\n{productos}\n{total}";
     }
 
     public static function templateWhatsapp()
     {
         return self::obtener('template_whatsapp', self::templateWhatsappDefault());
+    }
+
+    // 'ambos' | 'solo_url' | 'solo_archivo'
+    public static function modoImagenProducto()
+    {
+        return self::obtener('modo_imagen_producto', 'solo_url');
+    }
+
+    public static function monedaDefaultId()
+    {
+        $valor = self::obtener('moneda_default', null);
+        return $valor ? (int) $valor : null;
     }
 }

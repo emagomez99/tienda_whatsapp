@@ -155,7 +155,7 @@ class Menu extends Model
             return collect();
         }
         return Etiqueta::whereIn('id', $this->filtros_etiquetas)
-            ->orderByRaw('FIELD(id, ' . implode(',', $this->filtros_etiquetas) . ')')
+            ->orderByRaw('array_position(ARRAY[' . implode(',', $this->filtros_etiquetas) . ']::bigint[], id)')
             ->get();
     }
 

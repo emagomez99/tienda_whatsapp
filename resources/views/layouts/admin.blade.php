@@ -7,7 +7,7 @@
     <title>@yield('title', 'Admin') - {{ config('app.name', 'Tienda MC') }}</title>
     @php $favicon = App\Models\Configuracion::favicon(); @endphp
     @if($favicon)
-        <link rel="icon" href="{{ asset('storage/' . $favicon) }}" type="image/x-icon">
+        <link rel="icon" href="{{ url('storage/' . $favicon) }}" type="image/x-icon">
     @endif
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
@@ -31,6 +31,26 @@
         .sidebar .nav-link i {
             margin-right: 0.5rem;
         }
+        .sidebar .nav-submenu .nav-link {
+            padding: 0.45rem 1rem 0.45rem 1.75rem;
+            font-size: 0.875rem;
+            color: rgba(255,255,255,.6);
+        }
+        .sidebar .nav-submenu .nav-link:hover {
+            color: #fff;
+            background-color: rgba(255,255,255,.08);
+        }
+        .sidebar .nav-submenu .nav-link.active {
+            color: #fff;
+            background-color: rgba(255,255,255,.15);
+        }
+        .sidebar .collapse-toggle .bi-chevron-down {
+            transition: transform 0.2s ease;
+            font-size: 0.75rem;
+        }
+        .sidebar .collapse-toggle[aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+        }
         .content-wrapper {
             min-height: calc(100vh - 56px);
         }
@@ -43,7 +63,7 @@
             <a class="navbar-brand d-flex align-items-center" href="{{ route('admin.dashboard') }}">
                 @php $logoAdmin = App\Models\Configuracion::logo(); @endphp
                 @if($logoAdmin)
-                    <img src="{{ asset('storage/' . $logoAdmin) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}" style="max-height: 35px;" class="me-2">
+                    <img src="{{ url('storage/' . $logoAdmin) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}" style="max-height: 35px;" class="me-2">
                 @else
                     <i class="bi bi-gear-fill me-2"></i>
                 @endif
@@ -83,42 +103,100 @@
         <div class="row">
             <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
                 <div class="position-sticky pt-3">
+                    @php $user = auth()->user(); @endphp
                     <ul class="nav flex-column">
+                        @if($user->puede('dashboard.ver'))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
                                 <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                         </li>
+                        @endif
+                        @if($user->puede('pedidos.ver'))
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.pedidos.*') ? 'active' : '' }}" href="{{ route('admin.pedidos.index') }}">
+                                <i class="bi bi-bag-check"></i> Pedidos
+                            </a>
+                        </li>
+                        @endif
+                        @if($user->puede('productos.ver'))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.productos.*') ? 'active' : '' }}" href="{{ route('admin.productos.index') }}">
                                 <i class="bi bi-box-seam"></i> Productos
                             </a>
                         </li>
+                        @endif
+                        @if($user->puede('proveedores.ver'))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.proveedores.*') ? 'active' : '' }}" href="{{ route('admin.proveedores.index') }}">
                                 <i class="bi bi-truck"></i> Proveedores
                             </a>
                         </li>
+                        @endif
+                        @php
+                            $configActive = request()->routeIs('admin.configuraciones.*')
+                                || request()->routeIs('admin.etiquetas.*')
+                                || request()->routeIs('admin.menus.*')
+                                || request()->routeIs('admin.usuarios.*')
+                                || request()->routeIs('admin.perfiles.*');
+                            $verConfigGrupo = $user->puede('configuraciones.ver')
+                                || $user->puede('etiquetas.ver')
+                                || $user->puede('menus.ver')
+                                || $user->puede('usuarios.ver')
+                                || $user->puede('perfiles.ver');
+                        @endphp
+                        @if($verConfigGrupo)
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.etiquetas.*') ? 'active' : '' }}" href="{{ route('admin.etiquetas.index') }}">
-                                <i class="bi bi-tags"></i> Etiquetas
+                            <a class="nav-link collapse-toggle d-flex justify-content-between align-items-center {{ $configActive ? 'active' : '' }}"
+                               href="#menu-configuracion"
+                               data-bs-toggle="collapse"
+                               role="button"
+                               aria-expanded="{{ $configActive ? 'true' : 'false' }}"
+                               aria-controls="menu-configuracion">
+                                <span><i class="bi bi-gear"></i> Configuración</span>
+                                <i class="bi bi-chevron-down"></i>
                             </a>
+                            <div class="collapse {{ $configActive ? 'show' : '' }}" id="menu-configuracion">
+                                <ul class="nav flex-column nav-submenu">
+                                    @if($user->puede('configuraciones.ver'))
+                                    <li class="nav-item">
+                                        <a class="nav-link {{ request()->routeIs('admin.configuraciones.*') ? 'active' : '' }}" href="{{ route('admin.configuraciones.index') }}">
+                                            <i class="bi bi-sliders"></i> Ajustes
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @if($user->puede('etiquetas.ver'))
+                                    <li class="nav-item">
+                                        <a class="nav-link {{ request()->routeIs('admin.etiquetas.*') ? 'active' : '' }}" href="{{ route('admin.etiquetas.index') }}">
+                                            <i class="bi bi-tags"></i> Etiquetas
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @if($user->puede('menus.ver'))
+                                    <li class="nav-item">
+                                        <a class="nav-link {{ request()->routeIs('admin.menus.*') ? 'active' : '' }}" href="{{ route('admin.menus.index') }}">
+                                            <i class="bi bi-list-nested"></i> Menú Tienda
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @if($user->puede('usuarios.ver'))
+                                    <li class="nav-item">
+                                        <a class="nav-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}" href="{{ route('admin.usuarios.index') }}">
+                                            <i class="bi bi-people"></i> Usuarios
+                                        </a>
+                                    </li>
+                                    @endif
+                                    @if($user->puede('perfiles.ver'))
+                                    <li class="nav-item">
+                                        <a class="nav-link {{ request()->routeIs('admin.perfiles.*') ? 'active' : '' }}" href="{{ route('admin.perfiles.index') }}">
+                                            <i class="bi bi-shield-check"></i> Perfiles
+                                        </a>
+                                    </li>
+                                    @endif
+                                </ul>
+                            </div>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.menus.*') ? 'active' : '' }}" href="{{ route('admin.menus.index') }}">
-                                <i class="bi bi-list-nested"></i> Menú Tienda
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}" href="{{ route('admin.usuarios.index') }}">
-                                <i class="bi bi-people"></i> Usuarios
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.configuraciones.*') ? 'active' : '' }}" href="{{ route('admin.configuraciones.index') }}">
-                                <i class="bi bi-sliders"></i> Configuración
-                            </a>
-                        </li>
+                        @endif
                     </ul>
                 </div>
             </nav>

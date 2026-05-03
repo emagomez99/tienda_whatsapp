@@ -28,4 +28,18 @@ class Proveedor extends Model
     {
         return $this->hasMany(Producto::class);
     }
+
+    public function etiquetas()
+    {
+        return $this->belongsToMany(Etiqueta::class, 'proveedor_etiqueta')
+                    ->withPivot('obligatoria')
+                    ->withTimestamps();
+    }
+
+    public function etiquetasObligatorias()
+    {
+        return $this->belongsToMany(Etiqueta::class, 'proveedor_etiqueta')
+                    ->wherePivot('obligatoria', true)
+                    ->withTimestamps();
+    }
 }

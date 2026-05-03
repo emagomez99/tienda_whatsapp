@@ -43,9 +43,15 @@ class RouteServiceProvider extends ServiceProvider
                 ->namespace($this->namespace)
                 ->group(base_path('routes/api.php'));
 
+            // Rutas centrales (plataforma)
             Route::middleware('web')
                 ->namespace($this->namespace)
                 ->group(base_path('routes/web.php'));
+
+            // Rutas de la tienda — el middleware inicializa el tenant por dominio
+            Route::middleware(['web', \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class, \App\Http\Middleware\CheckTenantActivo::class])
+                ->namespace($this->namespace)
+                ->group(base_path('routes/tenant.php'));
         });
     }
 

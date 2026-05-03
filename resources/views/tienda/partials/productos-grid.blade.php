@@ -55,13 +55,31 @@
                         @endif
                     </div>
                     <div class="card-footer bg-transparent">
-                        <form action="{{ route('carrito.agregar', $producto) }}" method="POST" class="d-flex gap-2">
-                            @csrf
-                            <input type="number" name="cantidad" value="1" min="1" class="form-control form-control-sm" style="width: 70px;">
-                            <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
-                                <i class="bi bi-cart-plus"></i> Agregar
+                        @if($producto->estaDisponible())
+                            @php $maxGrid = $producto->stockMaximo(); @endphp
+                            <form class="form-agregar" data-url="{{ route('carrito.agregar', $producto) }}">
+                                @csrf
+                                <div class="d-flex gap-1 align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-dec" disabled>
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" name="cantidad" value="1" min="1"
+                                           @if($maxGrid !== null) max="{{ $maxGrid }}" @endif
+                                           class="form-control form-control-sm text-center qty-grid"
+                                           style="width: 50px; -moz-appearance: textfield;">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-inc" {{ $maxGrid === 1 ? 'disabled' : '' }}>
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                                        <i class="bi bi-cart-plus"></i> Agregar
+                                    </button>
+                                </div>
+                            </form>
+                        @else
+                            <button class="btn btn-secondary btn-sm w-100" disabled>
+                                <i class="bi bi-x-circle"></i> Sin stock
                             </button>
-                        </form>
+                        @endif
                     </div>
                 </div>
             </div>

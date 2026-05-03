@@ -66,23 +66,20 @@
                     <tbody>
                         @foreach($productos as $producto)
                             <tr>
-                                <td>
-                                    @if($producto->url_imagen)
-                                        <img src="{{ $producto->imagen_url }}" alt="" style="width: 50px; height: 50px; object-fit: cover;" class="rounded">
-                                    @else
-                                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
-                                            <i class="bi bi-image"></i>
-                                        </div>
-                                    @endif
+                                <td style="width: 60px;">
+                                    <div class="rounded overflow-hidden bg-light" style="width: 50px; height: 50px; flex-shrink: 0;">
+                                        @if($producto->url_imagen)
+                                            <img src="{{ $producto->imagen_url }}" alt=""
+                                                 style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                        @else
+                                            <div class="bg-secondary d-flex align-items-center justify-content-center text-white h-100">
+                                                <i class="bi bi-image small"></i>
+                                            </div>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
                                     <strong>{{ $producto->descripcion }}</strong>
-                                    @if($producto->etiquetas->count() > 0)
-                                        <br>
-                                        @foreach($producto->etiquetas as $etiqueta)
-                                            <span class="badge bg-info">{{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}</span>
-                                        @endforeach
-                                    @endif
                                 </td>
                                 <td>{{ $producto->id_proveedor ?? '-' }}</td>
                                 <td>{{ $producto->proveedor->nombre ?? '-' }}</td>
@@ -102,13 +99,16 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="{{ route('admin.productos.edit', $producto) }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ route('admin.productos.historial', $producto) }}" class="btn btn-sm btn-outline-secondary" title="Historial de movimientos">
+                                            <i class="bi bi-clock-history"></i>
+                                        </a>
+                                        <a href="{{ route('admin.productos.edit', $producto) }}" class="btn btn-sm btn-outline-primary" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <form action="{{ route('admin.productos.destroy', $producto) }}" method="POST" onsubmit="return confirm('¿Eliminar este producto?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
