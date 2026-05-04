@@ -9,7 +9,7 @@
                 <div class="card h-100 producto-card shadow-sm">
                     <a href="{{ route('tienda.show', $producto) }}" class="text-decoration-none">
                         @if($producto->url_imagen)
-                            <img src="{{ $producto->imagen_url }}" class="card-img-top" alt="{{ $producto->descripcion }}" style="height: 250px; width: 100%; object-fit: contain; background-color: #f8f9fa;">
+                            <img src="{{ $producto->imagen_url }}" class="card-img-top" alt="{{ $producto->descripcion }}" style="height: 250px; width: 100%; object-fit: contain; background-color: #f8f9fa;" onerror="this.onerror=null;this.src='/img/no-image.svg';">
                         @else
                             <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center text-white" style="height: 250px;">
                                 <i class="bi bi-image" style="font-size: 3rem;"></i>

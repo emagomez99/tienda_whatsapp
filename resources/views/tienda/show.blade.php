@@ -17,7 +17,8 @@
                 @if($producto->url_imagen)
                     <img src="{{ $producto->imagen_url }}"
                          alt="{{ $producto->descripcion }}"
-                         style="width: 100%; height: 100%; object-fit: contain;">
+                         style="width: 100%; height: 100%; object-fit: contain;"
+                         onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.objectFit='contain';">
                 @else
                     <div class="text-secondary text-center">
                         <i class="bi bi-image" style="font-size: 5rem;"></i>

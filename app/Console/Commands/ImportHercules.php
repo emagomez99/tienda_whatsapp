@@ -24,7 +24,7 @@ class ImportHercules extends Command
     protected $description = 'Importa productos desde herculesus.com';
 
     private const PROVEEDOR_NOMBRE = 'Hercules';
-    private const FABRICANTES = ['Atlas', 'Case', 'Ford'];
+    private const FABRICANTES = ['Liugong', 'Case', 'Ford'];
 
     // IDs resueltos dinámicamente al inicio (tenant-aware)
     private $proveedorId;
