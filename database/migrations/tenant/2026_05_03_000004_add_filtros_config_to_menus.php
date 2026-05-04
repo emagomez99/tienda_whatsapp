@@ -7,7 +7,7 @@ class AddFiltrosConfigToMenus extends Migration
 {
     public function up()
     {
-        DB::statement('ALTER TABLE menus ADD COLUMN filtros_config JSONB');
+        DB::statement('ALTER TABLE menus ADD COLUMN filtros_config JSON');
     }
 
     public function down()
