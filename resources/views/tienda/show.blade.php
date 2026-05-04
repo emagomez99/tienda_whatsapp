@@ -14,16 +14,10 @@
     <div class="row">
         <div class="col-md-5">
             <div class="rounded shadow overflow-hidden bg-light d-flex align-items-center justify-content-center" style="height: 420px;">
-                @if($producto->url_imagen)
-                    <img src="{{ $producto->imagen_url }}"
-                         alt="{{ $producto->descripcion }}"
-                         style="width: 100%; height: 100%; object-fit: contain;"
-                         onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.objectFit='contain';">
-                @else
-                    <div class="text-secondary text-center">
-                        <i class="bi bi-image" style="font-size: 5rem;"></i>
-                    </div>
-                @endif
+                <img src="{{ $producto->url_imagen ? $producto->imagen_url : '/img/no-image.svg' }}"
+                     alt="{{ $producto->descripcion }}"
+                     style="width: 100%; height: 100%; object-fit: contain;"
+                     onerror="this.onerror=null;this.src='/img/no-image.svg';">
             </div>
         </div>
         <div class="col-md-7">
