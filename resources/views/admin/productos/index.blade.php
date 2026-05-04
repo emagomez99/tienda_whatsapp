@@ -68,14 +68,10 @@
                             <tr>
                                 <td style="width: 60px;">
                                     <div class="rounded overflow-hidden bg-light" style="width: 50px; height: 50px; flex-shrink: 0;">
-                                        @if($producto->url_imagen)
-                                            <img src="{{ $producto->imagen_url }}" alt=""
-                                                 style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                                        @else
-                                            <div class="bg-secondary d-flex align-items-center justify-content-center text-white h-100">
-                                                <i class="bi bi-image small"></i>
-                                            </div>
-                                        @endif
+                                        <img src="{{ $producto->url_imagen ? $producto->imagen_url : '/img/no-image.svg' }}"
+                                             alt=""
+                                             style="width: 100%; height: 100%; object-fit: cover; display: block;"
+                                             onerror="this.onerror=null;this.src='/img/no-image.svg';">
                                     </div>
                                 </td>
                                 <td>
