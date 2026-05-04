@@ -156,9 +156,13 @@ class Menu extends Model
         if (empty($this->filtros_etiquetas)) {
             return collect();
         }
-        return Etiqueta::whereIn('id', $this->filtros_etiquetas)
-            ->orderByRaw('array_position(ARRAY[' . implode(',', $this->filtros_etiquetas) . ']::bigint[], id)')
-            ->get();
+        $ids = $this->filtros_etiquetas;
+        return Etiqueta::whereIn('id', $ids)
+            ->get()
+            ->sortBy(function ($etiqueta) use ($ids) {
+                return array_search($etiqueta->id, $ids);
+            })
+            ->values();
     }
 
     /**
