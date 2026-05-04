@@ -188,15 +188,24 @@
                                         @foreach($filtrosActuales as $index => $filtroId)
                                             @php $etiquetaFiltro = $etiquetas->firstWhere('id', $filtroId); @endphp
                                             @if($etiquetaFiltro)
-                                                <li class="list-group-item py-2 px-3 d-flex justify-content-between align-items-center" data-id="{{ $etiquetaFiltro->id }}" data-nombre="{{ $etiquetaFiltro->nombre }}">
-                                                    <span>
-                                                        <span class="badge bg-secondary me-2">{{ $index + 1 }}</span>
-                                                        {{ $etiquetaFiltro->nombre }}
-                                                    </span>
-                                                    <div class="btn-group btn-group-sm">
-                                                        <button type="button" class="btn btn-outline-secondary btn-subir" title="Subir"><i class="bi bi-arrow-up"></i></button>
-                                                        <button type="button" class="btn btn-outline-secondary btn-bajar" title="Bajar"><i class="bi bi-arrow-down"></i></button>
-                                                        <button type="button" class="btn btn-outline-danger btn-quitar-filtro" title="Quitar"><i class="bi bi-x"></i></button>
+                                                @php $mostrarTodosEtiqueta = ($menu->filtros_config[(string)$etiquetaFiltro->id] ?? true); @endphp
+                                                <li class="list-group-item py-2 px-2" data-id="{{ $etiquetaFiltro->id }}" data-nombre="{{ $etiquetaFiltro->nombre }}">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="bi bi-grip-vertical text-muted flex-shrink-0"></i>
+                                                        <span class="badge bg-secondary badge-num flex-shrink-0">{{ $index + 1 }}</span>
+                                                        <span class="flex-grow-1 small fw-semibold text-truncate">{{ $etiquetaFiltro->nombre }}</span>
+                                                        <div class="form-check form-switch mb-0 flex-shrink-0" title="Permitir opción Todos">
+                                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                                   name="filtros_todos[{{ $etiquetaFiltro->id }}]"
+                                                                   id="todos_{{ $etiquetaFiltro->id }}"
+                                                                   value="1" {{ $mostrarTodosEtiqueta ? 'checked' : '' }}>
+                                                            <label class="form-check-label small text-muted" for="todos_{{ $etiquetaFiltro->id }}">Todos</label>
+                                                        </div>
+                                                        <div class="btn-group btn-group-sm flex-shrink-0">
+                                                            <button type="button" class="btn btn-outline-secondary btn-subir" title="Subir"><i class="bi bi-arrow-up"></i></button>
+                                                            <button type="button" class="btn btn-outline-secondary btn-bajar" title="Bajar"><i class="bi bi-arrow-down"></i></button>
+                                                            <button type="button" class="btn btn-outline-danger btn-quitar-filtro" title="Quitar"><i class="bi bi-x"></i></button>
+                                                        </div>
                                                     </div>
                                                     <input type="hidden" name="filtros_etiquetas[]" value="{{ $etiquetaFiltro->id }}">
                                                 </li>
@@ -349,8 +358,62 @@
             radio.addEventListener('change', mostrarCampos);
         });
 
+        // Datos para filtrar etiquetas por proveedor
+        const etiquetasData = @json($etiquetas->map(function($e) { return ['id' => $e->id, 'nombre' => $e->nombre]; })->values());
+        const etiquetasPorProveedor = @json($etiquetasPorProveedor);
+
+        function getEtiquetasAplicables() {
+            const tipo = document.querySelector('input[name="tipo_enlace"]:checked').value;
+            if (tipo !== 'proveedor') return null;
+            const provId = String(proveedorSelect.value);
+            if (!provId) return null;
+            const cfg = etiquetasPorProveedor[provId];
+            if (!cfg || !cfg.configured) return null;
+            return cfg.ids;
+        }
+
+        function reconstruirDisponibles() {
+            const listaDisp = document.getElementById('etiquetas-disponibles');
+            const listaSel = document.getElementById('filtros-seleccionados');
+            if (!listaDisp) return;
+
+            const aplicables = getEtiquetasAplicables();
+
+            // Quitar de seleccionados los que ya no aplican
+            if (aplicables !== null) {
+                listaSel.querySelectorAll('li').forEach(function(li) {
+                    if (aplicables.indexOf(parseInt(li.dataset.id)) === -1) li.remove();
+                });
+                listaSel.querySelectorAll('li').forEach(function(item, index) {
+                    const badge = item.querySelector('.badge-num');
+                    if (badge) badge.textContent = index + 1;
+                });
+                const vacio = document.getElementById('filtros-vacio');
+                if (vacio) vacio.style.display = listaSel.querySelectorAll('li').length === 0 ? 'block' : 'none';
+            }
+
+            // IDs actualmente seleccionados
+            const enSel = [];
+            listaSel.querySelectorAll('li').forEach(function(li) { enSel.push(parseInt(li.dataset.id)); });
+
+            // Reconstruir lista de disponibles
+            listaDisp.innerHTML = '';
+            etiquetasData.forEach(function(e) {
+                if (enSel.indexOf(e.id) !== -1) return;
+                if (aplicables !== null && aplicables.indexOf(e.id) === -1) return;
+                const li = document.createElement('li');
+                li.className = 'list-group-item list-group-item-action py-2 px-3 d-flex justify-content-between align-items-center';
+                li.dataset.id = e.id;
+                li.dataset.nombre = e.nombre;
+                li.innerHTML = e.nombre + ' <button type="button" class="btn btn-sm btn-outline-success btn-agregar-filtro" title="Agregar"><i class="bi bi-plus"></i></button>';
+                listaDisp.appendChild(li);
+            });
+
+            if (typeof asignarEventos === 'function') asignarEventos();
+        }
+
         // Eventos para actualizar campos ocultos
-        proveedorSelect.addEventListener('change', actualizarCamposOcultos);
+        proveedorSelect.addEventListener('change', function() { actualizarCamposOcultos(); reconstruirDisponibles(); });
         etiquetaSelect.addEventListener('change', actualizarCamposOcultos);
         etiquetaValorInput.addEventListener('input', actualizarCamposOcultos);
         especificacionValorInput.addEventListener('input', actualizarCamposOcultos);
@@ -434,14 +497,22 @@
             nuevoLi.dataset.id = id;
             nuevoLi.dataset.nombre = nombre;
             nuevoLi.innerHTML = `
-                <span>
-                    <span class="badge bg-secondary me-2">0</span>
-                    ${nombre}
-                </span>
-                <div class="btn-group btn-group-sm">
-                    <button type="button" class="btn btn-outline-secondary btn-subir" title="Subir"><i class="bi bi-arrow-up"></i></button>
-                    <button type="button" class="btn btn-outline-secondary btn-bajar" title="Bajar"><i class="bi bi-arrow-down"></i></button>
-                    <button type="button" class="btn btn-outline-danger btn-quitar-filtro" title="Quitar"><i class="bi bi-x"></i></button>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-grip-vertical text-muted flex-shrink-0"></i>
+                    <span class="badge bg-secondary badge-num flex-shrink-0">0</span>
+                    <span class="flex-grow-1 small fw-semibold text-truncate">${nombre}</span>
+                    <div class="form-check form-switch mb-0 flex-shrink-0" title="Permitir opción Todos">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               name="filtros_todos[${id}]"
+                               id="todos_${id}"
+                               value="1" checked>
+                        <label class="form-check-label small text-muted" for="todos_${id}">Todos</label>
+                    </div>
+                    <div class="btn-group btn-group-sm flex-shrink-0">
+                        <button type="button" class="btn btn-outline-secondary btn-subir" title="Subir"><i class="bi bi-arrow-up"></i></button>
+                        <button type="button" class="btn btn-outline-secondary btn-bajar" title="Bajar"><i class="bi bi-arrow-down"></i></button>
+                        <button type="button" class="btn btn-outline-danger btn-quitar-filtro" title="Quitar"><i class="bi bi-x"></i></button>
+                    </div>
                 </div>
                 <input type="hidden" name="filtros_etiquetas[]" value="${id}">
             `;
@@ -522,6 +593,12 @@
 
         asignarEventos();
         actualizarNumeracion();
+
+        // Filtrar etiquetas según tipo/proveedor inicial y al cambiar tipo
+        tipoRadios.forEach(function(radio) {
+            radio.addEventListener('change', reconstruirDisponibles);
+        });
+        reconstruirDisponibles();
     });
 </script>
 @endpush

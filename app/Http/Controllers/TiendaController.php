@@ -31,7 +31,10 @@ class TiendaController extends Controller
             $buscar = $request->buscar;
             $query->where(function ($q) use ($buscar) {
                 $q->where('descripcion', 'ilike', "%{$buscar}%")
-                  ->orWhere('id_proveedor', 'ilike', "%{$buscar}%");
+                  ->orWhere('id_proveedor', 'ilike', "%{$buscar}%")
+                  ->orWhereHas('etiquetas', function ($q2) use ($buscar) {
+                      $q2->where('producto_etiqueta.valor', 'ilike', "%{$buscar}%");
+                  });
             });
         }
 
@@ -238,7 +241,10 @@ class TiendaController extends Controller
             $buscar = $request->buscar;
             $query->where(function ($q) use ($buscar) {
                 $q->where('descripcion', 'ilike', "%{$buscar}%")
-                  ->orWhere('id_proveedor', 'ilike', "%{$buscar}%");
+                  ->orWhere('id_proveedor', 'ilike', "%{$buscar}%")
+                  ->orWhereHas('etiquetas', function ($q2) use ($buscar) {
+                      $q2->where('producto_etiqueta.valor', 'ilike', "%{$buscar}%");
+                  });
             });
         }
 

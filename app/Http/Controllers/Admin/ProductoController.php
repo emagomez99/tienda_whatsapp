@@ -205,8 +205,9 @@ class ProductoController extends Controller
             }
         }
 
-        return redirect()->route('admin.productos.index')
-            ->with('success', 'Producto actualizado correctamente');
+        $backParams = $request->input('_back', '');
+        $backUrl = route('admin.productos.index') . ($backParams ? '?' . $backParams : '');
+        return redirect($backUrl)->with('success', 'Producto actualizado correctamente');
     }
 
     public function destroy(Producto $producto)

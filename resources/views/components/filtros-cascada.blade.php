@@ -2,6 +2,7 @@
     @php
         $etiquetasFiltro = $menuActual->getEtiquetasFiltro();
         $filtrosRequeridos = $menuActual->filtros_requeridos;
+        $filtrosConfig = $menuActual->filtros_config ?? [];
     @endphp
 
     <div class="card mb-4" id="filtros-cascada">
@@ -31,7 +32,12 @@
                                 data-etiqueta-id="{{ $etiqueta->id }}"
                                 data-orden="{{ $index }}"
                                 data-nombre="{{ $etiqueta->nombre }}">
-                            <option value="">{{ $filtrosRequeridos ? 'Seleccionar ' . $etiqueta->nombre . '...' : 'Todos' }}</option>
+                            @php
+                                $mostrarTodosEst = $filtrosConfig[(string)$etiqueta->id] ?? true;
+                                $opcionTexto = $mostrarTodosEst ? 'Todos' : 'Seleccionar ' . $etiqueta->nombre . '...';
+                                $opcionDisabled = !$mostrarTodosEst && !$filtrosRequeridos;
+                            @endphp
+                            <option value="" {{ $opcionDisabled ? 'disabled' : '' }}>{{ $opcionTexto }}</option>
                         </select>
                     </div>
                 @endforeach
@@ -47,6 +53,7 @@
             const selectores = document.querySelectorAll('.filtro-select');
             const ordenEtiquetas = @json($etiquetasFiltro->pluck('id')->toArray());
             const filtrosRequeridos = {{ $filtrosRequeridos ? 'true' : 'false' }};
+            const filtrosConfig = @json($filtrosConfig);
             const productosContainer = document.getElementById('productos-container');
             const contadorResultados = document.getElementById('contador-resultados');
             const totalProductos = document.getElementById('total-productos');
@@ -80,6 +87,13 @@
                 }
             }
 
+            // Un filtro está "completo" si tiene valor, o si su etiqueta permite Todos (vacío = Todos)
+            function esFiltroCompleto(select) {
+                if (select.value) return true;
+                const etiquetaId = String(select.dataset.etiquetaId);
+                return filtrosConfig.hasOwnProperty(etiquetaId) ? filtrosConfig[etiquetaId] : true;
+            }
+
             // Actualizar estado habilitado/deshabilitado de filtros (modo compuesto)
             function actualizarEstadoFiltros() {
                 if (!filtrosRequeridos) return;
@@ -91,7 +105,7 @@
                     } else {
                         select.disabled = !habilitarSiguiente;
                     }
-                    if (!select.value) {
+                    if (!esFiltroCompleto(select)) {
                         habilitarSiguiente = false;
                     }
                 });
@@ -100,7 +114,7 @@
             // Verificar si todos los filtros están completos
             function todosLosFiltrosCompletos() {
                 for (const select of selectores) {
-                    if (!select.value) return false;
+                    if (!esFiltroCompleto(select)) return false;
                 }
                 return true;
             }
@@ -277,8 +291,20 @@
             // Poblar select con valores
             function poblarSelect(selectElement, valores, valorActual) {
                 const nombre = selectElement.dataset.nombre;
-                const placeholder = filtrosRequeridos ? `Seleccionar ${nombre}...` : 'Todos';
-                selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+                const etiquetaId = String(selectElement.dataset.etiquetaId);
+                const mostrarTodosEsta = filtrosConfig.hasOwnProperty(etiquetaId) ? filtrosConfig[etiquetaId] : true;
+                // "Todos" aparece si está permitido (independiente del modo).
+                // En Individual sin Todos → disabled para que no sea seleccionable.
+                // En Compuesto sin Todos → no disabled (el select mismo puede estar disabled).
+                let opcionVacia;
+                if (mostrarTodosEsta) {
+                    opcionVacia = '<option value="">Todos</option>';
+                } else if (!filtrosRequeridos) {
+                    opcionVacia = `<option value="" disabled>Seleccionar ${nombre}...</option>`;
+                } else {
+                    opcionVacia = `<option value="">Seleccionar ${nombre}...</option>`;
+                }
+                selectElement.innerHTML = opcionVacia;
                 valores.forEach(valor => {
                     const option = document.createElement('option');
                     option.value = valor;
@@ -341,6 +367,7 @@
                 if (filtrosRequeridos) {
                     // Modo compuesto: limpiar filtros siguientes y solo cargar el inmediato siguiente
                     let siguienteCargado = false;
+                    const cambiadoCompleto = esFiltroCompleto(selectCambiado);
 
                     for (const select of selectores) {
                         const orden = parseInt(select.dataset.orden);
@@ -348,8 +375,8 @@
                             select.value = '';
                             select.dataset.cargado = '';
 
-                            if (!selectCambiado.value) {
-                                // Si se limpió el filtro, deshabilitar los siguientes
+                            if (!cambiadoCompleto) {
+                                // Filtro sin valor y sin Todos → deshabilitar los siguientes
                                 select.disabled = true;
                             } else if (!siguienteCargado) {
                                 // Solo cargar el siguiente filtro inmediato

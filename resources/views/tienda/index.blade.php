@@ -10,41 +10,23 @@
 @endif
     <div class="row mb-4">
         <div class="col-12">
-            <div class="row g-3">
-                <div class="{{ $menuEnSidebar ? 'col-12' : 'col-md-10' }}">
-                    <div class="input-group">
-                        <input type="text"
-                               id="buscar-productos"
-                               class="form-control"
-                               placeholder="Buscar en productos filtrados..."
-                               value="{{ request('buscar') }}"
-                               autocomplete="off">
-                        <button class="btn btn-primary" type="button" id="btn-buscar">
-                            <i class="bi bi-search"></i>
-                        </button>
-                        <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda" style="display: none;">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-                    <small class="text-muted" id="busqueda-contexto" style="display: none;">
-                        <i class="bi bi-info-circle"></i> Buscando dentro de los productos filtrados
-                    </small>
-                </div>
-                @if(!$menuEnSidebar)
-                <div class="col-md-2">
-                    @if(!request('proveedor') && !request('etiqueta_valor') && !request('especificacion') && !($menuActual && $menuActual->tieneFiltros()))
-                        <select name="etiqueta" id="filtro-etiqueta-simple" class="form-select">
-                            <option value="">Filtrar por etiqueta</option>
-                            @foreach($etiquetas as $etiqueta)
-                                <option value="{{ $etiqueta->id }}" {{ request('etiqueta') == $etiqueta->id ? 'selected' : '' }}>
-                                    {{ $etiqueta->nombre }}
-                                </option>
-                            @endforeach
-                        </select>
-                    @endif
-                </div>
-                @endif
+            <div class="input-group">
+                <input type="text"
+                       id="buscar-productos"
+                       class="form-control"
+                       placeholder="Buscar productos..."
+                       value="{{ request('buscar') }}"
+                       autocomplete="off">
+                <button class="btn btn-primary" type="button" id="btn-buscar">
+                    <i class="bi bi-search"></i>
+                </button>
+                <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda" style="display: none;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
+            <small class="text-muted" id="busqueda-contexto" style="display: none;">
+                <i class="bi bi-info-circle"></i> Buscando dentro de los productos filtrados
+            </small>
         </div>
     </div>
 

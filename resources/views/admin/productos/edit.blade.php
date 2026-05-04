@@ -3,9 +3,13 @@
 @section('title', 'Editar Producto')
 
 @section('content')
+@php
+    $backParams = request('_back', '');
+    $backUrl = route('admin.productos.index') . ($backParams ? '?' . $backParams : '');
+@endphp
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="bi bi-pencil"></i> Editar Producto</h2>
-    <a href="{{ route('admin.productos.index') }}" class="btn btn-outline-secondary">
+    <a href="{{ $backUrl }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Volver
     </a>
 </div>
@@ -326,7 +330,8 @@
                     <button type="submit" class="btn btn-primary w-100 mb-2">
                         <i class="bi bi-check-circle"></i> Actualizar Producto
                     </button>
-                    <a href="{{ route('admin.productos.index') }}" class="btn btn-outline-secondary w-100">
+                    <input type="hidden" name="_back" value="{{ $backParams }}">
+                    <a href="{{ $backUrl }}" class="btn btn-outline-secondary w-100">
                         Cancelar
                     </a>
                 </div>

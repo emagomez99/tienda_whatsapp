@@ -198,9 +198,10 @@
         @endif
     </main>
 
-    <footer class="bg-light py-3 mt-4">
-        <div class="container text-center text-muted">
-            <small>&copy; {{ date('Y') }} {{ App\Models\Configuracion::obtener('nombre_tienda', 'Tienda MC') }}. Todos los derechos reservados.</small>
+    <footer class="bg-light py-3 mt-4 border-top">
+        <div class="container text-center text-muted small">
+            <div>&copy; {{ date('Y') }} {{ App\Models\Configuracion::obtener('nombre_tienda', 'Tienda MC') }}. Todos los derechos reservados.</div>
+            <div class="mt-1">Desarrollado por <a href="https://tredevs.com.ar/" target="_blank" rel="noopener" class="text-muted">Tredevs</a></div>
         </div>
     </footer>
 

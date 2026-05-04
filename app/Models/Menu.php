@@ -20,6 +20,7 @@ class Menu extends Model
         'activo',
         'filtros_etiquetas',
         'filtros_requeridos',
+        'filtros_config',
     ];
 
     protected $casts = [
@@ -27,6 +28,7 @@ class Menu extends Model
         'orden' => 'integer',
         'filtros_etiquetas' => 'array',
         'filtros_requeridos' => 'boolean',
+        'filtros_config' => 'array',
     ];
 
     const TIPO_NINGUNO = 'ninguno';

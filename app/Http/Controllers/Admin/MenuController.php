@@ -31,10 +31,11 @@ class MenuController extends Controller
     public function create()
     {
         $menusParent = Menu::orderBy('nombre')->get();
-        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
+        $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
         $etiquetas = Etiqueta::orderBy('nombre')->get();
+        $etiquetasPorProveedor = $this->mapEtiquetasAplicables($proveedores);
 
-        return view('admin.menus.create', compact('menusParent', 'proveedores', 'etiquetas'));
+        return view('admin.menus.create', compact('menusParent', 'proveedores', 'etiquetas', 'etiquetasPorProveedor'));
     }
 
     public function store(Request $request)
@@ -57,12 +58,20 @@ class MenuController extends Controller
         $validated['filtros_etiquetas'] = $request->input('filtros_etiquetas', []);
         $validated['filtros_requeridos'] = $request->boolean('filtros_requeridos');
 
+        $filtrosTodos = $request->input('filtros_todos', []);
+        $filtrosConfig = [];
+        foreach ($validated['filtros_etiquetas'] as $etiquetaId) {
+            $filtrosConfig[(string) $etiquetaId] = isset($filtrosTodos[(string) $etiquetaId]);
+        }
+        $validated['filtros_config'] = !empty($filtrosConfig) ? $filtrosConfig : null;
+
         // Limpiar campos según el tipo
         if ($validated['tipo_enlace'] === 'ninguno') {
             $validated['enlace_id'] = null;
             $validated['enlace_valor'] = null;
             $validated['filtros_etiquetas'] = []; // Contenedores no pueden tener filtros
             $validated['filtros_requeridos'] = false;
+            $validated['filtros_config'] = null;
         } elseif ($validated['tipo_enlace'] === 'especificacion') {
             $validated['enlace_id'] = null;
         }
@@ -79,10 +88,11 @@ class MenuController extends Controller
             ->whereNotIn('id', $this->getDescendantIds($menu))
             ->orderBy('nombre')
             ->get();
-        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
+        $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
         $etiquetas = Etiqueta::orderBy('nombre')->get();
+        $etiquetasPorProveedor = $this->mapEtiquetasAplicables($proveedores);
 
-        return view('admin.menus.edit', compact('menu', 'menusParent', 'proveedores', 'etiquetas'));
+        return view('admin.menus.edit', compact('menu', 'menusParent', 'proveedores', 'etiquetas', 'etiquetasPorProveedor'));
     }
 
     public function update(Request $request, Menu $menu)
@@ -109,12 +119,20 @@ class MenuController extends Controller
         $validated['filtros_etiquetas'] = $request->input('filtros_etiquetas', []);
         $validated['filtros_requeridos'] = $request->boolean('filtros_requeridos');
 
+        $filtrosTodos = $request->input('filtros_todos', []);
+        $filtrosConfig = [];
+        foreach ($validated['filtros_etiquetas'] as $etiquetaId) {
+            $filtrosConfig[(string) $etiquetaId] = isset($filtrosTodos[(string) $etiquetaId]);
+        }
+        $validated['filtros_config'] = !empty($filtrosConfig) ? $filtrosConfig : null;
+
         // Limpiar campos según el tipo
         if ($validated['tipo_enlace'] === 'ninguno') {
             $validated['enlace_id'] = null;
             $validated['enlace_valor'] = null;
             $validated['filtros_etiquetas'] = []; // Contenedores no pueden tener filtros
             $validated['filtros_requeridos'] = false;
+            $validated['filtros_config'] = null;
         } elseif ($validated['tipo_enlace'] === 'especificacion') {
             $validated['enlace_id'] = null;
         }
@@ -172,6 +190,22 @@ class MenuController extends Controller
             ->take(20);
 
         return response()->json($valores);
+    }
+
+    private function mapEtiquetasAplicables($proveedores)
+    {
+        $map = [];
+        foreach ($proveedores as $prov) {
+            $todas = $prov->etiquetas;
+            $aplicables = $todas->filter(function ($e) {
+                return $e->pivot->obligatoria !== null;
+            })->pluck('id')->values()->toArray();
+            $map[$prov->id] = [
+                'configured' => $todas->isNotEmpty(),
+                'ids'        => $aplicables,
+            ];
+        }
+        return $map;
     }
 
     /**
