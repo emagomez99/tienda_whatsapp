@@ -24,26 +24,12 @@
                     <h5 class="mb-0">Información del Producto</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8 mb-3">
-                            <label for="descripcion" class="form-label">Nombre del Producto *</label>
-                            <input type="text" class="form-control @error('descripcion') is-invalid @enderror" id="descripcion" name="descripcion" value="{{ old('descripcion') }}" required>
-                            @error('descripcion')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="id_proveedor" class="form-label">Código Proveedor</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control @error('id_proveedor') is-invalid @enderror" id="id_proveedor" name="id_proveedor" value="{{ old('id_proveedor') }}">
-                                <button type="button" class="btn btn-outline-secondary" id="btn-generar-codigo" title="Generar código">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
-                            </div>
-                            @error('id_proveedor')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Nombre del Producto *</label>
+                        <input type="text" class="form-control @error('descripcion') is-invalid @enderror" id="descripcion" name="descripcion" value="{{ old('descripcion') }}" required>
+                        @error('descripcion')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="mb-3">
                         <label for="detalle" class="form-label">Descripción detallada</label>
@@ -54,7 +40,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="proveedor_id" class="form-label">Proveedor *</label>
                             <select class="form-select @error('proveedor_id') is-invalid @enderror" id="proveedor_id" name="proveedor_id" required>
                                 <option value="">Seleccionar proveedor</option>
@@ -68,6 +54,20 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_proveedor" class="form-label">Código Proveedor</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control @error('id_proveedor') is-invalid @enderror" id="id_proveedor" name="id_proveedor" value="{{ old('id_proveedor') }}">
+                                <button type="button" class="btn btn-outline-secondary" id="btn-generar-codigo" title="Generar código">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            @error('id_proveedor')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="moneda_id" class="form-label">Moneda</label>
                             <select class="form-select @error('moneda_id') is-invalid @enderror" id="moneda_id" name="moneda_id">
