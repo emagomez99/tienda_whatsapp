@@ -111,7 +111,7 @@
     </div>
 </div>
 <style>
-.img-producto-wrap { height: 260px; }
+.img-producto-wrap { height: 320px; }
 #input-cantidad::-webkit-outer-spin-button,
 #input-cantidad::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 @media (min-width: 768px) {
