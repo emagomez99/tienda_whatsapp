@@ -8,13 +8,13 @@
     $backUrl = route('admin.productos.index') . ($backParams ? '?' . $backParams : '');
 @endphp
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-pencil"></i> Editar Producto</h2>
+    <h3><i class="bi bi-pencil"></i> Editar Producto</h3>
     <a href="{{ $backUrl }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Volver
     </a>
 </div>
 
-<form action="{{ route('admin.productos.update', $producto) }}" method="POST" enctype="multipart/form-data">
+<form id="form-producto" action="{{ route('admin.productos.update', $producto) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
     @if($errors->any())
@@ -37,8 +37,9 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="detalle" class="form-label">Descripción detallada</label>
-                        <textarea class="form-control @error('detalle') is-invalid @enderror" id="detalle" name="detalle" rows="4" placeholder="Descripción completa del producto, características, usos, etc.">{{ old('detalle', $producto->detalle) }}</textarea>
+                        <label class="form-label">Descripción detallada</label>
+                        <div id="detalle-editor" class="@error('detalle') is-invalid @enderror"></div>
+                        <input type="hidden" name="detalle" id="detalle" value="{{ old('detalle', $producto->detalle) }}">
                         @error('detalle')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -394,7 +395,11 @@
 </div>
 
 @push('styles')
+<link rel="stylesheet" href="{{ asset('vendor/quill/quill.snow.css') }}">
 <style>
+    #detalle-editor { min-height: 120px; background: #fff; }
+    .ql-toolbar { border-radius: 6px 6px 0 0; }
+    .ql-container { border-radius: 0 0 6px 6px; font-size: 1rem; }
     .autocomplete-suggestions .list-group-item {
         cursor: pointer;
         padding: 0.5rem 0.75rem;
@@ -412,7 +417,28 @@
 @endpush
 
 @push('scripts')
+<script src="{{ asset('vendor/quill/quill.min.js') }}"></script>
 <script>
+    var quill = new Quill('#detalle-editor', {
+        theme: 'snow',
+        placeholder: 'Descripción completa del producto, características, usos, etc.',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                ['clean']
+            ]
+        }
+    });
+
+    var detalleInicial = document.getElementById('detalle').value;
+    if (detalleInicial) quill.clipboard.dangerouslyPasteHTML(detalleInicial);
+
+    document.getElementById('form-producto').addEventListener('submit', function() {
+        var contenido = quill.root.innerHTML;
+        document.getElementById('detalle').value = contenido === '<p><br></p>' ? '' : contenido;
+    });
+
     let especificacionIndex = {{ $producto->especificaciones->count() ?: 1 }};
     let etiquetaIndex = {{ $producto->etiquetas->count() ?: 1 }};
 

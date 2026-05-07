@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-shield-check"></i> Perfiles</h2>
+    <h3><i class="bi bi-shield-check"></i> Perfiles</h3>
     @if(auth()->user()->puede('perfiles.gestionar'))
     <a href="{{ route('admin.perfiles.create') }}" class="btn btn-primary">
         <i class="bi bi-plus-circle"></i> Nuevo Perfil

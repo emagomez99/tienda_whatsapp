@@ -5,7 +5,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2><i class="bi bi-clock-history"></i> Historial de stock</h2>
+        <h3><i class="bi bi-clock-history"></i> Historial de stock</h3>
         <p class="text-muted mb-0">
             <strong>{{ $producto->descripcion }}</strong>
             @if($producto->id_proveedor)

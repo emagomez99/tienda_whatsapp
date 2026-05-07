@@ -4,13 +4,13 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-plus-circle"></i> Nuevo Producto</h2>
+    <h3><i class="bi bi-plus-circle"></i> Nuevo Producto</h3>
     <a href="{{ route('admin.productos.index') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Volver
     </a>
 </div>
 
-<form action="{{ route('admin.productos.store') }}" method="POST" enctype="multipart/form-data">
+<form id="form-producto" action="{{ route('admin.productos.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     @if($errors->any())
         <div class="alert alert-danger mb-3">
@@ -32,8 +32,9 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="detalle" class="form-label">Descripción detallada</label>
-                        <textarea class="form-control @error('detalle') is-invalid @enderror" id="detalle" name="detalle" rows="4" placeholder="Descripción completa del producto, características, usos, etc.">{{ old('detalle') }}</textarea>
+                        <label class="form-label">Descripción detallada</label>
+                        <div id="detalle-editor" class="@error('detalle') is-invalid @enderror"></div>
+                        <input type="hidden" name="detalle" id="detalle" value="{{ old('detalle') }}">
                         @error('detalle')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -264,7 +265,11 @@
 </form>
 
 @push('styles')
+<link rel="stylesheet" href="{{ asset('vendor/quill/quill.snow.css') }}">
 <style>
+    #detalle-editor { min-height: 120px; background: #fff; }
+    .ql-toolbar { border-radius: 6px 6px 0 0; }
+    .ql-container { border-radius: 0 0 6px 6px; font-size: 1rem; }
     .autocomplete-suggestions .list-group-item {
         cursor: pointer;
         padding: 0.5rem 0.75rem;
@@ -282,7 +287,28 @@
 @endpush
 
 @push('scripts')
+<script src="{{ asset('vendor/quill/quill.min.js') }}"></script>
 <script>
+    var quill = new Quill('#detalle-editor', {
+        theme: 'snow',
+        placeholder: 'Descripción completa del producto, características, usos, etc.',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                ['clean']
+            ]
+        }
+    });
+
+    var detalleInicial = document.getElementById('detalle').value;
+    if (detalleInicial) quill.clipboard.dangerouslyPasteHTML(detalleInicial);
+
+    document.getElementById('form-producto').addEventListener('submit', function() {
+        var contenido = quill.root.innerHTML;
+        document.getElementById('detalle').value = contenido === '<p><br></p>' ? '' : contenido;
+    });
+
     let especificacionIndex = 1;
     let etiquetaIndex = 1;
 

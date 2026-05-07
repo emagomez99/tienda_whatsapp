@@ -4,10 +4,16 @@
 
 @section('content')
 <div class="container py-4">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('tienda.index') }}">Tienda</a></li>
-            <li class="breadcrumb-item active">{{ $producto->descripcion }}</li>
+    <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '›';">
+        <ol class="breadcrumb mb-4">
+            <li class="breadcrumb-item">
+                <a href="{{ route('tienda.index') }}" class="text-decoration-none">
+                    <i class="bi bi-house-door"></i> Tienda
+                </a>
+            </li>
+            <li class="breadcrumb-item active text-truncate" style="max-width: 480px;" aria-current="page">
+                {{ $producto->descripcion }}
+            </li>
         </ol>
     </nav>
 
@@ -33,7 +39,7 @@
 
             @if($producto->detalle)
                 <div class="my-3">
-                    <p class="lead" style="white-space: pre-line;">{{ $producto->detalle }}</p>
+                    {!! $producto->detalle !!}
                 </div>
                 <hr>
             @endif

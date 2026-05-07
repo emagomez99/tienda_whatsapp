@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-people"></i> Usuarios</h2>
+    <h3><i class="bi bi-people"></i> Usuarios</h3>
     <a href="{{ route('admin.usuarios.create') }}" class="btn btn-primary">
         <i class="bi bi-plus-circle"></i> Nuevo Usuario
     </a>

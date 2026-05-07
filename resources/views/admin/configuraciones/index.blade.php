@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-sliders"></i> Configuraciones</h2>
+    <h3><i class="bi bi-sliders"></i> Configuraciones</h3>
 </div>
 
 <form action="{{ route('admin.configuraciones.update') }}" method="POST" enctype="multipart/form-data">
@@ -141,15 +141,12 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-4">
-                        <label for="whatsapp_admin" class="form-label">Número de WhatsApp</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-whatsapp"></i></span>
-                            <input type="text" class="form-control @error('whatsapp_admin') is-invalid @enderror" id="whatsapp_admin" name="whatsapp_admin" value="{{ old('whatsapp_admin', App\Models\Configuracion::obtener('whatsapp_admin', '')) }}" placeholder="5491112345678">
-                        </div>
-                        @error('whatsapp_admin')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted">Código de país + número. Ej: 5491112345678</small>
+                        @include('partials.intl-tel-input', [
+                            'inputId'   => 'whatsapp-input',
+                            'fieldName' => 'whatsapp_admin',
+                            'value'     => App\Models\Configuracion::obtener('whatsapp_admin', ''),
+                            'label'     => 'Número de WhatsApp',
+                        ])
                     </div>
 
                     <div class="mb-4">
