@@ -17,12 +17,22 @@
                 <form action="{{ route('admin.proveedores.update', $proveedor) }}" method="POST">
                     @csrf
                     @method('PUT')
-                    <div class="mb-3">
-                        <label for="nombre" class="form-label">Nombre *</label>
-                        <input type="text" class="form-control @error('nombre') is-invalid @enderror" id="nombre" name="nombre" value="{{ old('nombre', $proveedor->nombre) }}" required>
-                        @error('nombre')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="nombre" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control @error('nombre') is-invalid @enderror" id="nombre" name="nombre" value="{{ old('nombre', $proveedor->nombre) }}" required>
+                            @error('nombre')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="prefijo" class="form-label">Prefijo de código</label>
+                            <input type="text" class="form-control @error('prefijo') is-invalid @enderror" id="prefijo" name="prefijo" value="{{ old('prefijo', $proveedor->prefijo) }}" placeholder="Ej: BCK" maxlength="20" style="text-transform:uppercase">
+                            @error('prefijo')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">Se usará para sugerir códigos de producto</small>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">

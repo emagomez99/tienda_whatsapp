@@ -39,9 +39,14 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="id_proveedor" class="form-label">Código Proveedor</label>
-                            <input type="text" class="form-control @error('id_proveedor') is-invalid @enderror" id="id_proveedor" name="id_proveedor" value="{{ old('id_proveedor', $producto->id_proveedor) }}">
+                            <div class="input-group">
+                                <input type="text" class="form-control @error('id_proveedor') is-invalid @enderror" id="id_proveedor" name="id_proveedor" value="{{ old('id_proveedor', $producto->id_proveedor) }}">
+                                <button type="button" class="btn btn-outline-secondary" id="btn-generar-codigo" title="Generar código">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
                             @error('id_proveedor')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
@@ -59,7 +64,7 @@
                             <select class="form-select @error('proveedor_id') is-invalid @enderror" id="proveedor_id" name="proveedor_id" required>
                                 <option value="">Seleccionar proveedor</option>
                                 @foreach($proveedores as $proveedor)
-                                    <option value="{{ $proveedor->id }}" {{ old('proveedor_id', $producto->proveedor_id) == $proveedor->id ? 'selected' : '' }}>
+                                    <option value="{{ $proveedor->id }}" data-prefijo="{{ $proveedor->prefijo }}" {{ old('proveedor_id', $producto->proveedor_id) == $proveedor->id ? 'selected' : '' }}>
                                         {{ $proveedor->nombre }}
                                     </option>
                                 @endforeach
@@ -542,6 +547,14 @@
         });
     }
 
+    document.getElementById('btn-generar-codigo').addEventListener('click', function() {
+        var sel = document.getElementById('proveedor_id');
+        var option = sel.options[sel.selectedIndex];
+        var prefijo = option ? (option.dataset.prefijo || '').trim().toUpperCase() : '';
+        var numero = Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('id_proveedor').value = prefijo ? prefijo + '-' + numero : String(numero);
+    });
+
     document.getElementById('proveedor_id').addEventListener('change', function() {
         var proveedorId = this.value;
         limpiarTodasEtiquetas(proveedorId);
@@ -750,6 +763,10 @@
             const rows = document.querySelectorAll('.especificacion-row');
             if (rows.length > 1) {
                 e.target.closest('.especificacion-row').remove();
+            } else {
+                const row = e.target.closest('.especificacion-row');
+                row.querySelector('.especificacion-clave').value = '';
+                row.querySelector('.especificacion-valor').value = '';
             }
         }
         if (e.target.closest('.btn-eliminar-etiqueta')) {
@@ -758,6 +775,10 @@
             const rows = document.querySelectorAll('.etiqueta-row');
             if (rows.length > 1) {
                 e.target.closest('.etiqueta-row').remove();
+            } else {
+                const row = e.target.closest('.etiqueta-row');
+                row.querySelector('.etiqueta-select').value = '';
+                row.querySelector('.etiqueta-valor').value = '';
             }
         }
     });

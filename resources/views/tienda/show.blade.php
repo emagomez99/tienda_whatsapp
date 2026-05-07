@@ -27,7 +27,7 @@
                 <p class="text-muted mb-1">Código: {{ $producto->id_proveedor }}</p>
             @endif
 
-            @if($producto->proveedor)
+            @if($producto->proveedor && App\Models\Configuracion::mostrarProveedor())
                 <p class="text-muted mb-1">Proveedor: {{ $producto->proveedor->nombre }}</p>
             @endif
 

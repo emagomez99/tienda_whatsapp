@@ -202,6 +202,7 @@ class CarritoController extends Controller
         $total = 0;
         $mostrarPrecios = Configuracion::mostrarPrecios();
         $productosTexto = '';
+        $productosTextoDetalle = '';
 
         foreach ($carrito as $id => $cantidad) {
             $producto = Producto::with(['especificaciones', 'etiquetas'])->find($id);
@@ -209,30 +210,32 @@ class CarritoController extends Controller
                 $subtotal = $producto->precio * $cantidad;
                 $total += $subtotal;
 
-                $productosTexto .= "• {$producto->descripcion}";
+                $lineaBase = "• {$producto->descripcion}";
                 if ($producto->id_proveedor) {
-                    $productosTexto .= " ({$producto->id_proveedor})";
+                    $lineaBase .= " ({$producto->id_proveedor})";
                 }
-                $productosTexto .= " x{$cantidad}";
+                $lineaBase .= " x{$cantidad}";
                 if ($mostrarPrecios) {
-                    $productosTexto .= " - $" . number_format($subtotal, 2);
+                    $lineaBase .= " - $" . number_format($subtotal, 2);
                 }
-                $productosTexto .= "\n";
 
-                // Agregar etiquetas
+                $productosTexto .= $lineaBase . "\n";
+                $productosTextoDetalle .= $lineaBase . "\n";
+
+                // Agregar etiquetas (solo en detalle)
                 if ($producto->etiquetas->count() > 0) {
                     $etiquetasTexto = $producto->etiquetas->map(function ($e) {
                         return "{$e->nombre}={$e->pivot->valor}";
                     })->implode(', ');
-                    $productosTexto .= "  Etiquetas: {$etiquetasTexto}\n";
+                    $productosTextoDetalle .= "  Etiquetas: {$etiquetasTexto}\n";
                 }
 
-                // Agregar especificaciones
+                // Agregar especificaciones (solo en detalle)
                 if ($producto->especificaciones->count() > 0) {
                     $especificacionesTexto = $producto->especificaciones->map(function ($e) {
                         return "{$e->clave}={$e->valor}";
                     })->implode(', ');
-                    $productosTexto .= "  Info: {$especificacionesTexto}\n";
+                    $productosTextoDetalle .= "  Info: {$especificacionesTexto}\n";
                 }
             }
         }
@@ -270,8 +273,8 @@ class CarritoController extends Controller
         // Construir mensaje usando el template configurable
         $template = Configuracion::templateWhatsapp();
         $mensaje = str_replace(
-            ['{pedido_id}', '{nombre}', '{apellido}', '{email}', '{celular}', '{direccion}', '{localidad}', '{provincia}', '{cp}', '{productos}', '{total}'],
-            [$pedido->id, $request->nombre, $request->apellido, $request->email, $request->celular, $request->direccion ?? '', $request->localidad ?? '', $request->provincia ?? '', $request->cp ?? '', rtrim($productosTexto), $totalTexto],
+            ['{pedido_id}', '{nombre}', '{apellido}', '{email}', '{celular}', '{direccion}', '{localidad}', '{provincia}', '{cp}', '{productos+detalles}', '{productos}', '{total}'],
+            [$pedido->id, $request->nombre, $request->apellido, $request->email, $request->celular, $request->direccion ?? '', $request->localidad ?? '', $request->provincia ?? '', $request->cp ?? '', rtrim($productosTextoDetalle), rtrim($productosTexto), $totalTexto],
             $template
         );
 

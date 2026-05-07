@@ -175,4 +175,9 @@ class Configuracion extends Model
         $valor = self::obtener('moneda_default', null);
         return $valor ? (int) $valor : null;
     }
+
+    public static function mostrarProveedor()
+    {
+        return self::obtener('mostrar_proveedor', 'false') === 'true';
+    }
 }

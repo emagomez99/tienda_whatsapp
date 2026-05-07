@@ -172,6 +172,25 @@
                     </div>
 
                     <div class="mb-4">
+                        <label class="form-label">Mostrar Proveedor en Productos</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="mostrar_proveedor" id="proveedor_si" value="true" {{ old('mostrar_proveedor', App\Models\Configuracion::obtener('mostrar_proveedor', 'false')) === 'true' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="proveedor_si">
+                                    <i class="bi bi-eye"></i> Sí
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="mostrar_proveedor" id="proveedor_no" value="false" {{ old('mostrar_proveedor', App\Models\Configuracion::obtener('mostrar_proveedor', 'false')) === 'false' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="proveedor_no">
+                                    <i class="bi bi-eye-slash"></i> Ocultar
+                                </label>
+                            </div>
+                        </div>
+                        <small class="text-muted">Si se oculta, los clientes no verán el nombre del proveedor en la ficha del producto</small>
+                    </div>
+
+                    <div class="mb-4">
                         <label class="form-label">Solicitar Dirección de Envío</label>
                         <div>
                             <div class="form-check form-check-inline">
@@ -300,7 +319,11 @@
                                 </div>
                                 <div class="list-group-item px-0 py-2">
                                     <code class="text-success">{productos}</code>
-                                    <span class="text-muted ms-2">Lista de productos del pedido</span>
+                                    <span class="text-muted ms-2">Lista de productos (solo nombre, código y cantidad)</span>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <code class="text-success">{productos+detalles}</code>
+                                    <span class="text-muted ms-2">Lista de productos con etiquetas e información técnica</span>
                                 </div>
                                 <div class="list-group-item px-0 py-2">
                                     <code class="text-success">{total}</code>

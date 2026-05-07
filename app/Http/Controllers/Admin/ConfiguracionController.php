@@ -42,6 +42,7 @@ class ConfiguracionController extends Controller
             'template_whatsapp'          => 'nullable|string|max:2000',
             'modo_imagen_producto'       => 'nullable|in:ambos,solo_url,solo_archivo',
             'moneda_default'             => 'nullable|exists:monedas,id',
+            'mostrar_proveedor'          => 'required|in:true,false',
         ]);
 
         Configuracion::establecer('mostrar_precios', $request->mostrar_precios, 'Mostrar precios en la tienda');
@@ -52,6 +53,7 @@ class ConfiguracionController extends Controller
         Configuracion::establecer('paleta', $request->paleta, 'Paleta de colores');
         Configuracion::establecer('posicion_menu', $request->posicion_menu, 'Posición del menú en la tienda');
         Configuracion::establecer('pedir_direccion_envio', $request->pedir_direccion_envio, 'Solicitar dirección de envío en el checkout');
+        Configuracion::establecer('mostrar_proveedor', $request->mostrar_proveedor, 'Mostrar proveedor en ficha de producto');
 
         $templateWhatsapp = $request->filled('template_whatsapp')
             ? $request->template_whatsapp
