@@ -17,9 +17,9 @@
         </ol>
     </nav>
 
-    <div class="row">
+    <div class="row g-4">
         <div class="col-md-5">
-            <div class="rounded shadow overflow-hidden bg-light d-flex align-items-center justify-content-center" style="height: 420px;">
+            <div class="rounded shadow overflow-hidden bg-light d-flex align-items-center justify-content-center img-producto-wrap">
                 <img src="{{ $producto->url_imagen ? $producto->imagen_url : '/img/no-image.svg' }}"
                      alt="{{ $producto->descripcion }}"
                      style="width: 100%; height: 100%; object-fit: contain;"
@@ -27,7 +27,7 @@
             </div>
         </div>
         <div class="col-md-7">
-            <h2>{{ $producto->descripcion }}</h2>
+            <h2 class="fs-3">{{ $producto->descripcion }}</h2>
 
             @if($producto->id_proveedor)
                 <p class="text-muted mb-1">Código: {{ $producto->id_proveedor }}</p>
@@ -87,33 +87,38 @@
                 <form id="form-agregar" class="mt-4">
                     @csrf
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" id="btn-decrement" class="btn btn-outline-secondary" disabled>
+                        <button type="button" id="btn-decrement" class="btn btn-outline-secondary" style="width:44px;height:44px;padding:0;" disabled>
                             <i class="bi bi-dash"></i>
                         </button>
                         <input type="number" name="cantidad" value="1" min="1" @if($maxStock !== null) max="{{ $maxStock }}" @endif
                                class="form-control text-center"
-                               style="width: 70px; -moz-appearance: textfield;"
+                               style="width: 70px; height:44px; -moz-appearance: textfield;"
                                id="input-cantidad">
-                        <button type="button" id="btn-increment" class="btn btn-outline-secondary" {{ $maxStock === 1 ? 'disabled' : '' }}>
+                        <button type="button" id="btn-increment" class="btn btn-outline-secondary" style="width:44px;height:44px;padding:0;" {{ $maxStock === 1 ? 'disabled' : '' }}>
                             <i class="bi bi-plus"></i>
                         </button>
-                        <button type="submit" class="btn btn-primary btn-lg ms-2">
+                        <button type="submit" class="btn btn-primary btn-lg flex-grow-1" style="height:44px;">
                             <i class="bi bi-cart-plus"></i> Agregar al carrito
                         </button>
                     </div>
                 </form>
-                <style>
-                    #input-cantidad::-webkit-outer-spin-button,
-                    #input-cantidad::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-                </style>
             @endif
 
-            <button type="button" onclick="history.back()" class="btn btn-outline-secondary mt-3">
+            <a href="{{ route('tienda.index') }}" class="btn btn-outline-secondary mt-3 w-100" id="btn-volver">
                 <i class="bi bi-arrow-left"></i> Volver a la tienda
-            </button>
+            </a>
         </div>
     </div>
 </div>
+<style>
+.img-producto-wrap { height: 260px; }
+#input-cantidad::-webkit-outer-spin-button,
+#input-cantidad::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+@media (min-width: 768px) {
+    .img-producto-wrap { height: 420px; }
+    #btn-volver { width: auto !important; }
+}
+</style>
 @push('scripts')
 <script>
     var formAgregar = document.getElementById('form-agregar');
