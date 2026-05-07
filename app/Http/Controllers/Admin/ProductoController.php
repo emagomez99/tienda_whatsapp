@@ -246,15 +246,9 @@ class ProductoController extends Controller
     {
         $map = [];
         foreach ($proveedores as $prov) {
-            $todas = $prov->etiquetas; // includes "no aplica" (obligatoria = null)
-            $aplicables = $todas->filter(function ($e) {
-                return $e->pivot->obligatoria !== null; // opcional o obligatoria
+            $map[$prov->id] = $prov->etiquetas->filter(function ($e) {
+                return $e->pivot->obligatoria !== null;
             })->pluck('id')->values()->toArray();
-
-            $map[$prov->id] = [
-                'configured' => $todas->isNotEmpty(), // any record = was configured
-                'ids'        => $aplicables,
-            ];
         }
         return $map;
     }

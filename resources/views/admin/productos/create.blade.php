@@ -44,8 +44,9 @@
                             <label for="proveedor_id" class="form-label">Proveedor *</label>
                             <select class="form-select @error('proveedor_id') is-invalid @enderror" id="proveedor_id" name="proveedor_id" required>
                                 <option value="">Seleccionar proveedor</option>
+                                @php $defaultProveedor = old('proveedor_id', $proveedores->count() === 1 ? $proveedores->first()->id : ''); @endphp
                                 @foreach($proveedores as $proveedor)
-                                    <option value="{{ $proveedor->id }}" data-prefijo="{{ $proveedor->prefijo }}" {{ old('proveedor_id') == $proveedor->id ? 'selected' : '' }}>
+                                    <option value="{{ $proveedor->id }}" data-prefijo="{{ $proveedor->prefijo }}" {{ $defaultProveedor == $proveedor->id ? 'selected' : '' }}>
                                         {{ $proveedor->nombre }}
                                     </option>
                                 @endforeach
@@ -302,9 +303,8 @@
     function buildOptionsHtml(proveedorId, excludeIds) {
         excludeIds = excludeIds || [];
         var html = '<option value="">Seleccionar etiqueta</option>';
-        var config = (proveedorId && etiquetasAplicablesMapa.hasOwnProperty(String(proveedorId)))
+        var aplicables = (proveedorId && etiquetasAplicablesMapa.hasOwnProperty(String(proveedorId)))
             ? etiquetasAplicablesMapa[String(proveedorId)] : null;
-        var aplicables = (config && config.configured) ? config.ids : null;
         etiquetasData.forEach(function (e) {
             if ((aplicables === null || aplicables.indexOf(e.id) !== -1) && excludeIds.indexOf(e.id) === -1) {
                 html += '<option value="' + e.id + '">' + e.nombre + '</option>';
@@ -313,14 +313,21 @@
         return html;
     }
 
+    function refrescarOpciones(proveedorId) {
+        document.querySelectorAll('.etiqueta-select').forEach(function(sel) {
+            var currentVal = sel.value;
+            sel.innerHTML = buildOptionsHtml(proveedorId || '', getSelectedEtiquetaIds(sel));
+            if (currentVal) sel.value = currentVal;
+        });
+    }
+
     function crearFilaEtiqueta(preselectedId, proveedorId) {
-        var excludeIds = getSelectedEtiquetaIds(null);
         const newRow = document.createElement('div');
         newRow.className = 'row mb-2 etiqueta-row';
         newRow.innerHTML = `
             <div class="col-md-5">
                 <select class="form-select etiqueta-select" name="etiquetas[${etiquetaIndex}][etiqueta_id]" data-index="${etiquetaIndex}">
-                    ${buildOptionsHtml(proveedorId || '', excludeIds)}
+                    ${buildOptionsHtml(proveedorId || '', [])}
                 </select>
             </div>
             <div class="col-md-5 position-relative">
@@ -378,35 +385,43 @@
 
     function actualizarObligatorias(proveedorId) {
         limpiarObligatorias();
-        if (!proveedorId || !etiquetasObligatoriasMapa[proveedorId] || !etiquetasObligatoriasMapa[proveedorId].length) return;
 
-        const container = document.getElementById('etiquetas-container');
-        var insertAfter = null;
+        if (proveedorId && etiquetasObligatoriasMapa[proveedorId] && etiquetasObligatoriasMapa[proveedorId].length) {
+            const container = document.getElementById('etiquetas-container');
+            var insertAfter = null;
 
-        etiquetasObligatoriasMapa[proveedorId].forEach(function(etiqueta) {
-            var existingRow = null;
-            document.querySelectorAll('.etiqueta-row').forEach(function(row) {
-                if (parseInt(row.querySelector('.etiqueta-select').value) === etiqueta.id) {
-                    existingRow = row;
+            etiquetasObligatoriasMapa[proveedorId].forEach(function(etiqueta) {
+                var existingRow = null;
+                document.querySelectorAll('.etiqueta-row').forEach(function(row) {
+                    if (parseInt(row.querySelector('.etiqueta-select').value) === etiqueta.id) {
+                        existingRow = row;
+                    }
+                });
+
+                var targetRow = existingRow || crearFilaEtiqueta(etiqueta.id, proveedorId);
+
+                if (insertAfter === null) {
+                    container.insertBefore(targetRow, container.firstChild);
+                } else if (insertAfter.nextSibling) {
+                    container.insertBefore(targetRow, insertAfter.nextSibling);
+                } else {
+                    container.appendChild(targetRow);
                 }
+
+                targetRow.querySelector('.etiqueta-select').value = etiqueta.id;
+                marcarObligatoria(targetRow);
+                insertAfter = targetRow;
             });
+        }
 
-            var targetRow = existingRow || crearFilaEtiqueta(etiqueta.id, proveedorId);
-
-            // Insertar en posición correcta (obligatorias primero, en orden)
-            if (insertAfter === null) {
-                container.insertBefore(targetRow, container.firstChild);
-            } else if (insertAfter.nextSibling) {
-                container.insertBefore(targetRow, insertAfter.nextSibling);
-            } else {
-                container.appendChild(targetRow);
-            }
-
-            targetRow.querySelector('.etiqueta-select').value = etiqueta.id;
-            marcarObligatoria(targetRow);
-            insertAfter = targetRow;
-        });
+        refrescarOpciones(proveedorId);
     }
+
+    document.getElementById('etiquetas-container').addEventListener('change', function(e) {
+        if (e.target.classList.contains('etiqueta-select')) {
+            refrescarOpciones(document.getElementById('proveedor_id').value);
+        }
+    });
 
     document.getElementById('btn-generar-codigo').addEventListener('click', function() {
         var sel = document.getElementById('proveedor_id');
@@ -617,6 +632,7 @@
     document.getElementById('agregar-etiqueta').addEventListener('click', function() {
         var proveedorId = document.getElementById('proveedor_id').value;
         agregarFilaEtiqueta(null, proveedorId);
+        refrescarOpciones(proveedorId);
     });
 
     document.addEventListener('click', function(e) {
