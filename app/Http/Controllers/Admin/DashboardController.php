@@ -23,7 +23,9 @@ class DashboardController extends Controller
             'productos_disponibles'=> Producto::disponibles()->count(),
             'proveedores'          => Proveedor::where('activo', true)->count(),
             'usuarios'             => User::where('activo', true)->count(),
-            'productos_sin_stock'  => Producto::where('stock', 0)->where('por_encargue', false)->count(),
+            'productos_sin_stock'  => Producto::where(function ($q) {
+                $q->where('stock', 0)->orWhereNull('stock');
+            })->count(),
         ];
 
         $pedidosStats = [

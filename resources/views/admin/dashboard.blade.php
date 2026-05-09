@@ -14,16 +14,17 @@
         <a href="{{ route('admin.productos.index') }}" class="text-decoration-none">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body py-2 px-3">
-                    <div class="text-muted mb-0" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Productos</div>
-                    <div class="d-flex align-items-end gap-2">
-                        <span class="fs-4 fw-bold text-primary lh-1">{{ $stats['productos'] }}</span>
-                        <span class="text-success small mb-1">{{ $stats['productos_disponibles'] }} disp.</span>
+                    <div class="text-muted mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Productos</div>
+                    <div class="fs-4 fw-bold text-primary lh-1">{{ $stats['productos'] }}</div>
+                    <div class="text-success mt-1" style="font-size:.75rem;">
+                        <i class="bi bi-check-circle-fill"></i> {{ $stats['productos_disponibles'] }} disponibles
                     </div>
                 </div>
             </div>
         </a>
     </div>
     <div class="col-6 col-md-2">
+        <a href="{{ route('admin.productos.index', ['stock' => 'sin']) }}" class="text-decoration-none">
         <div class="card border-0 shadow-sm h-100 {{ $stats['productos_sin_stock'] > 0 ? 'border-warning border' : '' }}">
             <div class="card-body py-2 px-3">
                 <div class="text-muted mb-0" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Sin stock</div>
@@ -37,6 +38,7 @@
                 </div>
             </div>
         </div>
+        </a>
     </div>
     <div class="col-6 col-md-2">
         <a href="{{ route('admin.proveedores.index') }}" class="text-decoration-none">
