@@ -39,6 +39,18 @@
         .text-primary { color: var(--color-primary) !important; }
         .navbar-custom { background-color: var(--color-primary) !important; }
 
+        /* Navbar mobile: logo centrado */
+        @media (max-width: 991.98px) {
+            .navbar > .container { position: relative; }
+            .navbar-brand-centered {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                pointer-events: auto;
+            }
+        }
+
         /* Estilos para submenús anidados */
         .dropdown-menu .dropend .dropdown-menu {
             top: 0;
@@ -87,15 +99,25 @@
     @stack('styles')
 </head>
 <body>
+    @php $cantidadCarrito = array_sum(session()->get('carrito', [])); @endphp
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="{{ route('tienda.index') }}">
+
+            {{-- Hamburguesa: izquierda en mobile, oculta en desktop --}}
+            <button class="navbar-toggler border-0 d-lg-none" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            {{-- Logo: centrado en mobile (absoluto), izquierda en desktop --}}
+            <a class="navbar-brand navbar-brand-centered d-flex align-items-center" href="{{ route('tienda.index') }}">
                 @php
                     $logoTienda = App\Models\Configuracion::logo();
                     $mostrarNombre = App\Models\Configuracion::mostrarNombreTienda();
                 @endphp
                 @if($logoTienda)
-                    <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}" style="max-height: 40px;" class="{{ $mostrarNombre ? 'me-2' : '' }}">
+                    <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}"
+                         style="max-height: 40px;" class="{{ $mostrarNombre ? 'me-2' : '' }}">
                 @else
                     <i class="bi bi-shop me-2"></i>
                 @endif
@@ -103,23 +125,31 @@
                     {{ App\Models\Configuracion::nombreTienda() }}
                 @endif
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+
+            {{-- Carrito: derecha en mobile, siempre visible, oculto en desktop (está en el menú) --}}
+            <a href="{{ route('carrito.index') }}"
+               class="d-lg-none text-white text-decoration-none position-relative p-1 {{ request()->routeIs('carrito.*') ? 'opacity-75' : '' }}"
+               style="font-size: 1.4rem; line-height: 1;">
+                <i class="bi bi-cart3"></i>
+                <span class="cart-badge-mobile badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle{{ $cantidadCarrito > 0 ? '' : ' d-none' }}"
+                      style="font-size: .6rem; min-width: 1.1rem; padding: .2em .4em;">
+                    {{ $cantidadCarrito ?: '' }}
+                </span>
+            </a>
+
+            {{-- Menú colapsable --}}
             <div class="collapse navbar-collapse" id="navbarNav">
                 @if(!$menuEnSidebar)
                     @include('components.menu-tienda')
                 @endif
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
+                    {{-- Carrito en desktop --}}
+                    <li class="nav-item d-none d-lg-block">
                         <a class="nav-link {{ request()->routeIs('carrito.*') ? 'active' : '' }}" href="{{ route('carrito.index') }}">
                             <i class="bi bi-cart3"></i> Carrito
-                            @php
-                                $cantidadCarrito = array_sum(session()->get('carrito', []));
-                            @endphp
-                            @if($cantidadCarrito > 0)
-                                <span class="badge bg-danger">{{ $cantidadCarrito }}</span>
-                            @endif
+                            <span class="cart-badge-desktop badge bg-danger{{ $cantidadCarrito > 0 ? '' : ' d-none' }}">
+                                {{ $cantidadCarrito ?: '' }}
+                            </span>
                         </a>
                     </li>
                     @auth
@@ -233,20 +263,16 @@
             el.addEventListener('hidden.bs.toast', function () { el.remove(); });
         }
 
-        // Actualizar badge del carrito
+        // Actualizar badge del carrito (mobile y desktop)
         function updateCartBadge(cantidad) {
-            var badge = document.querySelector('.nav-link .badge.bg-danger');
-            var cartLink = document.querySelector('a[href="{{ route("carrito.index") }}"]');
-            if (cantidad > 0) {
-                if (badge) {
+            document.querySelectorAll('.cart-badge-mobile, .cart-badge-desktop').forEach(function(badge) {
+                if (cantidad > 0) {
                     badge.textContent = cantidad;
-                } else if (cartLink) {
-                    var b = document.createElement('span');
-                    b.className = 'badge bg-danger';
-                    b.textContent = cantidad;
-                    cartLink.appendChild(b);
+                    badge.classList.remove('d-none');
+                } else {
+                    badge.classList.add('d-none');
                 }
-            }
+            });
         }
     </script>
     <script>
