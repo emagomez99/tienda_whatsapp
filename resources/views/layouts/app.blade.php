@@ -98,7 +98,7 @@
         $mostrarNombre = App\Models\Configuracion::mostrarNombreTienda();
         $nombreTienda = App\Models\Configuracion::nombreTienda();
     @endphp
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
         <div class="container">
 
             {{-- === BARRA MOBILE: 3 columnas flex, oculta en desktop === --}}
