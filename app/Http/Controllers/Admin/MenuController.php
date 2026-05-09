@@ -30,7 +30,7 @@ class MenuController extends Controller
 
     public function create()
     {
-        $menusParent = Menu::orderBy('nombre')->get();
+        $menusParent = $this->buildMenusOrdenados();
         $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
         $etiquetas = Etiqueta::orderBy('nombre')->get();
         $etiquetasPorProveedor = $this->mapEtiquetasAplicables($proveedores);
@@ -84,10 +84,8 @@ class MenuController extends Controller
 
     public function edit(Menu $menu)
     {
-        $menusParent = Menu::where('id', '!=', $menu->id)
-            ->whereNotIn('id', $this->getDescendantIds($menu))
-            ->orderBy('nombre')
-            ->get();
+        $excluirIds = array_merge([$menu->id], $this->getDescendantIds($menu));
+        $menusParent = $this->buildMenusOrdenados($excluirIds);
         $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
         $etiquetas = Etiqueta::orderBy('nombre')->get();
         $etiquetasPorProveedor = $this->mapEtiquetasAplicables($proveedores);
@@ -190,6 +188,31 @@ class MenuController extends Controller
             ->take(20);
 
         return response()->json($valores);
+    }
+
+    private function buildMenusOrdenados($excluirIds = [])
+    {
+        $raices = Menu::raiz()
+            ->when(!empty($excluirIds), function ($q) use ($excluirIds) {
+                $q->whereNotIn('id', $excluirIds);
+            })
+            ->orderBy('orden')
+            ->orderBy('nombre')
+            ->with(['children' => function ($q) {
+                $q->orderBy('orden')->orderBy('nombre');
+            }])
+            ->get();
+
+        $resultado = collect();
+        foreach ($raices as $padre) {
+            $resultado->push($padre);
+            foreach ($padre->children as $hijo) {
+                if (empty($excluirIds) || !in_array($hijo->id, $excluirIds)) {
+                    $resultado->push($hijo);
+                }
+            }
+        }
+        return $resultado;
     }
 
     private function mapEtiquetasAplicables($proveedores)
