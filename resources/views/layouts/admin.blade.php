@@ -60,14 +60,17 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
+            <button class="btn btn-link text-white p-1 me-2 d-none d-md-inline-flex align-items-center"
+                    id="btn-toggle-sidebar" title="Colapsar menú" style="font-size:1.2rem;line-height:1;">
+                <i class="bi bi-layout-sidebar"></i>
+            </button>
             <a class="navbar-brand d-flex align-items-center" href="{{ route('admin.dashboard') }}">
                 @php $logoAdmin = App\Models\Configuracion::logo(); @endphp
                 @if($logoAdmin)
                     <img src="{{ url('storage/' . $logoAdmin) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}" style="max-height: 35px;" class="me-2">
                 @else
-                    <i class="bi bi-gear-fill me-2"></i>
+                    {{ App\Models\Configuracion::nombreTienda() }}
                 @endif
-                Panel de Administración
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin">
                 <span class="navbar-toggler-icon"></span>
@@ -101,7 +104,7 @@
 
     <div class="container-fluid">
         <div class="row">
-            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="adminSidebar">
                 <div class="position-sticky pt-3">
                     @php $user = auth()->user(); @endphp
                     <ul class="nav flex-column">
@@ -201,7 +204,7 @@
                 </div>
             </nav>
 
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper">
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content-wrapper" id="adminContent">
                 <div class="py-4">
 
                     @yield('content')
@@ -234,6 +237,42 @@
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('#toast-container .toast').forEach(function (el) {
                 new bootstrap.Toast(el).show();
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var sidebar = document.getElementById('adminSidebar');
+            var content = document.getElementById('adminContent');
+            var btn = document.getElementById('btn-toggle-sidebar');
+            if (!sidebar || !content || !btn) return;
+
+            var collapsed = localStorage.getItem('adminSidebarCollapsed') === '1';
+
+            function applyState(isCollapsed) {
+                if (isCollapsed) {
+                    sidebar.classList.remove('d-md-block');
+                    sidebar.classList.add('d-none');
+                    content.classList.remove('col-md-9', 'col-lg-10', 'ms-sm-auto');
+                    content.classList.add('col-12');
+                    btn.querySelector('i').className = 'bi bi-layout-sidebar-inset';
+                    btn.title = 'Expandir menú';
+                } else {
+                    sidebar.classList.remove('d-none');
+                    sidebar.classList.add('d-md-block');
+                    content.classList.remove('col-12');
+                    content.classList.add('col-md-9', 'col-lg-10', 'ms-sm-auto');
+                    btn.querySelector('i').className = 'bi bi-layout-sidebar';
+                    btn.title = 'Colapsar menú';
+                }
+            }
+
+            if (collapsed) applyState(true);
+
+            btn.addEventListener('click', function () {
+                collapsed = !collapsed;
+                localStorage.setItem('adminSidebarCollapsed', collapsed ? '1' : '0');
+                applyState(collapsed);
             });
         });
     </script>
