@@ -41,6 +41,7 @@
 
         /* Navbar mobile: logo centrado */
         @media (max-width: 991.98px) {
+            .navbar { padding-top: .75rem; padding-bottom: .75rem; }
             .navbar > .container { position: relative; }
             .navbar-brand-centered {
                 position: absolute;
