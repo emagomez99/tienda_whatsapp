@@ -149,6 +149,15 @@ class TiendaController extends Controller
             });
         }
 
+        // Filtro de stock del menú
+        if ($menu->filtro_stock === 'con_stock') {
+            $query->where('stock', '>', 0);
+        } elseif ($menu->filtro_stock === 'con_stock_y_encargue') {
+            $query->where(function ($q) {
+                $q->where('stock', '>', 0)->orWhere('por_encargue', true);
+            });
+        }
+
         // Aplicar filtros anteriores en la cascada
         foreach ($filtros as $filtroEtiquetaId => $filtroValor) {
             if ($filtroValor && $filtroEtiquetaId != $etiquetaId) {
@@ -204,6 +213,15 @@ class TiendaController extends Controller
                         if ($menuActual->enlace_valor) {
                             $q->where('producto_etiqueta.valor', $menuActual->enlace_valor);
                         }
+                    });
+                }
+
+                // Filtro de stock del menú
+                if ($menuActual->filtro_stock === 'con_stock') {
+                    $query->where('stock', '>', 0);
+                } elseif ($menuActual->filtro_stock === 'con_stock_y_encargue') {
+                    $query->where(function ($q) {
+                        $q->where('stock', '>', 0)->orWhere('por_encargue', true);
                     });
                 }
             }
