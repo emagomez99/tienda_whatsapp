@@ -14,11 +14,13 @@
     <div class="card-body">
         <form action="{{ route('admin.productos.index') }}" method="GET" class="row g-3">
             <div class="col-md-4">
+                <label class="form-label text-muted mb-1" style="font-size:.75rem;">Buscar</label>
                 <input type="text" name="buscar" class="form-control" placeholder="Buscar..." value="{{ request('buscar') }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <label class="form-label text-muted mb-1" style="font-size:.75rem;">Proveedor</label>
                 <select name="proveedor" class="form-select">
-                    <option value="">Todos los proveedores</option>
+                    <option value="">Todos</option>
                     @foreach($proveedores as $proveedor)
                         <option value="{{ $proveedor->id }}" {{ request('proveedor') == $proveedor->id ? 'selected' : '' }}>
                             {{ $proveedor->nombre }}
@@ -26,14 +28,24 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <label class="form-label text-muted mb-1" style="font-size:.75rem;">Estado</label>
                 <select name="disponible" class="form-select">
-                    <option value="">Todos los estados</option>
+                    <option value="">Todos</option>
                     <option value="1" {{ request('disponible') === '1' ? 'selected' : '' }}>Disponibles</option>
                     <option value="0" {{ request('disponible') === '0' ? 'selected' : '' }}>No disponibles</option>
                 </select>
             </div>
             <div class="col-md-2">
+                <label class="form-label text-muted mb-1" style="font-size:.75rem;">Stock</label>
+                <select name="stock" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="con" {{ request('stock') === 'con' ? 'selected' : '' }}>Con stock</option>
+                    <option value="sin" {{ request('stock') === 'sin' ? 'selected' : '' }}>Sin stock</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label mb-1" style="font-size:.75rem; visibility:hidden;">.</label>
                 <button type="submit" class="btn btn-outline-primary w-100">
                     <i class="bi bi-search"></i> Filtrar
                 </button>

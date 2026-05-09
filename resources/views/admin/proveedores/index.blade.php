@@ -13,7 +13,7 @@
 <div class="card mb-4">
     <div class="card-body">
         <form action="{{ route('admin.proveedores.index') }}" method="GET" class="row g-3">
-            <div class="col-md-10">
+            <div class="col-md-4">
                 <input type="text" name="buscar" class="form-control" placeholder="Buscar por nombre, contacto o email..." value="{{ request('buscar') }}">
             </div>
             <div class="col-md-2">

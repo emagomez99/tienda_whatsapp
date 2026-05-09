@@ -42,6 +42,16 @@ class ProductoController extends Controller
             $query->where('disponible', $request->disponible);
         }
 
+        if ($request->filled('stock')) {
+            if ($request->stock === 'con') {
+                $query->where('stock', '>', 0);
+            } elseif ($request->stock === 'sin') {
+                $query->where(function ($q) {
+                    $q->where('stock', 0)->orWhereNull('stock');
+                });
+            }
+        }
+
         $productos = $query->orderBy('descripcion')->paginate(15);
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
 
