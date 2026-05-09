@@ -39,17 +39,9 @@
         .text-primary { color: var(--color-primary) !important; }
         .navbar-custom { background-color: var(--color-primary) !important; }
 
-        /* Navbar mobile: logo centrado */
+        /* Navbar mobile */
         @media (max-width: 991.98px) {
             .navbar { padding-top: .75rem; padding-bottom: .75rem; }
-            .navbar > .container { position: relative; }
-            .navbar-brand-centered {
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                pointer-events: auto;
-            }
         }
 
         /* Estilos para submenús anidados */
@@ -100,51 +92,72 @@
     @stack('styles')
 </head>
 <body>
-    @php $cantidadCarrito = array_sum(session()->get('carrito', [])); @endphp
+    @php
+        $cantidadCarrito = array_sum(session()->get('carrito', []));
+        $logoTienda = App\Models\Configuracion::logo();
+        $mostrarNombre = App\Models\Configuracion::mostrarNombreTienda();
+        $nombreTienda = App\Models\Configuracion::nombreTienda();
+    @endphp
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container">
 
-            {{-- Hamburguesa: izquierda en mobile, oculta en desktop --}}
-            <button class="navbar-toggler border-0 d-lg-none" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir menú">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            {{-- === BARRA MOBILE: 3 columnas flex, oculta en desktop === --}}
+            <div class="d-flex d-lg-none align-items-center w-100">
 
-            {{-- Logo: centrado en mobile (absoluto), izquierda en desktop --}}
-            <a class="navbar-brand navbar-brand-centered d-flex align-items-center" href="{{ route('tienda.index') }}">
-                @php
-                    $logoTienda = App\Models\Configuracion::logo();
-                    $mostrarNombre = App\Models\Configuracion::mostrarNombreTienda();
-                @endphp
+                {{-- Izquierda: hamburguesa --}}
+                <div style="flex:1;">
+                    <button class="navbar-toggler border-0 p-1" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir menú">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
+
+                {{-- Centro: logo --}}
+                <a class="navbar-brand mb-0 d-flex align-items-center" href="{{ route('tienda.index') }}">
+                    @if($logoTienda)
+                        <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ $nombreTienda }}"
+                             style="max-height: 40px;" class="{{ $mostrarNombre ? 'me-2' : '' }}">
+                    @else
+                        <i class="bi bi-shop me-2"></i>
+                    @endif
+                    @if($mostrarNombre || !$logoTienda)
+                        {{ $nombreTienda }}
+                    @endif
+                </a>
+
+                {{-- Derecha: carrito --}}
+                <div style="flex:1; text-align:right;">
+                    <a href="{{ route('carrito.index') }}"
+                       class="text-white text-decoration-none position-relative p-1 {{ request()->routeIs('carrito.*') ? 'opacity-75' : '' }}"
+                       style="font-size: 1.4rem; line-height: 1;">
+                        <i class="bi bi-cart3"></i>
+                        <span class="cart-badge-mobile badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle{{ $cantidadCarrito > 0 ? '' : ' d-none' }}"
+                              style="font-size: .6rem; min-width: 1.1rem; padding: .2em .4em;">
+                            {{ $cantidadCarrito ?: '' }}
+                        </span>
+                    </a>
+                </div>
+            </div>
+
+            {{-- === LOGO DESKTOP (oculto en mobile) === --}}
+            <a class="navbar-brand d-none d-lg-flex align-items-center" href="{{ route('tienda.index') }}">
                 @if($logoTienda)
-                    <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ App\Models\Configuracion::nombreTienda() }}"
+                    <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ $nombreTienda }}"
                          style="max-height: 40px;" class="{{ $mostrarNombre ? 'me-2' : '' }}">
                 @else
                     <i class="bi bi-shop me-2"></i>
                 @endif
                 @if($mostrarNombre || !$logoTienda)
-                    {{ App\Models\Configuracion::nombreTienda() }}
+                    {{ $nombreTienda }}
                 @endif
             </a>
 
-            {{-- Carrito: derecha en mobile, siempre visible, oculto en desktop (está en el menú) --}}
-            <a href="{{ route('carrito.index') }}"
-               class="d-lg-none text-white text-decoration-none position-relative p-1 {{ request()->routeIs('carrito.*') ? 'opacity-75' : '' }}"
-               style="font-size: 1.4rem; line-height: 1;">
-                <i class="bi bi-cart3"></i>
-                <span class="cart-badge-mobile badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle{{ $cantidadCarrito > 0 ? '' : ' d-none' }}"
-                      style="font-size: .6rem; min-width: 1.1rem; padding: .2em .4em;">
-                    {{ $cantidadCarrito ?: '' }}
-                </span>
-            </a>
-
-            {{-- Menú colapsable --}}
+            {{-- === MENÚ COLAPSABLE === --}}
             <div class="collapse navbar-collapse" id="navbarNav">
                 @if(!$menuEnSidebar)
                     @include('components.menu-tienda')
                 @endif
                 <ul class="navbar-nav ms-auto">
-                    {{-- Carrito en desktop --}}
                     <li class="nav-item d-none d-lg-block">
                         <a class="nav-link {{ request()->routeIs('carrito.*') ? 'active' : '' }}" href="{{ route('carrito.index') }}">
                             <i class="bi bi-cart3"></i> Carrito
@@ -178,6 +191,7 @@
                     @endauth
                 </ul>
             </div>
+
         </div>
     </nav>
 
