@@ -48,12 +48,14 @@ class MenuController extends Controller
             'enlace_valor' => 'nullable|string|max:255',
             'orden' => 'integer|min:0',
             'activo' => 'boolean',
+            'filtro_stock' => 'nullable|in:todos,con_stock,con_stock_y_encargue',
             'filtros_etiquetas' => 'nullable|array',
             'filtros_etiquetas.*' => 'exists:etiquetas,id',
             'filtros_requeridos' => 'nullable|boolean',
         ]);
 
         $validated['activo'] = $request->boolean('activo');
+        $validated['filtro_stock'] = $request->input('filtro_stock', 'todos');
         $validated['orden'] = $request->input('orden', 0);
         $validated['filtros_etiquetas'] = $request->input('filtros_etiquetas', []);
         $validated['filtros_requeridos'] = $request->boolean('filtros_requeridos');
@@ -103,6 +105,7 @@ class MenuController extends Controller
             'enlace_valor' => 'nullable|string|max:255',
             'orden' => 'integer|min:0',
             'activo' => 'boolean',
+            'filtro_stock' => 'nullable|in:todos,con_stock,con_stock_y_encargue',
             'filtros_etiquetas' => 'nullable|array',
             'filtros_etiquetas.*' => 'exists:etiquetas,id',
             'filtros_requeridos' => 'nullable|boolean',
@@ -114,6 +117,7 @@ class MenuController extends Controller
         }
 
         $validated['activo'] = $request->boolean('activo');
+        $validated['filtro_stock'] = $request->input('filtro_stock', 'todos');
         $validated['filtros_etiquetas'] = $request->input('filtros_etiquetas', []);
         $validated['filtros_requeridos'] = $request->boolean('filtros_requeridos');
 

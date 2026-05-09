@@ -146,6 +146,14 @@
                         <input type="checkbox" class="form-check-input" id="activo" name="activo" value="1" {{ old('activo', $menu->activo) ? 'checked' : '' }}>
                         <label class="form-check-label" for="activo">Menú activo</label>
                     </div>
+                    <div class="mt-3">
+                        <label for="filtro_stock" class="form-label">Filtro de disponibilidad</label>
+                        <select name="filtro_stock" id="filtro_stock" class="form-select">
+                            <option value="todos" {{ old('filtro_stock', $menu->filtro_stock) === 'todos' ? 'selected' : '' }}>Todos los productos</option>
+                            <option value="con_stock" {{ old('filtro_stock', $menu->filtro_stock) === 'con_stock' ? 'selected' : '' }}>Solo con stock</option>
+                            <option value="con_stock_y_encargue" {{ old('filtro_stock', $menu->filtro_stock) === 'con_stock_y_encargue' ? 'selected' : '' }}>Con stock y por encargue</option>
+                        </select>
+                    </div>
 
                     <hr class="mt-4">
 

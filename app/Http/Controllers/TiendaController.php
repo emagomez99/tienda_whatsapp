@@ -70,6 +70,15 @@ class TiendaController extends Controller
             $menuActual = Menu::find($request->menu);
         }
 
+        // Filtro de stock forzado por el menú
+        if ($menuActual && $menuActual->filtro_stock === 'con_stock') {
+            $query->where('stock', '>', 0);
+        } elseif ($menuActual && $menuActual->filtro_stock === 'con_stock_y_encargue') {
+            $query->where(function ($q) {
+                $q->where('stock', '>', 0)->orWhere('por_encargue', true);
+            });
+        }
+
         // Aplicar filtros de etiquetas en cascada (f1, f2, f3, etc.)
         $filtrosAplicados = [];
         foreach ($request->all() as $key => $value) {

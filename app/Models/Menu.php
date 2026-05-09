@@ -21,6 +21,7 @@ class Menu extends Model
         'filtros_etiquetas',
         'filtros_requeridos',
         'filtros_config',
+        'filtro_stock',
     ];
 
     protected $casts = [
@@ -99,8 +100,8 @@ class Menu extends Model
     {
         $params = [];
 
-        // Incluir menu_id si tiene filtros configurados
-        if ($this->tieneFiltros()) {
+        // Incluir menu_id si tiene filtros configurados o filtro_stock activo
+        if ($this->tieneFiltros() || $this->filtro_stock !== 'todos') {
             $params['menu'] = $this->id;
         }
 
