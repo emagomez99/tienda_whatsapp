@@ -5,22 +5,34 @@
         $filtrosConfig = $menuActual->filtros_config ?? [];
     @endphp
 
+    @php $hayFiltrosActivos = !empty($filtrosAplicados); @endphp
     <div class="card mb-4" id="filtros-cascada">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
-            <span><i class="bi bi-funnel"></i> Filtrar productos</span>
-            <div>
-                <span class="badge bg-secondary" id="contador-resultados" style="display: none;">
-                    <i class="bi bi-box"></i> <span id="total-productos">0</span> productos
-                </span>
-                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="btn-limpiar" style="display: none;">
-                    <i class="bi bi-x-circle"></i> Limpiar
-                </button>
+        <div class="card-header bg-light py-2"
+             id="filtros-toggle-header"
+             role="button"
+             style="cursor:pointer;"
+             onclick="toggleFiltrosMobile(this)">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-funnel"></i> Filtrar productos</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary" id="contador-resultados" style="display: none;">
+                        <i class="bi bi-box"></i> <span id="total-productos">0</span> productos
+                    </span>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-limpiar"
+                            style="display: none;"
+                            onclick="event.stopPropagation();">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </button>
+                    <i class="bi bi-chevron-down d-lg-none transition-chevron" id="filtros-chevron"
+                       style="transition: transform .25s;"></i>
+                </div>
             </div>
         </div>
+        <div id="filtros-body-collapse">
         <div class="card-body py-3">
-            <div class="row g-3 align-items-end">
+            <div class="row g-2 align-items-end">
                 @foreach($etiquetasFiltro as $index => $etiqueta)
-                    <div class="col-md-4">
+                    <div class="col-6 col-md-4">
                         <label for="filtro_{{ $etiqueta->id }}" class="form-label small fw-bold mb-1">
                             {{ $etiqueta->nombre }}
                             @if($filtrosRequeridos)
@@ -43,7 +55,60 @@
                 @endforeach
             </div>
         </div>
+        </div>
     </div>
+
+    @push('scripts')
+    <style>
+    @media (max-width: 991.98px) {
+        #filtros-body-collapse {
+            overflow: hidden;
+            transition: max-height .3s ease;
+        }
+        #filtros-body-collapse.filtros-collapsed {
+            max-height: 0 !important;
+        }
+        #filtros-body-collapse.filtros-expanded {
+            max-height: 500px;
+        }
+        #filtros-chevron.rotado { transform: rotate(180deg); }
+    }
+    @media (min-width: 992px) {
+        #filtros-toggle-header { cursor: default !important; }
+        #filtros-chevron { display: none; }
+    }
+    </style>
+    <script>
+    function toggleFiltrosMobile(header) {
+        if (window.innerWidth >= 992) return;
+        var body = document.getElementById('filtros-body-collapse');
+        var chevron = document.getElementById('filtros-chevron');
+        if (body.classList.contains('filtros-collapsed')) {
+            body.classList.remove('filtros-collapsed');
+            body.classList.add('filtros-expanded');
+            chevron.classList.add('rotado');
+        } else {
+            body.classList.remove('filtros-expanded');
+            body.classList.add('filtros-collapsed');
+            chevron.classList.remove('rotado');
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var body = document.getElementById('filtros-body-collapse');
+        var chevron = document.getElementById('filtros-chevron');
+        if (!body) return;
+        if (window.innerWidth < 992) {
+            var hayFiltros = {{ $hayFiltrosActivos ? 'true' : 'false' }};
+            if (hayFiltros) {
+                body.classList.add('filtros-expanded');
+                if (chevron) chevron.classList.add('rotado');
+            } else {
+                body.classList.add('filtros-collapsed');
+            }
+        }
+    });
+    </script>
+    @endpush
 
     @push('scripts')
     <script>
