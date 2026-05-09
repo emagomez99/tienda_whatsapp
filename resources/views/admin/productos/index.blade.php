@@ -92,18 +92,20 @@
                                 <td>{{ $producto->id_proveedor ?? '-' }}</td>
                                 <td>{{ $producto->proveedor->nombre ?? '-' }}</td>
                                 <td>{{ $producto->precio_con_moneda }}</td>
+                                <td>{{ $producto->stock }}</td>
                                 <td>
-                                    {{ $producto->stock }}
-                                    @if($producto->por_encargue)
-                                        <br><small class="text-info">Por encargue</small>
-                                    @endif
-                                </td>
-                                <td>
+                                    <span class="d-flex flex-column gap-1">
                                     @if($producto->disponible)
-                                        <span class="badge bg-success">Disponible</span>
+                                        <span class="badge rounded-pill text-bg-success" style="font-size:.68rem;font-weight:500;">Disponible</span>
                                     @else
-                                        <span class="badge bg-secondary">No disponible</span>
+                                        <span class="badge rounded-pill text-bg-secondary" style="font-size:.68rem;font-weight:500;">No disponible</span>
                                     @endif
+                                    @if($producto->por_encargue)
+                                        <span class="badge rounded-pill text-bg-info" style="font-size:.68rem;font-weight:500;">
+                                            <i class="bi bi-clock"></i> Por encargue
+                                        </span>
+                                    @endif
+                                    </span>
                                 </td>
                                 <td>
                                     <div class="btn-group">
