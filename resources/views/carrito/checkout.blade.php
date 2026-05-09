@@ -96,11 +96,11 @@
                             <i class="bi bi-info-circle"></i> Al enviar el pedido, serás redirigido a WhatsApp para completar la comunicación con el vendedor.
                         </div>
 
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex flex-column-reverse flex-sm-row justify-content-sm-between gap-2 mt-2">
                             <a href="{{ route('carrito.index') }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left"></i> Volver al carrito
                             </a>
-                            <button type="submit" class="btn btn-success btn-lg">
+                            <button type="submit" class="btn btn-success">
                                 <i class="bi bi-whatsapp"></i> Enviar pedido por WhatsApp
                             </button>
                         </div>
