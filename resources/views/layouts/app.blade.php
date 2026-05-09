@@ -44,6 +44,47 @@
             .navbar { padding-top: .75rem; padding-bottom: .75rem; }
         }
 
+        /* Drawer offcanvas */
+        #menuDrawer { background-color: var(--color-primary); width: 280px; }
+        .drawer-item {
+            display: block;
+            width: 100%;
+            color: rgba(255,255,255,.92);
+            text-decoration: none;
+            padding: .9rem 1.5rem;
+            font-size: 1rem;
+            border: none;
+            background: none;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+            text-align: left;
+            cursor: pointer;
+        }
+        .drawer-item:hover, .drawer-item:focus {
+            background: rgba(255,255,255,.1);
+            color: #fff;
+            outline: none;
+        }
+        .drawer-chevron { transition: transform .2s ease; font-size: .85rem; opacity: .7; }
+        .drawer-item[aria-expanded="true"] .drawer-chevron { transform: rotate(180deg); }
+        .drawer-subitem {
+            display: block;
+            color: rgba(255,255,255,.75);
+            text-decoration: none;
+            padding: .7rem 1.5rem .7rem 2.25rem;
+            font-size: .95rem;
+            border-bottom: 1px solid rgba(255,255,255,.07);
+            background: rgba(0,0,0,.18);
+        }
+        .drawer-subitem:hover { background: rgba(0,0,0,.3); color: #fff; }
+        .drawer-footer-link {
+            display: block;
+            color: rgba(255,255,255,.8);
+            text-decoration: none;
+            padding: .5rem 0;
+            font-size: .95rem;
+        }
+        .drawer-footer-link:hover { color: #fff; }
+
         /* Estilos para submenús anidados */
         .dropdown-menu .dropend .dropdown-menu {
             top: 0;
@@ -104,10 +145,10 @@
             {{-- === BARRA MOBILE: 3 columnas flex, oculta en desktop === --}}
             <div class="d-flex d-lg-none align-items-center w-100">
 
-                {{-- Izquierda: hamburguesa --}}
+                {{-- Izquierda: abre drawer --}}
                 <div style="flex:1;">
                     <button class="navbar-toggler border-0 p-1" type="button"
-                            data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir menú">
+                            data-bs-toggle="offcanvas" data-bs-target="#menuDrawer" aria-label="Abrir menú">
                         <span class="navbar-toggler-icon"></span>
                     </button>
                 </div>
@@ -194,6 +235,45 @@
 
         </div>
     </nav>
+
+    {{-- Drawer mobile --}}
+    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="menuDrawer" aria-labelledby="menuDrawerLabel">
+        <div class="offcanvas-header" style="border-bottom: 1px solid rgba(255,255,255,.15);">
+            <a class="text-white text-decoration-none fw-bold fs-5" href="{{ route('tienda.index') }}" id="menuDrawerLabel">
+                @if($logoTienda)
+                    <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ $nombreTienda }}" style="max-height:32px;">
+                    @if($mostrarNombre) <span class="ms-2">{{ $nombreTienda }}</span> @endif
+                @else
+                    <i class="bi bi-shop me-2"></i>{{ $nombreTienda }}
+                @endif
+            </a>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column p-0">
+            <nav class="flex-grow-1 overflow-auto">
+                @include('components.menu-drawer')
+            </nav>
+            <div class="p-3" style="border-top: 1px solid rgba(255,255,255,.15);">
+                @auth
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('admin.dashboard') }}" class="drawer-footer-link">
+                            <i class="bi bi-gear me-2"></i> Admin
+                        </a>
+                    @endif
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="drawer-footer-link btn btn-link p-0 w-100 text-start">
+                            <i class="bi bi-box-arrow-right me-2"></i> Salir
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="drawer-footer-link">
+                        <i class="bi bi-person me-2"></i> Acceder
+                    </a>
+                @endauth
+            </div>
+        </div>
+    </div>
 
     <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
         @if(session('success'))
