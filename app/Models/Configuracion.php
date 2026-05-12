@@ -28,10 +28,14 @@ class Configuracion extends Model
 
     public static function obtener($clave, $default = null)
     {
-        return Cache::remember(static::cacheKey($clave), 3600, function () use ($clave, $default) {
-            $config = self::where('clave', $clave)->first();
-            return $config ? $config->valor : $default;
-        });
+        try {
+            return Cache::remember(static::cacheKey($clave), 3600, function () use ($clave, $default) {
+                $config = self::where('clave', $clave)->first();
+                return $config ? $config->valor : $default;
+            });
+        } catch (\Exception $e) {
+            return $default;
+        }
     }
 
     public static function establecer($clave, $valor, $descripcion = null)
