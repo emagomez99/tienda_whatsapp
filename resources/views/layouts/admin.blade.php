@@ -12,48 +12,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        /* ── Desktop sidebar ── */
-        .sidebar {
-            min-height: calc(100vh - 56px);
-            background-color: #343a40;
-        }
-        .sidebar .nav-link {
-            color: rgba(255,255,255,.75);
-            padding: 0.75rem 1rem;
-        }
-        .sidebar .nav-link:hover {
-            color: #fff;
-            background-color: rgba(255,255,255,.1);
-        }
-        .sidebar .nav-link.active {
-            color: #fff;
-            background-color: rgba(255,255,255,.2);
-        }
-        .sidebar .nav-link i { margin-right: 0.5rem; }
-        .sidebar .nav-submenu .nav-link {
-            padding: 0.45rem 1rem 0.45rem 1.75rem;
-            font-size: 0.875rem;
-            color: rgba(255,255,255,.6);
-        }
-        .sidebar .nav-submenu .nav-link:hover {
-            color: #fff;
-            background-color: rgba(255,255,255,.08);
-        }
-        .sidebar .nav-submenu .nav-link.active {
-            color: #fff;
-            background-color: rgba(255,255,255,.15);
-        }
-        .sidebar .collapse-toggle .bi-chevron-down {
-            transition: transform 0.2s ease;
-            font-size: 0.75rem;
-        }
-        .sidebar .collapse-toggle[aria-expanded="true"] .bi-chevron-down {
-            transform: rotate(180deg);
-        }
-        .content-wrapper { min-height: calc(100vh - 56px); }
         body { overflow-x: hidden; }
+        .content-wrapper { min-height: calc(100vh - 56px); }
+        .navbar-brand, .navbar .nav-link { text-decoration: none; }
 
-        /* ── Mobile drawer ── */
         #adminDrawer { background-color: #343a40; width: 280px; }
         .admin-drawer-item {
             display: block;
@@ -98,6 +60,10 @@
             font-size: .95rem;
         }
         .admin-drawer-footer-link:hover { color: #fff; }
+        #adminDrawer nav { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent; }
+        #adminDrawer nav::-webkit-scrollbar { width: 4px; }
+        #adminDrawer nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+        #adminDrawer nav::-webkit-scrollbar-track { background: transparent; }
     </style>
     @stack('styles')
 </head>
@@ -121,72 +87,63 @@
     {{-- ═══════════════════════════════════════════════
          NAVBAR
     ═══════════════════════════════════════════════ --}}
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark sticky-top">
-        <div class="container-fluid">
-
-            {{-- Mobile: 3 columnas --}}
-            <div class="d-flex d-md-none align-items-center w-100">
-                <div style="flex:1;">
-                    <button class="btn btn-link text-white p-1"
-                            data-bs-toggle="offcanvas" data-bs-target="#adminDrawer"
-                            aria-label="Abrir menú" style="font-size:1.3rem;line-height:1;">
-                        <i class="bi bi-list"></i>
-                    </button>
-                </div>
-                <a class="navbar-brand mb-0 d-flex align-items-center" href="{{ route('admin.dashboard') }}">
-                    @if($logoAdmin)
-                        <img src="{{ url('storage/' . $logoAdmin) }}" alt="{{ $nombreAdmin }}" style="max-height:32px;">
-                    @else
-                        <span style="font-size:.95rem;">{{ $nombreAdmin }}</span>
-                    @endif
-                </a>
-                <div style="flex:1;"></div>
+    <nav class="navbar navbar-dark bg-dark sticky-top">
+        <div class="container-fluid d-flex align-items-center">
+            {{-- Izquierda: hamburger --}}
+            <div style="flex:1;">
+                <button class="btn btn-link text-white p-1"
+                        data-bs-toggle="offcanvas" data-bs-target="#adminDrawer"
+                        aria-label="Abrir menú" style="font-size:1.3rem;line-height:1;">
+                    <i class="bi bi-list"></i>
+                </button>
             </div>
 
-            {{-- Desktop --}}
-            <button class="btn btn-link text-white p-1 me-2 d-none d-md-inline-flex align-items-center"
-                    id="btn-toggle-sidebar" title="Colapsar menú" style="font-size:1.2rem;line-height:1;">
-                <i class="bi bi-layout-sidebar"></i>
-            </button>
-            <a class="navbar-brand d-none d-md-flex align-items-center" href="{{ route('admin.dashboard') }}">
+            {{-- Centro: logo --}}
+            <a class="navbar-brand mb-0 d-flex align-items-center" href="{{ route('admin.dashboard') }}">
                 @if($logoAdmin)
-                    <img src="{{ url('storage/' . $logoAdmin) }}" alt="{{ $nombreAdmin }}" style="max-height:35px;" class="me-2">
+                    <img src="{{ url('storage/' . $logoAdmin) }}" alt="{{ $nombreAdmin }}" style="max-height:34px;">
                 @else
                     {{ $nombreAdmin }}
                 @endif
             </a>
-            <div class="collapse navbar-collapse d-none d-md-flex" id="navbarAdmin">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('tienda.index') }}" target="_blank">
-                            <i class="bi bi-shop"></i> Ver Tienda
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> {{ $user->name }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item">
-                                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
 
+            {{-- Derecha: acciones --}}
+            <div style="flex:1;" class="d-flex align-items-center justify-content-end gap-2">
+                <a class="nav-link text-white d-none d-md-block" href="{{ route('tienda.index') }}" target="_blank" style="font-size:.9rem;">
+                    <i class="bi bi-shop me-1"></i> Ver Tienda
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-link text-white p-1 d-flex align-items-center gap-1"
+                            data-bs-toggle="dropdown" style="font-size:.9rem;text-decoration:none;">
+                        <i class="bi bi-person-circle" style="font-size:1.2rem;"></i>
+                        <span class="d-none d-md-inline">{{ $user->name }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text text-muted small">{{ $user->name }}</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item d-md-none" href="{{ route('tienda.index') }}" target="_blank">
+                                <i class="bi bi-shop me-1"></i> Ver Tienda
+                            </a>
+                        </li>
+                        <li>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="dropdown-item">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Cerrar Sesión
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </nav>
 
     {{-- ═══════════════════════════════════════════════
-         DRAWER MOBILE
+         DRAWER (mobile + desktop)
     ═══════════════════════════════════════════════ --}}
-    <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="adminDrawer" data-bs-scroll="true" data-bs-backdrop="true">
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="adminDrawer" data-bs-scroll="true" data-bs-backdrop="true">
         <div class="offcanvas-header" style="border-bottom:1px solid rgba(255,255,255,.12);">
             <span class="text-white fw-bold fs-6">
                 @if($logoAdmin)
@@ -279,105 +236,13 @@
     </div>
 
     {{-- ═══════════════════════════════════════════════
-         CONTENIDO PRINCIPAL
+         CONTENIDO
     ═══════════════════════════════════════════════ --}}
-    <div class="container-fluid">
-        <div class="row">
-            {{-- Sidebar desktop --}}
-            <nav class="col-md-3 col-lg-2 d-none d-md-block sidebar" id="adminSidebar">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        @if($user->puede('dashboard.ver'))
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
-                                <i class="bi bi-speedometer2"></i> Dashboard
-                            </a>
-                        </li>
-                        @endif
-                        @if($user->puede('pedidos.ver'))
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.pedidos.*') ? 'active' : '' }}" href="{{ route('admin.pedidos.index') }}">
-                                <i class="bi bi-bag-check"></i> Pedidos
-                            </a>
-                        </li>
-                        @endif
-                        @if($user->puede('productos.ver'))
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.productos.*') ? 'active' : '' }}" href="{{ route('admin.productos.index') }}">
-                                <i class="bi bi-box-seam"></i> Productos
-                            </a>
-                        </li>
-                        @endif
-                        @if($user->puede('proveedores.ver'))
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.proveedores.*') ? 'active' : '' }}" href="{{ route('admin.proveedores.index') }}">
-                                <i class="bi bi-truck"></i> Proveedores
-                            </a>
-                        </li>
-                        @endif
-                        @if($verConfigGrupo)
-                        <li class="nav-item">
-                            <a class="nav-link collapse-toggle d-flex justify-content-between align-items-center {{ $configActive ? 'active' : '' }}"
-                               href="#menu-configuracion"
-                               data-bs-toggle="collapse"
-                               role="button"
-                               aria-expanded="{{ $configActive ? 'true' : 'false' }}"
-                               aria-controls="menu-configuracion">
-                                <span><i class="bi bi-gear"></i> Configuración</span>
-                                <i class="bi bi-chevron-down"></i>
-                            </a>
-                            <div class="collapse {{ $configActive ? 'show' : '' }}" id="menu-configuracion">
-                                <ul class="nav flex-column nav-submenu">
-                                    @if($user->puede('configuraciones.ver'))
-                                    <li class="nav-item">
-                                        <a class="nav-link {{ request()->routeIs('admin.configuraciones.*') ? 'active' : '' }}" href="{{ route('admin.configuraciones.index') }}">
-                                            <i class="bi bi-sliders"></i> Ajustes
-                                        </a>
-                                    </li>
-                                    @endif
-                                    @if($user->puede('etiquetas.ver'))
-                                    <li class="nav-item">
-                                        <a class="nav-link {{ request()->routeIs('admin.etiquetas.*') ? 'active' : '' }}" href="{{ route('admin.etiquetas.index') }}">
-                                            <i class="bi bi-tags"></i> Etiquetas
-                                        </a>
-                                    </li>
-                                    @endif
-                                    @if($user->puede('menus.ver'))
-                                    <li class="nav-item">
-                                        <a class="nav-link {{ request()->routeIs('admin.menus.*') ? 'active' : '' }}" href="{{ route('admin.menus.index') }}">
-                                            <i class="bi bi-list-nested"></i> Menú Tienda
-                                        </a>
-                                    </li>
-                                    @endif
-                                    @if($user->puede('usuarios.ver'))
-                                    <li class="nav-item">
-                                        <a class="nav-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}" href="{{ route('admin.usuarios.index') }}">
-                                            <i class="bi bi-people"></i> Usuarios
-                                        </a>
-                                    </li>
-                                    @endif
-                                    @if($user->puede('perfiles.ver'))
-                                    <li class="nav-item">
-                                        <a class="nav-link {{ request()->routeIs('admin.perfiles.*') ? 'active' : '' }}" href="{{ route('admin.perfiles.index') }}">
-                                            <i class="bi bi-shield-check"></i> Perfiles
-                                        </a>
-                                    </li>
-                                    @endif
-                                </ul>
-                            </div>
-                        </li>
-                        @endif
-                    </ul>
-                </div>
-            </nav>
-
-            <main class="col-md-9 col-lg-10 px-md-4 content-wrapper" id="adminContent">
-                <div class="py-3 py-md-4">
-                    @yield('content')
-                </div>
-            </main>
+    <main class="content-wrapper px-3 px-md-4">
+        <div class="py-3 py-md-4">
+            @yield('content')
         </div>
-    </div>
+    </main>
 
     {{-- Toasts --}}
     <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100;">
@@ -404,42 +269,6 @@
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('#toast-container .toast').forEach(function (el) {
                 new bootstrap.Toast(el).show();
-            });
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var sidebar = document.getElementById('adminSidebar');
-            var content = document.getElementById('adminContent');
-            var btn = document.getElementById('btn-toggle-sidebar');
-            if (!sidebar || !content || !btn) return;
-
-            var collapsed = localStorage.getItem('adminSidebarCollapsed') === '1';
-
-            function applyState(isCollapsed) {
-                if (isCollapsed) {
-                    sidebar.classList.remove('d-md-block');
-                    sidebar.classList.add('d-none');
-                    content.classList.remove('col-md-9', 'col-lg-10');
-                    content.classList.add('col-12');
-                    btn.querySelector('i').className = 'bi bi-layout-sidebar-inset';
-                    btn.title = 'Expandir menú';
-                } else {
-                    sidebar.classList.remove('d-none');
-                    sidebar.classList.add('d-md-block');
-                    content.classList.remove('col-12');
-                    content.classList.add('col-md-9', 'col-lg-10');
-                    btn.querySelector('i').className = 'bi bi-layout-sidebar';
-                    btn.title = 'Colapsar menú';
-                }
-            }
-
-            if (collapsed) applyState(true);
-
-            btn.addEventListener('click', function () {
-                collapsed = !collapsed;
-                localStorage.setItem('adminSidebarCollapsed', collapsed ? '1' : '0');
-                applyState(collapsed);
             });
         });
     </script>
