@@ -40,7 +40,7 @@
             @endif
 
             @if($mostrarPrecios)
-                <h3 class="text-primary my-3">${{ number_format($producto->precio, 2) }}</h3>
+                <h3 class="text-primary my-3">{{ $producto->precio_con_moneda }}</h3>
             @endif
 
             @if($producto->etiquetas->where('visible_usuarios', true)->count() > 0)

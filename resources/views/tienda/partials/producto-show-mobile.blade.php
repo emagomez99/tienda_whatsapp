@@ -1,7 +1,7 @@
 <div class="d-block d-md-none">
 
     {{-- Imagen con botones flotantes --}}
-    <div class="position-relative bg-light" style="height:260px;margin-top:12px;">
+    <div class="position-relative bg-light" style="height:340px;margin-top:12px;">
         <img src="{{ $producto->url_imagen ? $producto->imagen_url : '/img/no-image.svg' }}"
              alt="{{ $producto->descripcion }}"
              style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
@@ -36,7 +36,7 @@
 
         {{-- Precio --}}
         @if($mostrarPrecios)
-            <div class="fs-4 fw-bold text-primary mb-3">${{ number_format($producto->precio, 2) }}</div>
+            <div class="fs-4 fw-bold text-primary mb-3">{{ $producto->precio_con_moneda }}</div>
         @endif
 
         {{-- Stock --}}
