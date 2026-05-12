@@ -4,8 +4,9 @@
 
 @section('content')
 @php
-    $backParams = request('_back', '');
-    $backUrl = route('admin.productos.index') . ($backParams ? '?' . $backParams : '');
+    $backUrl = request('_back_url')
+        ? request('_back_url')
+        : route('admin.productos.index') . (request('_back') ? '?' . request('_back') : '');
 @endphp
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3><i class="bi bi-pencil"></i> Editar Producto</h3>
@@ -336,7 +337,11 @@
                     <button type="submit" class="btn btn-primary w-100 mb-2">
                         <i class="bi bi-check-circle"></i> Actualizar Producto
                     </button>
-                    <input type="hidden" name="_back" value="{{ $backParams }}">
+                    @if(request('_back_url'))
+                        <input type="hidden" name="_back_url" value="{{ request('_back_url') }}">
+                    @else
+                        <input type="hidden" name="_back" value="{{ request('_back', '') }}">
+                    @endif
                     <a href="{{ $backUrl }}" class="btn btn-outline-secondary w-100">
                         Cancelar
                     </a>

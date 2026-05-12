@@ -66,6 +66,10 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::put('/configuraciones', [ConfiguracionController::class, 'update'])->name('configuraciones.update');
 
         Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
+        Route::get('/pedidos/create', [PedidoController::class, 'create'])->name('pedidos.create');
+        Route::get('/pedidos/buscar-cliente', [PedidoController::class, 'buscarCliente'])->name('pedidos.buscar-cliente');
+        Route::get('/pedidos/sugerir-clientes', [PedidoController::class, 'sugerirClientes'])->name('pedidos.sugerir-clientes');
+        Route::post('/pedidos', [PedidoController::class, 'store'])->name('pedidos.store');
         Route::get('/pedidos/{pedido}', [PedidoController::class, 'show'])->name('pedidos.show');
         Route::post('/pedidos/{pedido}/confirmar', [PedidoController::class, 'confirmar'])->name('pedidos.confirmar');
         Route::post('/pedidos/{pedido}/cancelar', [PedidoController::class, 'cancelar'])->name('pedidos.cancelar');

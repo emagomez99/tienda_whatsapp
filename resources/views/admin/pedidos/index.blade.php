@@ -5,6 +5,11 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3><i class="bi bi-bag-check"></i> Pedidos</h3>
+    @if(auth()->user()->puede('pedidos.gestionar'))
+        <a href="{{ route('admin.pedidos.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo
+        </a>
+    @endif
 </div>
 
 {{-- Filtros --}}
@@ -48,11 +53,12 @@
         @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
+                    @php $mostrarLocalidad = App\Models\Configuracion::pedirDireccionEnvio(); @endphp
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
                             <th>Cliente</th>
-                            <th>Localidad</th>
+                            @if($mostrarLocalidad)<th>Localidad</th>@endif
                             <th>Total</th>
                             <th>Estado</th>
                             <th>Fecha</th>
@@ -67,7 +73,9 @@
                                 {{ $pedido->nombre }} {{ $pedido->apellido }}<br>
                                 <small class="text-muted">{{ $pedido->celular }}</small>
                             </td>
+                            @if($mostrarLocalidad)
                             <td>{{ $pedido->localidad ? $pedido->localidad . ($pedido->provincia ? ', ' . $pedido->provincia : '') : ($pedido->provincia ?: '—') }}</td>
+                            @endif
                             <td>${{ number_format($pedido->total, 2) }}</td>
                             <td>
                                 @if($pedido->esPendiente())

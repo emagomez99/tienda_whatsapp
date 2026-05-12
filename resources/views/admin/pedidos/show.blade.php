@@ -23,79 +23,79 @@
 
 <div class="row g-4">
 
-    {{-- Datos del cliente --}}
-    <div class="col-md-8">
-        <div class="card h-100">
-            <div class="card-header fw-semibold"><i class="bi bi-person"></i> Cliente</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-5">Nombre</dt>
-                    <dd class="col-7">{{ $pedido->nombre }} {{ $pedido->apellido }}</dd>
-                    <dt class="col-5">Email</dt>
-                    <dd class="col-7">{{ $pedido->email }}</dd>
-                    <dt class="col-5">Celular</dt>
-                    <dd class="col-7">
-                        {{ $pedido->celular }}
+    {{-- Resumen compacto --}}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body py-2 px-3">
+                <div class="d-flex flex-wrap align-items-center gap-3 justify-content-between">
+
+                    {{-- Info cliente --}}
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div>
+                            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Cliente</div>
+                            <div class="fw-semibold">{{ $pedido->nombre }} {{ $pedido->apellido }}</div>
+                        </div>
                         @if($pedido->celular)
                             @php $waNumber = ltrim($pedido->celular, '+'); @endphp
-                            <a href="https://wa.me/{{ $waNumber }}" target="_blank" class="btn btn-sm btn-success ms-2 py-0 px-2">
-                                <i class="bi bi-whatsapp"></i> Contactar
-                            </a>
+                            <div>
+                                <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Celular</div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span>{{ $pedido->celular }}</span>
+                                    <a href="https://wa.me/{{ $waNumber }}" target="_blank"
+                                       class="btn btn-sm btn-success py-0 px-2" style="font-size:.75rem;">
+                                        <i class="bi bi-whatsapp"></i>
+                                    </a>
+                                </div>
+                            </div>
                         @endif
-                    </dd>
-                    @if($pedido->direccion || $pedido->localidad || $pedido->provincia || $pedido->cp)
-                    <dt class="col-5">Dirección</dt>
-                    <dd class="col-7">{{ $pedido->direccion ?: '—' }}</dd>
-                    <dt class="col-5">Localidad</dt>
-                    <dd class="col-7">{{ $pedido->localidad ?: '—' }}</dd>
-                    <dt class="col-5">Provincia</dt>
-                    <dd class="col-7">{{ $pedido->provincia ?: '—' }}</dd>
-                    <dt class="col-5">CP</dt>
-                    <dd class="col-7">{{ $pedido->cp ?: '—' }}</dd>
-                    @endif
-                </dl>
-            </div>
-        </div>
-    </div>
+                        @if($pedido->email)
+                            <div>
+                                <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Email</div>
+                                <div>{{ $pedido->email }}</div>
+                            </div>
+                        @endif
+                        @if($pedido->localidad || $pedido->provincia)
+                            <div>
+                                <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Ubicación</div>
+                                <div>{{ implode(', ', array_filter([$pedido->localidad, $pedido->provincia])) }}</div>
+                            </div>
+                        @endif
+                    </div>
 
-    {{-- Estado y acciones --}}
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-header fw-semibold"><i class="bi bi-info-circle"></i> Estado</div>
-            <div class="card-body d-flex flex-column">
-                <dl class="row mb-0">
-                    <dt class="col-5">Estado</dt>
-                    <dd class="col-7">
+                    {{-- Estado + total + acciones --}}
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="text-end">
+                            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Total</div>
+                            <div class="fw-bold fs-5">${{ number_format($pedido->total, 2) }}</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Estado</div>
+                            @if($pedido->esPendiente())
+                                <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pendiente</span>
+                            @elseif($pedido->esConfirmado())
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Confirmado</span>
+                            @else
+                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Cancelado</span>
+                            @endif
+                            <div class="text-muted" style="font-size:.72rem;">{{ $pedido->created_at->format('d/m/Y H:i') }}</div>
+                        </div>
                         @if($pedido->esPendiente())
-                            <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pendiente</span>
+                            <div class="d-flex flex-column gap-1">
+                                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalConfirmar">
+                                    <i class="bi bi-check-circle"></i> Confirmar
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalCancelar">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
+                            </div>
                         @elseif($pedido->esConfirmado())
-                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Confirmado</span>
-                        @else
-                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Cancelado</span>
+                            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalCancelar">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
                         @endif
-                    </dd>
-                    <dt class="col-5">Total</dt>
-                    <dd class="col-7 fw-bold">${{ number_format($pedido->total, 2) }}</dd>
-                    <dt class="col-5">Fecha</dt>
-                    <dd class="col-7">{{ $pedido->created_at->format('d/m/Y H:i') }}</dd>
-                </dl>
+                    </div>
 
-                @if($pedido->esPendiente())
-                    <div class="mt-auto pt-3 d-flex flex-column gap-2">
-                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalConfirmar">
-                            <i class="bi bi-check-circle"></i> Confirmar pedido
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalCancelar">
-                            <i class="bi bi-x-circle"></i> Cancelar pedido
-                        </button>
-                    </div>
-                @elseif($pedido->esConfirmado())
-                    <div class="mt-auto pt-3">
-                        <button class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#modalCancelar">
-                            <i class="bi bi-x-circle"></i> Cancelar pedido
-                        </button>
-                    </div>
-                @endif
+                </div>
             </div>
         </div>
     </div>
@@ -121,8 +121,12 @@
                         @foreach($pedido->items as $item)
                             <tr>
                                 <td>
-                                    {{ $item->descripcion }}
-                                    @if(! $item->producto)
+                                    @if($item->producto)
+                                        <a href="{{ route('admin.productos.edit', $item->producto) . '?_back_url=' . urlencode(route('admin.pedidos.show', $pedido)) }}" class="text-decoration-none">
+                                            {{ $item->descripcion }}
+                                        </a>
+                                    @else
+                                        {{ $item->descripcion }}
                                         <small class="text-muted">(producto eliminado)</small>
                                     @endif
                                 </td>
@@ -286,6 +290,21 @@ function confirmarEliminarItem(url) {
         var btnCancel   = fila.querySelector('.btn-fila-cancel');
         var timer       = null;
 
+        function posicionarDropdown() {
+            var rect = inputBuscar.getBoundingClientRect();
+            var maxH = 240;
+            var spaceBelow = window.innerHeight - rect.bottom;
+            dropdown.style.left  = rect.left + 'px';
+            dropdown.style.width = Math.max(rect.width, 340) + 'px';
+            if (spaceBelow < maxH + 8) {
+                dropdown.style.top    = 'auto';
+                dropdown.style.bottom = (window.innerHeight - rect.top + 2) + 'px';
+            } else {
+                dropdown.style.top    = (rect.bottom + 2) + 'px';
+                dropdown.style.bottom = 'auto';
+            }
+        }
+
         inputBuscar.addEventListener('input', function () {
             clearTimeout(timer);
             inputId.value = '';
@@ -299,6 +318,7 @@ function confirmarEliminarItem(url) {
                         dropdown.innerHTML = '';
                         if (data.length === 0) {
                             dropdown.innerHTML = '<div class="list-group-item text-muted small">Sin resultados</div>';
+                            posicionarDropdown();
                             dropdown.style.display = 'block';
                             return;
                         }
@@ -319,6 +339,7 @@ function confirmarEliminarItem(url) {
                             });
                             dropdown.appendChild(item);
                         });
+                        posicionarDropdown();
                         dropdown.style.display = 'block';
                     });
             }, 250);
@@ -359,7 +380,7 @@ function confirmarEliminarItem(url) {
                 '<div class="position-relative">' +
                     '<input type="text" class="form-control form-control-sm fila-buscar" placeholder="Buscar por nombre o código..." autocomplete="off">' +
                     '<input type="hidden" class="fila-id">' +
-                    '<div class="fila-dropdown list-group position-absolute shadow-sm" style="z-index:1050;display:none;min-width:320px;max-height:240px;overflow-y:auto;"></div>' +
+                    '<div class="fila-dropdown list-group shadow" style="position:fixed;z-index:1055;display:none;min-width:340px;max-height:240px;overflow-y:auto;"></div>' +
                 '</div>' +
             '</td>' +
             '<td class="text-center py-2">' +

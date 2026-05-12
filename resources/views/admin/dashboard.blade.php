@@ -206,8 +206,8 @@
                     <a href="{{ route('admin.proveedores.create') }}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-plus-circle"></i> Nuevo Proveedor
                     </a>
-                    <a href="{{ route('admin.etiquetas.create') }}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-plus-circle"></i> Nueva Etiqueta
+                    <a href="{{ route('admin.pedidos.create') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-plus-circle"></i> Nuevo Pedido
                     </a>
                     <a href="{{ route('admin.configuraciones.index') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-sliders"></i> Configuración

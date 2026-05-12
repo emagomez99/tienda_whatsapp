@@ -14,7 +14,7 @@ class PedidoController extends Controller
     public function __construct()
     {
         $this->middleware('permiso:pedidos.ver')->only(['index', 'show']);
-        $this->middleware('permiso:pedidos.gestionar')->only(['confirmar', 'cancelar', 'updateProducto', 'destroyProducto', 'addProducto']);
+        $this->middleware('permiso:pedidos.gestionar')->only(['create', 'store', 'buscarCliente', 'sugerirClientes', 'confirmar', 'cancelar', 'updateProducto', 'destroyProducto', 'addProducto']);
     }
 
     public function index(Request $request)
@@ -43,6 +43,102 @@ class PedidoController extends Controller
         $pedidos = $query->paginate(20)->withQueryString();
 
         return view('admin.pedidos.index', compact('pedidos'));
+    }
+
+    public function create()
+    {
+        return view('admin.pedidos.create');
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'nombre'               => 'required|string|max:100',
+            'apellido'             => 'nullable|string|max:100',
+            'email'                => 'nullable|email|max:150',
+            'celular'              => 'nullable|string|max:30',
+            'direccion'            => 'nullable|string|max:200',
+            'localidad'            => 'nullable|string|max:100',
+            'provincia'            => 'nullable|string|max:100',
+            'cp'                   => 'nullable|string|max:20',
+            'productos'            => 'nullable|array',
+            'productos.*.id'       => 'required|integer|exists:productos,id',
+            'productos.*.cantidad' => 'required|integer|min:1',
+        ]);
+
+        $pedido = \DB::transaction(function () use ($data) {
+            $pedido = Pedido::create([
+                'nombre'    => $data['nombre'],
+                'apellido'  => $data['apellido']  ?? '',
+                'email'     => $data['email']     ?? '',
+                'celular'   => $data['celular']   ?? '',
+                'direccion' => $data['direccion'] ?? '',
+                'localidad' => $data['localidad'] ?? '',
+                'provincia' => $data['provincia'] ?? '',
+                'cp'        => $data['cp']        ?? '',
+                'estado'    => 'pendiente',
+                'total'     => 0,
+            ]);
+
+            foreach ($data['productos'] ?? [] as $p) {
+                $producto = Producto::findOrFail($p['id']);
+                $pedido->items()->create([
+                    'producto_id'     => $producto->id,
+                    'descripcion'     => $producto->descripcion,
+                    'precio_unitario' => $producto->precio,
+                    'cantidad'        => (int) $p['cantidad'],
+                    'subtotal'        => $producto->precio * (int) $p['cantidad'],
+                ]);
+            }
+
+            if (!empty($data['productos'])) {
+                $pedido->recalcularTotal();
+            }
+
+            return $pedido;
+        });
+
+        return redirect()->route('admin.pedidos.show', $pedido)
+            ->with('success', 'Pedido creado.');
+    }
+
+    public function sugerirClientes(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $resultados = Pedido::where(function ($query) use ($q) {
+                $query->where('nombre',   'ilike', "%{$q}%")
+                      ->orWhere('apellido', 'ilike', "%{$q}%")
+                      ->orWhere('celular',  'ilike', "%{$q}%");
+            })
+            ->orderBy('created_at', 'desc')
+            ->get(['nombre', 'apellido', 'email', 'celular', 'direccion', 'localidad', 'provincia', 'cp'])
+            ->unique(function ($p) { return strtolower($p->nombre . '|' . $p->apellido . '|' . $p->celular); })
+            ->take(8)
+            ->values();
+
+        return response()->json($resultados);
+    }
+
+    public function buscarCliente(Request $request)
+    {
+        $celular = trim($request->get('celular', ''));
+        if (!$celular) {
+            return response()->json(['found' => false]);
+        }
+
+        $pedido = Pedido::where('celular', 'ilike', '%' . $celular . '%')
+            ->orderBy('created_at', 'desc')
+            ->first(['nombre', 'apellido', 'email', 'celular', 'direccion', 'localidad', 'provincia', 'cp']);
+
+        if (!$pedido) {
+            return response()->json(['found' => false]);
+        }
+
+        return response()->json(['found' => true, 'data' => $pedido]);
     }
 
     public function show(Pedido $pedido)
