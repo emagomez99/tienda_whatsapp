@@ -95,6 +95,10 @@ class ProductoController extends Controller
         $validated['disponible'] = $request->boolean('disponible');
         $validated['por_encargue'] = $request->boolean('por_encargue');
 
+        if (!empty($validated['detalle'])) {
+            $validated['detalle'] = clean($validated['detalle']);
+        }
+
         // Manejar imagen (archivo tiene prioridad sobre URL)
         if ($request->hasFile('imagen_archivo')) {
             $validated['url_imagen'] = $request->file('imagen_archivo')->store(tenant('id') . '/productos', 'public');
@@ -178,7 +182,11 @@ class ProductoController extends Controller
 
         $validated['disponible'] = $request->boolean('disponible');
         $validated['por_encargue'] = $request->boolean('por_encargue');
-        unset($validated['stock']); // stock se gestiona exclusivamente via movimientos
+        unset($validated['stock']);
+
+        if (!empty($validated['detalle'])) {
+            $validated['detalle'] = clean($validated['detalle']);
+        }
 
         // Manejar eliminación de imagen
         if ($request->boolean('eliminar_imagen')) {
