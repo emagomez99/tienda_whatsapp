@@ -11,7 +11,7 @@
         {{-- Botón volver --}}
         <a href="{{ route('tienda.index') }}"
            class="d-flex align-items-center justify-content-center gap-1"
-           style="position:fixed;top:84px;left:12px;height:38px;padding:0 14px;border-radius:50px;background:rgba(0,0,0,.72);color:#fff;z-index:1020;box-shadow:0 3px 12px rgba(0,0,0,.35);text-decoration:none;font-size:.85rem;font-weight:500;backdrop-filter:blur(4px);">
+           style="position:fixed;top:84px;left:12px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;z-index:1020;box-shadow:0 3px 12px rgba(0,0,0,.35);text-decoration:none;font-size:1rem;backdrop-filter:blur(4px);">
             <i class="bi bi-arrow-left"></i>
         </a>
 
