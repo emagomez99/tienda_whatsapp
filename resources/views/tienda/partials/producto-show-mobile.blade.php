@@ -57,7 +57,8 @@
                 <div class="accordion-item border-0 border-bottom">
                     <h2 class="accordion-header">
                         <button class="accordion-button px-0 bg-transparent shadow-none fw-semibold"
-                                type="button" data-bs-toggle="collapse" data-bs-target="#detalle-mobile">
+                                type="button" data-bs-toggle="collapse" data-bs-target="#detalle-mobile"
+                                style="color:#212529 !important;">
                             Descripción
                         </button>
                     </h2>
@@ -74,7 +75,8 @@
                 <div class="accordion-item border-0 border-bottom">
                     <h2 class="accordion-header">
                         <button class="accordion-button px-0 bg-transparent shadow-none fw-semibold"
-                                type="button" data-bs-toggle="collapse" data-bs-target="#specs-mobile">
+                                type="button" data-bs-toggle="collapse" data-bs-target="#specs-mobile"
+                                style="color:#212529 !important;">
                             Especificaciones
                         </button>
                     </h2>
