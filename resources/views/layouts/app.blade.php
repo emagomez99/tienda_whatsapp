@@ -20,59 +20,9 @@
             --color-primary: {{ $paleta['primary'] }};
         }
         .navbar-brand { font-weight: bold; }
-        /* Product cards */
-        .producto-card {
-            border: none;
-            border-radius: 14px;
-            box-shadow: 0 1px 6px rgba(0,0,0,.07);
-            transition: box-shadow .25s ease, transform .25s ease;
-            overflow: hidden;
-        }
-        .producto-card:hover {
-            box-shadow: 0 10px 32px rgba(0,0,0,.13);
-            transform: translateY(-4px);
-        }
-        .producto-img-wrap { display: block; position: relative; overflow: hidden; flex-shrink: 0; }
-        .producto-sin-stock-overlay {
-            position: absolute; inset: 0;
-            background: rgba(255,255,255,.6);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .producto-sin-stock-overlay span {
-            background: rgba(0,0,0,.48); color: #fff;
-            padding: .25rem .9rem; border-radius: 4px;
-            font-size: .8rem; font-weight: 500;
-        }
-        .producto-card:hover .card-img-top { transform: scale(1.05); }
-        .producto-nombre {
-            font-size: .88rem;
-            font-weight: 600;
-            line-height: 1.45;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .producto-sin-stock-overlay {
-            position: absolute; inset: 0;
-            background: rgba(255,255,255,.6);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .producto-sin-stock-overlay span {
-            background: rgba(0,0,0,.48); color: #fff;
-            padding: .25rem .9rem; border-radius: 4px;
-            font-size: .8rem; font-weight: 500; letter-spacing: .03em;
-        }
-        /* Search bar */
-        .search-bar .form-control {
-            border-right: 0;
-            border-radius: 10px 0 0 10px;
-            padding-left: 1.1rem;
-            background: #fff;
-        }
-        .search-bar .form-control:focus { box-shadow: none; }
-        .search-bar #btn-buscar { border-radius: 0 10px 10px 0; }
-        .search-bar #btn-limpiar-busqueda { border-radius: 10px; margin-left: 6px; }
+        .card-img-top { height: 200px; object-fit: cover; }
+        .producto-card { transition: transform 0.2s; }
+        .producto-card:hover { transform: translateY(-5px); }
         .badge-etiqueta { font-size: 0.75rem; }
         .metadata-list { font-size: 0.85rem; }
         footer { margin-top: auto; }

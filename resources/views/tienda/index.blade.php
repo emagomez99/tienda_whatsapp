@@ -10,14 +10,14 @@
 @endif
     <div class="row mb-4">
         <div class="col-12">
-            <div class="input-group search-bar shadow-sm">
+            <div class="input-group">
                 <input type="text"
                        id="buscar-productos"
                        class="form-control"
                        placeholder="Buscar productos..."
                        value="{{ request('buscar') }}"
                        autocomplete="off">
-                <button class="btn btn-primary px-3" type="button" id="btn-buscar">
+                <button class="btn btn-primary" type="button" id="btn-buscar">
                     <i class="bi bi-search"></i>
                 </button>
                 <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda" style="display: none;">
