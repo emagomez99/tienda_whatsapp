@@ -325,10 +325,48 @@
 
     <footer class="bg-light py-3 mt-4 border-top">
         <div class="container text-center text-muted small">
+            @php
+                $footerSocial = [];
+                $inst = App\Models\Configuracion::socialInstagram();
+                $face = App\Models\Configuracion::socialFacebook();
+                $twit = App\Models\Configuracion::socialTwitter();
+                $tikt = App\Models\Configuracion::socialTiktok();
+                $yout = App\Models\Configuracion::socialYoutube();
+                $wapp = App\Models\Configuracion::socialWhatsapp();
+                if ($inst) $footerSocial[] = ['url' => $inst, 'icon' => 'bi-instagram',  'color' => '#E1306C', 'label' => 'Instagram'];
+                if ($face) $footerSocial[] = ['url' => $face, 'icon' => 'bi-facebook',   'color' => '#1877F2', 'label' => 'Facebook'];
+                if ($twit) $footerSocial[] = ['url' => $twit, 'icon' => 'bi-twitter-x',  'color' => '#000',    'label' => 'Twitter/X'];
+                if ($tikt) $footerSocial[] = ['url' => $tikt, 'icon' => 'bi-tiktok',     'color' => '#010101', 'label' => 'TikTok'];
+                if ($yout) $footerSocial[] = ['url' => $yout, 'icon' => 'bi-youtube',    'color' => '#FF0000', 'label' => 'YouTube'];
+                if ($wapp) $footerSocial[] = ['url' => 'https://wa.me/' . preg_replace('/\D/', '', $wapp), 'icon' => 'bi-whatsapp', 'color' => '#25D366', 'label' => 'WhatsApp'];
+            @endphp
+            @if(count($footerSocial) > 0)
+                <div class="d-flex justify-content-center gap-3 mb-2">
+                    @foreach($footerSocial as $red)
+                        <a href="{{ $red['url'] }}" target="_blank" rel="noopener noreferrer"
+                           aria-label="{{ $red['label'] }}"
+                           class="footer-social-icon text-muted fs-5"
+                           data-color="{{ $red['color'] }}">
+                            <i class="bi {{ $red['icon'] }}"></i>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
             <div>&copy; {{ date('Y') }} {{ App\Models\Configuracion::obtener('nombre_tienda', 'Tienda MC') }}. Todos los derechos reservados.</div>
-            <div class="mt-1">Desarrollado por <a href="https://tredevs.com.ar/" target="_blank" rel="noopener" class="text-muted">Tredevs</a></div>
+            <div class="mt-2">
+                <a href="https://tredevs.com.ar/" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-1 text-muted text-decoration-none" style="opacity:.4;transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">
+                    Creado por <img src="/img/tredevs.ico" alt="Tredevs" style="height:16px;width:16px;object-fit:contain;">
+                </a>
+            </div>
         </div>
     </footer>
+    <script>
+        document.querySelectorAll('.footer-social-icon').forEach(function (el) {
+            var color = el.dataset.color;
+            el.addEventListener('mouseenter', function () { el.style.color = color; });
+            el.addEventListener('mouseleave', function () { el.style.color = ''; });
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>

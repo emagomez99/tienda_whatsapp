@@ -58,12 +58,12 @@
             <div class="accordion mb-3" id="acc-specs-mobile">
                 <div class="accordion-item border-0 border-bottom">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed px-0 bg-transparent shadow-none fw-semibold"
+                        <button class="accordion-button px-0 bg-transparent shadow-none fw-semibold"
                                 type="button" data-bs-toggle="collapse" data-bs-target="#specs-mobile">
                             Especificaciones
                         </button>
                     </h2>
-                    <div id="specs-mobile" class="accordion-collapse collapse">
+                    <div id="specs-mobile" class="accordion-collapse collapse show">
                         <div class="accordion-body px-0">
                             <table class="table table-sm table-striped">
                                 @foreach($producto->especificaciones as $espec)

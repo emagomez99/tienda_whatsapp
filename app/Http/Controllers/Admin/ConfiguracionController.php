@@ -43,6 +43,12 @@ class ConfiguracionController extends Controller
             'modo_imagen_producto'       => 'nullable|in:ambos,solo_url,solo_archivo',
             'moneda_default'             => 'nullable|exists:monedas,id',
             'mostrar_proveedor'          => 'required|in:true,false',
+            'social_instagram'           => 'nullable|url|max:255',
+            'social_facebook'            => 'nullable|url|max:255',
+            'social_twitter'             => 'nullable|url|max:255',
+            'social_tiktok'              => 'nullable|url|max:255',
+            'social_youtube'             => 'nullable|url|max:255',
+            'social_whatsapp'            => 'nullable|string|max:20',
         ]);
 
         Configuracion::establecer('mostrar_precios', $request->mostrar_precios, 'Mostrar precios en la tienda');
@@ -54,6 +60,13 @@ class ConfiguracionController extends Controller
         Configuracion::establecer('posicion_menu', $request->posicion_menu, 'Posición del menú en la tienda');
         Configuracion::establecer('pedir_direccion_envio', $request->pedir_direccion_envio, 'Solicitar dirección de envío en el checkout');
         Configuracion::establecer('mostrar_proveedor', $request->mostrar_proveedor, 'Mostrar proveedor en ficha de producto');
+
+        Configuracion::establecer('social_instagram', $request->input('social_instagram', ''), 'Instagram');
+        Configuracion::establecer('social_facebook',  $request->input('social_facebook',  ''), 'Facebook');
+        Configuracion::establecer('social_twitter',   $request->input('social_twitter',   ''), 'Twitter/X');
+        Configuracion::establecer('social_tiktok',    $request->input('social_tiktok',    ''), 'TikTok');
+        Configuracion::establecer('social_youtube',   $request->input('social_youtube',   ''), 'YouTube');
+        Configuracion::establecer('social_whatsapp',  $request->input('social_whatsapp',  ''), 'WhatsApp footer');
 
         $templateWhatsapp = $request->filled('template_whatsapp')
             ? $request->template_whatsapp

@@ -253,6 +253,94 @@
         <div class="col-12 mb-4">
             <div class="card">
                 <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-share"></i> Redes Sociales</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Los íconos configurados aparecerán en el footer de la tienda. Dejá vacíos los que no uses.</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="social_instagram" class="form-label">
+                                <i class="bi bi-instagram" style="color:#E1306C;"></i> Instagram
+                            </label>
+                            <input type="url" class="form-control @error('social_instagram') is-invalid @enderror"
+                                   id="social_instagram" name="social_instagram"
+                                   placeholder="https://instagram.com/tutienda"
+                                   value="{{ old('social_instagram', App\Models\Configuracion::socialInstagram()) }}">
+                            @error('social_instagram')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="social_facebook" class="form-label">
+                                <i class="bi bi-facebook" style="color:#1877F2;"></i> Facebook
+                            </label>
+                            <input type="url" class="form-control @error('social_facebook') is-invalid @enderror"
+                                   id="social_facebook" name="social_facebook"
+                                   placeholder="https://facebook.com/tutienda"
+                                   value="{{ old('social_facebook', App\Models\Configuracion::socialFacebook()) }}">
+                            @error('social_facebook')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="social_twitter" class="form-label">
+                                <i class="bi bi-twitter-x"></i> Twitter / X
+                            </label>
+                            <input type="url" class="form-control @error('social_twitter') is-invalid @enderror"
+                                   id="social_twitter" name="social_twitter"
+                                   placeholder="https://x.com/tutienda"
+                                   value="{{ old('social_twitter', App\Models\Configuracion::socialTwitter()) }}">
+                            @error('social_twitter')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="social_tiktok" class="form-label">
+                                <i class="bi bi-tiktok"></i> TikTok
+                            </label>
+                            <input type="url" class="form-control @error('social_tiktok') is-invalid @enderror"
+                                   id="social_tiktok" name="social_tiktok"
+                                   placeholder="https://tiktok.com/@tutienda"
+                                   value="{{ old('social_tiktok', App\Models\Configuracion::socialTiktok()) }}">
+                            @error('social_tiktok')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="social_youtube" class="form-label">
+                                <i class="bi bi-youtube" style="color:#FF0000;"></i> YouTube
+                            </label>
+                            <input type="url" class="form-control @error('social_youtube') is-invalid @enderror"
+                                   id="social_youtube" name="social_youtube"
+                                   placeholder="https://youtube.com/@tutienda"
+                                   value="{{ old('social_youtube', App\Models\Configuracion::socialYoutube()) }}">
+                            @error('social_youtube')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="social_whatsapp" class="form-label">
+                                <i class="bi bi-whatsapp" style="color:#25D366;"></i> WhatsApp
+                            </label>
+                            <input type="text" class="form-control @error('social_whatsapp') is-invalid @enderror"
+                                   id="social_whatsapp" name="social_whatsapp"
+                                   placeholder="+54 9 11 1234 5678"
+                                   value="{{ old('social_whatsapp', App\Models\Configuracion::socialWhatsapp()) }}">
+                            @error('social_whatsapp')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">Solo el número (se genera el link wa.me automáticamente).</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
                     <h5 class="mb-0"><i class="bi bi-whatsapp text-success"></i> Template de Mensaje WhatsApp</h5>
                 </div>
                 <div class="card-body">

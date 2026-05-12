@@ -180,4 +180,34 @@ class Configuracion extends Model
     {
         return self::obtener('mostrar_proveedor', 'false') === 'true';
     }
+
+    public static function socialInstagram()
+    {
+        return self::obtener('social_instagram', '');
+    }
+
+    public static function socialFacebook()
+    {
+        return self::obtener('social_facebook', '');
+    }
+
+    public static function socialTwitter()
+    {
+        return self::obtener('social_twitter', '');
+    }
+
+    public static function socialTiktok()
+    {
+        return self::obtener('social_tiktok', '');
+    }
+
+    public static function socialYoutube()
+    {
+        return self::obtener('social_youtube', '');
+    }
+
+    public static function socialWhatsapp()
+    {
+        return self::obtener('social_whatsapp', '');
+    }
 }
