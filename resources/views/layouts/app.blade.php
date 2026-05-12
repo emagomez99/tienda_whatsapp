@@ -32,8 +32,8 @@
             box-shadow: 0 10px 32px rgba(0,0,0,.13);
             transform: translateY(-4px);
         }
-        .producto-img-wrap { display: block; overflow: hidden; background: #fff; }
-        .producto-img { width: 100%; height: 210px; object-fit: contain; background: #fff; transition: transform .35s ease; }
+        .producto-img-wrap { display: block; overflow: hidden; background: #fff; height: 210px; }
+        .producto-img { width: 100%; height: 100%; object-fit: contain; background: #fff; transition: transform .35s ease; }
         .producto-card:hover .producto-img { transform: scale(1.05); }
         .producto-nombre {
             font-size: .88rem;
