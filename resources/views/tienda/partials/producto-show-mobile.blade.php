@@ -9,11 +9,11 @@
              onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
 
         {{-- Botón volver --}}
-        <a href="{{ route('tienda.index') }}"
-           class="d-flex align-items-center justify-content-center gap-1"
-           style="position:fixed;top:84px;left:12px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;z-index:1020;box-shadow:0 3px 12px rgba(0,0,0,.35);text-decoration:none;font-size:1rem;backdrop-filter:blur(4px);">
+        <button type="button" onclick="history.length > 1 ? history.back() : window.location='{{ route('tienda.index') }}'"
+                class="d-flex align-items-center justify-content-center border-0"
+                style="position:fixed;top:84px;left:12px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;z-index:1020;box-shadow:0 3px 12px rgba(0,0,0,.35);font-size:1rem;backdrop-filter:blur(4px);cursor:pointer;">
             <i class="bi bi-arrow-left"></i>
-        </a>
+        </button>
 
         {{-- Botón compartir --}}
         <button type="button"
