@@ -1,7 +1,7 @@
 <div class="d-block d-md-none">
 
     {{-- Imagen con botones flotantes --}}
-    <div class="position-relative bg-light" style="height:340px;margin-top:12px;">
+    <div class="position-relative bg-light" style="height:340px;">
         <img src="{{ $producto->url_imagen ? $producto->imagen_url : '/img/no-image.svg' }}"
              alt="{{ $producto->descripcion }}"
              style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
