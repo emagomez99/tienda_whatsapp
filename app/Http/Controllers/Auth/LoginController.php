@@ -3,20 +3,16 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class LoginController extends Controller
 {
-    use ThrottlesLogins;
-
-    protected $maxAttempts  = 5;
-    protected $decayMinutes = 3;
-
-    public function username()
+    private function throttleKey(Request $request)
     {
-        return 'email';
+        return Str::lower($request->input('email')) . '|' . $request->ip();
     }
 
     public function showLoginForm()
@@ -31,9 +27,13 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        if ($this->hasTooManyLoginAttempts($request)) {
-            $this->fireLockoutEvent($request);
-            return $this->sendLockoutResponse($request);
+        $key = $this->throttleKey($request);
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $segundos = RateLimiter::availableIn($key);
+            return back()->withErrors([
+                'email' => "Demasiados intentos fallidos. Intentá de nuevo en {$segundos} segundos.",
+            ])->onlyInput('email');
         }
 
         if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
@@ -41,13 +41,13 @@ class LoginController extends Controller
 
             if (!$user->activo) {
                 Auth::logout();
-                $this->incrementLoginAttempts($request);
+                RateLimiter::hit($key, 180);
                 return back()->withErrors([
                     'email' => 'Las credenciales no coinciden con nuestros registros.',
                 ])->onlyInput('email');
             }
 
-            $this->clearLoginAttempts($request);
+            RateLimiter::clear($key);
             $request->session()->regenerate();
 
             if ($user->isAdmin()) {
@@ -57,7 +57,7 @@ class LoginController extends Controller
             return redirect()->intended('/');
         }
 
-        $this->incrementLoginAttempts($request);
+        RateLimiter::hit($key, 180);
 
         return back()->withErrors([
             'email' => 'Las credenciales no coinciden con nuestros registros.',

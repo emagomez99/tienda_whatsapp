@@ -201,7 +201,7 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item d-none d-lg-block">
                         <a class="nav-link {{ request()->routeIs('carrito.*') ? 'active' : '' }}" href="{{ route('carrito.index') }}">
-                            <i class="bi bi-cart3"></i> Carrito
+                            <i class="bi bi-cart3" style="font-size:1.4rem;"></i>
                             <span class="cart-badge-desktop badge bg-danger{{ $cantidadCarrito > 0 ? '' : ' d-none' }}">
                                 {{ $cantidadCarrito ?: '' }}
                             </span>
@@ -211,7 +211,7 @@
                         @if(auth()->user()->isAdmin())
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('admin.dashboard') }}">
-                                    <i class="bi bi-gear"></i> Admin
+                                    <i class="bi bi-gear" style="font-size:1.4rem;"></i> Admin
                                 </a>
                             </li>
                         @endif
@@ -219,14 +219,14 @@
                             <form action="{{ route('logout') }}" method="POST" class="d-inline">
                                 @csrf
                                 <button type="submit" class="nav-link btn btn-link">
-                                    <i class="bi bi-box-arrow-right"></i> Salir
+                                    <i class="bi bi-box-arrow-right" style="font-size:1.4rem;"></i> Salir
                                 </button>
                             </form>
                         </li>
                     @else
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('login') }}">
-                                <i class="bi bi-person"></i> Acceder
+                                <i class="bi bi-person" style="font-size:1.4rem;"></i> Acceder
                             </a>
                         </li>
                     @endauth
