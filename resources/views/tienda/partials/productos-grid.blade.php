@@ -14,8 +14,9 @@
                         <img src="{{ $producto->url_imagen ? $producto->imagen_url : '/img/no-image.svg' }}"
                              class="card-img-top"
                              alt="{{ $producto->descripcion }}"
-                             style="width:100%;height:100%;object-fit:contain;background:#fff;"
-                             onerror="this.onerror=null;this.src='/img/no-image.svg';">
+                             style="width:100%;height:100%;object-fit:contain;background:#fff;opacity:0;transition:opacity .15s;"
+                             onload="this.style.opacity=1"
+                             onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
 
                         @if($producto->stock > 0)
                             {{-- En stock: sin badge --}}
