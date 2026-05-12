@@ -104,9 +104,14 @@
                 </form>
             @endif
 
-            <a href="{{ route('tienda.index') }}" class="btn btn-outline-secondary mt-3 w-100" id="btn-volver">
-                <i class="bi bi-arrow-left"></i> Volver a la tienda
-            </a>
+            <div class="d-flex gap-2 mt-3">
+                <a href="{{ route('tienda.index') }}" class="btn btn-outline-secondary flex-grow-1" id="btn-volver">
+                    <i class="bi bi-arrow-left"></i> Volver a la tienda
+                </a>
+                <button type="button" class="btn btn-outline-secondary" id="btn-compartir" title="Compartir">
+                    <i class="bi bi-share"></i> Compartir
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -116,12 +121,40 @@
 #input-cantidad::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 @media (min-width: 768px) {
     .img-producto-wrap { height: 420px; }
-    #btn-volver { width: auto !important; }
 }
 </style>
 @push('scripts')
 <script>
     var formAgregar = document.getElementById('form-agregar');
+    document.getElementById('btn-compartir').addEventListener('click', function () {
+        var url  = window.location.href;
+        var text = '{{ addslashes($producto->descripcion) }}';
+        if (navigator.share) {
+            navigator.share({ title: text, url: url });
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url)
+                .then(function () { showToast('Link copiado al portapapeles', 'success'); })
+                .catch(function () { copiarFallback(url); });
+        } else {
+            copiarFallback(url);
+        }
+    });
+
+    function copiarFallback(url) {
+        var el = document.createElement('textarea');
+        el.value = url;
+        el.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+        document.body.appendChild(el);
+        el.select();
+        try {
+            document.execCommand('copy');
+            showToast('Link copiado al portapapeles', 'success');
+        } catch (e) {
+            showToast('No se pudo copiar el link', 'danger');
+        }
+        document.body.removeChild(el);
+    }
+
     if (formAgregar) {
         var inputCantidad = document.getElementById('input-cantidad');
         var btnDec = document.getElementById('btn-decrement');

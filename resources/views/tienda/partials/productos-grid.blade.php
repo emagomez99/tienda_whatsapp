@@ -18,10 +18,7 @@
                         <h6 class="card-title">
                             <a href="{{ route('tienda.show', $producto) }}" class="text-decoration-none text-dark stretched-link-title">{{ $producto->descripcion }}</a>
                         </h6>
-                        @if($producto->id_proveedor)
-                            <small class="text-muted">Cod: {{ $producto->id_proveedor }}</small>
-                            <br>
-                        @endif
+
                         @if($producto->stock > 0)
                             <small class="text-success"><i class="bi bi-check-circle"></i> En stock ({{ $producto->stock }})</small>
                         @elseif($producto->por_encargue)

@@ -40,7 +40,7 @@
                 <div class="d-flex flex-column gap-3">
                     @foreach($productos as $item)
                         @php $prod = $item['producto']; @endphp
-                        <div class="card border-0 shadow-sm" id="fila-{{ $prod->id }}">
+                        <div class="card border-0 shadow-sm" id="fila-{{ $prod->public_id }}">
                             <div class="card-body p-3">
                                 <div class="ci-grid">
 
@@ -64,11 +64,11 @@
                                                 <button class="btn btn-link btn-sm p-0 text-muted text-decoration-none"
                                                         type="button"
                                                         data-bs-toggle="collapse"
-                                                        data-bs-target="#detalle-{{ $prod->id }}">
+                                                        data-bs-target="#detalle-{{ $prod->public_id }}">
                                                     <i class="bi bi-tags"></i>
                                                     <small>Ver etiquetas</small>
                                                 </button>
-                                                <div class="collapse mt-1" id="detalle-{{ $prod->id }}">
+                                                <div class="collapse mt-1" id="detalle-{{ $prod->public_id }}">
                                                     <div class="d-flex flex-wrap gap-1">
                                                         @foreach($prod->etiquetas as $etiqueta)
                                                             <span class="badge bg-light text-dark border">
@@ -91,8 +91,9 @@
 
                                     {{-- Cantidad --}}
                                     <div class="ci-qty qty-control d-flex align-items-center"
-                                         data-producto-id="{{ $prod->id }}"
+                                         data-producto-id="{{ $prod->public_id }}"
                                          data-url="{{ route('carrito.actualizar', $prod) }}"
+                                         data-stock-url="{{ route('carrito.stock', $prod) }}"
                                          data-precio="{{ $prod->precio }}"
                                          data-stock="{{ $prod->stock ?? '' }}">
                                         <button type="button"
@@ -115,7 +116,7 @@
 
                                     {{-- Subtotal --}}
                                     @if($mostrarPrecios)
-                                        <div class="ci-sub fw-semibold" id="subtotal-{{ $prod->id }}">
+                                        <div class="ci-sub fw-semibold" id="subtotal-{{ $prod->public_id }}">
                                             ${{ number_format($item['subtotal'], 2) }}
                                         </div>
                                     @endif
@@ -227,10 +228,6 @@
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     let timers = {};
 
-    function getStockUrl(productoId) {
-        return '/carrito/stock/' + productoId;
-    }
-
     function enviarActualizacion(control, nuevaCantidad) {
         const url = control.dataset.url;
         const precio = parseFloat(control.dataset.precio);
@@ -318,7 +315,7 @@
             const actual = parseInt(input.value) || 1;
             const nuevaCantidad = actual + 1;
 
-            fetch(getStockUrl(productoId), {
+            fetch(control.dataset.stockUrl, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(function (r) { return r.json(); })

@@ -6,12 +6,24 @@ use App\Support\StockResult;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class Producto extends Model
 {
     use HasFactory;
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($modelo) {
+            if (empty($modelo->public_id)) {
+                $modelo->public_id = Str::uuid()->toString();
+            }
+        });
+    }
+
     protected $fillable = [
+        'public_id',
         'proveedor_id',
         'id_proveedor',
         'descripcion',
@@ -173,5 +185,18 @@ class Producto extends Model
                          $q->where('stock', '>', 0)
                            ->orWhere('por_encargue', true);
                      });
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'public_id';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if (!Str::isUuid($value)) {
+            abort(404);
+        }
+        return $this->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
     }
 }
