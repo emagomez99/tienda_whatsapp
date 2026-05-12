@@ -9,6 +9,16 @@
     @include('tienda.partials.producto-show-mobile')
 @endsection
 
+@if($producto->estaDisponible())
+@push('styles')
+<style>
+@media (max-width: 767.98px) {
+    body { padding-bottom: 68px; }
+}
+</style>
+@endpush
+@endif
+
 @push('scripts')
 <script>
 (function () {
