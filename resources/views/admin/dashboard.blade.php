@@ -102,42 +102,44 @@
                 @if($pedidosRecientes->isEmpty())
                     <p class="text-muted p-3 mb-0 small">No hay pedidos aún.</p>
                 @else
-                    <table class="table table-hover table-sm align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-3">#</th>
-                                <th>Cliente</th>
-                                <th>Total</th>
-                                <th>Estado</th>
-                                <th>Fecha</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @foreach($pedidosRecientes as $pedido)
-                            <tr>
-                                <td class="ps-3"><code class="small">#{{ $pedido->id }}</code></td>
-                                <td class="small">{{ $pedido->nombre }} {{ $pedido->apellido }}</td>
-                                <td class="small">${{ number_format($pedido->total, 2) }}</td>
-                                <td>
-                                    @if($pedido->esPendiente())
-                                        <span class="badge bg-warning text-dark">Pendiente</span>
-                                    @elseif($pedido->esConfirmado())
-                                        <span class="badge bg-success">Confirmado</span>
-                                    @else
-                                        <span class="badge bg-danger">Cancelado</span>
-                                    @endif
-                                </td>
-                                <td class="small text-muted">{{ $pedido->created_at->format('d/m H:i') }}</td>
-                                <td>
-                                    <a href="{{ route('admin.pedidos.show', $pedido) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">#</th>
+                                    <th>Cliente</th>
+                                    <th class="d-none d-md-table-cell">Total</th>
+                                    <th>Estado</th>
+                                    <th class="d-none d-md-table-cell">Fecha</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach($pedidosRecientes as $pedido)
+                                <tr>
+                                    <td class="ps-3"><code class="small">#{{ $pedido->id }}</code></td>
+                                    <td class="small">{{ $pedido->nombre }} {{ $pedido->apellido }}</td>
+                                    <td class="small d-none d-md-table-cell">${{ number_format($pedido->total, 2) }}</td>
+                                    <td>
+                                        @if($pedido->esPendiente())
+                                            <span class="badge bg-warning text-dark">Pendiente</span>
+                                        @elseif($pedido->esConfirmado())
+                                            <span class="badge bg-success">Confirmado</span>
+                                        @else
+                                            <span class="badge bg-danger">Cancelado</span>
+                                        @endif
+                                    </td>
+                                    <td class="small text-muted d-none d-md-table-cell">{{ $pedido->created_at->format('d/m H:i') }}</td>
+                                    <td>
+                                        <a href="{{ route('admin.pedidos.show', $pedido) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 @endif
             </div>
         </div>
@@ -152,36 +154,38 @@
                 @if($productosRecientes->isEmpty())
                     <p class="text-muted p-3 mb-0 small">No hay productos registrados.</p>
                 @else
-                    <table class="table table-hover table-sm align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-3">Descripción</th>
-                                <th>Proveedor</th>
-                                <th>Precio</th>
-                                <th>Stock</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($productosRecientes as $producto)
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm align-middle mb-0">
+                            <thead class="table-light">
                                 <tr>
-                                    <td class="ps-3">
-                                        <a href="{{ route('admin.productos.edit', $producto) }}" class="small">{{ $producto->descripcion }}</a>
-                                    </td>
-                                    <td class="small text-muted">{{ $producto->proveedor->nombre ?? '-' }}</td>
-                                    <td class="small">{{ $producto->precio_con_moneda }}</td>
-                                    <td class="small">{{ $producto->stock }}</td>
-                                    <td>
-                                        @if($producto->disponible)
-                                            <span class="badge bg-success">Disponible</span>
-                                        @else
-                                            <span class="badge bg-secondary">No disp.</span>
-                                        @endif
-                                    </td>
+                                    <th class="ps-3">Descripción</th>
+                                    <th class="d-none d-md-table-cell">Proveedor</th>
+                                    <th>Precio</th>
+                                    <th class="d-none d-md-table-cell">Stock</th>
+                                    <th>Estado</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach($productosRecientes as $producto)
+                                    <tr>
+                                        <td class="ps-3">
+                                            <a href="{{ route('admin.productos.edit', $producto) }}" class="small">{{ $producto->descripcion }}</a>
+                                        </td>
+                                        <td class="small text-muted d-none d-md-table-cell">{{ $producto->proveedor->nombre ?? '-' }}</td>
+                                        <td class="small">{{ $producto->precio_con_moneda }}</td>
+                                        <td class="small d-none d-md-table-cell">{{ $producto->stock }}</td>
+                                        <td>
+                                            @if($producto->disponible)
+                                                <span class="badge bg-success">Disponible</span>
+                                            @else
+                                                <span class="badge bg-secondary">No disp.</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 @endif
             </div>
         </div>

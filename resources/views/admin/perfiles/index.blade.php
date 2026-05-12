@@ -7,7 +7,7 @@
     <h3><i class="bi bi-shield-check"></i> Perfiles</h3>
     @if(auth()->user()->puede('perfiles.gestionar'))
     <a href="{{ route('admin.perfiles.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nuevo Perfil
+        <i class="bi bi-plus-circle"></i> Nuevo
     </a>
     @endif
 </div>

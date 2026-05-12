@@ -6,7 +6,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3><i class="bi bi-box-seam"></i> Productos</h3>
     <a href="{{ route('admin.productos.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nuevo Producto
+        <i class="bi bi-plus-circle"></i> Nuevo
     </a>
 </div>
 
