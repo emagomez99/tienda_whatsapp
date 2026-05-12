@@ -81,30 +81,30 @@
                     @csrf
                     <div class="d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-outline-secondary btn-decrement"
-                                style="width:44px;height:44px;padding:0;" disabled>
+                                style="width:38px;height:38px;padding:0;flex-shrink:0;" disabled>
                             <i class="bi bi-dash"></i>
                         </button>
                         <input type="number" name="cantidad" value="1" min="1"
                                @if($maxStock !== null) max="{{ $maxStock }}" @endif
                                class="form-control text-center input-cantidad"
-                               style="width:70px;height:44px;-moz-appearance:textfield;">
+                               style="width:60px;height:38px;-moz-appearance:textfield;flex-shrink:0;">
                         <button type="button" class="btn btn-outline-secondary btn-increment"
-                                style="width:44px;height:44px;padding:0;" {{ $maxStock === 1 ? 'disabled' : '' }}>
+                                style="width:38px;height:38px;padding:0;flex-shrink:0;" {{ $maxStock === 1 ? 'disabled' : '' }}>
                             <i class="bi bi-plus"></i>
                         </button>
-                        <button type="submit" class="btn btn-primary btn-lg flex-grow-1" style="height:44px;">
-                            <i class="bi bi-cart-plus"></i>
+                        <button type="submit" class="btn btn-primary flex-grow-1" style="height:38px;">
+                            <i class="bi bi-cart-plus"></i> Agregar al carrito
                         </button>
                     </div>
                 </form>
             @endif
 
             <div class="d-flex gap-2 mt-3">
-                <a href="{{ route('tienda.index') }}" class="btn btn-outline-secondary flex-grow-1">
-                    <i class="bi bi-arrow-left"></i> Volver a la tienda
+                <a href="{{ route('tienda.index') }}" class="btn btn-outline-secondary flex-grow-1" style="height:38px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-arrow-left me-1"></i> Volver a la tienda
                 </a>
-                <button type="button" class="btn btn-outline-secondary btn-compartir" title="Compartir">
-                    <i class="bi bi-share"></i> Compartir
+                <button type="button" class="btn btn-outline-secondary btn-compartir" style="height:38px;">
+                    <i class="bi bi-share me-1"></i> Compartir
                 </button>
             </div>
         </div>
