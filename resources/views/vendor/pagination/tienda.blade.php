@@ -8,7 +8,6 @@
             <span class="fw-semibold">{{ $paginator->lastItem() }}</span>
             de
             <span class="fw-semibold">{{ $paginator->total() }}</span>
-            productos
         </small>
     </div>
 

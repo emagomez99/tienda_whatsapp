@@ -3,7 +3,7 @@
 @section('title', 'Historial de stock — ' . $producto->descripcion)
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-start gap-3 mb-4">
     <div>
         <h3><i class="bi bi-clock-history"></i> Historial de stock</h3>
         <p class="text-muted mb-0">
@@ -16,15 +16,15 @@
             @endif
         </p>
     </div>
-    <div class="d-flex gap-2">
-        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-ajuste-stock">
-            <i class="bi bi-arrow-left-right"></i> Ajustar stock
+    <div class="d-flex gap-2 flex-wrap">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-ajuste-stock">
+            <i class="bi bi-arrow-left-right"></i><span class="d-none d-sm-inline"> Ajustar stock</span>
         </button>
-        <a href="{{ route('admin.productos.edit', $producto) }}" class="btn btn-outline-secondary">
-            <i class="bi bi-pencil"></i> Editar
+        <a href="{{ route('admin.productos.edit', $producto) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-pencil"></i><span class="d-none d-sm-inline"> Editar</span>
         </a>
-        <a href="{{ route('admin.productos.index') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
+        <a href="{{ route('admin.productos.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline"> Volver</span>
         </a>
     </div>
 </div>
@@ -38,7 +38,7 @@
 
 {{-- Resumen de stock --}}
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card text-center h-100">
             <div class="card-body py-3">
                 <div class="fs-2 fw-bold text-primary">{{ $producto->stock }}</div>
@@ -46,27 +46,27 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card text-center h-100">
             <div class="card-body py-3">
                 <div class="fs-2 fw-bold text-muted">{{ $movimientos->total() }}</div>
-                <div class="text-muted small">Movimientos totales</div>
+                <div class="text-muted small">Movimientos</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card text-center h-100">
             <div class="card-body py-3">
                 <div class="fs-2 fw-bold text-success">+{{ $totales['entradas'] }}</div>
-                <div class="text-muted small">Total entradas</div>
+                <div class="text-muted small">Entradas</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card text-center h-100">
             <div class="card-body py-3">
                 <div class="fs-2 fw-bold text-danger">-{{ $totales['salidas'] }}</div>
-                <div class="text-muted small">Total salidas</div>
+                <div class="text-muted small">Salidas</div>
             </div>
         </div>
     </div>
@@ -87,11 +87,11 @@
                         <tr>
                             <th class="ps-3">Fecha</th>
                             <th>Tipo</th>
-                            <th>Descripción</th>
-                            <th>Pedido</th>
-                            <th>Usuario</th>
+                            <th class="d-none d-md-table-cell">Descripción</th>
+                            <th class="d-none d-md-table-cell">Pedido</th>
+                            <th class="d-none d-lg-table-cell">Usuario</th>
                             <th class="text-end">Variación</th>
-                            <th class="text-end pe-3">Stock result.</th>
+                            <th class="text-end pe-3">Stock</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -104,13 +104,13 @@
                                 <td>
                                     <span class="badge bg-{{ $mov->tipoBadgeClase() }}">
                                         <i class="bi {{ $mov->tipoIcono() }}"></i>
-                                        {{ $mov->tipoLabel() }}
+                                        <span class="d-none d-sm-inline">{{ $mov->tipoLabel() }}</span>
                                     </span>
                                 </td>
-                                <td class="text-muted small">
+                                <td class="text-muted small d-none d-md-table-cell">
                                     {{ $mov->descripcion ?? '—' }}
                                 </td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     @if($mov->pedido_id && $mov->pedido)
                                         <a href="{{ route('admin.pedidos.show', $mov->pedido) }}" class="text-decoration-none fw-semibold">
                                             #{{ $mov->pedido->id }}
@@ -122,7 +122,7 @@
                                         <span class="text-muted">—</span>
                                     @endif
                                 </td>
-                                <td class="text-muted small">
+                                <td class="text-muted small d-none d-lg-table-cell">
                                     @if($mov->user)
                                         {{ $mov->user->name }}
                                     @elseif($mov->user_id)

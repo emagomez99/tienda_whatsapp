@@ -13,7 +13,15 @@
 </div>
 
 {{-- Filtros --}}
+@php $filtrosActivos = request()->hasAny(['buscar','estado']); @endphp
 <div class="card mb-4">
+    <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
+         style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#filtros-pedidos"
+         aria-expanded="{{ $filtrosActivos ? 'true' : 'false' }}">
+        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1" style="font-size:.6rem;">activo</span>' : '' !!}</span>
+        <i class="bi bi-chevron-down filtros-chevron" style="transition:transform .2s;{{ $filtrosActivos ? 'transform:rotate(180deg);' : '' }}"></i>
+    </div>
+    <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-pedidos">
     <div class="card-body">
         <form action="{{ route('admin.pedidos.index') }}" method="GET">
             <div class="row g-3 align-items-end">
@@ -43,6 +51,7 @@
             </div>
             <small class="text-muted fst-italic mt-2 d-block">Nombre, apellido, email, celular — o <code>#123</code> para buscar por ID</small>
         </form>
+    </div>
     </div>
 </div>
 
@@ -98,7 +107,7 @@
                 </table>
             </div>
             <div class="p-3">
-                {{ $pedidos->links() }}
+                {{ $pedidos->links('vendor.pagination.tienda') }}
             </div>
         @endif
     </div>

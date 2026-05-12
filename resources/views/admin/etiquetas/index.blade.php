@@ -10,7 +10,15 @@
     </a>
 </div>
 
+@php $filtrosActivos = request()->hasAny(['buscar']); @endphp
 <div class="card mb-4">
+    <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
+         style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#filtros-etiquetas"
+         aria-expanded="{{ $filtrosActivos ? 'true' : 'false' }}">
+        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1" style="font-size:.6rem;">activo</span>' : '' !!}</span>
+        <i class="bi bi-chevron-down filtros-chevron" style="transition:transform .2s;{{ $filtrosActivos ? 'transform:rotate(180deg);' : '' }}"></i>
+    </div>
+    <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-etiquetas">
     <div class="card-body">
         <form action="{{ route('admin.etiquetas.index') }}" method="GET" class="row g-3">
             <div class="col-md-10">
@@ -22,6 +30,7 @@
                 </button>
             </div>
         </form>
+    </div>
     </div>
 </div>
 
