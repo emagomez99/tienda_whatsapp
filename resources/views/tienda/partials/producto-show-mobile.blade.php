@@ -1,11 +1,26 @@
 <div class="d-block d-md-none">
 
-    {{-- Imagen --}}
-    <div class="bg-light d-flex align-items-center justify-content-center" style="height:260px;">
+    {{-- Imagen con botones flotantes --}}
+    <div class="position-relative bg-light" style="height:260px;margin-top:12px;">
         <img src="{{ $producto->url_imagen ? $producto->imagen_url : '/img/no-image.svg' }}"
              alt="{{ $producto->descripcion }}"
-             style="width:100%; height:100%; object-fit:contain;"
-             onerror="this.onerror=null;this.src='/img/no-image.svg';">
+             style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
+             onload="this.style.opacity=1"
+             onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
+
+        {{-- Botón volver --}}
+        <a href="{{ route('tienda.index') }}"
+           class="d-flex align-items-center justify-content-center bg-white shadow-sm"
+           style="position:fixed;top:84px;left:12px;width:42px;height:42px;border-radius:50%;color:#333;z-index:1020;box-shadow:0 2px 10px rgba(0,0,0,.25);border:1px solid rgba(0,0,0,.08);text-decoration:none;">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+
+        {{-- Botón compartir --}}
+        <button type="button"
+                class="btn-compartir position-absolute d-flex align-items-center justify-content-center bg-white shadow-sm border-0"
+                style="bottom:12px;right:12px;width:38px;height:38px;border-radius:50%;color:#555;z-index:1;">
+            <i class="bi bi-share"></i>
+        </button>
     </div>
 
     <div class="px-3 pt-3 pb-5">
@@ -88,15 +103,6 @@
             </div>
         @endif
 
-        {{-- Volver + Compartir --}}
-        <div class="d-flex gap-2 mt-2">
-            <a href="{{ route('tienda.index') }}" class="btn btn-outline-secondary flex-grow-1">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
-            <button type="button" class="btn btn-outline-secondary btn-compartir" title="Compartir">
-                <i class="bi bi-share"></i>
-            </button>
-        </div>
     </div>
 
     {{-- Barra sticky de agregar al carrito --}}
