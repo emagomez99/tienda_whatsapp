@@ -10,10 +10,11 @@
                 <div class="card h-100 producto-card">
 
                     {{-- Imagen --}}
-                    <a href="{{ route('tienda.show', $producto) }}" class="producto-img-wrap position-relative">
+                    <a href="{{ route('tienda.show', $producto) }}" class="producto-img-wrap position-relative d-block">
                         <img src="{{ $producto->url_imagen ? $producto->imagen_url : '/img/no-image.svg' }}"
-                             class="producto-img"
+                             class="card-img-top"
                              alt="{{ $producto->descripcion }}"
+                             style="height:220px;width:100%;object-fit:contain;background:#fff;"
                              onerror="this.onerror=null;this.src='/img/no-image.svg';">
 
                         @if($producto->stock > 0)

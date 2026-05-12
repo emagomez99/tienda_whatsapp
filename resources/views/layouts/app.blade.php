@@ -32,9 +32,18 @@
             box-shadow: 0 10px 32px rgba(0,0,0,.13);
             transform: translateY(-4px);
         }
-        .producto-img-wrap { display: block; position: relative; width: 100%; height: 0; padding-bottom: 75%; overflow: hidden; background: #fff; flex-shrink: 0; }
-        .producto-img { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; transition: transform .35s ease; }
-        .producto-card:hover .producto-img { transform: scale(1.05); }
+        .producto-img-wrap { display: block; position: relative; overflow: hidden; flex-shrink: 0; }
+        .producto-sin-stock-overlay {
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,.6);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .producto-sin-stock-overlay span {
+            background: rgba(0,0,0,.48); color: #fff;
+            padding: .25rem .9rem; border-radius: 4px;
+            font-size: .8rem; font-weight: 500;
+        }
+        .producto-card:hover .card-img-top { transform: scale(1.05); }
         .producto-nombre {
             font-size: .88rem;
             font-weight: 600;
