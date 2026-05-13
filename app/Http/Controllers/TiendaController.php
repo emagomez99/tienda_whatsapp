@@ -112,6 +112,10 @@ class TiendaController extends Controller
             ]);
         } else {
             $productos = $query->orderBy('descripcion')->paginate(12);
+
+            if ($productos->currentPage() > max($productos->lastPage(), 1)) {
+                abort(404);
+            }
         }
 
         $etiquetas = Etiqueta::where('visible_usuarios', true)->orderBy('nombre')->get();
