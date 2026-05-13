@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name', 'Tienda MC'))</title>
+    @stack('meta')
     @php $favicon = App\Models\Configuracion::favicon(); @endphp
     @if($favicon)
         <link rel="icon" href="{{ url('storage/' . $favicon) }}" type="image/x-icon">

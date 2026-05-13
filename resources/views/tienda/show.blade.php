@@ -4,6 +4,25 @@
 
 @php $maxStock = $producto->estaDisponible() ? $producto->stockMaximo() : null; @endphp
 
+@push('meta')
+@php
+    $ogUrl   = url()->current();
+    $ogTitle = $producto->descripcion;
+    $ogDesc  = $producto->id_proveedor ? 'Código: ' . $producto->id_proveedor : $producto->descripcion;
+    $ogImage = $producto->url_imagen ? $producto->imagen_url : url('/img/no-image.svg');
+@endphp
+<meta property="og:type"        content="product">
+<meta property="og:url"         content="{{ $ogUrl }}">
+<meta property="og:title"       content="{{ $ogTitle }}">
+<meta property="og:description" content="{{ $ogDesc }}">
+<meta property="og:image"       content="{{ $ogImage }}">
+<meta property="og:image:width" content="600">
+<meta property="og:image:height" content="600">
+<meta name="twitter:card"       content="summary_large_image">
+<meta name="twitter:title"      content="{{ $ogTitle }}">
+<meta name="twitter:image"      content="{{ $ogImage }}">
+@endpush
+
 @section('content')
     @include('tienda.partials.producto-show-desktop')
     @include('tienda.partials.producto-show-mobile')
