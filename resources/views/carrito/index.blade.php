@@ -25,7 +25,7 @@
     @endif
 
     @if(empty($productos))
-        <div class="text-center py-5">
+        <div class="text-center py-5 d-flex flex-column align-items-center justify-content-center" style="min-height: 50vh;">
             <i class="bi bi-cart-x" style="font-size: 3.5rem; color: #dee2e6;"></i>
             <p class="text-muted mt-3 mb-3">Tu carrito está vacío.</p>
             <a href="{{ route('tienda.index') }}" class="btn btn-primary">
