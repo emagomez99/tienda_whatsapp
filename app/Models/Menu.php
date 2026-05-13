@@ -187,11 +187,15 @@ class Menu extends Model
      */
     public static function getArbolMenu()
     {
-        return self::raiz()
-            ->activos()
-            ->orderBy('orden')
-            ->with('childrenActivos')
-            ->get();
+        try {
+            return self::raiz()
+                ->activos()
+                ->orderBy('orden')
+                ->with('childrenActivos')
+                ->get();
+        } catch (\Exception $e) {
+            return collect();
+        }
     }
 
     /**
