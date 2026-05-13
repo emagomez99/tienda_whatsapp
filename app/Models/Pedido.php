@@ -4,18 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Pedido extends Model
 {
     protected $fillable = [
         'nombre', 'apellido', 'email', 'celular',
         'direccion', 'localidad', 'provincia', 'cp',
-        'estado', 'total',
+        'estado',
     ];
 
     public function items()
     {
         return $this->hasMany(PedidoProducto::class);
+    }
+
+    public function totales()
+    {
+        return $this->hasMany(PedidoTotal::class);
     }
 
     public function esPendiente()
@@ -35,8 +41,18 @@ class Pedido extends Model
 
     public function recalcularTotal()
     {
-        $this->total = $this->items()->sum('subtotal');
-        $this->save();
+        $this->totales()->delete();
+        DB::table('pedido_productos')
+            ->select('moneda_id', DB::raw('SUM(subtotal) as total_moneda'))
+            ->where('pedido_id', $this->id)
+            ->groupBy('moneda_id')
+            ->get()
+            ->each(function ($row) {
+                $this->totales()->create([
+                    'moneda_id' => $row->moneda_id,
+                    'total'     => $row->total_moneda,
+                ]);
+            });
     }
 
     /**
@@ -79,7 +95,7 @@ class Pedido extends Model
             }
         }
 
-        if ($this->esConfirmado() && $diferencia !== 0) {
+        if ($this->esConfirmado() && $diferencia !== 0 && !$producto->por_encargue) {
             // variacion = -diferencia: más unidades = salida, menos = devolución
             $variacion = -$diferencia;
             $tipo = $variacion < 0
@@ -102,6 +118,7 @@ class Pedido extends Model
                 'precio_unitario' => $producto->precio,
                 'cantidad'        => $nuevaCantidad,
                 'subtotal'        => $producto->precio * $nuevaCantidad,
+                'moneda_id'       => $producto->moneda_id,
             ]);
         } else {
             $item->cantidad = $nuevaCantidad;

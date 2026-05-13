@@ -66,7 +66,12 @@
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <div class="text-end">
                             <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Total</div>
-                            <div class="fw-bold fs-5">${{ number_format($pedido->total, 2) }}</div>
+                            @foreach($pedido->totales as $pt)
+                                <div class="fw-bold fs-6">
+                                    {{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}
+                                    @if($pt->moneda)<small class="text-muted fw-normal">{{ $pt->moneda->codigo }}</small>@endif
+                                </div>
+                            @endforeach
                         </div>
                         <div class="text-end">
                             <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Estado</div>
@@ -130,7 +135,7 @@
                                         <small class="text-muted">(producto eliminado)</small>
                                     @endif
                                 </td>
-                                <td class="text-end">${{ number_format($item->precio_unitario, 2) }}</td>
+                                <td class="text-end">{{ $item->moneda ? $item->moneda->simbolo : '$' }}{{ number_format($item->precio_unitario, 2, ',', '.') }}</td>
                                 <td class="text-center">
                                     @if($editable)
                                         <form method="POST"
@@ -147,7 +152,7 @@
                                         {{ $item->cantidad }}
                                     @endif
                                 </td>
-                                <td class="text-end">${{ number_format($item->subtotal, 2) }}</td>
+                                <td class="text-end">{{ $item->moneda ? $item->moneda->simbolo : '$' }}{{ number_format($item->subtotal, 2, ',', '.') }}</td>
                                 @if($editable)
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-danger"
@@ -163,7 +168,11 @@
                         <tfoot class="table-light">
                             <tr>
                                 <td colspan="3" class="text-end fw-bold">Total</td>
-                                <td class="text-end fw-bold">${{ number_format($pedido->total, 2) }}</td>
+                                <td class="text-end fw-bold">
+                                    @foreach($pedido->totales as $pt)
+                                        <div>{{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}</div>
+                                    @endforeach
+                                </td>
                                 @if($editable)
                                 <td class="text-end">
                                     <button type="button" id="btn-nueva-fila" class="btn btn-sm btn-outline-primary" title="Agregar producto">

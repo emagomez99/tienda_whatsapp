@@ -385,12 +385,12 @@ class ProductoController extends Controller
     {
         $q = $request->get('q', '');
 
-        $productos = Producto::where('disponible', true)
+        $productos = Producto::with('moneda')
+            ->where('disponible', true)
             ->where(function ($query) use ($q) {
                 $query->where('descripcion', 'ilike', "%{$q}%")
                       ->orWhere('id_proveedor', 'ilike', "%{$q}%");
             })
-            ->select('id', 'descripcion', 'id_proveedor', 'precio', 'stock', 'por_encargue')
             ->orderBy('descripcion')
             ->limit(20)
             ->get();
@@ -402,6 +402,8 @@ class ProductoController extends Controller
                 'codigo'      => $p->id_proveedor,
                 'precio'      => $p->precio,
                 'stock'       => $p->por_encargue ? null : $p->stock,
+                'moneda_id'   => $p->moneda_id,
+                'simbolo'     => $p->moneda ? $p->moneda->simbolo : '$',
             ];
         }));
     }

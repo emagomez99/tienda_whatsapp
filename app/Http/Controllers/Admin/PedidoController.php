@@ -40,7 +40,7 @@ class PedidoController extends Controller
             }
         }
 
-        $pedidos = $query->paginate(20)->withQueryString();
+        $pedidos = $query->with('totales.moneda')->paginate(20)->withQueryString();
 
         return view('admin.pedidos.index', compact('pedidos'));
     }
@@ -77,7 +77,6 @@ class PedidoController extends Controller
                 'provincia' => $data['provincia'] ?? '',
                 'cp'        => $data['cp']        ?? '',
                 'estado'    => 'pendiente',
-                'total'     => 0,
             ]);
 
             foreach ($data['productos'] ?? [] as $p) {
@@ -88,6 +87,7 @@ class PedidoController extends Controller
                     'precio_unitario' => $producto->precio,
                     'cantidad'        => (int) $p['cantidad'],
                     'subtotal'        => $producto->precio * (int) $p['cantidad'],
+                    'moneda_id'       => $producto->moneda_id,
                 ]);
             }
 
@@ -143,7 +143,7 @@ class PedidoController extends Controller
 
     public function show(Pedido $pedido)
     {
-        $pedido->load('items.producto');
+        $pedido->load('items.producto', 'items.moneda', 'totales.moneda');
 
         return view('admin.pedidos.show', compact('pedido'));
     }
@@ -203,7 +203,7 @@ class PedidoController extends Controller
         if ($pedido->esConfirmado()) {
             $pedido->load('items.producto');
             foreach ($pedido->items as $item) {
-                if ($item->producto) {
+                if ($item->producto && !$item->producto->por_encargue) {
                     $item->producto->registrarMovimiento(
                         $item->cantidad,
                         StockMovimiento::TIPO_DEVOLUCION_PEDIDO,
@@ -248,8 +248,8 @@ class PedidoController extends Controller
                 ->with('error', 'No se puede editar un pedido cancelado.');
         }
 
-        // Restaurar stock solo si el pedido ya estaba confirmado
-        if ($pedido->esConfirmado() && $item->producto) {
+        // Restaurar stock solo si el pedido ya estaba confirmado y el producto tiene stock físico
+        if ($pedido->esConfirmado() && $item->producto && !$item->producto->por_encargue) {
             $item->producto->registrarMovimiento(
                 $item->cantidad,
                 StockMovimiento::TIPO_DEVOLUCION_PEDIDO,

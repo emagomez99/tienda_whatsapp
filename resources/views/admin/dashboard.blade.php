@@ -80,10 +80,16 @@
     <div class="col-6 col-md-2">
         <div class="card border-0 shadow-sm h-100 bg-success text-white">
             <div class="card-body py-2 px-3">
-                <div class="mb-0" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;opacity:.85">
+                <div class="mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;opacity:.85">
                     Facturado {{ now()->translatedFormat('M') }}
                 </div>
-                <span class="fs-5 fw-bold lh-1">${{ number_format($pedidosStats['total_mes'], 0, ',', '.') }}</span>
+                @forelse($pedidosStats['totales_mes'] as $tm)
+                    <div class="fw-bold lh-1 {{ $loop->first ? 'fs-5' : 'fs-6 mt-1' }}">
+                        {{ $tm->moneda_simbolo ?? '$' }}{{ number_format($tm->total, 0, ',', '.') }}
+                    </div>
+                @empty
+                    <span class="fs-5 fw-bold lh-1">$0</span>
+                @endforelse
             </div>
         </div>
     </div>
@@ -119,7 +125,11 @@
                                 <tr>
                                     <td class="ps-3"><code class="small">#{{ $pedido->id }}</code></td>
                                     <td class="small">{{ $pedido->nombre }} {{ $pedido->apellido }}</td>
-                                    <td class="small d-none d-md-table-cell">${{ number_format($pedido->total, 2) }}</td>
+                                    <td class="small d-none d-md-table-cell">
+                                        @foreach($pedido->totales as $pt)
+                                            <div class="lh-sm">{{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}</div>
+                                        @endforeach
+                                    </td>
                                     <td>
                                         @if($pedido->esPendiente())
                                             <span class="badge bg-warning text-dark">Pendiente</span>

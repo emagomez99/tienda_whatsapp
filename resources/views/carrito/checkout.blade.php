@@ -125,17 +125,22 @@
                                     @endif
                                 </div>
                                 @if($mostrarPrecios)
-                                    <span class="badge bg-primary rounded-pill">${{ number_format($item['subtotal'], 2) }}</span>
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ $item['producto']->moneda ? $item['producto']->moneda->simbolo : '$' }}{{ number_format($item['subtotal'], 2, ',', '.') }}
+                                    </span>
                                 @endif
                             </li>
                         @endforeach
                     </ul>
                     @if($mostrarPrecios)
                         <div class="card-footer bg-light">
-                            <div class="d-flex justify-content-between">
-                                <strong>Total:</strong>
-                                <strong class="text-primary">${{ number_format($total, 2) }}</strong>
-                            </div>
+                            @foreach($totalesPorMoneda as $grupo)
+                                @php $simbolo = $grupo['moneda'] ? $grupo['moneda']->simbolo : '$'; @endphp
+                                <div class="d-flex justify-content-between{{ $loop->first ? '' : ' mt-1' }}">
+                                    <strong>{{ $grupo['moneda'] ? 'Total ' . $grupo['moneda']->nombre . ':' : 'Total:' }}</strong>
+                                    <strong class="text-primary">{{ $simbolo }}{{ number_format($grupo['total'], 2, ',', '.') }}</strong>
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>

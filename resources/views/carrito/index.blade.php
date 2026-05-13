@@ -85,7 +85,7 @@
                                     @if($mostrarPrecios)
                                         <div class="ci-price text-center">
                                             <div class="text-muted small">Precio</div>
-                                            <div class="small">${{ number_format($prod->precio, 2) }}</div>
+                                            <div class="small">{{ $prod->moneda ? $prod->moneda->simbolo : '$' }}{{ number_format($prod->precio, 2, ',', '.') }}</div>
                                         </div>
                                     @endif
 
@@ -95,7 +95,10 @@
                                          data-url="{{ route('carrito.actualizar', $prod) }}"
                                          data-stock-url="{{ route('carrito.stock', $prod) }}"
                                          data-precio="{{ $prod->precio }}"
-                                         data-stock="{{ $prod->stock ?? '' }}">
+                                         data-stock="{{ $prod->stock ?? '' }}"
+                                         data-moneda-id="{{ $prod->moneda_id ?? '' }}"
+                                         data-moneda-simbolo="{{ $prod->moneda ? $prod->moneda->simbolo : '$' }}"
+                                         data-moneda-nombre="{{ $prod->moneda ? $prod->moneda->nombre : '' }}">
                                         <button type="button"
                                                 class="btn btn-outline-secondary btn-sm btn-decrement"
                                                 style="width:32px; height:32px; padding:0;"
@@ -117,7 +120,7 @@
                                     {{-- Subtotal --}}
                                     @if($mostrarPrecios)
                                         <div class="ci-sub fw-semibold" id="subtotal-{{ $prod->public_id }}">
-                                            ${{ number_format($item['subtotal'], 2) }}
+                                            {{ $prod->moneda ? $prod->moneda->simbolo : '$' }}{{ number_format($item['subtotal'], 2, ',', '.') }}
                                         </div>
                                     @endif
 
@@ -154,14 +157,14 @@
                         <h5 class="fw-semibold mb-3">Resumen del pedido</h5>
 
                         @if($mostrarPrecios)
-                            <div class="d-flex justify-content-between mb-2 text-muted">
-                                <span>Subtotal</span>
-                                <span id="total-carrito-sub">${{ number_format($total, 2) }}</span>
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between fw-semibold fs-5 mb-4">
-                                <span>Total</span>
-                                <span id="total-carrito" class="text-primary">${{ number_format($total, 2) }}</span>
+                            <div id="total-carrito" class="mb-4">
+                                @foreach($totalesPorMoneda as $grupo)
+                                    @php $simbolo = $grupo['moneda'] ? $grupo['moneda']->simbolo : '$'; @endphp
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">{{ $grupo['moneda'] ? $grupo['moneda']->nombre : 'Total' }}</span>
+                                        <span class="fw-semibold text-primary">{{ $simbolo }}{{ number_format($grupo['total'], 2, ',', '.') }}</span>
+                                    </div>
+                                @endforeach
                             </div>
                         @endif
 
@@ -263,7 +266,8 @@
 
                 const subtotalEl = document.getElementById('subtotal-' + productoId);
                 if (subtotalEl) {
-                    subtotalEl.textContent = '$' + formatNum(precio * cantidadFinal);
+                    const simbolo = control.dataset.monedaSimbolo || '$';
+                    subtotalEl.textContent = simbolo + formatNum(precio * cantidadFinal);
                 }
                 recalcularTotal();
 
@@ -282,21 +286,35 @@
     }
 
     function recalcularTotal() {
-        let total = 0;
+        var grupos = {};
         document.querySelectorAll('.qty-control').forEach(function (control) {
-            const precio = parseFloat(control.dataset.precio);
-            const input = control.querySelector('.qty-input');
-            total += precio * (parseInt(input.value) || 1);
+            var precio   = parseFloat(control.dataset.precio);
+            var monedaId = control.dataset.monedaId || '0';
+            var simbolo  = control.dataset.monedaSimbolo || '$';
+            var nombre   = control.dataset.monedaNombre || 'Total';
+            var cantidad = parseInt(control.querySelector('.qty-input').value) || 1;
+            if (!grupos[monedaId]) {
+                grupos[monedaId] = { simbolo: simbolo, nombre: nombre, total: 0 };
+            }
+            grupos[monedaId].total += precio * cantidad;
         });
-        const fmt = '$' + formatNum(total);
-        const elTotal = document.getElementById('total-carrito');
-        const elSub   = document.getElementById('total-carrito-sub');
-        if (elTotal) elTotal.textContent = fmt;
-        if (elSub)   elSub.textContent   = fmt;
+        var elTotal = document.getElementById('total-carrito');
+        if (elTotal) {
+            var html = '';
+            Object.values(grupos).forEach(function (g) {
+                html += '<div class="d-flex justify-content-between mb-1">' +
+                    '<span class="text-muted">' + g.nombre + '</span>' +
+                    '<span class="fw-semibold text-primary">' + g.simbolo + formatNum(g.total) + '</span>' +
+                    '</div>';
+            });
+            elTotal.innerHTML = html;
+        }
     }
 
     function formatNum(n) {
-        return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        var parts = n.toFixed(2).split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return parts.join(',');
     }
 
     document.querySelectorAll('.qty-control').forEach(function (control) {

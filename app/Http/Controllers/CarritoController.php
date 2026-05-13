@@ -15,23 +15,31 @@ class CarritoController extends Controller
         $ajustes = $this->validarYCorregirStock();
         $carrito = session()->get('carrito', []);
         $productos = [];
-        $total = 0;
+        $totalesPorMoneda = [];
 
         foreach ($carrito as $id => $cantidad) {
-            $producto = Producto::with(['especificaciones', 'etiquetas'])->find($id);
+            $producto = Producto::with(['especificaciones', 'etiquetas', 'moneda'])->find($id);
             if ($producto) {
+                $subtotal = $producto->precio * $cantidad;
                 $productos[] = [
                     'producto' => $producto,
                     'cantidad' => $cantidad,
-                    'subtotal' => $producto->precio * $cantidad,
+                    'subtotal' => $subtotal,
                 ];
-                $total += $producto->precio * $cantidad;
+                $monedaId = $producto->moneda_id ?? 0;
+                if (!isset($totalesPorMoneda[$monedaId])) {
+                    $totalesPorMoneda[$monedaId] = [
+                        'moneda' => $producto->moneda,
+                        'total'  => 0,
+                    ];
+                }
+                $totalesPorMoneda[$monedaId]['total'] += $subtotal;
             }
         }
 
         $mostrarPrecios = Configuracion::mostrarPrecios();
 
-        return view('carrito.index', compact('productos', 'total', 'mostrarPrecios', 'ajustes'));
+        return view('carrito.index', compact('productos', 'totalesPorMoneda', 'mostrarPrecios', 'ajustes'));
     }
 
     public function agregar(Request $request, Producto $producto)
@@ -150,24 +158,32 @@ class CarritoController extends Controller
         }
 
         $productos = [];
-        $total = 0;
+        $totalesPorMoneda = [];
 
         foreach ($carrito as $id => $cantidad) {
-            $producto = Producto::find($id);
+            $producto = Producto::with('moneda')->find($id);
             if ($producto) {
+                $subtotal = $producto->precio * $cantidad;
                 $productos[] = [
                     'producto' => $producto,
                     'cantidad' => $cantidad,
-                    'subtotal' => $producto->precio * $cantidad,
+                    'subtotal' => $subtotal,
                 ];
-                $total += $producto->precio * $cantidad;
+                $monedaId = $producto->moneda_id ?? 0;
+                if (!isset($totalesPorMoneda[$monedaId])) {
+                    $totalesPorMoneda[$monedaId] = [
+                        'moneda' => $producto->moneda,
+                        'total'  => 0,
+                    ];
+                }
+                $totalesPorMoneda[$monedaId]['total'] += $subtotal;
             }
         }
 
         $mostrarPrecios = Configuracion::mostrarPrecios();
         $pedirDireccion = Configuracion::pedirDireccionEnvio();
 
-        return view('carrito.checkout', compact('productos', 'total', 'mostrarPrecios', 'pedirDireccion', 'ajustes'));
+        return view('carrito.checkout', compact('productos', 'totalesPorMoneda', 'mostrarPrecios', 'pedirDireccion', 'ajustes'));
     }
 
     public function enviarPedido(Request $request)
@@ -199,48 +215,63 @@ class CarritoController extends Controller
             return redirect()->route('carrito.index')->with('error', 'El carrito está vacío');
         }
 
-        $total = 0;
         $mostrarPrecios = Configuracion::mostrarPrecios();
+        $totalesPorMoneda = [];
         $productosTexto = '';
         $productosTextoDetalle = '';
 
         foreach ($carrito as $id => $cantidad) {
-            $producto = Producto::with(['especificaciones', 'etiquetas'])->find($id);
-            if ($producto) {
-                $subtotal = $producto->precio * $cantidad;
-                $total += $subtotal;
+            $producto = Producto::with(['especificaciones', 'etiquetas', 'moneda'])->find($id);
+            if (!$producto) {
+                continue;
+            }
 
-                $lineaBase = "• {$producto->descripcion}";
-                if ($producto->id_proveedor) {
-                    $lineaBase .= " ({$producto->id_proveedor})";
-                }
-                $lineaBase .= " x{$cantidad}";
-                if ($mostrarPrecios) {
-                    $lineaBase .= " - $" . number_format($subtotal, 2);
-                }
+            $subtotal = $producto->precio * $cantidad;
+            $monedaId = $producto->moneda_id ?? 0;
+            if (!isset($totalesPorMoneda[$monedaId])) {
+                $totalesPorMoneda[$monedaId] = [
+                    'moneda' => $producto->moneda,
+                    'total'  => 0,
+                ];
+            }
+            $totalesPorMoneda[$monedaId]['total'] += $subtotal;
 
-                $productosTexto .= $lineaBase . "\n";
-                $productosTextoDetalle .= $lineaBase . "\n";
+            $simbolo = $producto->moneda ? $producto->moneda->simbolo : '$';
+            $lineaBase = "• {$producto->descripcion}";
+            if ($producto->id_proveedor) {
+                $lineaBase .= " ({$producto->id_proveedor})";
+            }
+            $lineaBase .= " x{$cantidad}";
+            if ($mostrarPrecios) {
+                $lineaBase .= " - {$simbolo}" . number_format($subtotal, 2);
+            }
 
-                // Agregar etiquetas (solo en detalle)
-                if ($producto->etiquetas->count() > 0) {
-                    $etiquetasTexto = $producto->etiquetas->map(function ($e) {
-                        return "{$e->nombre}={$e->pivot->valor}";
-                    })->implode(', ');
-                    $productosTextoDetalle .= "  Etiquetas: {$etiquetasTexto}\n";
-                }
+            $productosTexto .= $lineaBase . "\n";
+            $productosTextoDetalle .= $lineaBase . "\n";
 
-                // Agregar especificaciones (solo en detalle)
-                if ($producto->especificaciones->count() > 0) {
-                    $especificacionesTexto = $producto->especificaciones->map(function ($e) {
-                        return "{$e->clave}={$e->valor}";
-                    })->implode(', ');
-                    $productosTextoDetalle .= "  Info: {$especificacionesTexto}\n";
-                }
+            if ($producto->etiquetas->count() > 0) {
+                $etiquetasTexto = $producto->etiquetas->map(function ($e) {
+                    return "{$e->nombre}={$e->pivot->valor}";
+                })->implode(', ');
+                $productosTextoDetalle .= "  Etiquetas: {$etiquetasTexto}\n";
+            }
+
+            if ($producto->especificaciones->count() > 0) {
+                $especificacionesTexto = $producto->especificaciones->map(function ($e) {
+                    return "{$e->clave}={$e->valor}";
+                })->implode(', ');
+                $productosTextoDetalle .= "  Info: {$especificacionesTexto}\n";
             }
         }
 
-        $totalTexto = $mostrarPrecios ? "*Total: $" . number_format($total, 2) . "*" : '';
+        $totalTexto = '';
+        if ($mostrarPrecios) {
+            foreach ($totalesPorMoneda as $grupo) {
+                $simbolo = $grupo['moneda'] ? $grupo['moneda']->simbolo : '$';
+                $totalTexto .= "*Total {$simbolo}: " . number_format($grupo['total'], 2) . "*\n";
+            }
+            $totalTexto = rtrim($totalTexto);
+        }
 
         // Guardar pedido en la base de datos
         $pedido = Pedido::create([
@@ -253,7 +284,6 @@ class CarritoController extends Controller
             'provincia' => $request->provincia,
             'cp'        => $request->cp,
             'estado'    => 'pendiente',
-            'total'     => $total,
         ]);
 
         foreach ($carrito as $id => $cantidad) {
@@ -266,8 +296,17 @@ class CarritoController extends Controller
                     'precio_unitario' => $producto->precio,
                     'cantidad'        => $cantidad,
                     'subtotal'        => $producto->precio * $cantidad,
+                    'moneda_id'       => $producto->moneda_id,
                 ]);
             }
+        }
+
+        // Guardar totales por moneda
+        foreach ($totalesPorMoneda as $monedaId => $grupo) {
+            $pedido->totales()->create([
+                'moneda_id' => $monedaId ?: null,
+                'total'     => $grupo['total'],
+            ]);
         }
 
         // Construir mensaje usando el template configurable
@@ -278,14 +317,20 @@ class CarritoController extends Controller
             $template
         );
 
-        // Si no se pidió dirección, limpiar líneas que quedaron vacías o con solo separadores
+        // Si no se pidió dirección, limpiar líneas que quedaron vacías o con solo separadores/labels
         if (!$pedirDireccion) {
             $lineas = explode("\n", $mensaje);
             $lineas = array_filter($lineas, function ($linea) {
-                return trim(str_replace([',', '-', ':', ' '], '', $linea)) !== '';
+                // Si la línea tiene "label: valor", verificar que el valor tenga contenido alfanumérico
+                if (strpos($linea, ':') !== false) {
+                    $partes = explode(':', $linea, 2);
+                    $valor  = preg_replace('/[^a-zA-Z0-9\x{00C0}-\x{024F}]/u', '', $partes[1]);
+                    if ($valor === '') return false;
+                }
+                // Eliminar líneas sin ningún contenido alfanumérico
+                return preg_replace('/[^a-zA-Z0-9\x{00C0}-\x{024F}]/u', '', $linea) !== '';
             });
             $mensaje = implode("\n", array_values($lineas));
-            // Colapsar más de dos saltos de línea consecutivos en dos
             $mensaje = preg_replace('/\n{3,}/', "\n\n", $mensaje);
         }
 
@@ -296,7 +341,7 @@ class CarritoController extends Controller
         session()->forget('carrito');
 
         // Codificar mensaje para URL
-        $mensajeCodificado = urlencode($mensaje);
+        $mensajeCodificado = rawurlencode($mensaje);
         $urlWhatsApp = "https://wa.me/{$whatsapp}?text={$mensajeCodificado}";
 
         return redirect()->away($urlWhatsApp);

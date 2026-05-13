@@ -85,7 +85,11 @@
                             @if($mostrarLocalidad)
                             <td>{{ $pedido->localidad ? $pedido->localidad . ($pedido->provincia ? ', ' . $pedido->provincia : '') : ($pedido->provincia ?: '—') }}</td>
                             @endif
-                            <td>${{ number_format($pedido->total, 2) }}</td>
+                            <td>
+                                @foreach($pedido->totales as $pt)
+                                    <div class="lh-sm">{{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}</div>
+                                @endforeach
+                            </td>
                             <td>
                                 @if($pedido->esPendiente())
                                     <span class="badge bg-warning text-dark">Pendiente</span>

@@ -32,13 +32,18 @@ class DashboardController extends Controller
             'pendientes'  => Pedido::where('estado', 'pendiente')->count(),
             'confirmados' => Pedido::where('estado', 'confirmado')->count(),
             'cancelados'  => Pedido::where('estado', 'cancelado')->count(),
-            'total_mes'   => Pedido::where('estado', 'confirmado')
-                                ->whereMonth('created_at', now()->month)
-                                ->whereYear('created_at', now()->year)
-                                ->sum('total'),
+            'totales_mes' => DB::table('pedido_totales as pt')
+                                ->join('pedidos as p', 'p.id', '=', 'pt.pedido_id')
+                                ->leftJoin('monedas as m', 'm.id', '=', 'pt.moneda_id')
+                                ->where('p.estado', 'confirmado')
+                                ->whereMonth('p.created_at', now()->month)
+                                ->whereYear('p.created_at', now()->year)
+                                ->select('m.nombre as moneda_nombre', 'm.simbolo as moneda_simbolo', DB::raw('SUM(pt.total) as total'))
+                                ->groupBy('pt.moneda_id', 'm.nombre', 'm.simbolo')
+                                ->get(),
         ];
 
-        $pedidosRecientes = Pedido::orderBy('created_at', 'desc')->limit(5)->get();
+        $pedidosRecientes = Pedido::with('totales.moneda')->orderBy('created_at', 'desc')->limit(5)->get();
 
         $productosRecientes = Producto::with('proveedor')
             ->orderBy('created_at', 'desc')

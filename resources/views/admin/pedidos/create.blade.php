@@ -156,7 +156,7 @@
                             <tfoot class="table-light">
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold pe-3">Total</td>
-                                    <td class="text-end fw-bold" id="total-display">$0.00</td>
+                                    <td class="text-end fw-bold" id="total-display">—</td>
                                     <td class="text-end pe-2">
                                         <button type="button" id="btn-add-prod"
                                                 class="btn btn-sm btn-outline-primary" title="Agregar producto">
@@ -377,9 +377,23 @@
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
+    function fmtNum(n) {
+        var parts = n.toFixed(2).split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return parts.join(',');
+    }
+
     function actualizarTotal() {
-        var t = items.reduce(function (s, i) { return s + i.precio * i.cantidad; }, 0);
-        totalDisplay.textContent = '$' + t.toFixed(2);
+        if (items.length === 0) { totalDisplay.textContent = '—'; return; }
+        var grupos = {};
+        items.forEach(function (item) {
+            var key = item.moneda_id || '0';
+            if (!grupos[key]) { grupos[key] = { simbolo: item.simbolo || '$', total: 0 }; }
+            grupos[key].total += item.precio * item.cantidad;
+        });
+        totalDisplay.innerHTML = Object.values(grupos).map(function (g) {
+            return '<div>' + g.simbolo + fmtNum(g.total) + '</div>';
+        }).join('');
     }
 
     function renderItems() {
@@ -390,16 +404,17 @@
         trEmpty.style.display = items.length ? 'none' : '';
 
         items.forEach(function (item, idx) {
+            var sim = item.simbolo || '$';
             var tr = document.createElement('tr');
             tr.className = 'item-row';
             tr.innerHTML =
                 '<td class="ps-3" style="font-size:.9rem;">' + esc(item.descripcion) + '</td>' +
-                '<td class="text-end">$' + item.precio.toFixed(2) + '</td>' +
+                '<td class="text-end">' + sim + fmtNum(item.precio) + '</td>' +
                 '<td class="text-center">' +
                     '<input type="number" class="form-control form-control-sm text-center item-cant" ' +
                            'style="width:70px;margin:0 auto;" value="' + item.cantidad + '" min="1" data-idx="' + idx + '">' +
                 '</td>' +
-                '<td class="text-end item-sub">$' + (item.precio * item.cantidad).toFixed(2) + '</td>' +
+                '<td class="text-end item-sub">' + sim + fmtNum(item.precio * item.cantidad) + '</td>' +
                 '<td class="text-end pe-2">' +
                     '<button type="button" class="btn btn-sm btn-outline-danger btn-quitar" data-idx="' + idx + '" title="Quitar">' +
                         '<i class="bi bi-trash"></i>' +
@@ -411,7 +426,7 @@
                 this.value = val;
                 var i = parseInt(this.dataset.idx);
                 items[i].cantidad = val;
-                tr.querySelector('.item-sub').textContent = '$' + (items[i].precio * val).toFixed(2);
+                tr.querySelector('.item-sub').textContent = (items[i].simbolo || '$') + fmtNum(items[i].precio * val);
                 actualizarTotal();
             });
 
@@ -443,6 +458,8 @@
                     '<input type="hidden" class="fila-id">' +
                     '<input type="hidden" class="fila-precio">' +
                     '<input type="hidden" class="fila-desc">' +
+                    '<input type="hidden" class="fila-moneda-id">' +
+                    '<input type="hidden" class="fila-simbolo">' +
                     '<div class="fila-drop list-group shadow" style="position:fixed;z-index:1055;display:none;min-width:320px;max-height:240px;overflow-y:auto;"></div>' +
                 '</div>' +
             '</td>' +
@@ -466,6 +483,8 @@
         var inpId = fila.querySelector('.fila-id');
         var inpP  = fila.querySelector('.fila-precio');
         var inpD  = fila.querySelector('.fila-desc');
+        var inpM  = fila.querySelector('.fila-moneda-id');
+        var inpS  = fila.querySelector('.fila-simbolo');
         var inpC  = fila.querySelector('.fila-cant');
         var dropP = fila.querySelector('.fila-drop');
         var btnOk = fila.querySelector('.btn-ok');
@@ -488,7 +507,7 @@
 
         inpB.addEventListener('input', function () {
             clearTimeout(timer);
-            inpId.value = ''; inpP.value = ''; btnOk.disabled = true;
+            inpId.value = ''; inpP.value = ''; inpM.value = ''; inpS.value = ''; btnOk.disabled = true;
             var q = inpB.value.trim();
             if (q.length < 2) { dropP.style.display = 'none'; return; }
             timer = setTimeout(function () {
@@ -506,12 +525,14 @@
                             btn.className = 'list-group-item list-group-item-action py-2';
                             var stockTxt  = p.stock !== null ? ' · stock: ' + p.stock : ' · por encargue';
                             var codTxt    = p.codigo ? ' <small class="text-muted">(' + p.codigo + ')</small>' : '';
+                            var sim       = p.simbolo || '$';
                             btn.innerHTML =
                                 '<span class="fw-semibold">' + esc(p.descripcion) + '</span>' + codTxt +
-                                '<br><small class="text-muted">$' + parseFloat(p.precio).toFixed(2) + stockTxt + '</small>';
+                                '<br><small class="text-muted">' + sim + parseFloat(p.precio).toFixed(2) + stockTxt + '</small>';
                             btn.addEventListener('click', function () {
                                 inpB.value = p.descripcion;
                                 inpId.value = p.id; inpP.value = p.precio; inpD.value = p.descripcion;
+                                inpM.value = p.moneda_id || ''; inpS.value = sim;
                                 btnOk.disabled = false;
                                 dropP.style.display = 'none';
                                 inpC.focus();
@@ -523,19 +544,35 @@
             }, 250);
         });
 
+        inpB.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (!btnOk.disabled) btnOk.click();
+            }
+        });
+
+        inpC.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (!btnOk.disabled) btnOk.click();
+            }
+        });
+
         document.addEventListener('click', function (e) {
             if (!dropP.contains(e.target) && e.target !== inpB) dropP.style.display = 'none';
         });
 
         btnOk.addEventListener('click', function () {
             if (!inpId.value) { inpB.focus(); return; }
-            var id   = parseInt(inpId.value);
-            var prec = parseFloat(inpP.value);
-            var desc = inpD.value;
-            var cant = Math.max(1, parseInt(inpC.value) || 1);
-            var ex   = null;
+            var id       = parseInt(inpId.value);
+            var prec     = parseFloat(inpP.value);
+            var desc     = inpD.value;
+            var monedaId = inpM.value;
+            var simbolo  = inpS.value || '$';
+            var cant     = Math.max(1, parseInt(inpC.value) || 1);
+            var ex       = null;
             items.forEach(function (i) { if (i.id === id) ex = i; });
-            if (ex) { ex.cantidad += cant; } else { items.push({ id: id, descripcion: desc, precio: prec, cantidad: cant }); }
+            if (ex) { ex.cantidad += cant; } else { items.push({ id: id, descripcion: desc, precio: prec, cantidad: cant, moneda_id: monedaId, simbolo: simbolo }); }
             fila.remove();
             renderItems();
         });

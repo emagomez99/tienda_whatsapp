@@ -8,7 +8,7 @@ class PedidoProducto extends Model
 {
     protected $fillable = [
         'pedido_id', 'producto_id', 'descripcion',
-        'precio_unitario', 'cantidad', 'subtotal',
+        'precio_unitario', 'cantidad', 'subtotal', 'moneda_id',
     ];
 
     protected $casts = [
@@ -25,5 +25,10 @@ class PedidoProducto extends Model
     public function producto()
     {
         return $this->belongsTo(Producto::class);
+    }
+
+    public function moneda()
+    {
+        return $this->belongsTo(Moneda::class);
     }
 }
