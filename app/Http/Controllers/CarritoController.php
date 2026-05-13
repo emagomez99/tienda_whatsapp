@@ -340,9 +340,10 @@ class CarritoController extends Controller
         // Limpiar carrito
         session()->forget('carrito');
 
-        // Codificar mensaje para URL
+        // Codificar mensaje para URL (api.whatsapp.com evita la redirección de wa.me que puede corromper emojis)
+        $phone = preg_replace('/\D/', '', $whatsapp);
         $mensajeCodificado = rawurlencode($mensaje);
-        $urlWhatsApp = "https://wa.me/{$whatsapp}?text={$mensajeCodificado}";
+        $urlWhatsApp = "https://api.whatsapp.com/send?phone={$phone}&text={$mensajeCodificado}";
 
         return redirect()->away($urlWhatsApp);
     }
