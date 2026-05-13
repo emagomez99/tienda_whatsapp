@@ -317,18 +317,17 @@ class CarritoController extends Controller
             $template
         );
 
-        // Si no se pidió dirección, limpiar líneas que quedaron vacías o con solo separadores/labels
+        // Si no se pidió dirección, eliminar líneas donde el valor después de ":" quedó vacío
+        // (p.ej. "Dirección: " tras reemplazar {direccion} con "")
+        // Usamos trim() en vez de regex alfanumérico para no eliminar encabezados como "✅ *Sección:*"
         if (!$pedirDireccion) {
             $lineas = explode("\n", $mensaje);
             $lineas = array_filter($lineas, function ($linea) {
-                // Si la línea tiene "label: valor", verificar que el valor tenga contenido alfanumérico
                 if (strpos($linea, ':') !== false) {
                     $partes = explode(':', $linea, 2);
-                    $valor  = preg_replace('/[^a-zA-Z0-9\x{00C0}-\x{024F}]/u', '', $partes[1]);
-                    if ($valor === '') return false;
+                    if (trim($partes[1]) === '') return false;
                 }
-                // Eliminar líneas sin ningún contenido alfanumérico
-                return preg_replace('/[^a-zA-Z0-9\x{00C0}-\x{024F}]/u', '', $linea) !== '';
+                return trim($linea) !== '';
             });
             $mensaje = implode("\n", array_values($lineas));
             $mensaje = preg_replace('/\n{3,}/', "\n\n", $mensaje);
