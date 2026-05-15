@@ -96,7 +96,7 @@ class ProductoController extends Controller
         $validated['por_encargue'] = $request->boolean('por_encargue');
 
         if (!empty($validated['detalle'])) {
-            $validated['detalle'] = clean($validated['detalle']);
+            $validated['detalle'] = app('purifier')->clean($validated['detalle']);
         }
 
         // Manejar imagen (archivo tiene prioridad sobre URL)
@@ -185,7 +185,7 @@ class ProductoController extends Controller
         unset($validated['stock']);
 
         if (!empty($validated['detalle'])) {
-            $validated['detalle'] = clean($validated['detalle']);
+            $validated['detalle'] = app('purifier')->clean($validated['detalle']);
         }
 
         // Manejar eliminación de imagen
