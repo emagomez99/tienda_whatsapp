@@ -96,7 +96,7 @@ class ProductoController extends Controller
         $validated['por_encargue'] = $request->boolean('por_encargue');
 
         if (!empty($validated['detalle'])) {
-            $validated['detalle'] = app('purifier')->clean($validated['detalle']);
+            $validated['detalle'] = strip_tags($validated['detalle'], '<p><br><b><strong><i><em><u><ul><ol><li><a><h1><h2><h3><h4><blockquote><pre><code><img><table><thead><tbody><tr><th><td>');
         }
 
         // Manejar imagen (archivo tiene prioridad sobre URL)
@@ -185,7 +185,7 @@ class ProductoController extends Controller
         unset($validated['stock']);
 
         if (!empty($validated['detalle'])) {
-            $validated['detalle'] = app('purifier')->clean($validated['detalle']);
+            $validated['detalle'] = strip_tags($validated['detalle'], '<p><br><b><strong><i><em><u><ul><ol><li><a><h1><h2><h3><h4><blockquote><pre><code><img><table><thead><tbody><tr><th><td>');
         }
 
         // Manejar eliminación de imagen
