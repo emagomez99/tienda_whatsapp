@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -37,6 +38,23 @@ class Handler extends ExceptionHandler
     {
         $this->renderable(function (TenantCouldNotBeIdentifiedOnDomainException $e) {
             abort(404);
+        });
+
+        $this->renderable(function (NotFoundHttpException $e, $request) {
+            if (!tenancy()->initialized) {
+                try {
+                    $domain = $request->getHost();
+                    $tenant = \App\Models\Tenant::whereHas('domains', function ($q) use ($domain) {
+                        $q->where('domain', $domain);
+                    })->first();
+                    if ($tenant) {
+                        tenancy()->initialize($tenant);
+                    }
+                } catch (\Exception $ex) {
+                    // dominio central o tenant no encontrado, se muestra 404 genérico
+                }
+            }
+            // retorna null para que Laravel siga con el renderizado normal de errors/404.blade.php
         });
 
         $this->reportable(function (Throwable $e) {
