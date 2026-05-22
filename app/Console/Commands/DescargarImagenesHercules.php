@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Etiqueta;
 use App\Models\Producto;
+use App\Models\ProductoImagen;
 use App\Models\Proveedor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -102,16 +103,18 @@ class DescargarImagenesHercules extends Command
             $this->info("Filtrando por fabricante: {$fabricante}");
         }
 
-        // Solo productos con imagen externa (URL http), salvo --force
+        // Solo productos con al menos una imagen externa (URL http), salvo --force
         if (!$force) {
-            $query->where('url_imagen', 'ilike', 'http%');
+            $query->whereHas('imagenes', function ($q) {
+                $q->where('url', 'ilike', 'http%');
+            });
         }
 
         if ($limit) {
             $query->limit((int) $limit);
         }
 
-        $productos = $query->get();
+        $productos = $query->with('imagenes')->get();
         $total     = $productos->count();
 
         if ($total === 0) {
@@ -155,34 +158,44 @@ class DescargarImagenesHercules extends Command
     {
         $this->stats['productos_procesados']++;
 
-        if (empty($producto->url_imagen)) {
+        $imagenes = $producto->imagenes;
+
+        if ($imagenes->isEmpty()) {
             $this->stats['imagenes_sin_url']++;
-            $this->log('SKIP', 'Sin URL de imagen', ['producto_id' => $producto->id]);
+            $this->log('SKIP', 'Sin imágenes', ['producto_id' => $producto->id]);
             return;
         }
 
-        // strpos() === 0 en lugar de str_starts_with() — compatible con PHP 7.3
-        $esUrlExterna = strpos($producto->url_imagen, 'http') === 0;
+        foreach ($imagenes as $imagen) {
+            // strpos() === 0 en lugar de str_starts_with() — compatible con PHP 7.3
+            $esUrlExterna = strpos($imagen->url, 'http') === 0;
 
-        if (!$force && !$esUrlExterna) {
-            $this->stats['imagenes_ya_locales']++;
-            $this->log('SKIP', 'Ya tiene imagen local', [
-                'producto_id' => $producto->id,
-                'url_imagen'  => $producto->url_imagen,
-            ]);
-            return;
+            if (!$esUrlExterna) {
+                $this->stats['imagenes_ya_locales']++;
+                $this->log('SKIP', 'Ya tiene imagen local', [
+                    'producto_id' => $producto->id,
+                    'url'         => $imagen->url,
+                ]);
+                continue;
+            }
+
+            $this->descargarImagen($imagen, $producto, $dryRun);
         }
+    }
 
-        $urlExterna = $producto->url_imagen;
+    private function descargarImagen(ProductoImagen $imagen, Producto $producto, bool $dryRun): void
+    {
+        $urlExterna = $imagen->url;
 
         // Ruta de destino con prefijo de tenant para aislar imágenes por tenant
-        $extension   = pathinfo(parse_url($urlExterna, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
-        $nombreArch  = $this->sanitizeFileName($producto->descripcion) . '.' . $extension;
+        $extension    = pathinfo(parse_url($urlExterna, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
+        $nombreArch   = $this->sanitizeFileName($producto->descripcion) . '_' . $imagen->id . '.' . $extension;
         $rutaRelativa = $this->tenantStoragePrefix . '/' . $nombreArch;
 
         if ($dryRun) {
             $this->log('DRY-RUN', "Descargaría imagen", [
                 'producto_id' => $producto->id,
+                'imagen_id'   => $imagen->id,
                 'url'         => $urlExterna,
                 'destino'     => $rutaRelativa,
             ]);
@@ -201,6 +214,7 @@ class DescargarImagenesHercules extends Command
                 $this->stats['errores']++;
                 $this->log('ERROR', "HTTP error al descargar imagen", [
                     'producto_id' => $producto->id,
+                    'imagen_id'   => $imagen->id,
                     'url'         => $urlExterna,
                     'status'      => $response->status(),
                 ]);
@@ -220,12 +234,13 @@ class DescargarImagenesHercules extends Command
 
             Storage::disk('public')->put($rutaRelativa, $response->body());
 
-            $producto->url_imagen = $rutaRelativa;
-            $producto->save();
+            $imagen->url = $rutaRelativa;
+            $imagen->save();
 
             $this->stats['imagenes_descargadas']++;
             $this->log('OK', "Imagen descargada", [
                 'producto_id' => $producto->id,
+                'imagen_id'   => $imagen->id,
                 'ruta'        => $rutaRelativa,
             ]);
 

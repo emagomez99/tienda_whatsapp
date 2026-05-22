@@ -6,6 +6,7 @@ use App\Models\Etiqueta;
 use App\Models\Moneda;
 use App\Models\Producto;
 use App\Models\ProductoEspecificacion;
+use App\Models\ProductoImagen;
 use App\Models\Proveedor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -490,8 +491,16 @@ class ImportHercules extends Command
                     'disponible'   => true,
                     'stock'        => 0,
                     'por_encargue' => true,
-                    'url_imagen'   => $data['url_imagen'],
                 ]);
+
+                if (!empty($data['url_imagen'])) {
+                    ProductoImagen::create([
+                        'producto_id' => $producto->id,
+                        'url'         => $data['url_imagen'],
+                        'orden'       => 0,
+                        'es_portada'  => true,
+                    ]);
+                }
 
                 $producto->registrarMovimiento(
                     1,

@@ -65,6 +65,25 @@ class Producto extends Model
         return $this->hasMany(ProductoEspecificacion::class);
     }
 
+    // Imágenes adicionales (la principal vive en url_imagen del producto)
+    public function imagenes()
+    {
+        return $this->hasMany(ProductoImagen::class)->orderBy('orden')->orderBy('id');
+    }
+
+    // Todas las imágenes para el carrusel: principal primero, luego las adicionales
+    public function galeria()
+    {
+        $imgs = collect();
+        if ($this->imagen_url) {
+            $imgs->push((object) ['imagen_url' => $this->imagen_url]);
+        }
+        foreach ($this->imagenes as $img) {
+            $imgs->push((object) ['imagen_url' => $img->imagen_url]);
+        }
+        return $imgs;
+    }
+
     public function movimientos()
     {
         return $this->hasMany(StockMovimiento::class);
@@ -151,29 +170,21 @@ class Producto extends Model
     }
 
     /**
-     * Obtiene la URL completa de la imagen (local o externa)
+     * URL completa de la imagen principal.
+     * Usa url() en vez de Storage::url() para respetar el dominio del tenant en multi-tenant.
      */
-    public function getImagenUrlAttribute(): ?string
+    public function getImagenUrlAttribute()
     {
         if (!$this->url_imagen) {
             return null;
         }
-
-        // Si empieza con http, es una URL externa
         if (strpos($this->url_imagen, 'http') === 0) {
             return $this->url_imagen;
         }
-
-        // Es una imagen local en storage. Usamos url() en vez de Storage::disk()->url()
-        // porque Storage usa APP_URL (dominio central) mientras que url() usa el dominio
-        // del request actual (correcto para multi-tenant).
         return url('storage/' . $this->url_imagen);
     }
 
-    /**
-     * Verifica si la imagen es una URL externa
-     */
-    public function esImagenExterna(): bool
+    public function esImagenExterna()
     {
         return $this->url_imagen && strpos($this->url_imagen, 'http') === 0;
     }

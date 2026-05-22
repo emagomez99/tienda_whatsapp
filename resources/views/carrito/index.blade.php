@@ -47,7 +47,7 @@
                                     {{-- Imagen --}}
                                     <div class="ci-img rounded bg-light overflow-hidden d-flex align-items-center justify-content-center"
                                          style="width:60px; height:60px;">
-                                        <img src="{{ $prod->url_imagen ? $prod->imagen_url : '/img/no-image.svg' }}"
+                                        <img src="{{ $prod->imagen_url ?? '/img/no-image.svg' }}"
                                              alt="{{ $prod->descripcion }}"
                                              style="width:100%; height:100%; object-fit:contain;"
                                              onerror="this.onerror=null;this.src='/img/no-image.svg';">

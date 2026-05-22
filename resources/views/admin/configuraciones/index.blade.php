@@ -442,6 +442,61 @@
                             <strong>Solo URL</strong> no consume espacio en el VPS.
                         </small>
                         @php $modoActual = App\Models\Configuracion::modoImagenProducto(); @endphp
+                        @php
+                            $imgAdicionalesActivas = App\Models\Configuracion::imagenesAdicionalesActivas();
+                            $maxImgAdicionales     = App\Models\Configuracion::maxImagenesAdicionales();
+                        @endphp
+
+                        {{-- Imágenes adicionales --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Imágenes adicionales por producto</label>
+                            <small class="text-muted d-block mb-3">
+                                Permite que cada producto tenga varias imágenes que se muestran en un carrusel en la vista de detalle.
+                            </small>
+                            <div class="row g-3 align-items-start">
+                                <div class="col-md-5">
+                                    <label class="form-label small mb-1">Habilitar imágenes adicionales</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="imagenes_adicionales_activas"
+                                                   id="img_ad_si" value="true"
+                                                   {{ old('imagenes_adicionales_activas', $imgAdicionalesActivas ? 'true' : 'false') === 'true' ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="img_ad_si">
+                                                <i class="bi bi-check-circle text-success"></i> Sí
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="imagenes_adicionales_activas"
+                                                   id="img_ad_no" value="false"
+                                                   {{ old('imagenes_adicionales_activas', $imgAdicionalesActivas ? 'true' : 'false') === 'false' ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="img_ad_no">
+                                                <i class="bi bi-x-circle text-danger"></i> No
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small mb-1" for="max_imagenes_adicionales">
+                                        Máximo de imágenes adicionales
+                                    </label>
+                                    <div class="input-group" style="max-width:140px;">
+                                        <input type="number" class="form-control @error('max_imagenes_adicionales') is-invalid @enderror"
+                                               id="max_imagenes_adicionales" name="max_imagenes_adicionales"
+                                               value="{{ old('max_imagenes_adicionales', $maxImgAdicionales) }}"
+                                               min="1" max="20">
+                                        <span class="input-group-text text-muted small">fotos</span>
+                                    </div>
+                                    @error('max_imagenes_adicionales')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                    <small class="text-muted">Entre 1 y 20. Por defecto: 3.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        {{-- Modo imagen de producto --}}
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="form-check card p-3 h-100 {{ $modoActual === 'ambos' ? 'border-primary bg-primary bg-opacity-10' : '' }}">

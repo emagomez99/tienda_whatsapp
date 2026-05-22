@@ -14,14 +14,49 @@
 
     <div class="row g-4">
         <div class="col-md-5">
-            <div class="rounded shadow overflow-hidden bg-light d-flex align-items-center justify-content-center"
-                 style="height: 420px;">
-                <img src="{{ $producto->url_imagen ? $producto->imagen_url : '/img/no-image.svg' }}"
-                     alt="{{ $producto->descripcion }}"
-                     style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
-                     onload="this.style.opacity=1"
-                     onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
-            </div>
+            @php $galeria = $producto->galeria(); @endphp
+            @if($galeria->count() > 1)
+                <div id="carousel-producto-desktop" class="carousel slide rounded shadow overflow-hidden bg-light"
+                     style="height:420px;" data-bs-ride="false">
+                    <div class="carousel-inner h-100">
+                        @foreach($galeria as $i => $img)
+                            <div class="carousel-item h-100 {{ $i === 0 ? 'active' : '' }}">
+                                <img src="{{ $img->imagen_url }}"
+                                     alt="{{ $producto->descripcion }}"
+                                     style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
+                                     onload="this.style.opacity=1"
+                                     onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
+                            </div>
+                        @endforeach
+                    </div>
+                    <button class="carousel-control-prev" type="button"
+                            data-bs-target="#carousel-producto-desktop" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" style="filter:invert(1) brightness(.4)"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button"
+                            data-bs-target="#carousel-producto-desktop" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" style="filter:invert(1) brightness(.4)"></span>
+                    </button>
+                </div>
+                <div class="d-flex justify-content-center gap-2 mt-2">
+                    @foreach($galeria as $i => $img)
+                        <button type="button"
+                                data-bs-target="#carousel-producto-desktop"
+                                data-bs-slide-to="{{ $i }}"
+                                style="width:8px;height:8px;border-radius:50%;border:none;padding:0;background-color:{{ $i === 0 ? '#555' : '#ccc' }};transition:background-color .2s;"
+                                aria-label="Imagen {{ $i + 1 }}"></button>
+                    @endforeach
+                </div>
+            @else
+                <div class="rounded shadow overflow-hidden bg-light d-flex align-items-center justify-content-center"
+                     style="height:420px;">
+                    <img src="{{ $producto->imagen_url ?? '/img/no-image.svg' }}"
+                         alt="{{ $producto->descripcion }}"
+                         style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
+                         onload="this.style.opacity=1"
+                         onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
+                </div>
+            @endif
         </div>
         <div class="col-md-7">
             <h2 class="fs-3">{{ $producto->descripcion }}</h2>

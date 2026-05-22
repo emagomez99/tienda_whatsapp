@@ -1,12 +1,37 @@
 <div class="d-block d-md-none">
 
     {{-- Imagen con botones flotantes --}}
+    @php $galeria = $producto->galeria(); @endphp
     <div class="position-relative bg-light" style="height:340px;">
-        <img src="{{ $producto->url_imagen ? $producto->imagen_url : '/img/no-image.svg' }}"
-             alt="{{ $producto->descripcion }}"
-             style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
-             onload="this.style.opacity=1"
-             onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
+        @if($galeria->count() > 1)
+            <div id="carousel-producto-mobile" class="carousel slide h-100" data-bs-ride="false">
+                <div class="carousel-inner h-100">
+                    @foreach($galeria as $i => $img)
+                        <div class="carousel-item h-100 {{ $i === 0 ? 'active' : '' }}">
+                            <img src="{{ $img->imagen_url }}"
+                                 alt="{{ $producto->descripcion }}"
+                                 style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
+                                 onload="this.style.opacity=1"
+                                 onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
+                        </div>
+                    @endforeach
+                </div>
+                <button class="carousel-control-prev" type="button"
+                        data-bs-target="#carousel-producto-mobile" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" style="filter:invert(1) brightness(.4)"></span>
+                </button>
+                <button class="carousel-control-next" type="button"
+                        data-bs-target="#carousel-producto-mobile" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" style="filter:invert(1) brightness(.4)"></span>
+                </button>
+            </div>
+        @else
+            <img src="{{ $producto->imagen_url ?? '/img/no-image.svg' }}"
+                 alt="{{ $producto->descripcion }}"
+                 style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
+                 onload="this.style.opacity=1"
+                 onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
+        @endif
 
         {{-- Botón volver --}}
         <button type="button" onclick="history.length > 1 ? history.back() : window.location='{{ route('tienda.index') }}'"

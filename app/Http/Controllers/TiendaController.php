@@ -295,7 +295,7 @@ class TiendaController extends Controller
 
     public function show(Producto $producto)
     {
-        $producto->load(['proveedor', 'etiquetas', 'especificaciones', 'moneda']);
+        $producto->load(['proveedor', 'etiquetas', 'especificaciones', 'moneda', 'imagenes']);
         $mostrarPrecios = Configuracion::mostrarPrecios();
 
         return view('tienda.show', compact('producto', 'mostrarPrecios'));

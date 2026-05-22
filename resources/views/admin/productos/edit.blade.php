@@ -62,7 +62,10 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="id_proveedor" class="form-label">Código Proveedor</label>
+                            <label for="id_proveedor" class="form-label">Código Proveedor
+                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                   title="Código interno del proveedor. Aparece en el detalle del producto y se usa en búsquedas. El botón ↺ genera uno automático con el prefijo del proveedor."></i>
+                            </label>
                             <div class="input-group">
                                 <input type="text" class="form-control @error('id_proveedor') is-invalid @enderror" id="id_proveedor" name="id_proveedor" value="{{ old('id_proveedor', $producto->id_proveedor) }}">
                                 <button type="button" class="btn btn-outline-secondary" id="btn-generar-codigo" title="Generar código">
@@ -76,7 +79,10 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="moneda_id" class="form-label">Moneda</label>
+                            <label for="moneda_id" class="form-label">Moneda
+                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                   title="Moneda en la que se expresa el precio. Si el precio no aplica, dejá sin seleccionar."></i>
+                            </label>
                             <select class="form-select @error('moneda_id') is-invalid @enderror" id="moneda_id" name="moneda_id">
                                 <option value="">Seleccionar moneda</option>
                                 @foreach($monedas as $moneda)
@@ -90,7 +96,10 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="precio" class="form-label">Precio *</label>
+                            <label for="precio" class="form-label">Precio *
+                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                   title="Precio de venta al público. Solo se muestra en la tienda si la configuración 'Mostrar precios' está activa."></i>
+                            </label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
                                 <input type="number" step="0.01" min="0" class="form-control @error('precio') is-invalid @enderror" id="precio" name="precio" value="{{ old('precio', $producto->precio) }}" required>
@@ -102,7 +111,10 @@
                     </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Stock actual</label>
+                            <label class="form-label">Stock actual
+                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                   title="El stock no se edita directamente. Usá 'Ajustar' para registrar entradas o salidas con trazabilidad completa en el historial."></i>
+                            </label>
                             <div class="input-group">
                                 <span class="form-control bg-light fw-semibold text-center" style="max-width: 80px;">{{ $producto->stock }}</span>
                                 <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-ajuste-stock">
@@ -115,14 +127,20 @@
                             <small class="text-muted">El stock se modifica mediante movimientos trazables.</small>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label d-block">Disponible</label>
+                            <label class="form-label d-block">Disponible
+                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                   title="Si está desactivado, el producto no aparece en la tienda aunque tenga stock."></i>
+                            </label>
                             <div class="form-check form-switch">
                                 <input type="checkbox" class="form-check-input" id="disponible" name="disponible" value="1" {{ old('disponible', $producto->disponible) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="disponible">Mostrar en tienda</label>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label d-block">Por Encargue</label>
+                            <label class="form-label d-block">Por Encargue
+                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                   title="Permite que el cliente lo solicite aunque no haya stock. Aparece con la etiqueta 'Disponible por encargue' en la tienda."></i>
+                            </label>
                             <div class="form-check form-switch">
                                 <input type="checkbox" class="form-check-input" id="por_encargue" name="por_encargue" value="1" {{ old('por_encargue', $producto->por_encargue) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="por_encargue">Disponible sin stock</label>
@@ -132,10 +150,13 @@
                 </div>
             </div>
 
-            <!-- Card de Imagen -->
+            <!-- Card: Imagen principal -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-image"></i> Imagen del Producto</h5>
+                    <h5 class="mb-0"><i class="bi bi-image"></i> Imagen Principal
+                        <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="top"
+                           title="Imagen que aparece en el listado de productos y en la vista de detalle. Se recomienda fondo blanco o transparente."></i>
+                    </h5>
                 </div>
                 <div class="card-body">
                     @if($producto->url_imagen)
@@ -163,7 +184,7 @@
                             </div>
                         </div>
                         <hr>
-                        <p class="text-muted mb-2"><small>Cambiar imagen:</small></p>
+                        <p class="text-muted mb-2"><small>Cambiar imagen principal:</small></p>
                     @endif
 
                     @php $modoImagen = App\Models\Configuracion::modoImagenProducto(); @endphp
@@ -215,7 +236,6 @@
                             </div>
                         </div>
                     @endif
-                    <!-- Preview de nueva imagen -->
                     <div id="imagen-preview" class="mt-3 text-center" style="display: none;">
                         <p class="text-muted mb-1"><small>Nueva imagen:</small></p>
                         <img src="" alt="Preview" class="img-thumbnail" style="max-height: 200px;">
@@ -223,9 +243,110 @@
                 </div>
             </div>
 
+            <!-- Card: Imágenes adicionales -->
+            @if($imagenesAdicionalesActivas)
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Etiquetas</h5>
+                    <h5 class="mb-0"><i class="bi bi-images"></i> Imágenes Adicionales
+                        <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="top"
+                           title="Se muestran en el carrusel de la vista detallada del producto. Podés agregar varias antes de guardar. Con ★ podés promover cualquiera como imagen principal."></i>
+                    </h5>
+                    <button type="button" id="btn-abrir-agregar" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Agregar imagen
+                    </button>
+                </div>
+                <div class="card-body">
+
+                    {{-- Grid de imágenes existentes --}}
+                    <div class="d-flex flex-wrap gap-3" id="grid-extras">
+                        @forelse($producto->imagenes as $img)
+                            <div class="img-extra-card position-relative" data-id="{{ $img->id }}" style="width:120px;">
+                                <div class="rounded border overflow-hidden" style="height:90px;">
+                                    <img src="{{ $img->imagen_url }}" alt=""
+                                         style="width:100%;height:100%;object-fit:contain;"
+                                         onerror="this.src='/img/no-image.svg';">
+                                    <div class="img-overlay">
+                                        <button type="button" class="btn btn-light btn-sm btn-hacer-portada px-2 py-1"
+                                                data-id="{{ $img->id }}" title="Hacer imagen principal">
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm btn-eliminar-extra px-2 py-1"
+                                                data-id="{{ $img->id }}" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-1" style="font-size:.65rem;color:#888;">
+                                    @if($img->esExterna()) <i class="bi bi-link-45deg"></i> URL
+                                    @else <i class="bi bi-hdd"></i> Local @endif
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-muted mb-0" id="msg-sin-extras">No hay imágenes adicionales aún.</p>
+                        @endforelse
+                    </div>
+
+                    {{-- Panel agregar --}}
+                    <div id="panel-agregar-extras" class="mt-3 border rounded p-3" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-semibold small">Nueva imagen</span>
+                            <button type="button" id="btn-cerrar-agregar" class="btn-close" aria-label="Cerrar"></button>
+                        </div>
+
+                        @if($modoImagen !== 'solo_archivo')
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold mb-1">
+                                    <i class="bi bi-link-45deg"></i> Pegar URL
+                                </label>
+                                <div class="input-group">
+                                    <input type="url" id="input-url-nueva" class="form-control"
+                                           placeholder="https://ejemplo.com/imagen.jpg">
+                                    <button type="button" id="btn-agregar-url" class="btn btn-primary">
+                                        <i class="bi bi-plus-lg"></i> Agregar
+                                    </button>
+                                </div>
+                                <div id="preview-url-nueva" class="mt-2" style="display:none;">
+                                    <img id="preview-url-img" src=""
+                                         style="height:64px;object-fit:contain;border-radius:4px;border:1px solid #dee2e6;">
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($modoImagen !== 'solo_url')
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold mb-1">
+                                    <i class="bi bi-upload"></i> Subir archivos
+                                </label>
+                                <input type="file" id="imagenes_nuevas" name="imagenes_nuevas[]"
+                                       class="form-control @error('imagenes_nuevas') is-invalid @enderror"
+                                       accept="image/*" multiple>
+                                @error('imagenes_nuevas')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <small class="text-muted">Podés seleccionar varias. Máx. 2MB c/u.</small>
+                                <div id="preview-archivos" class="d-flex flex-wrap gap-2 mt-2"></div>
+                            </div>
+                        @endif
+
+                        {{-- Cola de URLs pendientes --}}
+                        <div id="cola-urls" style="display:none;">
+                            <hr class="my-2">
+                            <p class="text-muted small mb-2">
+                                <i class="bi bi-clock-history"></i> En cola para guardar:
+                            </p>
+                            <div id="cola-urls-items" class="d-flex flex-wrap gap-2"></div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="hacer_portada_id" id="hacer_portada_id" value="">
+                </div>
+            </div>
+            @endif {{-- imagenesAdicionalesActivas --}}
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Etiquetas
+                        <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="right"
+                           title="Categorizan el producto y habilitan filtros en la tienda. Cada etiqueta tiene un nombre y un valor específico para este producto. Ej: Marca → Toyota, Aplicación → Filtro de aceite."></i>
+                    </h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-etiqueta">
                         <i class="bi bi-plus"></i> Agregar
                     </button>
@@ -286,7 +407,10 @@
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Especificaciones</h5>
+                    <h5 class="mb-0">Especificaciones
+                        <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="right"
+                           title="Tabla de características técnicas. Aparece en el detalle del producto. Ej: Peso → 1.75 kg, Material → Acero inoxidable."></i>
+                    </h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-especificacion">
                         <i class="bi bi-plus"></i> Agregar
                     </button>
@@ -371,7 +495,10 @@
                         Stock actual: <strong>{{ $producto->stock }}</strong>
                     </div>
                     <div class="mb-3">
-                        <label for="modal-variacion" class="form-label fw-semibold">Variación *</label>
+                        <label for="modal-variacion" class="form-label fw-semibold">Variación *
+                            <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                               title="Ingresá un número positivo para sumar stock (recepción de mercadería) o negativo para restar (salida, merma, ajuste)."></i>
+                        </label>
                         <input type="number" name="variacion" id="modal-variacion" class="form-control"
                                placeholder="Ej: 10 para entrada, -5 para salida" required>
                         <small class="text-muted">Positivo = entrada de stock &nbsp;·&nbsp; Negativo = salida.</small>
@@ -418,6 +545,20 @@
         border-color: #dc3545;
         color: #495057;
     }
+    .img-extra-card { transition: opacity .2s, outline .15s; }
+    .img-extra-card .img-overlay {
+        position: absolute; inset: 0; border-radius: .375rem;
+        background: rgba(0,0,0,.52); opacity: 0;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        transition: opacity .18s;
+    }
+    .img-extra-card:hover .img-overlay { opacity: 1; }
+    #panel-agregar-extras { background: #f8f9fa; }
+    .cola-card { position:relative; width:88px; height:66px; border-radius:.375rem; overflow:hidden; border:1px solid #dee2e6; flex-shrink:0; }
+    .cola-card img { width:100%; height:100%; object-fit:contain; }
+    .cola-card .cola-del { position:absolute; top:2px; right:2px; width:18px; height:18px; border-radius:50%; border:none; background:rgba(220,53,69,.9); color:#fff; font-size:12px; line-height:1; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
+    .border-dashed-add { border: 2px dashed #adb5bd !important; cursor:pointer; transition: border-color .15s, background .15s; }
+    .border-dashed-add:hover { border-color: #0d6efd !important; background: #e8f0fe; }
 </style>
 @endpush
 
@@ -820,18 +961,18 @@
         }
     });
 
-    // Preview de imagen
+    // Preview imagen principal
     const imagenArchivo = document.getElementById('imagen_archivo');
     const imagenUrl = document.getElementById('imagen_url');
     const imagenPreview = document.getElementById('imagen-preview');
-    const imagenPreviewImg = imagenPreview.querySelector('img');
+    const imagenPreviewImg = imagenPreview ? imagenPreview.querySelector('img') : null;
     const eliminarImagen = document.getElementById('eliminar_imagen');
 
     function mostrarPreview(src) {
-        if (src) {
+        if (src && imagenPreviewImg) {
             imagenPreviewImg.src = src;
             imagenPreview.style.display = 'block';
-        } else {
+        } else if (imagenPreview) {
             imagenPreview.style.display = 'none';
         }
     }
@@ -877,20 +1018,201 @@
     if (urlTab) {
         urlTab.addEventListener('shown.bs.tab', function() {
             if (imagenArchivo) imagenArchivo.value = '';
-            imagenPreview.style.display = 'none';
+            if (imagenPreview) imagenPreview.style.display = 'none';
         });
     }
-
-    // Ocultar preview y limpiar campos si se marca eliminar
     if (eliminarImagen) {
         eliminarImagen.addEventListener('change', function() {
             if (this.checked) {
-                imagenArchivo.value = '';
-                imagenUrl.value = '';
-                imagenPreview.style.display = 'none';
+                if (imagenArchivo) imagenArchivo.value = '';
+                if (imagenUrl) imagenUrl.value = '';
+                if (imagenPreview) imagenPreview.style.display = 'none';
             }
         });
     }
+
+    // === Gestor de Imágenes Adicionales ===
+    @if($imagenesAdicionalesActivas)
+    (function() {
+        var maxExtras  = {{ $maxImagenesAdicionales }};
+        var totalActuales = {{ $producto->imagenes->count() }};
+        var enCola = 0;
+        var btnAbrir   = document.getElementById('btn-abrir-agregar');
+        var btnCerrar  = document.getElementById('btn-cerrar-agregar');
+        var panel      = document.getElementById('panel-agregar-extras');
+        var inputUrl   = document.getElementById('input-url-nueva');
+        var btnAgrUrl  = document.getElementById('btn-agregar-url');
+        var prevWrap   = document.getElementById('preview-url-nueva');
+        var prevImg    = document.getElementById('preview-url-img');
+        var colaSection= document.getElementById('cola-urls');
+        var colaItems  = document.getElementById('cola-urls-items');
+        var inputFiles = document.getElementById('imagenes_nuevas');
+        var prevArch   = document.getElementById('preview-archivos');
+        var form       = document.getElementById('form-producto');
+        var cid = 0, debUrl;
+
+        if (btnAbrir) {
+            btnAbrir.addEventListener('click', function() {
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+                if (panel.style.display === 'block' && inputUrl) inputUrl.focus();
+            });
+        }
+        if (btnCerrar) {
+            btnCerrar.addEventListener('click', function() { panel.style.display = 'none'; });
+        }
+
+        // Preview en vivo de URL
+        if (inputUrl) {
+            inputUrl.addEventListener('input', function() {
+                clearTimeout(debUrl);
+                var url = this.value.trim();
+                debUrl = setTimeout(function() {
+                    if (url && url.indexOf('http') === 0) {
+                        prevImg.src = url;
+                        prevWrap.style.display = 'block';
+                    } else {
+                        prevWrap.style.display = 'none';
+                    }
+                }, 400);
+            });
+            inputUrl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); agregarUrl(); }
+            });
+        }
+        if (btnAgrUrl) btnAgrUrl.addEventListener('click', agregarUrl);
+
+        function actualizarLimite() {
+            var usadas = totalActuales + enCola;
+            var restantes = maxExtras - usadas;
+            if (btnAbrir) {
+                if (restantes <= 0) {
+                    btnAbrir.disabled = true;
+                    btnAbrir.title = 'Límite de ' + maxExtras + ' imágenes adicionales alcanzado';
+                } else {
+                    btnAbrir.disabled = false;
+                    btnAbrir.title = restantes === 1
+                        ? 'Podés agregar 1 imagen más'
+                        : 'Podés agregar hasta ' + restantes + ' imágenes más';
+                }
+            }
+            if (btnAgrUrl) {
+                btnAgrUrl.disabled = restantes <= 0;
+            }
+        }
+        actualizarLimite();
+
+        function agregarUrl() {
+            var url = inputUrl.value.trim();
+            if (!url || url.indexOf('http') !== 0) {
+                inputUrl.classList.add('is-invalid');
+                return;
+            }
+            if (totalActuales + enCola >= maxExtras) {
+                inputUrl.classList.add('is-invalid');
+                inputUrl.placeholder = 'Límite de ' + maxExtras + ' imágenes alcanzado';
+                return;
+            }
+            inputUrl.classList.remove('is-invalid');
+            var qid = ++cid;
+
+            // Hidden input para el form
+            var h = document.createElement('input');
+            h.type = 'hidden'; h.name = 'imagenes_urls_nuevas[]'; h.value = url; h.id = 'cola_url_' + qid;
+            form.appendChild(h);
+
+            // Tarjeta visual en la cola
+            var card = document.createElement('div');
+            card.className = 'cola-card';
+            var img = document.createElement('img');
+            img.src = url;
+            img.alt = '';
+            img.onerror = function() { this.style.opacity = '.3'; };
+            var del = document.createElement('button');
+            del.type = 'button'; del.className = 'cola-del'; del.innerHTML = '&times;';
+            del.addEventListener('click', (function(q, c) {
+                return function() {
+                    var hi = document.getElementById('cola_url_' + q);
+                    if (hi) hi.remove();
+                    c.remove();
+                    enCola--;
+                    actualizarLimite();
+                    if (colaItems.children.length === 0) colaSection.style.display = 'none';
+                };
+            })(qid, card));
+            card.appendChild(img); card.appendChild(del);
+            colaItems.appendChild(card);
+            colaSection.style.display = 'block';
+            enCola++;
+            actualizarLimite();
+
+            // Esconder mensaje "sin imágenes" si está
+            var msg = document.getElementById('msg-sin-extras');
+            if (msg) msg.style.display = 'none';
+
+            // Reset
+            inputUrl.value = '';
+            prevWrap.style.display = 'none';
+            inputUrl.classList.add('border-success');
+            setTimeout(function() { inputUrl.classList.remove('border-success'); }, 700);
+            inputUrl.focus();
+        }
+
+        // Preview de archivos seleccionados
+        if (inputFiles && prevArch) {
+            inputFiles.addEventListener('change', function() {
+                prevArch.innerHTML = '';
+                Array.from(this.files).forEach(function(file) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'border rounded';
+                        img.style.cssText = 'width:80px;height:60px;object-fit:contain;';
+                        prevArch.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+
+        // Eliminar imagen existente (toggle)
+        document.querySelectorAll('.btn-eliminar-extra').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var id = this.getAttribute('data-id');
+                var card = this.closest('.img-extra-card');
+                var hid = 'h_del_' + id;
+                var ex = document.getElementById(hid);
+                if (ex) {
+                    ex.remove();
+                    card.style.opacity = '1';
+                    card.style.outline = '';
+                    this.innerHTML = '<i class="bi bi-trash"></i>';
+                    this.title = 'Eliminar';
+                    totalActuales++;
+                    actualizarLimite();
+                } else {
+                    var hh = document.createElement('input');
+                    hh.type = 'hidden'; hh.name = 'imagenes_eliminar[]'; hh.value = id; hh.id = hid;
+                    form.appendChild(hh);
+                    card.style.opacity = '.3';
+                    card.style.outline = '2px solid #dc3545';
+                    this.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i>';
+                    this.title = 'Deshacer';
+                    totalActuales--;
+                    actualizarLimite();
+                }
+            });
+        });
+
+        // Hacer portada
+        document.querySelectorAll('.btn-hacer-portada').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.getElementById('hacer_portada_id').value = this.getAttribute('data-id');
+                form.submit();
+            });
+        });
+    })();
+    @endif {{-- imagenesAdicionalesActivas --}}
 
     // Preview en tiempo real del stock resultante en el modal de ajuste
     var stockBase = {{ $producto->stock }};
@@ -912,6 +1234,11 @@
             modalAjuste.show();
         @endif
     }
+
+    // Inicializar todos los tooltips de Bootstrap
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+        new bootstrap.Tooltip(el, { trigger: 'hover focus' });
+    });
 </script>
 @endpush
 @endsection

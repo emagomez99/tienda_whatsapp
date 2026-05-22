@@ -40,7 +40,9 @@ class ConfiguracionController extends Controller
             'posicion_menu'              => 'required|in:superior,lateral',
             'pedir_direccion_envio'      => 'required|in:true,false',
             'template_whatsapp'          => 'nullable|string|max:2000',
-            'modo_imagen_producto'       => 'nullable|in:ambos,solo_url,solo_archivo',
+            'modo_imagen_producto'        => 'nullable|in:ambos,solo_url,solo_archivo',
+            'imagenes_adicionales_activas'=> 'nullable|in:true,false',
+            'max_imagenes_adicionales'    => 'nullable|integer|min:1|max:20',
             'moneda_default'             => 'nullable|exists:monedas,id',
             'mostrar_proveedor'          => 'required|in:true,false',
             'social_instagram'           => 'nullable|url|max:255',
@@ -75,8 +77,12 @@ class ConfiguracionController extends Controller
 
         Configuracion::establecer('moneda_default', $request->input('moneda_default', ''), 'Moneda por defecto para nuevos productos');
 
-        if (auth()->user()->esSuperAdmin() && $request->filled('modo_imagen_producto')) {
-            Configuracion::establecer('modo_imagen_producto', $request->modo_imagen_producto, 'Modo de carga de imágenes de productos');
+        if (auth()->user()->esSuperAdmin()) {
+            if ($request->filled('modo_imagen_producto')) {
+                Configuracion::establecer('modo_imagen_producto', $request->modo_imagen_producto, 'Modo de carga de imágenes de productos');
+            }
+            Configuracion::establecer('imagenes_adicionales_activas', $request->input('imagenes_adicionales_activas', 'true'), 'Habilitar imágenes adicionales por producto');
+            Configuracion::establecer('max_imagenes_adicionales', (string) max(1, (int) $request->input('max_imagenes_adicionales', 3)), 'Máximo de imágenes adicionales por producto');
         }
 
         $tenantDir = tenant('id');

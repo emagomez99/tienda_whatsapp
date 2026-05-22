@@ -174,6 +174,16 @@ class Configuracion extends Model
         return self::obtener('modo_imagen_producto', 'solo_url');
     }
 
+    public static function imagenesAdicionalesActivas()
+    {
+        return self::obtener('imagenes_adicionales_activas', 'true') === 'true';
+    }
+
+    public static function maxImagenesAdicionales()
+    {
+        return (int) self::obtener('max_imagenes_adicionales', '3');
+    }
+
     public static function monedaDefaultId()
     {
         $valor = self::obtener('moneda_default', null);

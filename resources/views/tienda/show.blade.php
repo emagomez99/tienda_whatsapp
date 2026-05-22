@@ -9,7 +9,7 @@
     $ogUrl   = url()->current();
     $ogTitle = $producto->descripcion;
     $ogDesc  = $producto->id_proveedor ? 'Código: ' . $producto->id_proveedor : $producto->descripcion;
-    $ogImage = $producto->url_imagen ? $producto->imagen_url : url('/img/no-image.svg');
+    $ogImage = $producto->imagen_url ?? url('/img/no-image.svg');
 @endphp
 <meta property="og:type"        content="product">
 <meta property="og:url"         content="{{ $ogUrl }}">
@@ -97,6 +97,19 @@
             });
         });
     });
+
+    // Sincronizar puntos indicadores del carousel desktop
+    var carouselDesktop = document.getElementById('carousel-producto-desktop');
+    if (carouselDesktop) {
+        var dotsWrap = carouselDesktop.nextElementSibling;
+        carouselDesktop.addEventListener('slid.bs.carousel', function (e) {
+            if (!dotsWrap) return;
+            dotsWrap.querySelectorAll('button[data-bs-slide-to]').forEach(function (dot) {
+                var idx = parseInt(dot.getAttribute('data-bs-slide-to'));
+                dot.style.backgroundColor = idx === e.to ? '#555' : '#ccc';
+            });
+        });
+    }
 
     // Compartir
     document.querySelectorAll('.btn-compartir').forEach(function (btn) {
