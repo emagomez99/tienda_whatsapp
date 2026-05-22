@@ -287,6 +287,11 @@
                     </div>
 
                     {{-- Panel agregar --}}
+                    <div id="msg-limite-extras" class="alert alert-warning d-flex align-items-center gap-2 mt-3 mb-0 py-2" style="display:none!important;">
+                        <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                        <span>Límite de <strong>{{ $maxImagenesAdicionales }}</strong> imágenes adicionales alcanzado. Eliminá una existente para poder agregar otra.</span>
+                    </div>
+
                     <div id="panel-agregar-extras" class="mt-3 border rounded p-3" style="display:none;">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="fw-semibold small">Nueva imagen</span>
@@ -1081,22 +1086,26 @@
         }
         if (btnAgrUrl) btnAgrUrl.addEventListener('click', agregarUrl);
 
+        var msgLimite = document.getElementById('msg-limite-extras');
+
         function actualizarLimite() {
             var usadas = totalActuales + enCola;
             var restantes = maxExtras - usadas;
+            var lleno = restantes <= 0;
+
             if (btnAbrir) {
-                if (restantes <= 0) {
-                    btnAbrir.disabled = true;
-                    btnAbrir.title = 'Límite de ' + maxExtras + ' imágenes adicionales alcanzado';
-                } else {
-                    btnAbrir.disabled = false;
-                    btnAbrir.title = restantes === 1
-                        ? 'Podés agregar 1 imagen más'
-                        : 'Podés agregar hasta ' + restantes + ' imágenes más';
-                }
+                btnAbrir.disabled = lleno;
+                btnAbrir.title = lleno
+                    ? 'Límite de ' + maxExtras + ' imágenes alcanzado'
+                    : (restantes === 1 ? 'Podés agregar 1 imagen más' : 'Podés agregar hasta ' + restantes + ' imágenes más');
             }
-            if (btnAgrUrl) {
-                btnAgrUrl.disabled = restantes <= 0;
+            if (btnAgrUrl) btnAgrUrl.disabled = lleno;
+
+            if (msgLimite) {
+                msgLimite.style.setProperty('display', lleno ? 'flex' : 'none', 'important');
+                if (lleno && panel && panel.style.display !== 'none') {
+                    panel.style.display = 'none';
+                }
             }
         }
         actualizarLimite();
