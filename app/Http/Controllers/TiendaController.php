@@ -131,7 +131,7 @@ class TiendaController extends Controller
     {
         $request->validate([
             'menu_id' => 'required|exists:menus,id',
-            'etiqueta_id' => 'required|exists:etiquetas,id',
+            'etiqueta_id' => 'required|exists:etiquetas,id,visible_usuarios,1',
             'filtros' => 'nullable|array',
         ]);
 

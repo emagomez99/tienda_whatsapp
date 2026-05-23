@@ -9,7 +9,7 @@
         : route('admin.productos.index') . (request('_back') ? '?' . request('_back') : '');
 @endphp
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-pencil"></i> Editar Producto</h3>
+    <h3 class="mb-0"><i class="bi bi-pencil"></i> Editar Producto <span class="text-muted fw-normal">#{{ $producto->id }}</span></h3>
     <a href="{{ $backUrl }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Volver
     </a>
@@ -151,95 +151,112 @@
             </div>
 
             <!-- Card: Imagen principal -->
+            @php $modoImagen = App\Models\Configuracion::modoImagenProducto(); @endphp
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-image"></i> Imagen Principal
                         <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="top"
                            title="Imagen que aparece en el listado de productos y en la vista de detalle. Se recomienda fondo blanco o transparente."></i>
                     </h5>
+                    @if($producto->url_imagen)
+                        <button type="button" id="btn-cambiar-principal" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i> Cambiar
+                        </button>
+                    @else
+                        <button type="button" id="btn-cambiar-principal" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-lg"></i> Agregar imagen
+                        </button>
+                    @endif
                 </div>
                 <div class="card-body">
-                    @if($producto->url_imagen)
-                        <div class="mb-3 p-3 bg-light rounded" id="imagen-actual">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <img src="{{ $producto->imagen_url }}" alt="" style="max-height: 120px;" class="rounded">
+
+                    {{-- Tarjeta de imagen actual --}}
+                    <div class="mb-3">
+                        <div id="card-img-principal" class="img-extra-card position-relative d-inline-block" style="width:150px;">
+                            <div class="rounded border overflow-hidden bg-light" style="height:115px;">
+                                <img id="img-principal-thumb"
+                                     src="{{ $producto->url_imagen ? $producto->imagen_url : '' }}"
+                                     style="width:100%;height:100%;object-fit:contain;{{ $producto->url_imagen ? '' : 'display:none;' }}"
+                                     onerror="this.src='/img/no-image.svg';">
+                                <div id="img-principal-placeholder"
+                                     class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"
+                                     style="{{ $producto->url_imagen ? 'display:none;' : '' }}">
+                                    <i class="bi bi-image fs-2"></i>
+                                    <span style="font-size:.75rem;">Sin imagen</span>
                                 </div>
-                                <div class="col">
-                                    <p class="mb-1"><strong>Imagen actual</strong></p>
-                                    @if($producto->esImagenExterna())
-                                        <small class="text-muted"><i class="bi bi-link-45deg"></i> URL externa</small>
-                                    @else
-                                        <small class="text-muted"><i class="bi bi-hdd"></i> Archivo local</small>
-                                    @endif
+                                @if($producto->url_imagen)
+                                <div class="img-overlay">
+                                    <button type="button" id="btn-cambiar-principal"
+                                            class="btn btn-light btn-sm px-2 py-1" title="Cambiar imagen">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" id="btn-del-principal"
+                                            class="btn btn-danger btn-sm px-2 py-1" title="Eliminar imagen">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </div>
-                                <div class="col-auto">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="eliminar_imagen" name="eliminar_imagen" value="1">
-                                        <label class="form-check-label text-danger" for="eliminar_imagen">
-                                            <i class="bi bi-trash"></i> Eliminar
-                                        </label>
-                                    </div>
-                                </div>
+                                @endif
+                            </div>
+                            <div class="text-center mt-1" style="font-size:.65rem;color:#888;">
+                                @if($producto->url_imagen)
+                                    <span class="badge bg-warning text-dark" style="font-size:.6rem;">
+                                        <i class="bi bi-star-fill"></i> Principal
+                                    </span>
+                                    <span class="text-muted ms-1">
+                                        {{ $producto->esImagenExterna() ? '· URL' : '· Local' }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
-                        <hr>
-                        <p class="text-muted mb-2"><small>Cambiar imagen principal:</small></p>
-                    @endif
 
-                    @php $modoImagen = App\Models\Configuracion::modoImagenProducto(); @endphp
-
-                    @if($modoImagen === 'solo_url')
-                        <input type="url" class="form-control @error('imagen_url') is-invalid @enderror"
-                               id="imagen_url" name="imagen_url"
-                               placeholder="https://ejemplo.com/imagen.jpg" value="{{ old('imagen_url') }}">
-                        @error('imagen_url')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted">Ingresa la URL completa de la imagen externa.</small>
-
-                    @elseif($modoImagen === 'solo_archivo')
-                        <input type="file" class="form-control @error('imagen_archivo') is-invalid @enderror"
-                               id="imagen_archivo" name="imagen_archivo" accept="image/*">
-                        @error('imagen_archivo')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted">Formatos: JPG, PNG, GIF. Máximo 2MB.</small>
-
-                    @else
-                        <ul class="nav nav-tabs" id="imagenTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="archivo-tab" data-bs-toggle="tab" data-bs-target="#archivo-panel" type="button" role="tab">
-                                    <i class="bi bi-upload"></i> Subir archivo
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="url-tab" data-bs-toggle="tab" data-bs-target="#url-panel" type="button" role="tab">
-                                    <i class="bi bi-link-45deg"></i> URL externa
-                                </button>
-                            </li>
-                        </ul>
-                        <div class="tab-content pt-3" id="imagenTabsContent">
-                            <div class="tab-pane fade show active" id="archivo-panel" role="tabpanel">
-                                <input type="file" class="form-control @error('imagen_archivo') is-invalid @enderror" id="imagen_archivo" name="imagen_archivo" accept="image/*">
-                                @error('imagen_archivo')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <small class="text-muted">Formatos: JPG, PNG, GIF. Máximo 2MB.</small>
-                            </div>
-                            <div class="tab-pane fade" id="url-panel" role="tabpanel">
-                                <input type="url" class="form-control @error('imagen_url') is-invalid @enderror" id="imagen_url" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg" value="{{ old('imagen_url') }}">
-                                @error('imagen_url')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <small class="text-muted">Ingresa la URL completa de la imagen externa.</small>
-                            </div>
-                        </div>
-                    @endif
-                    <div id="imagen-preview" class="mt-3 text-center" style="display: none;">
-                        <p class="text-muted mb-1"><small>Nueva imagen:</small></p>
-                        <img src="" alt="Preview" class="img-thumbnail" style="max-height: 200px;">
                     </div>
+
+                    {{-- Hidden inputs para el form --}}
+                    <input type="hidden" name="eliminar_imagen" id="eliminar_imagen" value="">
+
+                    {{-- Panel cambiar/agregar --}}
+                    <div id="panel-imagen-principal" class="border rounded p-3" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-semibold small">
+                                {{ $producto->url_imagen ? 'Cambiar imagen principal' : 'Agregar imagen principal' }}
+                            </span>
+                            <button type="button" id="btn-cerrar-principal" class="btn-close" aria-label="Cerrar"></button>
+                        </div>
+
+                        @if($modoImagen !== 'solo_archivo')
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold mb-1">
+                                    <i class="bi bi-link-45deg"></i> Pegar URL
+                                </label>
+                                <input type="url" id="imagen_url" name="imagen_url"
+                                       class="form-control @error('imagen_url') is-invalid @enderror"
+                                       placeholder="https://ejemplo.com/imagen.jpg"
+                                       value="{{ old('imagen_url') }}">
+                                @error('imagen_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div id="preview-url-p" class="mt-2" style="display:none;">
+                                    <img id="preview-url-p-img" src=""
+                                         style="height:64px;object-fit:contain;border-radius:4px;border:1px solid #dee2e6;">
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($modoImagen !== 'solo_url')
+                            <div class="mb-0">
+                                <label class="form-label small fw-semibold mb-1">
+                                    <i class="bi bi-upload"></i> Subir archivo
+                                </label>
+                                <input type="file" id="imagen_archivo" name="imagen_archivo"
+                                       class="form-control @error('imagen_archivo') is-invalid @enderror"
+                                       accept="image/*">
+                                @error('imagen_archivo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div id="preview-arch-p" class="mt-2" style="display:none;">
+                                    <img id="preview-arch-p-img" src=""
+                                         style="height:64px;object-fit:contain;border-radius:4px;border:1px solid #dee2e6;">
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
                 </div>
             </div>
 
@@ -251,13 +268,13 @@
                         <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="top"
                            title="Se muestran en el carrusel de la vista detallada del producto. Podés agregar varias antes de guardar. Con ★ podés promover cualquiera como imagen principal."></i>
                     </h5>
-                    <button type="button" id="btn-abrir-agregar" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg"></i> Agregar imagen
+                    <button type="button" id="btn-abrir-agregar" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus"></i> Agregar
                     </button>
                 </div>
                 <div class="card-body">
 
-                    {{-- Grid de imágenes existentes --}}
+                    {{-- Grid unificado: existentes + pendientes en la misma fila --}}
                     <div class="d-flex flex-wrap gap-3" id="grid-extras">
                         @forelse($producto->imagenes as $img)
                             <div class="img-extra-card position-relative" data-id="{{ $img->id }}" style="width:120px;">
@@ -284,24 +301,21 @@
                         @empty
                             <p class="text-muted mb-0" id="msg-sin-extras">No hay imágenes adicionales aún.</p>
                         @endforelse
+                        {{-- Las tarjetas de cola se insertan aquí via JS --}}
                     </div>
 
-                    {{-- Panel agregar --}}
-                    <div id="msg-limite-extras" class="alert alert-warning d-flex align-items-center gap-2 mt-3 mb-0 py-2" style="display:none!important;">
+                    {{-- Alerta de límite --}}
+                    <div id="msg-limite-extras" class="alert alert-warning align-items-center gap-2 mt-3 mb-0 py-2" style="display:none;">
                         <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
-                        <span>Límite de <strong>{{ $maxImagenesAdicionales }}</strong> imágenes adicionales alcanzado. Eliminá una existente para poder agregar otra.</span>
+                        <span>Límite de <strong>{{ $maxImagenesAdicionales }}</strong> imágenes adicionales alcanzado. Eliminá una para poder agregar otra.</span>
                     </div>
 
+                    {{-- Panel agregar (colapsable) --}}
                     <div id="panel-agregar-extras" class="mt-3 border rounded p-3" style="display:none;">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="fw-semibold small">Nueva imagen</span>
-                            <button type="button" id="btn-cerrar-agregar" class="btn-close" aria-label="Cerrar"></button>
-                        </div>
-
                         @if($modoImagen !== 'solo_archivo')
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold mb-1">
-                                    <i class="bi bi-link-45deg"></i> Pegar URL
+                                    <i class="bi bi-link-45deg"></i> URL de imagen
                                 </label>
                                 <div class="input-group">
                                     <input type="url" id="input-url-nueva" class="form-control"
@@ -318,7 +332,7 @@
                         @endif
 
                         @if($modoImagen !== 'solo_url')
-                            <div class="mb-2">
+                            <div>
                                 <label class="form-label small fw-semibold mb-1">
                                     <i class="bi bi-upload"></i> Subir archivos
                                 </label>
@@ -330,15 +344,6 @@
                                 <div id="preview-archivos" class="d-flex flex-wrap gap-2 mt-2"></div>
                             </div>
                         @endif
-
-                        {{-- Cola de URLs pendientes --}}
-                        <div id="cola-urls" style="display:none;">
-                            <hr class="my-2">
-                            <p class="text-muted small mb-2">
-                                <i class="bi bi-clock-history"></i> En cola para guardar:
-                            </p>
-                            <div id="cola-urls-items" class="d-flex flex-wrap gap-2"></div>
-                        </div>
                     </div>
 
                     <input type="hidden" name="hacer_portada_id" id="hacer_portada_id" value="">
@@ -595,7 +600,9 @@
 
     const etiquetasObligatoriasMapa = @json($etiquetasObligatorias);
     const etiquetasAplicablesMapa   = @json($etiquetasAplicables);
-    const etiquetasData = @json($etiquetas->map(function ($e) { return ['id' => $e->id, 'nombre' => $e->nombre]; })->values());
+    const etiquetasData = @json($etiquetas->map(function ($e) { return ['id' => $e->id, 'nombre' => $e->nombre, 'visible' => (bool)$e->visible_usuarios]; })->values());
+    const etiquetasVisibilidadMapa = {};
+    etiquetasData.forEach(function(e) { etiquetasVisibilidadMapa[e.id] = e.visible; });
 
     function getSelectedEtiquetaIds(exceptSelect) {
         var ids = [];
@@ -680,6 +687,23 @@
         row.querySelector('.btn-eliminar-etiqueta').classList.add('disabled');
     }
 
+    function actualizarBadgeOculta(row) {
+        var select = row.querySelector('.etiqueta-select');
+        var selectWrapper = row.querySelector('.col-md-5');
+        var id = parseInt(select.value);
+        var badgeExistente = selectWrapper.querySelector('.badge-oculta');
+        if (id && etiquetasVisibilidadMapa.hasOwnProperty(id) && !etiquetasVisibilidadMapa[id]) {
+            if (!badgeExistente) {
+                var badge = document.createElement('span');
+                badge.className = 'badge bg-secondary badge-oculta mt-1 d-inline-block';
+                badge.innerHTML = '<i class="bi bi-eye-slash"></i> Oculta';
+                selectWrapper.appendChild(badge);
+            }
+        } else {
+            if (badgeExistente) badgeExistente.remove();
+        }
+    }
+
     function limpiarObligatorias() {
         document.querySelectorAll('.etiqueta-row').forEach(function(row) {
             row.removeAttribute('data-obligatoria');
@@ -727,6 +751,7 @@
     document.getElementById('etiquetas-container').addEventListener('change', function(e) {
         if (e.target.classList.contains('etiqueta-select')) {
             refrescarOpciones(document.getElementById('proveedor_id').value);
+            actualizarBadgeOculta(e.target.closest('.etiqueta-row'));
         }
     });
 
@@ -744,12 +769,15 @@
         actualizarObligatorias(proveedorId);
     });
 
-    // Al cargar: filtrar selects existentes según proveedor actual y marcar obligatorias
+    // Al cargar: filtrar selects existentes según proveedor actual y marcar obligatorias + ocultas
     (function() {
         var sel = document.getElementById('proveedor_id');
         if (sel.value) {
             actualizarObligatorias(sel.value);
         }
+        document.querySelectorAll('.etiqueta-row').forEach(function(row) {
+            actualizarBadgeOculta(row);
+        });
     })();
 
     // Autocompletado para valores de etiquetas
@@ -966,107 +994,160 @@
         }
     });
 
-    // Preview imagen principal
-    const imagenArchivo = document.getElementById('imagen_archivo');
-    const imagenUrl = document.getElementById('imagen_url');
-    const imagenPreview = document.getElementById('imagen-preview');
-    const imagenPreviewImg = imagenPreview ? imagenPreview.querySelector('img') : null;
-    const eliminarImagen = document.getElementById('eliminar_imagen');
-
-    function mostrarPreview(src) {
-        if (src && imagenPreviewImg) {
-            imagenPreviewImg.src = src;
-            imagenPreview.style.display = 'block';
-        } else if (imagenPreview) {
-            imagenPreview.style.display = 'none';
-        }
-    }
-
-    if (imagenArchivo) {
-        imagenArchivo.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) { mostrarPreview(e.target.result); };
-                reader.readAsDataURL(this.files[0]);
-                if (imagenUrl) imagenUrl.value = '';
-                if (eliminarImagen) eliminarImagen.checked = false;
-            } else {
-                mostrarPreview(null);
-            }
-        });
-    }
-
-    let debounceUrl;
-    if (imagenUrl) {
-        imagenUrl.addEventListener('input', function() {
-            clearTimeout(debounceUrl);
-            const url = this.value.trim();
-            debounceUrl = setTimeout(() => {
-                if (url && url.startsWith('http')) {
-                    mostrarPreview(url);
-                    if (imagenArchivo) imagenArchivo.value = '';
-                    if (eliminarImagen) eliminarImagen.checked = false;
-                } else {
-                    mostrarPreview(null);
-                }
-            }, 500);
-        });
-    }
-
-    const archivoTab = document.getElementById('archivo-tab');
-    const urlTab = document.getElementById('url-tab');
-    if (archivoTab) {
-        archivoTab.addEventListener('shown.bs.tab', function() {
-            if (imagenUrl) imagenUrl.value = '';
-        });
-    }
-    if (urlTab) {
-        urlTab.addEventListener('shown.bs.tab', function() {
-            if (imagenArchivo) imagenArchivo.value = '';
-            if (imagenPreview) imagenPreview.style.display = 'none';
-        });
-    }
-    if (eliminarImagen) {
-        eliminarImagen.addEventListener('change', function() {
-            if (this.checked) {
-                if (imagenArchivo) imagenArchivo.value = '';
-                if (imagenUrl) imagenUrl.value = '';
-                if (imagenPreview) imagenPreview.style.display = 'none';
-            }
-        });
-    }
-
-    // === Gestor de Imágenes Adicionales ===
-    @if($imagenesAdicionalesActivas)
+    // === Gestor de Imagen Principal ===
     (function() {
-        var maxExtras  = {{ $maxImagenesAdicionales }};
-        var totalActuales = {{ $producto->imagenes->count() }};
-        var enCola = 0;
-        var btnAbrir   = document.getElementById('btn-abrir-agregar');
-        var btnCerrar  = document.getElementById('btn-cerrar-agregar');
-        var panel      = document.getElementById('panel-agregar-extras');
-        var inputUrl   = document.getElementById('input-url-nueva');
-        var btnAgrUrl  = document.getElementById('btn-agregar-url');
-        var prevWrap   = document.getElementById('preview-url-nueva');
-        var prevImg    = document.getElementById('preview-url-img');
-        var colaSection= document.getElementById('cola-urls');
-        var colaItems  = document.getElementById('cola-urls-items');
-        var inputFiles = document.getElementById('imagenes_nuevas');
-        var prevArch   = document.getElementById('preview-archivos');
-        var form       = document.getElementById('form-producto');
-        var cid = 0, debUrl;
+        var thumb       = document.getElementById('img-principal-thumb');
+        var placeholder = document.getElementById('img-principal-placeholder');
+        var card        = document.getElementById('card-img-principal');
+        var panel       = document.getElementById('panel-imagen-principal');
+        var inputElim   = document.getElementById('eliminar_imagen');
+        var inputUrl    = document.getElementById('imagen_url');
+        var inputArch   = document.getElementById('imagen_archivo');
+        var prevUrlWrap = document.getElementById('preview-url-p');
+        var prevUrlImg  = document.getElementById('preview-url-p-img');
+        var prevArchWrap= document.getElementById('preview-arch-p');
+        var prevArchImg = document.getElementById('preview-arch-p-img');
+        var marcadoElim = false;
+        var debUrl;
 
-        if (btnAbrir) {
-            btnAbrir.addEventListener('click', function() {
+        // Todos los botones con id="btn-cambiar-principal" (hay dos: overlay + abajo)
+        document.querySelectorAll('#btn-cambiar-principal').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                cancelarEliminacion();
                 panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
                 if (panel.style.display === 'block' && inputUrl) inputUrl.focus();
             });
-        }
+        });
+
+        var btnCerrar = document.getElementById('btn-cerrar-principal');
         if (btnCerrar) {
             btnCerrar.addEventListener('click', function() { panel.style.display = 'none'; });
         }
 
-        // Preview en vivo de URL
+        var btnDel = document.getElementById('btn-del-principal');
+        if (btnDel) {
+            btnDel.addEventListener('click', function() {
+                if (marcadoElim) {
+                    cancelarEliminacion();
+                } else {
+                    marcarEliminacion();
+                }
+            });
+        }
+
+        function marcarEliminacion() {
+            marcadoElim = true;
+            inputElim.value = '1';
+            panel.style.display = 'none';
+            if (inputUrl) inputUrl.value = '';
+            if (inputArch) inputArch.value = '';
+            if (prevUrlWrap) prevUrlWrap.style.display = 'none';
+            if (prevArchWrap) prevArchWrap.style.display = 'none';
+            if (card) { card.style.opacity = '.3'; card.style.outline = '2px solid #dc3545'; }
+            if (btnDel) { btnDel.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i>'; btnDel.title = 'Deshacer'; }
+        }
+
+        function cancelarEliminacion() {
+            marcadoElim = false;
+            inputElim.value = '';
+            if (card) { card.style.opacity = ''; card.style.outline = ''; }
+            if (btnDel) { btnDel.innerHTML = '<i class="bi bi-trash"></i>'; btnDel.title = 'Eliminar imagen'; }
+        }
+
+        // Preview URL en vivo
+        if (inputUrl) {
+            inputUrl.addEventListener('input', function() {
+                clearTimeout(debUrl);
+                var url = this.value.trim();
+                cancelarEliminacion();
+                debUrl = setTimeout(function() {
+                    if (url && url.indexOf('http') === 0) {
+                        prevUrlImg.src = url;
+                        prevUrlWrap.style.display = 'block';
+                        // Actualizar thumb en tiempo real
+                        thumb.src = url;
+                        thumb.style.display = '';
+                        if (placeholder) placeholder.style.display = 'none';
+                        if (inputArch) inputArch.value = '';
+                        if (prevArchWrap) prevArchWrap.style.display = 'none';
+                    } else {
+                        if (prevUrlWrap) prevUrlWrap.style.display = 'none';
+                    }
+                }, 400);
+            });
+        }
+
+        // Preview archivo en vivo
+        if (inputArch) {
+            inputArch.addEventListener('change', function() {
+                cancelarEliminacion();
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        prevArchImg.src = e.target.result;
+                        prevArchWrap.style.display = 'block';
+                        // Actualizar thumb en tiempo real
+                        thumb.src = e.target.result;
+                        thumb.style.display = '';
+                        if (placeholder) placeholder.style.display = 'none';
+                        if (inputUrl) inputUrl.value = '';
+                        if (prevUrlWrap) prevUrlWrap.style.display = 'none';
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                } else {
+                    if (prevArchWrap) prevArchWrap.style.display = 'none';
+                }
+            });
+        }
+    })();
+
+    // === Gestor de Imágenes Adicionales ===
+    @if($imagenesAdicionalesActivas)
+    (function() {
+        var maxExtras     = {{ $maxImagenesAdicionales }};
+        var totalActuales = {{ $producto->imagenes->count() }};
+        var enCola        = 0;
+        var cid           = 0;
+        var debUrl;
+
+        var btnAbrir    = document.getElementById('btn-abrir-agregar');
+        var panel       = document.getElementById('panel-agregar-extras');
+        var inputUrl    = document.getElementById('input-url-nueva');
+        var btnAgrUrl   = document.getElementById('btn-agregar-url');
+        var prevWrap    = document.getElementById('preview-url-nueva');
+        var prevImg     = document.getElementById('preview-url-img');
+        var gridExtras  = document.getElementById('grid-extras');
+        var inputFiles  = document.getElementById('imagenes_nuevas');
+        var prevArch    = document.getElementById('preview-archivos');
+        var msgLimite   = document.getElementById('msg-limite-extras');
+        var form        = document.getElementById('form-producto');
+
+        // ── Estado del límite ────────────────────────────────────────────────
+        function actualizarLimite() {
+            var usadas    = totalActuales + enCola;
+            var lleno     = usadas >= maxExtras;
+            var restantes = maxExtras - usadas;
+
+            if (btnAbrir) {
+                btnAbrir.disabled = lleno;
+                btnAbrir.title    = lleno
+                    ? 'Límite de ' + maxExtras + ' imágenes alcanzado'
+                    : 'Podés agregar ' + (restantes === 1 ? '1 imagen más' : 'hasta ' + restantes + ' imágenes más');
+            }
+            if (btnAgrUrl) btnAgrUrl.disabled = lleno;
+            if (inputUrl)  inputUrl.disabled  = lleno;
+            if (msgLimite) msgLimite.style.display = lleno ? 'flex' : 'none';
+        }
+
+        // ── Abrir / cerrar panel ─────────────────────────────────────────────
+        if (btnAbrir) {
+            btnAbrir.addEventListener('click', function() {
+                var abierto = panel.style.display !== 'none';
+                panel.style.display = abierto ? 'none' : 'block';
+                if (!abierto && inputUrl) inputUrl.focus();
+            });
+        }
+        // ── Preview de URL en vivo ───────────────────────────────────────────
         if (inputUrl) {
             inputUrl.addEventListener('input', function() {
                 clearTimeout(debUrl);
@@ -1086,87 +1167,84 @@
         }
         if (btnAgrUrl) btnAgrUrl.addEventListener('click', agregarUrl);
 
-        var msgLimite = document.getElementById('msg-limite-extras');
-
-        function actualizarLimite() {
-            var usadas = totalActuales + enCola;
-            var restantes = maxExtras - usadas;
-            var lleno = restantes <= 0;
-
-            if (btnAbrir) {
-                btnAbrir.disabled = lleno;
-                btnAbrir.title = lleno
-                    ? 'Límite de ' + maxExtras + ' imágenes alcanzado'
-                    : (restantes === 1 ? 'Podés agregar 1 imagen más' : 'Podés agregar hasta ' + restantes + ' imágenes más');
-            }
-            if (btnAgrUrl) btnAgrUrl.disabled = lleno;
-
-            if (msgLimite) {
-                msgLimite.style.setProperty('display', lleno ? 'flex' : 'none', 'important');
-                if (lleno && panel && panel.style.display !== 'none') {
-                    panel.style.display = 'none';
-                }
-            }
-        }
-        actualizarLimite();
-
+        // ── Agregar URL a la cola ────────────────────────────────────────────
         function agregarUrl() {
-            var url = inputUrl.value.trim();
+            var url = inputUrl ? inputUrl.value.trim() : '';
             if (!url || url.indexOf('http') !== 0) {
-                inputUrl.classList.add('is-invalid');
+                if (inputUrl) inputUrl.classList.add('is-invalid');
                 return;
             }
-            if (totalActuales + enCola >= maxExtras) {
-                inputUrl.classList.add('is-invalid');
-                inputUrl.placeholder = 'Límite de ' + maxExtras + ' imágenes alcanzado';
-                return;
-            }
+            if (totalActuales + enCola >= maxExtras) return;
+
             inputUrl.classList.remove('is-invalid');
             var qid = ++cid;
 
-            // Hidden input para el form
-            var h = document.createElement('input');
-            h.type = 'hidden'; h.name = 'imagenes_urls_nuevas[]'; h.value = url; h.id = 'cola_url_' + qid;
-            form.appendChild(h);
+            // Hidden input que viaja con el form
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'imagenes_urls_nuevas[]';
+            hidden.value = url;
+            hidden.id = 'cola_url_' + qid;
+            form.appendChild(hidden);
 
-            // Tarjeta visual en la cola
+            // Tarjeta visual — mismo formato que las existentes
             var card = document.createElement('div');
-            card.className = 'cola-card';
+            card.className = 'img-extra-card position-relative';
+            card.style.width = '120px';
+
+            var inner = document.createElement('div');
+            inner.className = 'rounded overflow-hidden';
+            inner.style.cssText = 'height:90px;border:2px dashed #6c757d;';
+
             var img = document.createElement('img');
             img.src = url;
-            img.alt = '';
-            img.onerror = function() { this.style.opacity = '.3'; };
+            img.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+            img.onerror = function() { this.src = '/img/no-image.svg'; };
+
+            var overlay = document.createElement('div');
+            overlay.className = 'img-overlay';
+
             var del = document.createElement('button');
-            del.type = 'button'; del.className = 'cola-del'; del.innerHTML = '&times;';
-            del.addEventListener('click', (function(q, c) {
-                return function() {
-                    var hi = document.getElementById('cola_url_' + q);
-                    if (hi) hi.remove();
-                    c.remove();
-                    enCola--;
-                    actualizarLimite();
-                    if (colaItems.children.length === 0) colaSection.style.display = 'none';
-                };
-            })(qid, card));
-            card.appendChild(img); card.appendChild(del);
-            colaItems.appendChild(card);
-            colaSection.style.display = 'block';
+            del.type = 'button';
+            del.className = 'btn btn-danger btn-sm px-2 py-1';
+            del.title = 'Quitar de la cola';
+            del.innerHTML = '<i class="bi bi-trash"></i>';
+            del.addEventListener('click', function() {
+                var hi = document.getElementById('cola_url_' + qid);
+                if (hi) hi.remove();
+                card.remove();
+                enCola--;
+                actualizarLimite();
+            });
+
+            overlay.appendChild(del);
+            inner.appendChild(img);
+            inner.appendChild(overlay);
+            card.appendChild(inner);
+
+            var label = document.createElement('div');
+            label.className = 'text-center mt-1';
+            label.style.cssText = 'font-size:.65rem;color:#888;';
+            label.innerHTML = '<i class="bi bi-clock-history"></i> Pendiente';
+            card.appendChild(label);
+
+            gridExtras.appendChild(card);
+
+            var msgSin = document.getElementById('msg-sin-extras');
+            if (msgSin) msgSin.style.display = 'none';
+
             enCola++;
             actualizarLimite();
 
-            // Esconder mensaje "sin imágenes" si está
-            var msg = document.getElementById('msg-sin-extras');
-            if (msg) msg.style.display = 'none';
-
-            // Reset
+            // Feedback y reset
             inputUrl.value = '';
             prevWrap.style.display = 'none';
             inputUrl.classList.add('border-success');
-            setTimeout(function() { inputUrl.classList.remove('border-success'); }, 700);
+            setTimeout(function() { inputUrl.classList.remove('border-success'); }, 600);
             inputUrl.focus();
         }
 
-        // Preview de archivos seleccionados
+        // ── Preview de archivos seleccionados ────────────────────────────────
         if (inputFiles && prevArch) {
             inputFiles.addEventListener('change', function() {
                 prevArch.innerHTML = '';
@@ -1184,42 +1262,46 @@
             });
         }
 
-        // Eliminar imagen existente (toggle)
+        // ── Eliminar imagen existente (toggle) ───────────────────────────────
         document.querySelectorAll('.btn-eliminar-extra').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                var id = this.getAttribute('data-id');
+                var id   = this.getAttribute('data-id');
                 var card = this.closest('.img-extra-card');
-                var hid = 'h_del_' + id;
-                var ex = document.getElementById(hid);
+                var hid  = 'h_del_' + id;
+                var ex   = document.getElementById(hid);
                 if (ex) {
                     ex.remove();
-                    card.style.opacity = '1';
+                    card.style.opacity = '';
                     card.style.outline = '';
                     this.innerHTML = '<i class="bi bi-trash"></i>';
                     this.title = 'Eliminar';
                     totalActuales++;
-                    actualizarLimite();
                 } else {
                     var hh = document.createElement('input');
-                    hh.type = 'hidden'; hh.name = 'imagenes_eliminar[]'; hh.value = id; hh.id = hid;
+                    hh.type = 'hidden';
+                    hh.name = 'imagenes_eliminar[]';
+                    hh.value = id;
+                    hh.id = hid;
                     form.appendChild(hh);
-                    card.style.opacity = '.3';
+                    card.style.opacity = '.35';
                     card.style.outline = '2px solid #dc3545';
                     this.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i>';
                     this.title = 'Deshacer';
                     totalActuales--;
-                    actualizarLimite();
                 }
+                actualizarLimite();
             });
         });
 
-        // Hacer portada
+        // ── Hacer portada ────────────────────────────────────────────────────
         document.querySelectorAll('.btn-hacer-portada').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 document.getElementById('hacer_portada_id').value = this.getAttribute('data-id');
                 form.submit();
             });
         });
+
+        actualizarLimite();
     })();
     @endif {{-- imagenesAdicionalesActivas --}}
 

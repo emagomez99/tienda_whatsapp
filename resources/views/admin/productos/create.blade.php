@@ -184,6 +184,56 @@
                 </div>
             </div>
 
+            @if($imagenesAdicionalesActivas)
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-images"></i> Imágenes Adicionales</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-abrir-extras"
+                            data-bs-toggle="collapse" data-bs-target="#panel-extras">
+                        <i class="bi bi-plus"></i> Agregar
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="msg-limite-extras" class="alert alert-warning py-2 small d-none">
+                        <i class="bi bi-exclamation-triangle"></i> Se alcanzó el límite de {{ $maxImagenesAdicionales }} imagen(es) adicional(es).
+                    </div>
+
+                    <div id="cola-urls" class="mb-3" style="display:none;">
+                        <p class="text-muted small mb-2">Imágenes a agregar al guardar:</p>
+                        <div id="cola-urls-items" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div class="collapse" id="panel-extras">
+                        <div class="border rounded p-3 bg-light">
+                            @if($modoImagen !== 'solo_archivo')
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">URL de imagen</label>
+                                <div class="input-group">
+                                    <input type="url" id="extra-url-input" class="form-control form-control-sm"
+                                           placeholder="https://ejemplo.com/imagen.jpg">
+                                    <button type="button" class="btn btn-sm btn-primary" id="btn-agregar-extra-url">
+                                        <i class="bi bi-plus-lg"></i> Agregar
+                                    </button>
+                                </div>
+                                <div id="extra-url-preview" class="mt-2" style="display:none;">
+                                    <img src="" alt="Preview" style="height:70px;object-fit:contain;border-radius:4px;border:1px solid #dee2e6;">
+                                </div>
+                            </div>
+                            @endif
+                            @if($modoImagen !== 'solo_url')
+                            <div>
+                                <label class="form-label small fw-semibold">Subir archivo(s)</label>
+                                <input type="file" id="extra-archivo-input" name="imagenes_nuevas[]"
+                                       class="form-control form-control-sm" accept="image/*" multiple>
+                                <small class="text-muted">Podés seleccionar varios archivos a la vez.</small>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Etiquetas</h5>
@@ -283,6 +333,9 @@
         border-color: #dc3545;
         color: #495057;
     }
+    .cola-card { position:relative; width:90px; height:70px; border-radius:6px; overflow:hidden; border:1px solid #dee2e6; background:#f8f9fa; flex-shrink:0; }
+    .cola-card img { width:100%;height:100%;object-fit:contain; }
+    .cola-del { position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(220,53,69,.85);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:.65rem;cursor:pointer;line-height:1;padding:0; }
 </style>
 @endpush
 
@@ -735,6 +788,123 @@
             imagenPreview.style.display = 'none';
         });
     }
+
+    @if($imagenesAdicionalesActivas)
+    (function() {
+        var maxExtras = {{ $maxImagenesAdicionales }};
+        var enCola = 0;
+
+        function actualizarLimite() {
+            var lleno = enCola >= maxExtras;
+            var msgLimite = document.getElementById('msg-limite-extras');
+            var btnAbrir = document.getElementById('btn-abrir-extras');
+            var btnAgregarUrl = document.getElementById('btn-agregar-extra-url');
+            var inputArchivo = document.getElementById('extra-archivo-input');
+            if (msgLimite) msgLimite.classList.toggle('d-none', !lleno);
+            if (btnAbrir) btnAbrir.disabled = lleno;
+            if (btnAgregarUrl) btnAgregarUrl.disabled = lleno;
+            if (inputArchivo) inputArchivo.disabled = lleno;
+            if (lleno) {
+                var panel = document.getElementById('panel-extras');
+                if (panel && panel.classList.contains('show')) {
+                    bootstrap.Collapse.getOrCreateInstance(panel).hide();
+                }
+            }
+        }
+
+        // Preview URL en tiempo real
+        var inputUrl = document.getElementById('extra-url-input');
+        var previewDiv = document.getElementById('extra-url-preview');
+        var debounceExtra;
+        if (inputUrl) {
+            inputUrl.addEventListener('input', function() {
+                clearTimeout(debounceExtra);
+                var url = this.value.trim();
+                debounceExtra = setTimeout(function() {
+                    if (url.startsWith('http') && previewDiv) {
+                        previewDiv.querySelector('img').src = url;
+                        previewDiv.style.display = 'block';
+                    } else if (previewDiv) {
+                        previewDiv.style.display = 'none';
+                    }
+                }, 400);
+            });
+        }
+
+        function crearTarjeta(src, hidden) {
+            var card = document.createElement('div');
+            card.className = 'cola-card';
+            var img = document.createElement('img');
+            img.src = src;
+            img.onerror = function() { this.src = '/img/no-image.svg'; };
+            var delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'cola-del';
+            delBtn.innerHTML = '<i class="bi bi-x"></i>';
+            delBtn.addEventListener('click', function() {
+                card.remove();
+                if (hidden && hidden.parentNode) hidden.remove();
+                enCola--;
+                actualizarLimite();
+                if (document.getElementById('cola-urls-items').children.length === 0) {
+                    document.getElementById('cola-urls').style.display = 'none';
+                }
+            });
+            card.appendChild(img);
+            card.appendChild(delBtn);
+            return card;
+        }
+
+        // Agregar URL a la cola
+        var btnAgregarUrl = document.getElementById('btn-agregar-extra-url');
+        if (btnAgregarUrl) {
+            btnAgregarUrl.addEventListener('click', function() {
+                var url = inputUrl ? inputUrl.value.trim() : '';
+                if (!url || !url.startsWith('http') || enCola >= maxExtras) return;
+                var hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'imagenes_urls_nuevas[]';
+                hidden.value = url;
+                document.getElementById('form-producto').appendChild(hidden);
+                var items = document.getElementById('cola-urls-items');
+                items.appendChild(crearTarjeta(url, hidden));
+                document.getElementById('cola-urls').style.display = 'block';
+                inputUrl.value = '';
+                if (previewDiv) previewDiv.style.display = 'none';
+                enCola++;
+                actualizarLimite();
+            });
+        }
+
+        // Preview de archivos seleccionados
+        var inputArchivo = document.getElementById('extra-archivo-input');
+        if (inputArchivo) {
+            inputArchivo.addEventListener('change', function() {
+                var files = this.files;
+                if (!files || files.length === 0) return;
+                var disponible = maxExtras - enCola;
+                var items = document.getElementById('cola-urls-items');
+                Array.prototype.slice.call(files, 0, disponible).forEach(function(file) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var card = document.createElement('div');
+                        card.className = 'cola-card';
+                        var img = document.createElement('img');
+                        img.src = e.target.result;
+                        card.appendChild(img);
+                        items.appendChild(card);
+                        enCola++;
+                        actualizarLimite();
+                        document.getElementById('cola-urls').style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+
+        actualizarLimite();
+    })();
+    @endif
 </script>
 @endpush
 @endsection

@@ -451,7 +451,7 @@
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Imágenes adicionales por producto</label>
                             <small class="text-muted d-block mb-3">
-                                Permite que cada producto tenga varias imágenes que se muestran en un carrusel en la vista de detalle.
+                                Permite agregar imágenes extra a cada producto (además de la portada). Se muestran en un carrusel en la vista de detalle.
                             </small>
                             <div class="row g-3 align-items-start">
                                 <div class="col-md-5">
@@ -489,7 +489,7 @@
                                     @error('max_imagenes_adicionales')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
-                                    <small class="text-muted">Entre 1 y 20. Por defecto: 3.</small>
+                                    <small class="text-muted">No incluye la portada. Entre 1 y 20. Por defecto: 3.</small>
                                 </div>
                             </div>
                         </div>

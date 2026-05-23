@@ -98,6 +98,16 @@
         });
     });
 
+    // Inicializar carousels explícitamente para que el touch/swipe funcione desde el primer momento
+    var carouselMobileEl = document.getElementById('carousel-producto-mobile');
+    if (carouselMobileEl) {
+        new bootstrap.Carousel(carouselMobileEl, { touch: true, ride: false });
+    }
+    var carouselDesktopEl = document.getElementById('carousel-producto-desktop');
+    if (carouselDesktopEl) {
+        new bootstrap.Carousel(carouselDesktopEl, { touch: true, ride: false });
+    }
+
     // Sincronizar puntos indicadores del carousel desktop
     var carouselDesktop = document.getElementById('carousel-producto-desktop');
     if (carouselDesktop) {

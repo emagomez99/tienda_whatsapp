@@ -68,8 +68,14 @@ class ProductoController extends Controller
         $etiquetasObligatorias = $this->mapEtiquetasObligatorias($proveedores);
         $etiquetasAplicables = $this->mapEtiquetasAplicables($proveedores);
         $monedaDefaultId = \App\Models\Configuracion::monedaDefaultId();
+        $imagenesAdicionalesActivas = Configuracion::imagenesAdicionalesActivas();
+        $maxImagenesAdicionales     = Configuracion::maxImagenesAdicionales();
 
-        return view('admin.productos.create', compact('proveedores', 'etiquetas', 'monedas', 'etiquetasObligatorias', 'etiquetasAplicables', 'monedaDefaultId'));
+        return view('admin.productos.create', compact(
+            'proveedores', 'etiquetas', 'monedas',
+            'etiquetasObligatorias', 'etiquetasAplicables', 'monedaDefaultId',
+            'imagenesAdicionalesActivas', 'maxImagenesAdicionales'
+        ));
     }
 
     public function store(Request $request)
@@ -84,8 +90,12 @@ class ProductoController extends Controller
             'disponible' => 'boolean',
             'stock' => 'required|integer|min:0',
             'por_encargue' => 'boolean',
-            'imagen_archivo' => 'nullable|image|max:2048',
-            'imagen_url'     => 'nullable|url|max:500',
+            'imagen_archivo'         => 'nullable|image|max:2048',
+            'imagen_url'             => 'nullable|url|max:500',
+            'imagenes_nuevas'        => 'nullable|array',
+            'imagenes_nuevas.*'      => 'image|max:2048',
+            'imagenes_urls_nuevas'   => 'nullable|array',
+            'imagenes_urls_nuevas.*' => 'nullable|url|max:2048',
             'etiquetas' => 'nullable|array',
             'etiquetas.*.etiqueta_id' => 'nullable|exists:etiquetas,id',
             'etiquetas.*.valor' => 'nullable|string|max:255',
@@ -145,6 +155,36 @@ class ProductoController extends Controller
             }
         }
 
+        // Imágenes adicionales
+        if (Configuracion::imagenesAdicionalesActivas()) {
+            $max = Configuracion::maxImagenesAdicionales();
+            $actuales = 0;
+
+            if ($request->hasFile('imagenes_nuevas')) {
+                foreach ($request->file('imagenes_nuevas') as $archivo) {
+                    if ($actuales >= $max) break;
+                    ProductoImagen::create([
+                        'producto_id' => $producto->id,
+                        'url'         => $archivo->store(tenant('id') . '/productos', 'public'),
+                        'orden'       => 0,
+                    ]);
+                    $actuales++;
+                }
+            }
+
+            if (!empty($validated['imagenes_urls_nuevas'])) {
+                foreach ($validated['imagenes_urls_nuevas'] as $urlNueva) {
+                    if (!$urlNueva || $actuales >= $max) continue;
+                    ProductoImagen::create([
+                        'producto_id' => $producto->id,
+                        'url'         => $urlNueva,
+                        'orden'       => 0,
+                    ]);
+                    $actuales++;
+                }
+            }
+        }
+
         return redirect()->route('admin.productos.index')
             ->with('success', 'Producto creado correctamente');
     }
@@ -180,7 +220,7 @@ class ProductoController extends Controller
             'por_encargue'         => 'boolean',
             'imagen_archivo'       => 'nullable|image|max:2048',
             'imagen_url'           => 'nullable|url|max:500',
-            'eliminar_imagen'      => 'boolean',
+            'eliminar_imagen'      => 'nullable|boolean',
             'hacer_portada_id'     => 'nullable|integer|exists:producto_imagenes,id',
             'imagenes_nuevas'      => 'nullable|array',
             'imagenes_nuevas.*'    => 'image|max:2048',

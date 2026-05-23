@@ -82,7 +82,7 @@ class ConfiguracionController extends Controller
                 Configuracion::establecer('modo_imagen_producto', $request->modo_imagen_producto, 'Modo de carga de imágenes de productos');
             }
             Configuracion::establecer('imagenes_adicionales_activas', $request->input('imagenes_adicionales_activas', 'true'), 'Habilitar imágenes adicionales por producto');
-            Configuracion::establecer('max_imagenes_adicionales', (string) max(1, (int) $request->input('max_imagenes_adicionales', 3)), 'Máximo de imágenes adicionales por producto');
+            Configuracion::establecer('max_imagenes_adicionales', (string) max(1, (int) ($request->input('max_imagenes_adicionales') ?: 3)), 'Máximo de imágenes adicionales por producto');
         }
 
         $tenantDir = tenant('id');
