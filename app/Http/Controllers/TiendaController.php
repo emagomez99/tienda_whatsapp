@@ -130,9 +130,9 @@ class TiendaController extends Controller
     public function filtrosValores(Request $request)
     {
         $request->validate([
-            'menu_id' => 'required|exists:menus,id',
-            'etiqueta_id' => 'required|exists:etiquetas,id,visible_usuarios,1',
-            'filtros' => 'nullable|array',
+            'menu_id'    => 'required|integer|exists:menus,id',
+            'etiqueta_id'=> 'required|integer|exists:etiquetas,id,visible_usuarios,1',
+            'filtros'    => 'nullable|array',
         ]);
 
         $menu = Menu::findOrFail($request->menu_id);

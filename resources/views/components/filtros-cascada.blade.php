@@ -381,6 +381,7 @@
 
             // Cargar valores de un filtro
             async function cargarValoresFiltro(etiquetaId, selectElement, soloSiCambia = false, forzarRecarga = false) {
+                if (!etiquetaId || etiquetaId === 'undefined') return;
                 const filtros = cargaInicial ? obtenerFiltrosAnterioresInicial(etiquetaId) : obtenerFiltrosAnteriores(etiquetaId);
                 const valorAplicado = filtrosAplicados[etiquetaId] || '';
                 const claveCache = generarClaveCache(etiquetaId, filtros);
