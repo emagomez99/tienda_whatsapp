@@ -475,7 +475,7 @@
 
             // Cargar opciones al hacer foco
             async function onFiltroFocus(e) {
-                const select = e.target;
+                const select = e.currentTarget;
                 if (select.dataset.cargado !== 'completo' && !select.disabled) {
                     await cargarValoresFiltro(select.dataset.etiquetaId, select, false, false);
                 }
