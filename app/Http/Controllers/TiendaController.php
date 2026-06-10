@@ -14,6 +14,17 @@ class TiendaController extends Controller
 {
     public function index(Request $request)
     {
+        // Parámetros numéricos: si vienen con valor no numérico (ej: "undefined") → 404
+        if ($request->filled('etiqueta') && !is_numeric($request->etiqueta)) {
+            abort(404);
+        }
+        if ($request->filled('proveedor') && !is_numeric($request->proveedor)) {
+            abort(404);
+        }
+        if ($request->filled('menu') && !is_numeric($request->menu)) {
+            abort(404);
+        }
+
         $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
             ->where('disponible', true);
 
@@ -39,8 +50,8 @@ class TiendaController extends Controller
         }
 
         // Filtro por etiqueta (con valor opcional)
-        if ($request->filled('etiqueta')) {
-            $etiquetaId = $request->etiqueta;
+        if ($request->filled('etiqueta') && is_numeric($request->etiqueta)) {
+            $etiquetaId = (int) $request->etiqueta;
             $etiquetaValor = $request->etiqueta_valor;
 
             $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $etiquetaValor) {
@@ -52,8 +63,8 @@ class TiendaController extends Controller
         }
 
         // Filtro por proveedor
-        if ($request->filled('proveedor')) {
-            $query->where('proveedor_id', $request->proveedor);
+        if ($request->filled('proveedor') && is_numeric($request->proveedor)) {
+            $query->where('proveedor_id', (int) $request->proveedor);
         }
 
         // Filtro por especificación (desde menú dinámico)
@@ -67,7 +78,10 @@ class TiendaController extends Controller
         // Filtros en cascada desde menú
         $menuActual = null;
         if ($request->filled('menu')) {
-            $menuActual = Menu::find($request->menu);
+            $menuActual = Menu::find((int) $request->menu);
+            if (!$menuActual) {
+                abort(404);
+            }
         }
 
         // Filtro de stock forzado por el menú
