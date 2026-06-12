@@ -28,6 +28,9 @@ class TiendaController extends Controller
         // Redirigir URLs legacy al slug si el menú ya tiene uno
         if ($request->filled('menu') && is_numeric($request->menu)) {
             $menuLegacy = Menu::find((int) $request->menu);
+            if ($menuLegacy && !$menuLegacy->activo) {
+                abort(404);
+            }
             if ($menuLegacy && $menuLegacy->slug) {
                 $queryParams = $request->except(['menu', 'etiqueta', 'etiqueta_valor', 'proveedor', 'especificacion']);
                 $slugUrl = route('tienda.catalogo', $menuLegacy->slug);
@@ -94,7 +97,7 @@ class TiendaController extends Controller
 
     public function catalogo(string $slug, Request $request)
     {
-        $menuActual = Menu::where('slug', $slug)->firstOrFail();
+        $menuActual = Menu::where('slug', $slug)->where('activo', true)->firstOrFail();
 
         $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
             ->where('disponible', true);
