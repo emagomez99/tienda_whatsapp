@@ -33,11 +33,25 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="orden" class="form-label">Orden</label>
-                            <input type="number" class="form-control @error('orden') is-invalid @enderror" id="orden" name="orden" value="{{ old('orden', 0) }}" min="0">
+                            <input type="number" class="form-control @error('orden') is-invalid @enderror" id="orden" name="orden" value="{{ old('orden', $siguienteOrdenRaiz) }}" min="0">
                             @error('orden')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="slug" class="form-label">Slug (URL pública)</label>
+                        <div class="input-group">
+                            <span class="input-group-text text-muted small">/catalogo/</span>
+                            <input type="text" class="form-control @error('slug') is-invalid @enderror"
+                                   id="slug" name="slug" value="{{ old('slug') }}"
+                                   placeholder="ej: volvo-excavadoras">
+                            @error('slug')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <small class="text-muted">Se genera automáticamente desde el nombre. Solo letras, números y guiones.</small>
                     </div>
 
                     <div class="mb-3">
@@ -291,6 +305,46 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Auto-generar slug desde nombre
+        const nombreInput = document.getElementById('nombre');
+        const slugInput   = document.getElementById('slug');
+        let slugModificado = slugInput.value !== '';
+
+        slugInput.addEventListener('input', function() {
+            slugModificado = this.value !== '';
+            // Normalizar mientras escribe directamente en el campo
+            var pos = this.selectionStart;
+            this.value = this.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            this.setSelectionRange(pos, pos);
+        });
+
+        nombreInput.addEventListener('input', function() {
+            if (slugModificado) return;
+            slugInput.value = this.value
+                .toLowerCase()
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/[^a-z0-9\s-]/g, '')
+                .trim()
+                .replace(/\s+/g, '-');
+        });
+
+        // Sugerir orden según nivel (raíz o hijo)
+        var siguienteOrdenRaiz = {{ $siguienteOrdenRaiz }};
+        var siguienteOrdenPorPadre = @json($siguienteOrdenPorPadre);
+        var ordenInput = document.getElementById('orden');
+        var parentSelect = document.getElementById('parent_id');
+
+        parentSelect.addEventListener('change', function() {
+            var parentId = this.value;
+            if (!parentId) {
+                ordenInput.value = siguienteOrdenRaiz;
+            } else {
+                ordenInput.value = siguienteOrdenPorPadre[parentId] !== undefined
+                    ? siguienteOrdenPorPadre[parentId]
+                    : 0;
+            }
+        });
+
         const tipoRadios = document.querySelectorAll('input[name="tipo_enlace"]');
         const camposTipo = document.querySelectorAll('.campos-tipo');
         const enlaceIdHidden = document.getElementById('enlace_id');

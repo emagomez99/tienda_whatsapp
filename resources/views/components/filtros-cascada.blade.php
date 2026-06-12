@@ -114,6 +114,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const menuId = {{ $menuActual->id }};
+            const menuSlug = @json($menuActual->slug ?? null);
             const filtrosAplicados = @json($filtrosAplicados ?? []);
             const selectores = document.querySelectorAll('.filtro-select');
             const ordenEtiquetas = @json($etiquetasFiltro->pluck('id')->toArray());
@@ -296,7 +297,11 @@
             // Actualizar URL con los filtros actuales
             function actualizarURL(filtros, pagina = 1, busqueda = '') {
                 const url = new URL(window.location);
-                url.searchParams.set('menu', menuId);
+
+                // En URL de slug (/catalogo/xxx) no agregamos ?menu= — ya está en el path
+                if (!menuSlug) {
+                    url.searchParams.set('menu', menuId);
+                }
 
                 // Limpiar filtros anteriores, página y búsqueda
                 ordenEtiquetas.forEach(id => {

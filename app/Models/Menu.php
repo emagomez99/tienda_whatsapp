@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class Menu extends Model
 {
@@ -12,6 +13,7 @@ class Menu extends Model
 
     protected $fillable = [
         'nombre',
+        'slug',
         'parent_id',
         'tipo_enlace',
         'enlace_id',
@@ -98,13 +100,19 @@ class Menu extends Model
      */
     public function getUrlAttribute(): string
     {
-        $params = [];
+        if ($this->tipo_enlace === self::TIPO_NINGUNO) {
+            return '#';
+        }
 
-        // Incluir menu_id si tiene filtros configurados o filtro_stock activo
+        if ($this->slug) {
+            return route('tienda.catalogo', $this->slug);
+        }
+
+        // Fallback para menús sin slug (no debería ocurrir en producción)
+        $params = [];
         if ($this->tieneFiltros() || $this->filtro_stock !== 'todos') {
             $params['menu'] = $this->id;
         }
-
         if ($this->tipo_enlace === self::TIPO_PROVEEDOR) {
             $params['proveedor'] = $this->enlace_id;
             return route('tienda.index', $params);
@@ -117,6 +125,23 @@ class Menu extends Model
             return route('tienda.index', $params);
         }
         return '#';
+    }
+
+    public static function generarSlugUnico(string $nombre, $exceptId = null): string
+    {
+        $base = Str::slug($nombre) ?: 'menu';
+        $slug = $base;
+        $i = 2;
+        while (true) {
+            $query = static::where('slug', $slug);
+            if ($exceptId) {
+                $query->where('id', '!=', $exceptId);
+            }
+            if (!$query->exists()) {
+                return $slug;
+            }
+            $slug = $base . '-' . $i++;
+        }
     }
 
     /**
@@ -243,6 +268,12 @@ class Menu extends Model
     protected static function boot()
     {
         parent::boot();
+
+        static::creating(function ($menu) {
+            if (!$menu->slug && $menu->nombre) {
+                $menu->slug = static::generarSlugUnico($menu->nombre);
+            }
+        });
 
         static::saved(function () {
             self::limpiarCache();

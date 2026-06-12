@@ -7,6 +7,7 @@ use App\Models\Etiqueta;
 use App\Models\Menu;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class MenuController extends Controller
 {
@@ -35,24 +36,45 @@ class MenuController extends Controller
         $etiquetas = Etiqueta::orderBy('nombre')->get();
         $etiquetasPorProveedor = $this->mapEtiquetasAplicables($proveedores);
 
-        return view('admin.menus.create', compact('menusParent', 'proveedores', 'etiquetas', 'etiquetasPorProveedor'));
+        $siguienteOrdenRaiz = (Menu::whereNull('parent_id')->max('orden') ?? -1) + 1;
+        $siguienteOrdenPorPadre = Menu::whereNotNull('parent_id')
+            ->selectRaw('parent_id, MAX(orden) as max_orden')
+            ->groupBy('parent_id')
+            ->pluck('max_orden', 'parent_id')
+            ->map(function ($max) { return $max + 1; });
+
+        return view('admin.menus.create', compact('menusParent', 'proveedores', 'etiquetas', 'etiquetasPorProveedor', 'siguienteOrdenRaiz', 'siguienteOrdenPorPadre'));
     }
 
     public function store(Request $request)
     {
+        // Solo lowercase — sin transliteración, para que el regex rechace chars inválidos
+        if ($request->filled('slug')) {
+            $request->merge(['slug' => strtolower(trim($request->slug))]);
+        }
+
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:menus,id',
-            'tipo_enlace' => 'required|in:ninguno,proveedor,etiqueta,especificacion',
-            'enlace_id' => 'nullable|integer',
-            'enlace_valor' => 'nullable|string|max:255',
-            'orden' => 'integer|min:0',
-            'activo' => 'boolean',
-            'filtro_stock' => 'nullable|in:todos,con_stock,con_stock_y_encargue',
-            'filtros_etiquetas' => 'nullable|array',
+            'nombre'           => 'required|string|max:255',
+            'slug'             => 'nullable|string|max:255|regex:/^[a-z0-9-]+$/|unique:menus,slug',
+            'parent_id'        => 'nullable|exists:menus,id',
+            'tipo_enlace'      => 'required|in:ninguno,proveedor,etiqueta,especificacion',
+            'enlace_id'        => 'nullable|integer',
+            'enlace_valor'     => 'nullable|string|max:255',
+            'orden'            => 'integer|min:0',
+            'activo'           => 'boolean',
+            'filtro_stock'     => 'nullable|in:todos,con_stock,con_stock_y_encargue',
+            'filtros_etiquetas'   => 'nullable|array',
             'filtros_etiquetas.*' => 'exists:etiquetas,id',
-            'filtros_requeridos' => 'nullable|boolean',
+            'filtros_requeridos'  => 'nullable|boolean',
+        ], [
+            'slug.unique' => 'Este slug ya está en uso, elegí otro.',
+            'slug.regex'  => 'El slug solo puede contener letras minúsculas, números y guiones.',
         ]);
+
+        // Si no vino slug, el boot del modelo lo genera desde nombre
+        if (empty($validated['slug'])) {
+            unset($validated['slug']);
+        }
 
         $validated['activo'] = $request->boolean('activo');
         $validated['filtro_stock'] = $request->input('filtro_stock', 'todos');
@@ -97,19 +119,33 @@ class MenuController extends Controller
 
     public function update(Request $request, Menu $menu)
     {
+        // Solo lowercase — sin transliteración, para que el regex rechace chars inválidos
+        if ($request->filled('slug')) {
+            $request->merge(['slug' => strtolower(trim($request->slug))]);
+        }
+
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:menus,id',
-            'tipo_enlace' => 'required|in:ninguno,proveedor,etiqueta,especificacion',
-            'enlace_id' => 'nullable|integer',
-            'enlace_valor' => 'nullable|string|max:255',
-            'orden' => 'integer|min:0',
-            'activo' => 'boolean',
-            'filtro_stock' => 'nullable|in:todos,con_stock,con_stock_y_encargue',
-            'filtros_etiquetas' => 'nullable|array',
+            'nombre'           => 'required|string|max:255',
+            'slug'             => 'nullable|string|max:255|regex:/^[a-z0-9-]+$/|unique:menus,slug,' . $menu->id,
+            'parent_id'        => 'nullable|exists:menus,id',
+            'tipo_enlace'      => 'required|in:ninguno,proveedor,etiqueta,especificacion',
+            'enlace_id'        => 'nullable|integer',
+            'enlace_valor'     => 'nullable|string|max:255',
+            'orden'            => 'integer|min:0',
+            'activo'           => 'boolean',
+            'filtro_stock'     => 'nullable|in:todos,con_stock,con_stock_y_encargue',
+            'filtros_etiquetas'   => 'nullable|array',
             'filtros_etiquetas.*' => 'exists:etiquetas,id',
-            'filtros_requeridos' => 'nullable|boolean',
+            'filtros_requeridos'  => 'nullable|boolean',
+        ], [
+            'slug.unique' => 'Este slug ya está en uso, elegí otro.',
+            'slug.regex'  => 'El slug solo puede contener letras minúsculas, números y guiones.',
         ]);
+
+        // Si vino vacío, mantener el slug actual
+        if (empty($validated['slug'])) {
+            $validated['slug'] = $menu->slug ?: Menu::generarSlugUnico($validated['nombre'], $menu->id);
+        }
 
         // Evitar que un menú sea su propio padre o descendiente
         if ($validated['parent_id'] == $menu->id || in_array($validated['parent_id'], $this->getDescendantIds($menu))) {

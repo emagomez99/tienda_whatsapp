@@ -28,32 +28,17 @@ class TiendaController extends Controller
         $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
             ->where('disponible', true);
 
-        // Filtro por disponibilidad de stock
-        $mostrarProductosSinStock = Configuracion::mostrarProductosSinStock();
-        if (!$mostrarProductosSinStock) {
-            $query->where(function ($q) {
-                $q->where('stock', '>', 0)
-                  ->orWhere('por_encargue', true);
-            });
-        }
+        $this->aplicarFiltroConfigStock($query);
 
         // Filtro por búsqueda
         if ($request->filled('buscar')) {
-            $buscar = $request->buscar;
-            $query->where(function ($q) use ($buscar) {
-                $q->where('descripcion', 'ilike', "%{$buscar}%")
-                  ->orWhere('id_proveedor', 'ilike', "%{$buscar}%")
-                  ->orWhereHas('etiquetas', function ($q2) use ($buscar) {
-                      $q2->where('producto_etiqueta.valor', 'ilike', "%{$buscar}%");
-                  });
-            });
+            $this->aplicarFiltroBusqueda($query, $request->buscar);
         }
 
-        // Filtro por etiqueta (con valor opcional)
+        // Filtros directos desde URL (modo legacy / sin slug)
         if ($request->filled('etiqueta') && is_numeric($request->etiqueta)) {
-            $etiquetaId = (int) $request->etiqueta;
+            $etiquetaId  = (int) $request->etiqueta;
             $etiquetaValor = $request->etiqueta_valor;
-
             $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $etiquetaValor) {
                 $q->where('etiquetas.id', $etiquetaId);
                 if ($etiquetaValor) {
@@ -62,20 +47,18 @@ class TiendaController extends Controller
             });
         }
 
-        // Filtro por proveedor
         if ($request->filled('proveedor') && is_numeric($request->proveedor)) {
             $query->where('proveedor_id', (int) $request->proveedor);
         }
 
-        // Filtro por especificación (desde menú dinámico)
         if ($request->filled('especificacion')) {
-            $especificacionValor = $request->especificacion;
-            $query->whereHas('especificaciones', function ($q) use ($especificacionValor) {
-                $q->where('valor', 'ilike', "%{$especificacionValor}%");
+            $val = $request->especificacion;
+            $query->whereHas('especificaciones', function ($q) use ($val) {
+                $q->where('valor', 'ilike', "%{$val}%");
             });
         }
 
-        // Filtros en cascada desde menú
+        // Menú (solo para filtro_stock y contexto de filtros en cascada)
         $menuActual = null;
         if ($request->filled('menu')) {
             $menuActual = Menu::find((int) $request->menu);
@@ -84,55 +67,41 @@ class TiendaController extends Controller
             }
         }
 
-        // Filtro de stock forzado por el menú
-        if ($menuActual && $menuActual->filtro_stock === 'con_stock') {
-            $query->where('stock', '>', 0);
-        } elseif ($menuActual && $menuActual->filtro_stock === 'con_stock_y_encargue') {
-            $query->where(function ($q) {
-                $q->where('stock', '>', 0)->orWhere('por_encargue', true);
-            });
+        $this->aplicarFiltroStock($query, $menuActual);
+
+        [$filtrosAplicados, $filtrosIncompletos] = $this->aplicarFiltrosCascada($request, $query, $menuActual);
+
+        $productos = $this->paginar($request, $query, $filtrosIncompletos);
+
+        $etiquetas    = Etiqueta::where('visible_usuarios', true)->orderBy('nombre')->get();
+        $mostrarPrecios = Configuracion::mostrarPrecios();
+
+        return view('tienda.index', compact('productos', 'etiquetas', 'mostrarPrecios', 'menuActual', 'filtrosAplicados', 'filtrosIncompletos'));
+    }
+
+    public function catalogo(string $slug, Request $request)
+    {
+        $menuActual = Menu::where('slug', $slug)->firstOrFail();
+
+        $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
+            ->where('disponible', true);
+
+        $this->aplicarFiltroConfigStock($query);
+
+        // Aplicar el scope base del menú (proveedor, etiqueta, especificación)
+        $this->aplicarFiltroTipoMenu($query, $menuActual);
+
+        $this->aplicarFiltroStock($query, $menuActual);
+
+        if ($request->filled('buscar')) {
+            $this->aplicarFiltroBusqueda($query, $request->buscar);
         }
 
-        // Aplicar filtros de etiquetas en cascada (f1, f2, f3, etc.)
-        $filtrosAplicados = [];
-        foreach ($request->all() as $key => $value) {
-            if (preg_match('/^f(\d+)$/', $key, $matches) && $value) {
-                $etiquetaId = (int) $matches[1];
-                $filtrosAplicados[$etiquetaId] = $value;
-                $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $value) {
-                    $q->where('etiquetas.id', $etiquetaId)
-                      ->where('producto_etiqueta.valor', $value);
-                });
-            }
-        }
+        [$filtrosAplicados, $filtrosIncompletos] = $this->aplicarFiltrosCascada($request, $query, $menuActual);
 
-        // Verificar si el menú requiere todos los filtros completos
-        $filtrosIncompletos = false;
-        if ($menuActual && $menuActual->filtros_requeridos && $menuActual->tieneFiltros()) {
-            $etiquetasFiltro = $menuActual->filtros_etiquetas ?? [];
-            foreach ($etiquetasFiltro as $etiquetaId) {
-                if (!isset($filtrosAplicados[$etiquetaId]) || empty($filtrosAplicados[$etiquetaId])) {
-                    $filtrosIncompletos = true;
-                    break;
-                }
-            }
-        }
+        $productos = $this->paginar($request, $query, $filtrosIncompletos);
 
-        // Si los filtros son requeridos y están incompletos, no mostrar productos
-        if ($filtrosIncompletos) {
-            $productos = new LengthAwarePaginator([], 0, 12, 1, [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]);
-        } else {
-            $productos = $query->orderBy('descripcion')->paginate(12);
-
-            if ($productos->currentPage() > max($productos->lastPage(), 1)) {
-                abort(404);
-            }
-        }
-
-        $etiquetas = Etiqueta::where('visible_usuarios', true)->orderBy('nombre')->get();
+        $etiquetas    = Etiqueta::where('visible_usuarios', true)->orderBy('nombre')->get();
         $mostrarPrecios = Configuracion::mostrarPrecios();
 
         return view('tienda.index', compact('productos', 'etiquetas', 'mostrarPrecios', 'menuActual', 'filtrosAplicados', 'filtrosIncompletos'));
@@ -144,39 +113,19 @@ class TiendaController extends Controller
     public function filtrosValores(Request $request)
     {
         $request->validate([
-            'menu_id'    => 'required|integer|exists:menus,id',
-            'etiqueta_id'=> 'required|integer|exists:etiquetas,id,visible_usuarios,1',
-            'filtros'    => 'nullable|array',
+            'menu_id'     => 'required|integer|exists:menus,id',
+            'etiqueta_id' => 'required|integer|exists:etiquetas,id,visible_usuarios,1',
+            'filtros'     => 'nullable|array',
         ]);
 
-        $menu = Menu::findOrFail($request->menu_id);
+        $menu      = Menu::findOrFail($request->menu_id);
         $etiquetaId = $request->etiqueta_id;
-        $filtros = $request->input('filtros', []);
+        $filtros   = $request->input('filtros', []);
 
-        // Construir query base según el tipo de menú
         $query = Producto::where('disponible', true);
+        $this->aplicarFiltroTipoMenu($query, $menu);
+        $this->aplicarFiltroStock($query, $menu);
 
-        if ($menu->tipo_enlace === Menu::TIPO_PROVEEDOR) {
-            $query->where('proveedor_id', $menu->enlace_id);
-        } elseif ($menu->tipo_enlace === Menu::TIPO_ETIQUETA) {
-            $query->whereHas('etiquetas', function ($q) use ($menu) {
-                $q->where('etiquetas.id', $menu->enlace_id);
-                if ($menu->enlace_valor) {
-                    $q->where('producto_etiqueta.valor', $menu->enlace_valor);
-                }
-            });
-        }
-
-        // Filtro de stock del menú
-        if ($menu->filtro_stock === 'con_stock') {
-            $query->where('stock', '>', 0);
-        } elseif ($menu->filtro_stock === 'con_stock_y_encargue') {
-            $query->where(function ($q) {
-                $q->where('stock', '>', 0)->orWhere('por_encargue', true);
-            });
-        }
-
-        // Aplicar filtros anteriores en la cascada
         foreach ($filtros as $filtroEtiquetaId => $filtroValor) {
             if ($filtroValor && $filtroEtiquetaId != $etiquetaId) {
                 $query->whereHas('etiquetas', function ($q) use ($filtroEtiquetaId, $filtroValor) {
@@ -186,10 +135,8 @@ class TiendaController extends Controller
             }
         }
 
-        // Obtener IDs de productos que cumplen los filtros
         $productoIds = $query->pluck('id');
 
-        // Obtener valores disponibles para la etiqueta solicitada
         $valores = DB::table('producto_etiqueta')
             ->whereIn('producto_id', $productoIds)
             ->where('etiqueta_id', $etiquetaId)
@@ -208,51 +155,23 @@ class TiendaController extends Controller
         $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
             ->where('disponible', true);
 
-        // Filtro por disponibilidad de stock
-        $mostrarProductosSinStock = Configuracion::mostrarProductosSinStock();
-        if (!$mostrarProductosSinStock) {
-            $query->where(function ($q) {
-                $q->where('stock', '>', 0)
-                  ->orWhere('por_encargue', true);
-            });
-        }
+        $this->aplicarFiltroConfigStock($query);
 
-        // Filtro por menú
         $menuActual = null;
         if ($request->filled('menu_id')) {
             $menuActual = Menu::find($request->menu_id);
-
             if ($menuActual) {
-                if ($menuActual->tipo_enlace === Menu::TIPO_PROVEEDOR) {
-                    $query->where('proveedor_id', $menuActual->enlace_id);
-                } elseif ($menuActual->tipo_enlace === Menu::TIPO_ETIQUETA) {
-                    $query->whereHas('etiquetas', function ($q) use ($menuActual) {
-                        $q->where('etiquetas.id', $menuActual->enlace_id);
-                        if ($menuActual->enlace_valor) {
-                            $q->where('producto_etiqueta.valor', $menuActual->enlace_valor);
-                        }
-                    });
-                }
-
-                // Filtro de stock del menú
-                if ($menuActual->filtro_stock === 'con_stock') {
-                    $query->where('stock', '>', 0);
-                } elseif ($menuActual->filtro_stock === 'con_stock_y_encargue') {
-                    $query->where(function ($q) {
-                        $q->where('stock', '>', 0)->orWhere('por_encargue', true);
-                    });
-                }
+                $this->aplicarFiltroTipoMenu($query, $menuActual);
+                $this->aplicarFiltroStock($query, $menuActual);
             }
         }
 
-        // Filtro por proveedor (directo)
         if ($request->filled('proveedor')) {
             $query->where('proveedor_id', $request->proveedor);
         }
 
-        // Filtro por etiqueta (directo)
         if ($request->filled('etiqueta')) {
-            $etiquetaId = $request->etiqueta;
+            $etiquetaId  = $request->etiqueta;
             $etiquetaValor = $request->etiqueta_valor;
             $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $etiquetaValor) {
                 $q->where('etiquetas.id', $etiquetaId);
@@ -262,15 +181,13 @@ class TiendaController extends Controller
             });
         }
 
-        // Filtro por especificación
         if ($request->filled('especificacion')) {
-            $especificacionValor = $request->especificacion;
-            $query->whereHas('especificaciones', function ($q) use ($especificacionValor) {
-                $q->where('valor', 'ilike', "%{$especificacionValor}%");
+            $val = $request->especificacion;
+            $query->whereHas('especificaciones', function ($q) use ($val) {
+                $q->where('valor', 'ilike', "%{$val}%");
             });
         }
 
-        // Aplicar filtros de etiquetas en cascada
         $filtros = $request->input('filtros', []);
         foreach ($filtros as $etiquetaId => $valor) {
             if ($valor) {
@@ -281,28 +198,19 @@ class TiendaController extends Controller
             }
         }
 
-        // Filtro por búsqueda (dentro de productos ya filtrados)
         if ($request->filled('buscar')) {
-            $buscar = $request->buscar;
-            $query->where(function ($q) use ($buscar) {
-                $q->where('descripcion', 'ilike', "%{$buscar}%")
-                  ->orWhere('id_proveedor', 'ilike', "%{$buscar}%")
-                  ->orWhereHas('etiquetas', function ($q2) use ($buscar) {
-                      $q2->where('producto_etiqueta.valor', 'ilike', "%{$buscar}%");
-                  });
-            });
+            $this->aplicarFiltroBusqueda($query, $request->buscar);
         }
 
         $productos = $query->orderBy('descripcion')->paginate(12);
         $mostrarPrecios = Configuracion::mostrarPrecios();
-        $menuEnSidebar = Configuracion::menuEnSidebar();
+        $menuEnSidebar  = Configuracion::menuEnSidebar();
 
-        // Retornar HTML parcial
         $html = view('tienda.partials.productos-grid', compact('productos', 'mostrarPrecios', 'menuEnSidebar'))->render();
 
         return response()->json([
-            'html' => $html,
-            'total' => $productos->total(),
+            'html'     => $html,
+            'total'    => $productos->total(),
             'hasPages' => $productos->hasPages(),
         ]);
     }
@@ -313,5 +221,103 @@ class TiendaController extends Controller
         $mostrarPrecios = Configuracion::mostrarPrecios();
 
         return view('tienda.show', compact('producto', 'mostrarPrecios'));
+    }
+
+    // ─── Helpers privados ────────────────────────────────────────────────────
+
+    private function aplicarFiltroConfigStock($query)
+    {
+        if (!Configuracion::mostrarProductosSinStock()) {
+            $query->where(function ($q) {
+                $q->where('stock', '>', 0)->orWhere('por_encargue', true);
+            });
+        }
+    }
+
+    private function aplicarFiltroTipoMenu($query, Menu $menu)
+    {
+        if ($menu->tipo_enlace === Menu::TIPO_PROVEEDOR) {
+            $query->where('proveedor_id', $menu->enlace_id);
+        } elseif ($menu->tipo_enlace === Menu::TIPO_ETIQUETA) {
+            $query->whereHas('etiquetas', function ($q) use ($menu) {
+                $q->where('etiquetas.id', $menu->enlace_id);
+                if ($menu->enlace_valor) {
+                    $q->where('producto_etiqueta.valor', $menu->enlace_valor);
+                }
+            });
+        } elseif ($menu->tipo_enlace === Menu::TIPO_ESPECIFICACION) {
+            $val = $menu->enlace_valor;
+            $query->whereHas('especificaciones', function ($q) use ($val) {
+                $q->where('valor', 'ilike', "%{$val}%");
+            });
+        }
+    }
+
+    private function aplicarFiltroStock($query, ?Menu $menu)
+    {
+        if (!$menu) return;
+        if ($menu->filtro_stock === 'con_stock') {
+            $query->where('stock', '>', 0);
+        } elseif ($menu->filtro_stock === 'con_stock_y_encargue') {
+            $query->where(function ($q) {
+                $q->where('stock', '>', 0)->orWhere('por_encargue', true);
+            });
+        }
+    }
+
+    private function aplicarFiltroBusqueda($query, string $buscar)
+    {
+        $query->where(function ($q) use ($buscar) {
+            $q->where('descripcion', 'ilike', "%{$buscar}%")
+              ->orWhere('id_proveedor', 'ilike', "%{$buscar}%")
+              ->orWhereHas('etiquetas', function ($q2) use ($buscar) {
+                  $q2->where('producto_etiqueta.valor', 'ilike', "%{$buscar}%");
+              });
+        });
+    }
+
+    private function aplicarFiltrosCascada(Request $request, $query, ?Menu $menuActual): array
+    {
+        $filtrosAplicados = [];
+        foreach ($request->all() as $key => $value) {
+            if (preg_match('/^f(\d+)$/', $key, $matches) && $value) {
+                $etiquetaId = (int) $matches[1];
+                $filtrosAplicados[$etiquetaId] = $value;
+                $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $value) {
+                    $q->where('etiquetas.id', $etiquetaId)
+                      ->where('producto_etiqueta.valor', $value);
+                });
+            }
+        }
+
+        $filtrosIncompletos = false;
+        if ($menuActual && $menuActual->filtros_requeridos && $menuActual->tieneFiltros()) {
+            foreach ($menuActual->filtros_etiquetas ?? [] as $etiquetaId) {
+                if (empty($filtrosAplicados[$etiquetaId])) {
+                    $filtrosIncompletos = true;
+                    break;
+                }
+            }
+        }
+
+        return [$filtrosAplicados, $filtrosIncompletos];
+    }
+
+    private function paginar(Request $request, $query, bool $filtrosIncompletos)
+    {
+        if ($filtrosIncompletos) {
+            return new LengthAwarePaginator([], 0, 12, 1, [
+                'path'  => $request->url(),
+                'query' => $request->query(),
+            ]);
+        }
+
+        $productos = $query->orderBy('descripcion')->paginate(12);
+
+        if ($productos->currentPage() > max($productos->lastPage(), 1)) {
+            abort(404);
+        }
+
+        return $productos;
     }
 }

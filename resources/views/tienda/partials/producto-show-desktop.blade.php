@@ -136,9 +136,9 @@
             @endif
 
             <div class="d-flex gap-2 mt-3">
-                <a href="{{ route('tienda.index') }}" class="btn btn-outline-secondary flex-grow-1" style="height:38px;display:flex;align-items:center;justify-content:center;">
+                <button type="button" onclick="history.length > 1 ? history.back() : window.location='{{ route('tienda.index') }}'" class="btn btn-outline-secondary flex-grow-1" style="height:38px;">
                     <i class="bi bi-arrow-left me-1"></i> Volver a la tienda
-                </a>
+                </button>
                 <button type="button" class="btn btn-outline-secondary btn-compartir" style="height:38px;">
                     <i class="bi bi-share me-1"></i> Compartir
                 </button>

@@ -42,6 +42,20 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="slug" class="form-label">Slug (URL pública)</label>
+                        <div class="input-group">
+                            <span class="input-group-text text-muted small">/catalogo/</span>
+                            <input type="text" class="form-control @error('slug') is-invalid @enderror"
+                                   id="slug" name="slug" value="{{ old('slug', $menu->slug) }}"
+                                   placeholder="ej: volvo-excavadoras">
+                        @error('slug')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        </div>
+                        <small class="text-muted">Solo letras, números y guiones.</small>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="parent_id" class="form-label">Menú Padre</label>
                         <select class="form-select @error('parent_id') is-invalid @enderror" id="parent_id" name="parent_id">
                             <option value="">-- Menú Principal (raíz) --</option>
@@ -310,6 +324,16 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Normalizar slug mientras escribe directamente en el campo
+        const slugInput = document.getElementById('slug');
+        if (slugInput) {
+            slugInput.addEventListener('input', function() {
+                var pos = this.selectionStart;
+                this.value = this.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                this.setSelectionRange(pos, pos);
+            });
+        }
+
         const tipoRadios = document.querySelectorAll('input[name="tipo_enlace"]');
         const camposTipo = document.querySelectorAll('.campos-tipo');
         const enlaceIdHidden = document.getElementById('enlace_id');

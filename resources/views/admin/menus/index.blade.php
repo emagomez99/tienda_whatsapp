@@ -12,10 +12,7 @@
 
 <div class="card">
     <div class="card-header bg-light">
-        <div class="d-flex justify-content-between align-items-center">
-            <span>Estructura del Menú</span>
-            <small class="text-muted">Arrastra los elementos para reordenar</small>
-        </div>
+        <span>Estructura del Menú</span>
     </div>
     <div class="card-body p-0">
         @if($menus->count() > 0)
