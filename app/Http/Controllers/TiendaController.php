@@ -25,6 +25,19 @@ class TiendaController extends Controller
             abort(404);
         }
 
+        // Redirigir URLs legacy al slug si el menú ya tiene uno
+        if ($request->filled('menu') && is_numeric($request->menu)) {
+            $menuLegacy = Menu::find((int) $request->menu);
+            if ($menuLegacy && $menuLegacy->slug) {
+                $queryParams = $request->except(['menu', 'etiqueta', 'etiqueta_valor', 'proveedor', 'especificacion']);
+                $slugUrl = route('tienda.catalogo', $menuLegacy->slug);
+                if (!empty($queryParams)) {
+                    $slugUrl .= '?' . http_build_query($queryParams);
+                }
+                return redirect($slugUrl, 301);
+            }
+        }
+
         $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
             ->where('disponible', true);
 
