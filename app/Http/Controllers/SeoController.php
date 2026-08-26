@@ -137,10 +137,10 @@ class SeoController extends Controller
             ->orderBy('id')
             ->skip($offset)
             ->take(self::PRODUCTOS_POR_PAGINA_SITEMAP)
-            ->get(['id', 'public_id', 'updated_at'])
+            ->get(['id', 'slug', 'updated_at'])
             ->map(function ($producto) {
                 return [
-                    'loc' => route('tienda.show', $producto),
+                    'loc' => $producto->url(),
                     'lastmod' => $producto->updated_at ? $producto->updated_at->toAtomString() : now()->toAtomString(),
                     'priority' => '0.6',
                 ];

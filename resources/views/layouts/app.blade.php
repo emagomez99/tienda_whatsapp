@@ -10,6 +10,7 @@
             'description' => trim($__env->yieldContent('meta_description')),
             'image'       => trim($__env->yieldContent('meta_image')),
             'type'        => trim($__env->yieldContent('meta_type')),
+            'canonical'   => trim($__env->yieldContent('meta_canonical')),
         ]);
     @endphp
     <title>{{ $seo->title }}</title>

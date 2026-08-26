@@ -26,7 +26,21 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
     // Rutas públicas de la tienda
     Route::get('/', [TiendaController::class, 'index'])->name('tienda.index');
     Route::get('/catalogo/{slug}', [TiendaController::class, 'catalogo'])->name('tienda.catalogo');
-    Route::get('/producto/{producto}', [TiendaController::class, 'show'])->name('tienda.show')->middleware('throttle:180,3');
+    // El id va en su propio segmento (no pegado al slug con guión) para que no haya
+    // ambigüedad cuando el slug termina en número -- ej. /producto/jcb-991-00131/17080.
+    // Ver Producto::url() y TiendaController::show().
+    Route::get('/producto/{slug}/{producto}', [TiendaController::class, 'show'])
+        ->name('tienda.show')
+        ->where('producto', '[0-9]+')
+        ->middleware('throttle:180,3');
+
+    // Forma corta /producto/{id}: redirige a la canónica. Sólo matchea dígitos, así
+    // que NO es ambigua -- /producto/jcb-991-00131 (un slug suelto) cae en 404, que
+    // es justamente lo que buscamos.
+    Route::get('/producto/{producto}', [TiendaController::class, 'showPorId'])
+        ->name('tienda.show.id')
+        ->where('producto', '[0-9]+')
+        ->middleware('throttle:180,3');
     Route::get('/filtros/valores', [TiendaController::class, 'filtrosValores'])->name('tienda.filtros.valores');
     Route::get('/productos/ajax', [TiendaController::class, 'productosAjax'])->name('tienda.productos.ajax');
     Route::get('/sitemap.xml', [SeoController::class, 'sitemapIndex'])->name('tienda.sitemap');
@@ -58,6 +72,7 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/productos/buscar', [ProductoController::class, 'buscarParaPedido'])->name('productos.buscar');
+        Route::get('/productos/preview-slug', [ProductoController::class, 'previewSlug'])->name('productos.preview-slug');
         Route::get('/especificaciones/claves', [ProductoController::class, 'buscarEspecificacionClaves'])->name('especificaciones.claves');
         Route::get('/especificaciones/valores', [ProductoController::class, 'buscarEspecificacionValores'])->name('especificaciones.valores');
         Route::get('/productos/{producto}/historial', [ProductoController::class, 'historial'])->name('productos.historial');

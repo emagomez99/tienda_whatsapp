@@ -19,6 +19,9 @@ class Producto extends Model
             if (empty($modelo->public_id)) {
                 $modelo->public_id = Str::uuid()->toString();
             }
+            if (empty($modelo->slug)) {
+                $modelo->slug = static::generarSlug($modelo->descripcion);
+            }
         });
     }
 
@@ -27,6 +30,7 @@ class Producto extends Model
         'proveedor_id',
         'id_proveedor',
         'descripcion',
+        'slug',
         'detalle',
         'meta_title',
         'meta_description',
@@ -245,16 +249,78 @@ class Producto extends Model
         return $query;
     }
 
+    // ─── URL pública: /producto/{slug}/{id} ──────────────────────────────────
+    //
+    // El id identifica al producto; el slug que lo precede es decorativo (mismo
+    // esquema que MercadoLibre o Amazon). Gracias a eso el slug no necesita ser
+    // único ni estable: se puede editar la descripción las veces que haga falta y
+    // ninguna URL publicada deja de resolver -- si el slug no es el actual,
+    // TiendaController::show() responde 301 hacia la forma canónica.
+    //
+    // El id va en un SEGMENTO PROPIO y no pegado con guión. Con la forma vieja
+    // (/producto/{slug}-{id}) había que adivinar por regex dónde terminaba el slug
+    // y empezaba el id, y con slugs que terminan en número la adivinanza fallaba:
+    // /producto/jcb-991-00131 servía el id 131 -- un producto distinto -- en lugar
+    // de un 404. Afectaba a 1.651 productos del catálogo de oleomc.
+
+    /** Slug usado en la URL cuando el producto no tiene uno propio. */
+    const SLUG_POR_DEFECTO = 'producto';
+
+    /**
+     * Slug decorativo a partir de la descripción. Puede repetirse entre productos.
+     * Devuelve null si la descripción no deja nada slugificable (ej. "!!!").
+     */
+    public static function generarSlug($descripcion)
+    {
+        // rtrim: Str::limit puede cortar sobre un guión y dejarlo colgando.
+        $slug = rtrim(Str::limit(Str::slug((string) $descripcion), 100, ''), '-');
+
+        if ($slug === '') {
+            return null;
+        }
+
+        // Un slug de puros dígitos (descripción "12345") sería indistinguible de un id
+        // en la ruta corta /producto/{id}, y volvería a abrir la ambigüedad que este
+        // esquema elimina: pedir el slug suelto serviría el producto con ese id.
+        if (ctype_digit($slug)) {
+            $slug = self::SLUG_POR_DEFECTO . '-' . $slug;
+        }
+
+        return $slug;
+    }
+
+    /** Slug tal como aparece en la URL (nunca vacío, para no dejar un segmento hueco). */
+    public function slugUrl()
+    {
+        return $this->slug ? $this->slug : self::SLUG_POR_DEFECTO;
+    }
+
+    /**
+     * URL pública canónica. Único lugar donde se arma, para que los call sites no
+     * tengan que saber que la ruta lleva dos parámetros.
+     */
+    public function url()
+    {
+        return route('tienda.show', [$this->slugUrl(), $this->id]);
+    }
+
+    /**
+     * El id es la route key en todas las rutas que reciben un {producto}
+     * (carrito, admin): son internas y no necesitan el slug decorativo.
+     */
     public function getRouteKeyName()
     {
-        return 'public_id';
+        return 'id';
     }
 
     public function resolveRouteBinding($value, $field = null)
     {
-        if (!Str::isUuid($value)) {
+        // Guarda: sin esto, un valor no numérico llega como texto a una columna
+        // integer de Postgres y revienta con un 500 en vez de un 404.
+        if (!ctype_digit((string) $value)) {
             abort(404);
         }
-        return $this->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
+
+        return $this->where('id', (int) $value)->firstOrFail();
     }
 }

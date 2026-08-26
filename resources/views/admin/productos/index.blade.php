@@ -118,7 +118,7 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="{{ route('tienda.show', $producto) }}" class="btn btn-sm btn-outline-secondary" title="Ver en tienda" target="_blank">
+                                        <a href="{{ $producto->url() }}" class="btn btn-sm btn-outline-secondary" title="Ver en tienda" target="_blank">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         <a href="{{ route('admin.productos.historial', $producto) }}" class="btn btn-sm btn-outline-secondary" title="Historial de movimientos">

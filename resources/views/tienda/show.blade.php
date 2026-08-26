@@ -4,6 +4,8 @@
 @section('meta_description', $producto->meta_description)
 @section('meta_image', $producto->imagen_url ?: App\Services\SeoService::imagenPorDefecto())
 @section('meta_type', 'product')
+{{-- Canónica explícita: se puede llegar acá con cualquier slug (resuelve por el id). --}}
+@section('meta_canonical', $producto->url())
 
 @php $maxStock = $producto->estaDisponible() ? $producto->stockMaximo() : null; @endphp
 
@@ -11,7 +13,7 @@
 <script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::productSchema($producto)) !!}</script>
 <script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::breadcrumbSchema([
     ['name' => 'Inicio', 'url' => route('tienda.index')],
-    ['name' => $producto->descripcion, 'url' => url()->current()],
+    ['name' => $producto->descripcion, 'url' => $producto->url()],
 ])) !!}</script>
 @endpush
 

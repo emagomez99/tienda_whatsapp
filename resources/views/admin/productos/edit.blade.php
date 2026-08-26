@@ -37,6 +37,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    @include('admin.productos.partials.slug-field')
                     <div class="mb-3">
                         <label class="form-label">Descripción detallada</label>
                         <div id="detalle-editor" class="@error('detalle') is-invalid @enderror"></div>
@@ -604,6 +605,7 @@
 
 @push('scripts')
 <script src="{{ asset('vendor/quill/quill.min.js') }}"></script>
+@include('admin.productos.partials.slug-script')
 <script>
     var quill = new Quill('#detalle-editor', {
         theme: 'snow',

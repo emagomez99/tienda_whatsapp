@@ -17,7 +17,7 @@ class SeoService
     /**
      * Resuelve los meta tags para el <head> de una página.
      *
-     * @param array $overrides Claves opcionales: title, description, keywords, image, type, noindex
+     * @param array $overrides Claves opcionales: title, description, keywords, image, type, noindex, canonical
      */
     public static function metaTags(array $overrides = [])
     {
@@ -43,7 +43,15 @@ class SeoService
         $type = isset($overrides['type']) && $overrides['type'] ? $overrides['type'] : 'website';
         $noindex = isset($overrides['noindex']) ? (bool) $overrides['noindex'] : !Configuracion::robotsIndex();
 
-        return new SeoMeta($title, $description, $keywords, $image, $type, $noindex, url()->current());
+        // La página puede declarar su URL canónica explícita (ver tienda/show.blade.php).
+        // Sin eso se cae a la URL pedida, que sólo es canónica si nadie puede llegar a
+        // esta página por otra dirección.
+        $canonical = isset($overrides['canonical']) ? trim((string) $overrides['canonical']) : '';
+        if ($canonical === '') {
+            $canonical = url()->current();
+        }
+
+        return new SeoMeta($title, $description, $keywords, $image, $type, $noindex, $canonical);
     }
 
     public static function imagenPorDefecto()
@@ -149,7 +157,9 @@ class SeoService
         if (Configuracion::mostrarPrecios() && (float) $producto->precio > 0) {
             $schema['offers'] = [
                 '@type' => 'Offer',
-                'url' => url()->current(),
+                // URL canónica del producto, no la pedida: /producto/{slug}-{id} resuelve
+                // por el id, así que se puede llegar acá con cualquier slug.
+                'url' => $producto->url(),
                 'priceCurrency' => $producto->moneda ? $producto->moneda->codigo : 'ARS',
                 'price' => number_format((float) $producto->precio, 2, '.', ''),
                 'availability' => $producto->estaDisponible()

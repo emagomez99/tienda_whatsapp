@@ -225,8 +225,35 @@ class TiendaController extends Controller
         ]);
     }
 
-    public function show(Producto $producto)
+    /**
+     * Forma corta /producto/{id}: siempre 301 a la canónica con slug.
+     */
+    public function showPorId(Producto $producto)
     {
+        return $this->redirigirACanonica($producto);
+    }
+
+    private function redirigirACanonica(Producto $producto)
+    {
+        $url = $producto->url();
+
+        // Preservar la query string o se pierde la atribución de campañas (utm_*).
+        if ($qs = request()->getQueryString()) {
+            $url .= '?' . $qs;
+        }
+
+        return redirect($url, 301);
+    }
+
+    public function show($slug, Producto $producto)
+    {
+        // La URL resuelve por el id, así que el slug del primer segmento puede venir
+        // viejo o directamente inventado. Si no es el canónico, 301 -- mismo criterio
+        // que el redirect de menús legacy en index().
+        if ($slug !== $producto->slugUrl()) {
+            return $this->redirigirACanonica($producto);
+        }
+
         $producto->load(['proveedor', 'etiquetas', 'especificaciones', 'moneda', 'imagenes']);
         $mostrarPrecios = Configuracion::mostrarPrecios();
 

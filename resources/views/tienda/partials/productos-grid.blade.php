@@ -10,7 +10,7 @@
                 <div class="card h-100 producto-card">
 
                     {{-- Imagen --}}
-                    <a href="{{ route('tienda.show', $producto) }}" class="producto-img-wrap position-relative d-block" style="height:220px;">
+                    <a href="{{ $producto->url() }}" class="producto-img-wrap position-relative d-block" style="height:220px;">
                         <img src="{{ $producto->imagen_url ?? '/img/no-image.svg' }}"
                              class="card-img-top"
                              alt="{{ $producto->descripcion }}"
@@ -35,7 +35,7 @@
                     {{-- Cuerpo --}}
                     <div class="card-body d-flex flex-column px-3 pt-3 pb-2">
                         <h6 class="producto-nombre mb-2">
-                            <a href="{{ route('tienda.show', $producto) }}" class="text-decoration-none text-dark">
+                            <a href="{{ $producto->url() }}" class="text-decoration-none text-dark">
                                 {{ $producto->descripcion }}
                             </a>
                         </h6>

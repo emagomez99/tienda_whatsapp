@@ -80,10 +80,16 @@ class ProductoController extends Controller
 
     public function store(Request $request)
     {
+        // Solo lowercase -- sin transliteración, para que el regex rechace chars inválidos
+        if ($request->filled('slug')) {
+            $request->merge(['slug' => strtolower(trim($request->slug))]);
+        }
+
         $validated = $request->validate([
             'proveedor_id' => 'required|exists:proveedores,id',
             'id_proveedor' => 'nullable|string|max:255',
             'descripcion' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:100|regex:/^[a-z0-9-]+$/',
             'detalle' => 'nullable|string',
             'meta_title' => 'nullable|string|max:60',
             'meta_description' => 'nullable|string|max:160',
@@ -104,7 +110,16 @@ class ProductoController extends Controller
             'especificaciones' => 'nullable|array',
             'especificaciones.*.clave' => 'nullable|string|max:255',
             'especificaciones.*.valor' => 'nullable|string|max:255',
+        ], [
+            'slug.regex' => 'La dirección web solo puede tener letras minúsculas, números y guiones.',
         ]);
+
+        // Switch "Generar automáticamente" prendido (o ausente, ej. una API externa):
+        // ignoramos cualquier slug que haya llegado y dejamos que el boot() del modelo
+        // lo arme solo a partir de la descripción.
+        if ($request->boolean('autogenerar_slug', true)) {
+            unset($validated['slug']);
+        }
 
         $validated['disponible'] = $request->boolean('disponible');
         $validated['por_encargue'] = $request->boolean('por_encargue');
@@ -211,10 +226,16 @@ class ProductoController extends Controller
 
     public function update(Request $request, Producto $producto)
     {
+        // Solo lowercase -- sin transliteración, para que el regex rechace chars inválidos
+        if ($request->filled('slug')) {
+            $request->merge(['slug' => strtolower(trim($request->slug))]);
+        }
+
         $validated = $request->validate([
             'proveedor_id'         => 'required|exists:proveedores,id',
             'id_proveedor'         => 'nullable|string|max:255',
             'descripcion'          => 'required|string|max:255',
+            'slug'                 => 'nullable|string|max:100|regex:/^[a-z0-9-]+$/',
             'detalle'              => 'nullable|string',
             'meta_title'           => 'nullable|string|max:60',
             'meta_description'     => 'nullable|string|max:160',
@@ -239,7 +260,17 @@ class ProductoController extends Controller
             'especificaciones'     => 'nullable|array',
             'especificaciones.*.clave' => 'nullable|string|max:255',
             'especificaciones.*.valor' => 'nullable|string|max:255',
+        ], [
+            'slug.regex' => 'La dirección web solo puede tener letras minúsculas, números y guiones.',
         ]);
+
+        // Cambiar el slug es seguro: la URL resuelve por id, así que las direcciones
+        // ya publicadas siguen funcionando (redirigen 301 a la nueva).
+        if ($request->boolean('autogenerar_slug')) {
+            $validated['slug'] = Producto::generarSlug($validated['descripcion']);
+        } elseif (empty($validated['slug'])) {
+            $validated['slug'] = $producto->slug ?: Producto::generarSlug($validated['descripcion']);
+        }
 
         $validated['disponible']   = $request->boolean('disponible');
         $validated['por_encargue'] = $request->boolean('por_encargue');
@@ -476,6 +507,20 @@ class ProductoController extends Controller
 
         return redirect($destino)
             ->with('success', 'Stock ajustado correctamente. Stock actual: ' . $producto->stock);
+    }
+
+    /**
+     * Vista previa de la dirección web a partir del nombre del producto.
+     *
+     * Existe para que el formulario no tenga que reimplementar Str::slug() en JS:
+     * una transliteración propia diverge de la de PHP en los símbolos poco comunes
+     * (Ø, €, …) y terminaría mostrando una dirección distinta de la que se guarda.
+     */
+    public function previewSlug(Request $request)
+    {
+        return response()->json([
+            'slug' => Producto::generarSlug($request->get('descripcion', '')),
+        ]);
     }
 
     public function buscarEspecificacionClaves(Request $request)
