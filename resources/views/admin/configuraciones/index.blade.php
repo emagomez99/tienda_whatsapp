@@ -399,10 +399,7 @@
                         <div class="col-12">
                             <label class="form-label fw-semibold mb-0">Ubicación (SEO local)</label>
                             <p class="text-muted small mb-2">
-                                Ayuda a que Google asocie la tienda con su ubicación. <strong>Ciudad, Provincia y
-                                Código Postal</strong> completalos siempre que actives esta opción, tengas o no local
-                                físico. Solo <strong>Dirección</strong> (la calle) le dice a Google que hay un local
-                                visitable por el público — dejala vacía si operás online o desde un depósito.
+                                Ayuda a que Google asocie la tienda con su ciudad, la tengas visitable o no.
                             </p>
                         </div>
                         <div class="col-12">
@@ -425,7 +422,9 @@
                             </div>
                             <small class="text-muted">Si elegís "No", los campos de abajo se guardan pero no se usan en el SEO.</small>
                         </div>
-                        <div class="col-md-6">
+
+                        {{-- Grupo 1: siempre se pueden completar, tengas o no local físico --}}
+                        <div class="col-md-5">
                             <label for="ciudad" class="form-label">Ciudad <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('ciudad') is-invalid @enderror"
                                    id="ciudad" name="ciudad" placeholder="Bahía Blanca"
@@ -434,7 +433,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="provincia" class="form-label">Provincia</label>
                             <input type="text" class="form-control @error('provincia') is-invalid @enderror"
                                    id="provincia" name="provincia" placeholder="Buenos Aires"
@@ -443,23 +442,31 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-8">
-                            <label for="direccion" class="form-label">Dirección <span class="text-muted fw-normal">(solo si hay local visitable)</span></label>
+                        <div class="col-md-3">
+                            <label for="codigo_postal" class="form-label">Código postal</label>
+                            <input type="text" class="form-control @error('codigo_postal') is-invalid @enderror"
+                                   id="codigo_postal" name="codigo_postal" placeholder="B8000"
+                                   value="{{ old('codigo_postal', App\Models\Configuracion::codigoPostal()) }}">
+                            @error('codigo_postal')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- Grupo 2: solo si hay un local donde atender público --}}
+                        <div class="col-12 mt-2">
+                            <label class="form-label small fw-semibold text-uppercase text-muted mb-1">
+                                <i class="bi bi-shop"></i> Local físico <span class="fw-normal text-lowercase">(opcional)</span>
+                            </label>
+                        </div>
+                        <div class="col-12">
+                            <label for="direccion" class="form-label">Dirección</label>
                             <input type="text" class="form-control @error('direccion') is-invalid @enderror"
                                    id="direccion" name="direccion" placeholder="Ej: Alsina 250"
                                    value="{{ old('direccion', App\Models\Configuracion::direccion()) }}">
                             @error('direccion')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                        </div>
-                        <div class="col-md-4">
-                            <label for="codigo_postal" class="form-label">Código postal</label>
-                            <input type="text" class="form-control @error('codigo_postal') is-invalid @enderror"
-                                   id="codigo_postal" name="codigo_postal"
-                                   value="{{ old('codigo_postal', App\Models\Configuracion::codigoPostal()) }}">
-                            @error('codigo_postal')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <small class="text-muted">Completala solo si un cliente puede venir a comprar o retirar acá. Si vendés solo online o despachás desde un depósito, dejala vacía.</small>
                         </div>
                         <div class="col-12"><hr></div>
                         <div class="col-12">
