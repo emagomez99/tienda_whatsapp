@@ -14,6 +14,8 @@ class Menu extends Model
     protected $fillable = [
         'nombre',
         'slug',
+        'meta_title',
+        'meta_description',
         'parent_id',
         'tipo_enlace',
         'enlace_id',
@@ -125,6 +127,14 @@ class Menu extends Model
             return route('tienda.index', $params);
         }
         return '#';
+    }
+
+    /**
+     * Meta title SEO. Si no se cargó uno específico, usa el nombre del menú.
+     */
+    public function getMetaTitleAttribute($value)
+    {
+        return $value ?: $this->nombre;
     }
 
     public static function generarSlugUnico(string $nombre, $exceptId = null): string

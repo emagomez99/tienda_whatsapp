@@ -54,6 +54,28 @@
                         <small class="text-muted">Se genera automáticamente desde el nombre. Solo letras, números y guiones.</small>
                     </div>
 
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="meta_title" class="form-label">Meta title
+                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                   title="Si lo dejás vacío, se usa el nombre del menú."></i>
+                            </label>
+                            <input type="text" class="form-control @error('meta_title') is-invalid @enderror" id="meta_title" name="meta_title" maxlength="60" value="{{ old('meta_title') }}">
+                            @error('meta_title')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted contador-caracteres" data-max="60">0/60</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="meta_description" class="form-label">Meta description</label>
+                            <textarea class="form-control @error('meta_description') is-invalid @enderror" id="meta_description" name="meta_description" rows="1" maxlength="160">{{ old('meta_description') }}</textarea>
+                            @error('meta_description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted contador-caracteres" data-max="160">0/160</small>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label for="parent_id" class="form-label">Menú Padre</label>
                         <select class="form-select @error('parent_id') is-invalid @enderror" id="parent_id" name="parent_id">
@@ -642,6 +664,23 @@
             radio.addEventListener('change', reconstruirDisponibles);
         });
         reconstruirDisponibles();
+
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+            new bootstrap.Tooltip(el, { trigger: 'hover focus' });
+        });
+
+        // Contador de caracteres para los campos de SEO
+        document.querySelectorAll('.contador-caracteres').forEach(function (contador) {
+            var campo = contador.parentElement.querySelector('input, textarea');
+            if (!campo) return;
+            var max = contador.dataset.max;
+            function actualizarContador() {
+                contador.textContent = campo.value.length + '/' + max;
+                contador.classList.toggle('text-danger', campo.value.length > max);
+            }
+            campo.addEventListener('input', actualizarContador);
+            actualizarContador();
+        });
     });
 </script>
 @endpush

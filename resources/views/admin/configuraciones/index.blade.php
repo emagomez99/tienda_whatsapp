@@ -341,6 +341,154 @@
         <div class="col-12 mb-4">
             <div class="card">
                 <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-search"></i> SEO</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Valores por defecto que se usan cuando una página, producto o menú no tiene su propio
+                        título/descripción SEO cargado.
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="seo_titulo_default" class="form-label">Meta title por defecto</label>
+                            <input type="text" class="form-control @error('seo_titulo_default') is-invalid @enderror"
+                                   id="seo_titulo_default" name="seo_titulo_default" maxlength="60"
+                                   value="{{ old('seo_titulo_default', App\Models\Configuracion::seoTituloDefault()) }}">
+                            @error('seo_titulo_default')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted contador-caracteres" data-max="60">0/60</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="seo_keywords" class="form-label">Palabras clave (separadas por coma)</label>
+                            <input type="text" class="form-control @error('seo_keywords') is-invalid @enderror"
+                                   id="seo_keywords" name="seo_keywords"
+                                   value="{{ old('seo_keywords', App\Models\Configuracion::seoKeywords()) }}">
+                            @error('seo_keywords')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12">
+                            <label for="seo_descripcion_default" class="form-label">Meta description por defecto</label>
+                            <textarea class="form-control @error('seo_descripcion_default') is-invalid @enderror"
+                                      id="seo_descripcion_default" name="seo_descripcion_default" rows="2" maxlength="160">{{ old('seo_descripcion_default', App\Models\Configuracion::seoDescripcionDefault()) }}</textarea>
+                            @error('seo_descripcion_default')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted contador-caracteres" data-max="160">0/160</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="google_analytics_id" class="form-label">Google Analytics (GA4)</label>
+                            <input type="text" class="form-control @error('google_analytics_id') is-invalid @enderror"
+                                   id="google_analytics_id" name="google_analytics_id" placeholder="G-XXXXXXXXXX"
+                                   value="{{ old('google_analytics_id', App\Models\Configuracion::googleAnalyticsId()) }}">
+                            @error('google_analytics_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="google_site_verification" class="form-label">Google Search Console (código de verificación)</label>
+                            <input type="text" class="form-control @error('google_site_verification') is-invalid @enderror"
+                                   id="google_site_verification" name="google_site_verification"
+                                   value="{{ old('google_site_verification', App\Models\Configuracion::googleSiteVerification()) }}">
+                            @error('google_site_verification')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12"><hr></div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold mb-0">Ubicación (SEO local)</label>
+                            <p class="text-muted small mb-2">
+                                Ayuda a que Google asocie la tienda con la ciudad. Si además cargás la calle,
+                                se interpreta como un local visitable por el público; si dejás la calle vacía,
+                                solo indica que la tienda está radicada/opera desde esa ciudad.
+                            </p>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">¿Declarar ubicación de la tienda?</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="ubicacion_activa" id="ubicacion_si" value="true"
+                                           {{ old('ubicacion_activa', App\Models\Configuracion::ubicacionActiva() ? 'true' : 'false') === 'true' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="ubicacion_si">
+                                        <i class="bi bi-check-circle text-success"></i> Sí
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="ubicacion_activa" id="ubicacion_no" value="false"
+                                           {{ old('ubicacion_activa', App\Models\Configuracion::ubicacionActiva() ? 'true' : 'false') === 'false' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="ubicacion_no">
+                                        <i class="bi bi-x-circle text-danger"></i> No
+                                    </label>
+                                </div>
+                            </div>
+                            <small class="text-muted">Si elegís "No", los campos de abajo se guardan pero no se usan en el SEO.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ciudad" class="form-label">Ciudad <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control @error('ciudad') is-invalid @enderror"
+                                   id="ciudad" name="ciudad" placeholder="Bahía Blanca"
+                                   value="{{ old('ciudad', App\Models\Configuracion::ciudad()) }}">
+                            @error('ciudad')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="provincia" class="form-label">Provincia</label>
+                            <input type="text" class="form-control @error('provincia') is-invalid @enderror"
+                                   id="provincia" name="provincia" placeholder="Buenos Aires"
+                                   value="{{ old('provincia', App\Models\Configuracion::provincia()) }}">
+                            @error('provincia')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-8">
+                            <label for="direccion" class="form-label">Dirección <span class="text-muted fw-normal">(solo si hay local visitable)</span></label>
+                            <input type="text" class="form-control @error('direccion') is-invalid @enderror"
+                                   id="direccion" name="direccion" placeholder="Ej: Alsina 250"
+                                   value="{{ old('direccion', App\Models\Configuracion::direccion()) }}">
+                            @error('direccion')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-4">
+                            <label for="codigo_postal" class="form-label">Código postal</label>
+                            <input type="text" class="form-control @error('codigo_postal') is-invalid @enderror"
+                                   id="codigo_postal" name="codigo_postal"
+                                   value="{{ old('codigo_postal', App\Models\Configuracion::codigoPostal()) }}">
+                            @error('codigo_postal')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12"><hr></div>
+                        <div class="col-12">
+                            <label class="form-label">Permitir que los buscadores indexen la tienda</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="robots_index" id="robots_si" value="true" {{ old('robots_index', App\Models\Configuracion::robotsIndex() ? 'true' : 'false') === 'true' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="robots_si">
+                                        <i class="bi bi-check-circle text-success"></i> Sí
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="robots_index" id="robots_no" value="false" {{ old('robots_index', App\Models\Configuracion::robotsIndex() ? 'true' : 'false') === 'false' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="robots_no">
+                                        <i class="bi bi-x-circle text-danger"></i> No
+                                    </label>
+                                </div>
+                            </div>
+                            <small class="text-muted">Desactivalo mientras armás la tienda para evitar que Google la indexe antes de tiempo.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
                     <h5 class="mb-0"><i class="bi bi-whatsapp text-success"></i> Template de Mensaje WhatsApp</h5>
                 </div>
                 <div class="card-body">
@@ -558,6 +706,19 @@
 <script>
 document.getElementById('btn-reset-template').addEventListener('click', function () {
     document.getElementById('template_whatsapp').value = @json(App\Models\Configuracion::templateWhatsappDefault());
+});
+
+// Contador de caracteres para los campos de SEO
+document.querySelectorAll('.contador-caracteres').forEach(function (contador) {
+    var campo = contador.parentElement.querySelector('input, textarea');
+    if (!campo) return;
+    var max = contador.dataset.max;
+    function actualizar() {
+        contador.textContent = campo.value.length + '/' + max;
+        contador.classList.toggle('text-danger', campo.value.length > max);
+    }
+    campo.addEventListener('input', actualizar);
+    actualizar();
 });
 </script>
 @endpush

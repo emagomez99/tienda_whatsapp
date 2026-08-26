@@ -56,6 +56,8 @@ class MenuController extends Controller
         $validated = $request->validate([
             'nombre'           => 'required|string|max:255',
             'slug'             => 'nullable|string|max:255|regex:/^[a-z0-9-]+$/|unique:menus,slug',
+            'meta_title'       => 'nullable|string|max:60',
+            'meta_description' => 'nullable|string|max:160',
             'parent_id'        => 'nullable|exists:menus,id',
             'tipo_enlace'      => 'required|in:ninguno,proveedor,etiqueta,especificacion',
             'enlace_id'        => 'nullable|integer',
@@ -127,6 +129,8 @@ class MenuController extends Controller
         $validated = $request->validate([
             'nombre'           => 'required|string|max:255',
             'slug'             => 'nullable|string|max:255|regex:/^[a-z0-9-]+$/|unique:menus,slug,' . $menu->id,
+            'meta_title'       => 'nullable|string|max:60',
+            'meta_description' => 'nullable|string|max:160',
             'parent_id'        => 'nullable|exists:menus,id',
             'tipo_enlace'      => 'required|in:ninguno,proveedor,etiqueta,especificacion',
             'enlace_id'        => 'nullable|integer',

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CarritoController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\TiendaController;
 use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -28,6 +29,12 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
     Route::get('/producto/{producto}', [TiendaController::class, 'show'])->name('tienda.show')->middleware('throttle:180,3');
     Route::get('/filtros/valores', [TiendaController::class, 'filtrosValores'])->name('tienda.filtros.valores');
     Route::get('/productos/ajax', [TiendaController::class, 'productosAjax'])->name('tienda.productos.ajax');
+    Route::get('/sitemap.xml', [SeoController::class, 'sitemapIndex'])->name('tienda.sitemap');
+    Route::get('/sitemap-paginas.xml', [SeoController::class, 'sitemapPaginas'])->name('tienda.sitemap.paginas');
+    Route::get('/sitemap-productos-{pagina}.xml', [SeoController::class, 'sitemapProductos'])
+        ->where('pagina', '[0-9]+')
+        ->name('tienda.sitemap.productos');
+    Route::get('/robots.txt', [SeoController::class, 'robots'])->name('tienda.robots');
 
     // Rutas del carrito
     Route::prefix('carrito')->name('carrito.')->group(function () {

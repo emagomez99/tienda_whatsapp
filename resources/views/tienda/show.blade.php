@@ -1,26 +1,18 @@
 @extends('layouts.app')
 
-@section('title', $producto->descripcion)
+@section('title', $producto->meta_title)
+@section('meta_description', $producto->meta_description)
+@section('meta_image', $producto->imagen_url ?: App\Services\SeoService::imagenPorDefecto())
+@section('meta_type', 'product')
 
 @php $maxStock = $producto->estaDisponible() ? $producto->stockMaximo() : null; @endphp
 
-@push('meta')
-@php
-    $ogUrl   = url()->current();
-    $ogTitle = $producto->descripcion;
-    $ogDesc  = $producto->id_proveedor ? 'Código: ' . $producto->id_proveedor : $producto->descripcion;
-    $ogImage = $producto->imagen_url ?? url('/img/no-image.svg');
-@endphp
-<meta property="og:type"        content="product">
-<meta property="og:url"         content="{{ $ogUrl }}">
-<meta property="og:title"       content="{{ $ogTitle }}">
-<meta property="og:description" content="{{ $ogDesc }}">
-<meta property="og:image"       content="{{ $ogImage }}">
-<meta property="og:image:width" content="600">
-<meta property="og:image:height" content="600">
-<meta name="twitter:card"       content="summary_large_image">
-<meta name="twitter:title"      content="{{ $ogTitle }}">
-<meta name="twitter:image"      content="{{ $ogImage }}">
+@push('schema')
+<script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::productSchema($producto)) !!}</script>
+<script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::breadcrumbSchema([
+    ['name' => 'Inicio', 'url' => route('tienda.index')],
+    ['name' => $producto->descripcion, 'url' => url()->current()],
+])) !!}</script>
 @endpush
 
 @section('content')

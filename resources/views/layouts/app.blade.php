@@ -4,8 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', config('app.name', 'Tienda MC'))</title>
+    @php
+        $seo = App\Services\SeoService::metaTags([
+            'title'       => trim($__env->yieldContent('title')),
+            'description' => trim($__env->yieldContent('meta_description')),
+            'image'       => trim($__env->yieldContent('meta_image')),
+            'type'        => trim($__env->yieldContent('meta_type')),
+        ]);
+    @endphp
+    <title>{{ $seo->title }}</title>
+    <meta name="description" content="{{ $seo->description }}">
+    @if($seo->tieneKeywords())
+        <meta name="keywords" content="{{ $seo->keywords }}">
+    @endif
+    <meta name="robots" content="{{ $seo->robotsContent() }}">
+    <link rel="canonical" href="{{ $seo->url }}">
+
+    <meta property="og:type" content="{{ $seo->type }}">
+    <meta property="og:url" content="{{ $seo->url }}">
+    <meta property="og:title" content="{{ $seo->title }}">
+    <meta property="og:description" content="{{ $seo->description }}">
+    <meta property="og:image" content="{{ $seo->image }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $seo->title }}">
+    <meta name="twitter:description" content="{{ $seo->description }}">
+    <meta name="twitter:image" content="{{ $seo->image }}">
+
+    @php $googleSiteVerification = App\Models\Configuracion::googleSiteVerification(); @endphp
+    @if($googleSiteVerification)
+        <meta name="google-site-verification" content="{{ $googleSiteVerification }}">
+    @endif
+
+    <script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::organizationSchema()) !!}</script>
+    @stack('schema')
+
     @stack('meta')
+
+    @php $googleAnalyticsId = App\Models\Configuracion::googleAnalyticsId(); @endphp
+    @if($googleAnalyticsId)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $googleAnalyticsId }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ $googleAnalyticsId }}');
+        </script>
+    @endif
+
     @php $favicon = App\Models\Configuracion::favicon(); @endphp
     @if($favicon)
         <link rel="icon" href="{{ url('storage/' . $favicon) }}" type="image/x-icon">

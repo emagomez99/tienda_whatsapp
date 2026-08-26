@@ -224,4 +224,68 @@ class Configuracion extends Model
     {
         return self::obtener('social_whatsapp', '');
     }
+
+    // ─── SEO ─────────────────────────────────────────────────────────────────
+
+    public static function seoTituloDefault()
+    {
+        return self::obtener('seo_titulo_default', '');
+    }
+
+    public static function seoDescripcionDefault()
+    {
+        return self::obtener('seo_descripcion_default', '');
+    }
+
+    public static function seoKeywords()
+    {
+        return self::obtener('seo_keywords', '');
+    }
+
+    public static function googleAnalyticsId()
+    {
+        return self::obtener('google_analytics_id', '');
+    }
+
+    public static function googleSiteVerification()
+    {
+        return self::obtener('google_site_verification', '');
+    }
+
+    // Si está en false, toda la tienda se marca como noindex (útil mientras se arma la tienda)
+    public static function robotsIndex()
+    {
+        return self::obtener('robots_index', 'true') === 'true';
+    }
+
+    // ─── Ubicación (SEO local) ──────────────────────────────────────────────
+    // ubicacion_activa gatilla si se declara la ubicación en el schema.
+    // Si está activa, ciudad es obligatoria; provincia/dirección/CP son opcionales.
+    // Sin dirección (calle) se entiende "radicada en" sin implicar que haya un
+    // local visitable (ver SeoService::organizationSchema).
+
+    public static function ubicacionActiva()
+    {
+        return self::obtener('ubicacion_activa', 'false') === 'true';
+    }
+
+    public static function direccion()
+    {
+        return self::obtener('direccion', '');
+    }
+
+    public static function ciudad()
+    {
+        return self::obtener('ciudad', '');
+    }
+
+    public static function provincia()
+    {
+        return self::obtener('provincia', '');
+    }
+
+    public static function codigoPostal()
+    {
+        return self::obtener('codigo_postal', '');
+    }
 }

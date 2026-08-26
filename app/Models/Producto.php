@@ -28,6 +28,8 @@ class Producto extends Model
         'id_proveedor',
         'descripcion',
         'detalle',
+        'meta_title',
+        'meta_description',
         'precio',
         'moneda_id',
         'disponible',
@@ -189,6 +191,32 @@ class Producto extends Model
         return $this->url_imagen && strpos($this->url_imagen, 'http') === 0;
     }
 
+    /**
+     * Meta title SEO. Si no se cargó uno específico, usa la descripción del producto.
+     */
+    public function getMetaTitleAttribute($value)
+    {
+        return $value ?: $this->descripcion;
+    }
+
+    /**
+     * Meta description SEO. Si no se cargó una específica, se arma a partir del detalle
+     * (sin HTML) o, en su defecto, de la descripción.
+     */
+    public function getMetaDescriptionAttribute($value)
+    {
+        if ($value) {
+            return $value;
+        }
+
+        $texto = $this->detalle ? strip_tags($this->detalle) : $this->descripcion;
+        $texto = trim(preg_replace('/\s+/', ' ', $texto));
+
+        // Str::limit() agrega "..." DESPUÉS del límite indicado, así que hay que
+        // restarle el largo del sufijo para que el total no supere 160 caracteres.
+        return Str::limit($texto, 160 - 3);
+    }
+
     public function scopeDisponibles($query)
     {
         return $query->where('disponible', true)
@@ -196,6 +224,25 @@ class Producto extends Model
                          $q->where('stock', '>', 0)
                            ->orWhere('por_encargue', true);
                      });
+    }
+
+    /**
+     * Productos visibles en la tienda pública: habilitados y, si la configuración
+     * no permite mostrar productos sin stock, con stock disponible o por encargue.
+     * Es el mismo criterio que usa TiendaController para listar productos, y el
+     * que debe usarse para decidir qué productos entran al sitemap.
+     */
+    public function scopeVisiblesEnTienda($query)
+    {
+        $query->where('disponible', true);
+
+        if (!Configuracion::mostrarProductosSinStock()) {
+            $query->where(function ($q) {
+                $q->where('stock', '>', 0)->orWhere('por_encargue', true);
+            });
+        }
+
+        return $query;
     }
 
     public function getRouteKeyName()

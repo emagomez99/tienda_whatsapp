@@ -42,9 +42,7 @@ class TiendaController extends Controller
         }
 
         $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
-            ->where('disponible', true);
-
-        $this->aplicarFiltroConfigStock($query);
+            ->visiblesEnTienda();
 
         // Filtro por búsqueda
         if ($request->filled('buscar')) {
@@ -100,9 +98,7 @@ class TiendaController extends Controller
         $menuActual = Menu::where('slug', $slug)->where('activo', true)->firstOrFail();
 
         $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
-            ->where('disponible', true);
-
-        $this->aplicarFiltroConfigStock($query);
+            ->visiblesEnTienda();
 
         // Aplicar el scope base del menú (proveedor, etiqueta, especificación)
         $this->aplicarFiltroTipoMenu($query, $menuActual);
@@ -169,9 +165,7 @@ class TiendaController extends Controller
     public function productosAjax(Request $request)
     {
         $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
-            ->where('disponible', true);
-
-        $this->aplicarFiltroConfigStock($query);
+            ->visiblesEnTienda();
 
         $menuActual = null;
         if ($request->filled('menu_id')) {
@@ -240,15 +234,6 @@ class TiendaController extends Controller
     }
 
     // ─── Helpers privados ────────────────────────────────────────────────────
-
-    private function aplicarFiltroConfigStock($query)
-    {
-        if (!Configuracion::mostrarProductosSinStock()) {
-            $query->where(function ($q) {
-                $q->where('stock', '>', 0)->orWhere('por_encargue', true);
-            });
-        }
-    }
 
     private function aplicarFiltroTipoMenu($query, Menu $menu)
     {

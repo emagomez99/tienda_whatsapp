@@ -1,8 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'Tienda')
+@section('title', isset($menuActual) && $menuActual ? $menuActual->meta_title : '')
+@section('meta_description', isset($menuActual) && $menuActual ? $menuActual->meta_description : '')
 
 @php $menuEnSidebar = App\Models\Configuracion::menuEnSidebar(); @endphp
+
+@if(isset($menuActual) && $menuActual)
+@push('schema')
+<script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::breadcrumbSchema([
+    ['name' => 'Inicio', 'url' => route('tienda.index')],
+    ['name' => $menuActual->nombre, 'url' => url()->current()],
+])) !!}</script>
+@endpush
+@endif
 
 @section('content')
 @if(!$menuEnSidebar)

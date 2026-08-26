@@ -51,6 +51,19 @@ class ConfiguracionController extends Controller
             'social_tiktok'              => 'nullable|url|max:255',
             'social_youtube'             => 'nullable|url|max:255',
             'social_whatsapp'            => 'nullable|string|max:20',
+            'seo_titulo_default'         => 'nullable|string|max:60',
+            'seo_descripcion_default'    => 'nullable|string|max:160',
+            'seo_keywords'               => 'nullable|string|max:255',
+            'google_analytics_id'        => ['nullable', 'string', 'max:50', 'regex:/^G-[A-Za-z0-9]+$/'],
+            'google_site_verification'   => 'nullable|string|max:255',
+            'robots_index'               => 'required|in:true,false',
+            'ubicacion_activa'           => 'required|in:true,false',
+            'ciudad'                     => 'nullable|required_if:ubicacion_activa,true|string|max:100',
+            'provincia'                  => 'nullable|string|max:100',
+            'direccion'                  => 'nullable|string|max:255',
+            'codigo_postal'              => 'nullable|string|max:20',
+        ], [
+            'ciudad.required_if' => 'La ciudad es obligatoria si activás la ubicación para SEO local.',
         ]);
 
         Configuracion::establecer('mostrar_precios', $request->mostrar_precios, 'Mostrar precios en la tienda');
@@ -76,6 +89,19 @@ class ConfiguracionController extends Controller
         Configuracion::establecer('template_whatsapp', $templateWhatsapp, 'Template del mensaje de WhatsApp');
 
         Configuracion::establecer('moneda_default', $request->input('moneda_default', ''), 'Moneda por defecto para nuevos productos');
+
+        Configuracion::establecer('seo_titulo_default', $request->input('seo_titulo_default', ''), 'Meta title por defecto de la tienda');
+        Configuracion::establecer('seo_descripcion_default', $request->input('seo_descripcion_default', ''), 'Meta description por defecto de la tienda');
+        Configuracion::establecer('seo_keywords', $request->input('seo_keywords', ''), 'Palabras clave por defecto de la tienda');
+        Configuracion::establecer('google_analytics_id', $request->input('google_analytics_id', ''), 'ID de Google Analytics (GA4)');
+        Configuracion::establecer('google_site_verification', $request->input('google_site_verification', ''), 'Código de verificación de Google Search Console');
+        Configuracion::establecer('robots_index', $request->robots_index, 'Permitir que los buscadores indexen la tienda');
+
+        Configuracion::establecer('ubicacion_activa', $request->ubicacion_activa, 'Declarar ubicación de la tienda para SEO local');
+        Configuracion::establecer('ciudad', $request->input('ciudad', ''), 'Ciudad donde opera/está radicada la tienda');
+        Configuracion::establecer('provincia', $request->input('provincia', ''), 'Provincia donde opera/está radicada la tienda');
+        Configuracion::establecer('direccion', $request->input('direccion', ''), 'Dirección del local (solo si es visitable por el público)');
+        Configuracion::establecer('codigo_postal', $request->input('codigo_postal', ''), 'Código postal');
 
         if (auth()->user()->esSuperAdmin()) {
             if ($request->filled('modo_imagen_producto')) {
