@@ -39,6 +39,13 @@ class SeoController extends Controller
     {
         $pagina = max(1, (int) $pagina);
 
+        // Sin este corte, cualquiera puede pedir un número de página arbitrario
+        // (ej. /sitemap-productos-999999999.xml): cada uno generaría una consulta
+        // real a la base y una entrada de caché nueva y permanente, sin límite.
+        if ($pagina > $this->totalPaginasProductos()) {
+            abort(404);
+        }
+
         $xml = Cache::remember($this->cacheKey('sitemap_productos_' . $pagina), 3600, function () use ($pagina) {
             return $this->generarSitemapProductos($pagina);
         });
@@ -64,10 +71,22 @@ class SeoController extends Controller
         return response(implode("\n", $lineas), 200)->header('Content-Type', 'text/plain');
     }
 
+    /**
+     * Cuántas páginas de productos existen hoy, cacheado para no repetir el
+     * count() en cada request (incluidos los que intentan pedir páginas fuera
+     * de rango).
+     */
+    private function totalPaginasProductos()
+    {
+        return Cache::remember($this->cacheKey('sitemap_total_paginas'), 3600, function () {
+            $totalProductos = Producto::visiblesEnTienda()->count();
+            return max(1, (int) ceil($totalProductos / self::PRODUCTOS_POR_PAGINA_SITEMAP));
+        });
+    }
+
     private function generarIndice()
     {
-        $totalProductos = Producto::visiblesEnTienda()->count();
-        $totalPaginas = max(1, (int) ceil($totalProductos / self::PRODUCTOS_POR_PAGINA_SITEMAP));
+        $totalPaginas = $this->totalPaginasProductos();
 
         $sitemaps = [
             ['loc' => route('tienda.sitemap.paginas'), 'lastmod' => now()->toAtomString()],

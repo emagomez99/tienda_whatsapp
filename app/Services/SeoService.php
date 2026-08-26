@@ -135,7 +135,7 @@ class SeoService
             '@context' => 'https://schema.org',
             '@type' => 'Product',
             'name' => $producto->descripcion,
-            'description' => Str::limit($texto, 300),
+            'description' => Str::limit($texto, 300 - 3),
             'image' => $producto->imagen_url ?: self::imagenPorDefecto(),
         ];
 
@@ -143,7 +143,10 @@ class SeoService
             $schema['sku'] = $producto->id_proveedor;
         }
 
-        if (Configuracion::mostrarPrecios() && $producto->precio) {
+        // precio tiene cast 'decimal:2', Eloquent lo devuelve como string ("0.00" incluido),
+        // y en PHP "0.00" es truthy -- por eso la comparación numérica explícita en vez de un
+        // simple if ($producto->precio). Google rechaza price=0 en merchant listings.
+        if (Configuracion::mostrarPrecios() && (float) $producto->precio > 0) {
             $schema['offers'] = [
                 '@type' => 'Offer',
                 'url' => url()->current(),
