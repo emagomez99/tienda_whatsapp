@@ -399,9 +399,10 @@
                         <div class="col-12">
                             <label class="form-label fw-semibold mb-0">Ubicación (SEO local)</label>
                             <p class="text-muted small mb-2">
-                                Ayuda a que Google asocie la tienda con la ciudad. Si además cargás la calle,
-                                se interpreta como un local visitable por el público; si dejás la calle vacía,
-                                solo indica que la tienda está radicada/opera desde esa ciudad.
+                                Ayuda a que Google asocie la tienda con su ubicación. <strong>Ciudad, Provincia y
+                                Código Postal</strong> completalos siempre que actives esta opción, tengas o no local
+                                físico. Solo <strong>Dirección</strong> (la calle) le dice a Google que hay un local
+                                visitable por el público — dejala vacía si operás online o desde un depósito.
                             </p>
                         </div>
                         <div class="col-12">
