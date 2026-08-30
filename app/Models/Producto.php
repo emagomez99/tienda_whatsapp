@@ -12,6 +12,19 @@ class Producto extends Model
 {
     use HasFactory;
 
+    /**
+     * TODO(public_id): la columna public_id quedó sin uso funcional.
+     *
+     * Era la route key (UUID, para que un bot no pudiera enumerar el catálogo con
+     * ids secuenciales), pero hoy la URL es /producto/{slug}/{id} y el sitemap
+     * publica 30.000+ URLs con sus ids, así que ya no oculta nada. Sobrevive sólo
+     * para que sigan resolviendo los links viejos /producto/{uuid}.
+     *
+     * Para eliminarla: `grep -rn "TODO(public_id)"` lista los puntos a tocar
+     * (este boot, $fillable, la ruta legacy + su controlador y su test, y los ids
+     * del DOM en carrito/index.blade.php), y después una migración que dropee la
+     * columna. Los tres primeros van juntos o el carrito se rompe en silencio.
+     */
     protected static function boot()
     {
         parent::boot();

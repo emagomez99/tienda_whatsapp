@@ -41,6 +41,14 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         ->name('tienda.show.id')
         ->where('producto', '[0-9]+')
         ->middleware('throttle:180,3');
+
+    // TODO(public_id): retrocompatibilidad temporal con las URLs viejas
+    // /producto/{uuid}, de cuando public_id era la route key. Se elimina junto con
+    // la columna -- `grep -rn "TODO(public_id)"` lista todo lo que hay que tocar.
+    Route::get('/producto/{public_id}', [TiendaController::class, 'showPorPublicId'])
+        ->name('tienda.show.legacy')
+        ->where('public_id', '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
+        ->middleware('throttle:180,3');
     Route::get('/filtros/valores', [TiendaController::class, 'filtrosValores'])->name('tienda.filtros.valores');
     Route::get('/productos/ajax', [TiendaController::class, 'productosAjax'])->name('tienda.productos.ajax');
     Route::get('/sitemap.xml', [SeoController::class, 'sitemapIndex'])->name('tienda.sitemap');

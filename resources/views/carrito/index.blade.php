@@ -40,6 +40,11 @@
                 <div class="d-flex flex-column gap-3">
                     @foreach($productos as $item)
                         @php $prod = $item['producto']; @endphp
+                        {{-- TODO(public_id): public_id se usa acá sólo como identificador
+                             único para los ids del DOM; sirve igual $prod->id. Al eliminar
+                             la columna hay que reemplazarlo en los 5 lugares de este archivo
+                             a la vez, o el JS deja de encontrar sus elementos (ids vacíos)
+                             y el carrito deja de recalcular sin tirar ningún error. --}}
                         <div class="card border-0 shadow-sm" id="fila-{{ $prod->public_id }}">
                             <div class="card-body p-3">
                                 <div class="ci-grid">

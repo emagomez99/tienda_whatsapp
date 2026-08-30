@@ -233,6 +233,19 @@ class TiendaController extends Controller
         return $this->redirigirACanonica($producto);
     }
 
+    /**
+     * TODO(public_id): URLs viejas /producto/{uuid}, de cuando public_id era la
+     * route key. Se elimina junto con la columna public_id.
+     *
+     * No usa route-model binding porque el binding resuelve por id, no por uuid.
+     */
+    public function showPorPublicId($publicId)
+    {
+        $producto = Producto::where('public_id', $publicId)->firstOrFail();
+
+        return $this->redirigirACanonica($producto);
+    }
+
     private function redirigirACanonica(Producto $producto)
     {
         $url = $producto->url();

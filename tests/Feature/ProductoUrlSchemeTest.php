@@ -200,6 +200,30 @@ class ProductoUrlSchemeTest extends TestCase
     }
 
     /**
+     * TODO(public_id): retrocompatibilidad con las URLs viejas /producto/{uuid},
+     * de cuando public_id era la route key.
+     *
+     * Este test es intencionalmente el que se va a poner en rojo cuando se elimine
+     * la columna: sirve de recordatorio de que el borrado es una decisión, no un
+     * descuido. Al eliminarla, borrar también este test.
+     *
+     * @test
+     */
+    public function una_url_vieja_con_uuid_redirige_301_al_canonico()
+    {
+        $response = $this->get($this->url($this->producto->public_id));
+
+        $response->assertStatus(301);
+        $response->assertRedirect($this->urlCanonica($this->producto));
+    }
+
+    /** @test */
+    public function un_uuid_inexistente_da_404()
+    {
+        $this->get($this->url('00000000-0000-4000-8000-000000000000'))->assertStatus(404);
+    }
+
+    /**
      * El 301 tiene que arrastrar la query string, o se pierde la atribución de
      * campañas (utm_*). Fue un bug real: el redirect las descartaba.
      *
