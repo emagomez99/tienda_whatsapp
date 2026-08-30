@@ -27,7 +27,7 @@
         <div class="col-md-8">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Información del Producto</h5>
+                    <h5 class="mb-0"><i class="bi bi-box-seam"></i> Información del Producto</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -48,8 +48,8 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="proveedor_id" class="form-label">Proveedor *</label>
+                        <div class="col-md-6 mb-3">
+                            <label for="proveedor_id" class="form-label">Proveedor * @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.proveedor')])</label>
                             <select class="form-select @error('proveedor_id') is-invalid @enderror" id="proveedor_id" name="proveedor_id" required>
                                 <option value="">Seleccionar proveedor</option>
                                 @foreach($proveedores as $proveedor)
@@ -145,7 +145,8 @@
                 </div>
             </div>
 
-            <!-- Card: SEO -->
+            <!-- Card: Imagen principal -->
+            @php $modoImagen = App\Models\Configuracion::modoImagenProducto(); @endphp
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-image"></i> Imagen Principal
@@ -345,7 +346,7 @@
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Etiquetas
+                    <h5 class="mb-0"><i class="bi bi-tags"></i> Etiquetas
                         @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.etiquetas'), 'lugar' => 'right', 'grande' => true])
                     </h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-etiqueta">
@@ -408,7 +409,7 @@
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Especificaciones
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Especificaciones
                         @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.especificaciones'), 'lugar' => 'right', 'grande' => true])
                     </h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-especificacion">

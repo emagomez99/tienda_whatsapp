@@ -22,8 +22,9 @@
                 type="button" data-bs-toggle="collapse" data-bs-target="#card-seo-body"
                 aria-expanded="{{ $abrirSeo ? 'true' : 'false' }}" aria-controls="card-seo-body">
             <span class="fw-semibold">
-                <i class="bi bi-search"></i> Cómo se ve en Google
-                <span class="text-muted fw-normal small ms-1">· opcional</span>
+                <i class="bi bi-search"></i> SEO
+                <span class="fw-normal">— Cómo se ve en Google</span>
+                <span class="badge bg-light text-muted fw-normal ms-1">opcional</span>
             </span>
             <i class="bi bi-chevron-down filtros-chevron text-muted"
                style="transition:transform .2s;{{ $abrirSeo ? 'transform:rotate(180deg);' : '' }}"></i>
@@ -32,10 +33,16 @@
 
     <div class="collapse {{ $abrirSeo ? 'show' : '' }}" id="card-seo-body">
         <div class="card-body pt-0">
-            <p class="text-muted small">
-                Si dejás estos campos vacíos los completamos solos con el nombre y la descripción
-                del producto. Sólo cargalos si querés que Google muestre otra cosa.
-            </p>
+            <div class="alert alert-light border d-flex gap-2 py-2 px-3 mb-4">
+                <i class="bi bi-info-circle text-primary mt-1"></i>
+                <div class="small">
+                    <span class="fw-semibold d-block mb-1">No hace falta que completes nada.</span>
+                    <span class="text-muted">
+                        Si dejás los campos vacíos usamos el nombre y la descripción del producto.
+                        Cargalos sólo si querés que Google muestre otra cosa.
+                    </span>
+                </div>
+            </div>
 
             <div class="mb-3">
                 <label for="meta_title" class="form-label">Título en Google</label>

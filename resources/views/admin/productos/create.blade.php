@@ -21,7 +21,7 @@
         <div class="col-md-8">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Información del Producto</h5>
+                    <h5 class="mb-0"><i class="bi bi-box-seam"></i> Información del Producto</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -42,7 +42,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label for="proveedor_id" class="form-label">Proveedor * @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.proveedor')])</label>
                             <select class="form-select @error('proveedor_id') is-invalid @enderror" id="proveedor_id" name="proveedor_id" required>
                                 <option value="">Seleccionar proveedor</option>
@@ -122,10 +122,10 @@
                 </div>
             </div>
 
-            <!-- Card: SEO -->
+            <!-- Card: Imagen del producto -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-image"></i> Imagen del Producto</h5>
+                    <h5 class="mb-0"><i class="bi bi-image"></i> Imagen del Producto @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.imagen_principal'), 'grande' => true])</h5>
                 </div>
                 <div class="card-body">
                     @php $modoImagen = App\Models\Configuracion::modoImagenProducto(); @endphp
@@ -188,7 +188,7 @@
             @if($imagenesAdicionalesActivas)
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-images"></i> Imágenes Adicionales</h5>
+                    <h5 class="mb-0"><i class="bi bi-images"></i> Imágenes Adicionales @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.imagenes_adicionales'), 'grande' => true])</h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="btn-abrir-extras"
                             data-bs-toggle="collapse" data-bs-target="#panel-extras">
                         <i class="bi bi-plus"></i> Agregar
@@ -237,7 +237,7 @@
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Etiquetas @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.etiquetas'), 'lugar' => 'right', 'grande' => true])</h5>
+                    <h5 class="mb-0"><i class="bi bi-tags"></i> Etiquetas @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.etiquetas'), 'lugar' => 'right', 'grande' => true])</h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-etiqueta">
                         <i class="bi bi-plus"></i> Agregar
                     </button>
@@ -273,7 +273,7 @@
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Especificaciones @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.especificaciones'), 'lugar' => 'right', 'grande' => true])</h5>
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Especificaciones @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.especificaciones'), 'lugar' => 'right', 'grande' => true])</h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-especificacion">
                         <i class="bi bi-plus"></i> Agregar
                     </button>

@@ -38,9 +38,9 @@ return [
 
         'imagenes_adicionales' => 'Se muestran en el carrusel de la vista detallada del producto. Podés agregar varias antes de guardar. Con ★ podés promover cualquiera como imagen principal.',
 
-        'etiquetas' => 'Categorizan el producto y habilitan filtros en la tienda. Cada etiqueta tiene un nombre y un valor específico para este producto. Ej: Marca → Toyota, Aplicación → Filtro de aceite.',
+        'etiquetas' => 'Categorizan el producto y habilitan los filtros de la tienda. Se eligen de una lista común a todos los productos y cada uno le pone su valor. Ej: Marca → Toyota, Aplicación → Filtro de aceite. Si el proveedor elegido tiene etiquetas obligatorias, hay que completarlas para poder guardar.',
 
-        'especificaciones' => 'Tabla de características técnicas. Aparece en el detalle del producto. Ej: Peso → 1.75 kg, Material → Acero inoxidable.',
+        'especificaciones' => 'Campos personalizados, exclusivos de este producto: el nombre lo escribís vos y no se comparte con los demás. Arman la tabla de características del detalle. Ej: Peso → 1.75 kg, Material → Acero inoxidable.',
 
     ],
 
