@@ -209,11 +209,37 @@ class Producto extends Model
     }
 
     /**
-     * Meta title SEO. Si no se cargó uno específico, usa la descripción del producto.
+     * Meta title SEO. Si no se cargó uno específico, se arma con la descripción más
+     * los valores de las etiquetas visibles.
+     *
+     * Existe porque en catálogos importados la descripción suele ser sólo un código
+     * de pieza que se repite: en oleomc hay 185 productos llamados "CTC-1140760".
+     * Para Google eso son 185 páginas con el mismo título -- contenido duplicado, e
+     * indexa una sola. Sumando fabricante, aplicación y modelo pasan a ser 45 títulos
+     * distintos, y encima con los términos que la gente busca de verdad
+     * ("Caterpillar 330C" se busca; el código de pieza no).
+     *
+     * Sin recorte a propósito: Google recorta la *visualización* alrededor de los 60
+     * caracteres pero indexa el título completo, así que limitarlo sólo lograría dejar
+     * afuera el dato que distingue un producto de otro.
      */
     public function getMetaTitleAttribute($value)
     {
-        return $value ?: $this->descripcion;
+        if ($value) {
+            return $value;
+        }
+
+        $partes = [trim((string) $this->descripcion)];
+
+        foreach ($this->etiquetas as $etiqueta) {
+            $valor = trim((string) $etiqueta->pivot->valor);
+
+            if ($etiqueta->visible_usuarios && $valor !== '') {
+                $partes[] = $valor;
+            }
+        }
+
+        return implode(' · ', $partes);
     }
 
     /**

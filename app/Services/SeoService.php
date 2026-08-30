@@ -142,7 +142,10 @@ class SeoService
         $schema = [
             '@context' => 'https://schema.org',
             '@type' => 'Product',
-            'name' => $producto->descripcion,
+            // meta_title y no descripcion: son la misma página, así que el nombre del
+            // schema tiene que coincidir con el <title>. En catálogos importados la
+            // descripción sola es un código repetido (ver Producto::getMetaTitleAttribute).
+            'name' => $producto->meta_title,
             'description' => Str::limit($texto, 300 - 3),
             'image' => $producto->imagen_url ?: self::imagenPorDefecto(),
         ];

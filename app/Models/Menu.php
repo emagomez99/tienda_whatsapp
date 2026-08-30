@@ -130,11 +130,27 @@ class Menu extends Model
     }
 
     /**
-     * Meta title SEO. Si no se cargó uno específico, usa el nombre del menú.
+     * Meta title SEO. Si no se cargó uno específico, se arma con el nombre del menú
+     * más el de la tienda.
+     *
+     * El nombre solo dice poco en un resultado de búsqueda: "Hidráulica" no indica
+     * de quién es ni qué se vende. Sumando la tienda queda "Hidráulica | Oleohidráulica
+     * MC", que es lo que se estila y da contexto sin que haya que cargar nada a mano.
      */
     public function getMetaTitleAttribute($value)
     {
-        return $value ?: $this->nombre;
+        if ($value) {
+            return $value;
+        }
+
+        $tienda = trim((string) Configuracion::nombreTienda());
+
+        // Si el nombre del menú ya menciona la tienda, no se repite.
+        if ($tienda === '' || mb_stripos($this->nombre, $tienda) !== false) {
+            return $this->nombre;
+        }
+
+        return $this->nombre . ' | ' . $tienda;
     }
 
     public static function generarSlugUnico(string $nombre, $exceptId = null): string
