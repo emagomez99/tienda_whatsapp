@@ -540,6 +540,7 @@
             });
         });
     </script>
+    @include('partials.modal-confirmar')
     @stack('scripts')
 </body>
 </html>

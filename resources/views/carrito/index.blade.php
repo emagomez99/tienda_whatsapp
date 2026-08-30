@@ -177,12 +177,13 @@
                             <i class="bi bi-whatsapp me-1"></i> Finalizar pedido
                         </a>
 
-                        <form action="{{ route('carrito.vaciar') }}" method="POST" class="mt-2">
+                        <form action="{{ route('carrito.vaciar') }}" method="POST" class="mt-2"
+                              data-confirmar="¿Vaciar el carrito?"
+                              data-confirmar-detalle="Se quitan todos los productos que agregaste."
+                              data-confirmar-boton="Sí, vaciar">
                             @csrf
                             @method('DELETE')
-                            <button type="submit"
-                                    class="btn btn-link text-danger w-100 btn-sm"
-                                    onclick="return confirm('¿Estás seguro de vaciar el carrito?')">
+                            <button type="submit" class="btn btn-link text-danger w-100 btn-sm">
                                 <i class="bi bi-trash"></i> Vaciar carrito
                             </button>
                         </form>

@@ -74,7 +74,7 @@
                                         <a href="{{ route('admin.proveedores.edit', $proveedor) }}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="{{ route('admin.proveedores.destroy', $proveedor) }}" method="POST" onsubmit="return confirm('¿Eliminar este proveedor?')">
+                                        <form action="{{ route('admin.proveedores.destroy', $proveedor) }}" method="POST" data-confirmar="¿Eliminar este proveedor?" data-confirmar-boton="Sí, eliminar">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger">

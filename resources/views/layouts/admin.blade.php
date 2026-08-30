@@ -283,6 +283,7 @@
         if (btn) { var c = btn.querySelector('.filtros-chevron'); if (c) c.style.transform = 'rotate(0deg)'; }
     });
     </script>
+    @include('partials.modal-confirmar')
     @stack('scripts')
 </body>
 </html>

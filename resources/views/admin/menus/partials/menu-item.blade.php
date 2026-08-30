@@ -39,7 +39,7 @@
             <a href="{{ route('admin.menus.edit', $menu) }}" class="btn btn-sm btn-outline-primary" title="Editar">
                 <i class="bi bi-pencil"></i>
             </a>
-            <form action="{{ route('admin.menus.destroy', $menu) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este menú y todos sus submenús?')">
+            <form action="{{ route('admin.menus.destroy', $menu) }}" method="POST" class="d-inline" data-confirmar="¿Eliminar este menú y todos sus submenús?" data-confirmar-boton="Sí, eliminar">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">

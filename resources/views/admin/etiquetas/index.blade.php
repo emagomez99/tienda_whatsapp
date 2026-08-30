@@ -68,7 +68,7 @@
                                         <a href="{{ route('admin.etiquetas.edit', $etiqueta) }}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="{{ route('admin.etiquetas.destroy', $etiqueta) }}" method="POST" onsubmit="return confirm('¿Eliminar esta etiqueta?')">
+                                        <form action="{{ route('admin.etiquetas.destroy', $etiqueta) }}" method="POST" data-confirmar="¿Eliminar esta etiqueta?" data-confirmar-boton="Sí, eliminar">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger">

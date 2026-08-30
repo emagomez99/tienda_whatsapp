@@ -482,21 +482,36 @@ class ProductoController extends Controller
 
     public function ajustarStock(Request $request, Producto $producto)
     {
+        // El formulario pide tipo (ingreso/egreso) y una cantidad siempre positiva;
+        // el signo se resuelve acá. Antes se cargaba la variación con signo, lo que
+        // obligaba al usuario a traducir su intención a una convención de signos.
+        // El motivo es obligatorio: el historial de stock es un registro de auditoría
+        // y un movimiento sin explicación no se puede reconstruir después.
         $validated = $request->validate([
-            'variacion'   => 'required|integer|not_in:0',
-            'descripcion' => 'nullable|string|max:255',
+            'tipo'        => 'required|in:ingreso,egreso',
+            'cantidad'    => 'required|integer|min:1',
+            'descripcion' => 'required|string|max:255',
+        ], [
+            'cantidad.min'        => 'La cantidad tiene que ser mayor a cero.',
+            'cantidad.required'   => 'Indicá la cantidad a ajustar.',
+            'tipo.required'       => 'Elegí si es un ingreso o un egreso.',
+            'descripcion.required' => 'Indicá el motivo del ajuste.',
         ]);
 
-        if ($producto->stock + $validated['variacion'] < 0) {
+        $variacion = $validated['tipo'] === 'egreso'
+            ? -$validated['cantidad']
+            : $validated['cantidad'];
+
+        if ($producto->stock + $variacion < 0) {
             return back()->withErrors([
-                'variacion' => 'El ajuste resultaría en stock negativo (' . ($producto->stock + $validated['variacion']) . ').',
-            ]);
+                'cantidad' => 'No se puede egresar ' . $validated['cantidad'] . ': el stock actual es ' . $producto->stock . '.',
+            ])->withInput();
         }
 
         $producto->registrarMovimiento(
-            $validated['variacion'],
+            $variacion,
             StockMovimiento::TIPO_AJUSTE_MANUAL,
-            $validated['descripcion'] ?: null,
+            $validated['descripcion'],
             null,
             auth()->id()
         );

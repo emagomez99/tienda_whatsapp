@@ -62,7 +62,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         @if($perfil->usuarios_count === 0)
-                                            <form action="{{ route('admin.perfiles.destroy', $perfil) }}" method="POST" onsubmit="return confirm('¿Eliminar este perfil?')">
+                                            <form action="{{ route('admin.perfiles.destroy', $perfil) }}" method="POST" data-confirmar="¿Eliminar este perfil?" data-confirmar-boton="Sí, eliminar">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">

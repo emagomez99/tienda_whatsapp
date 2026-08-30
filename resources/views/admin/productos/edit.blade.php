@@ -517,55 +517,7 @@
 </form>
 
 <!-- Modal: ajuste de stock -->
-<div class="modal fade" id="modal-ajuste-stock" tabindex="-1" aria-labelledby="modal-ajuste-stock-label" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="{{ route('admin.productos.ajustar-stock', $producto) }}" method="POST">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modal-ajuste-stock-label">
-                        <i class="bi bi-arrow-left-right"></i> Ajustar stock
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    @if($errors->has('variacion'))
-                        <div class="alert alert-danger py-2">{{ $errors->first('variacion') }}</div>
-                    @endif
-                    <div class="alert alert-secondary py-2 mb-3">
-                        Stock actual: <strong>{{ $producto->stock }}</strong>
-                    </div>
-                    <div class="mb-3">
-                        <label for="modal-variacion" class="form-label fw-semibold">Variación *
-                            <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Ingresá un número positivo para sumar stock (recepción de mercadería) o negativo para restar (salida, merma, ajuste)."></i>
-                        </label>
-                        <input type="number" name="variacion" id="modal-variacion" class="form-control"
-                               placeholder="Ej: 10 para entrada, -5 para salida" required>
-                        <small class="text-muted">Positivo = entrada de stock &nbsp;·&nbsp; Negativo = salida.</small>
-                    </div>
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted">Stock resultante:</span>
-                            <strong id="stock-resultante-preview">{{ $producto->stock }}</strong>
-                        </div>
-                    </div>
-                    <div class="mb-1">
-                        <label for="modal-descripcion" class="form-label">Motivo</label>
-                        <input type="text" name="descripcion" id="modal-descripcion" class="form-control"
-                               placeholder="Ej: Recepción de mercadería, corrección de inventario">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> Confirmar ajuste
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+@include('admin.productos.partials.modal-ajuste-stock')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('vendor/quill/quill.snow.css') }}">
@@ -1336,27 +1288,6 @@
         actualizarLimite();
     })();
     @endif {{-- imagenesAdicionalesActivas --}}
-
-    // Preview en tiempo real del stock resultante en el modal de ajuste
-    var stockBase = {{ $producto->stock }};
-    var modalVariacion = document.getElementById('modal-variacion');
-    var stockResultantePreview = document.getElementById('stock-resultante-preview');
-
-    if (modalVariacion) {
-        modalVariacion.addEventListener('input', function() {
-            var variacion = parseInt(this.value) || 0;
-            var resultante = stockBase + variacion;
-            stockResultantePreview.textContent = resultante;
-            stockResultantePreview.style.color = resultante < 0 ? '#dc3545' : '';
-            stockResultantePreview.style.fontWeight = 'bold';
-        });
-
-        // Abrir modal con errores de validación si existen
-        @if($errors->has('variacion'))
-            var modalAjuste = new bootstrap.Modal(document.getElementById('modal-ajuste-stock'));
-            modalAjuste.show();
-        @endif
-    }
 
     // Inicializar todos los tooltips de Bootstrap
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {

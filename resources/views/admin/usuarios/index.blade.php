@@ -83,7 +83,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         @if($usuario->id !== auth()->id())
-                                            <form action="{{ route('admin.usuarios.destroy', $usuario) }}" method="POST" onsubmit="return confirm('¿Eliminar este usuario?')">
+                                            <form action="{{ route('admin.usuarios.destroy', $usuario) }}" method="POST" data-confirmar="¿Eliminar este usuario?" data-confirmar-boton="Sí, eliminar">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">

@@ -74,7 +74,7 @@
                         </td>
                         <td class="text-center">
                             <form method="POST" action="{{ route('tenants.destroy', $tenant) }}"
-                                  onsubmit="return confirm('¿Eliminar tenant {{ $tenant->id }} y su schema PostgreSQL? Esta acción no se puede deshacer.')">
+                                  data-confirmar="¿Eliminar el tenant {{ $tenant->id }}?" data-confirmar-detalle="Se borra su schema de PostgreSQL. Esta acción no se puede deshacer." data-confirmar-boton="Sí, eliminar">
                                 @csrf @method('DELETE')
                                 <button class="btn btn-sm btn-outline-danger">Eliminar</button>
                             </form>
@@ -174,5 +174,6 @@
     new bootstrap.Modal(document.getElementById('modalCrear')).show();
 </script>
 @endif
+@include('partials.modal-confirmar')
 </body>
 </html>
