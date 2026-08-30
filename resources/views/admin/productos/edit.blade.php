@@ -370,7 +370,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-5 position-relative">
-                                    <input type="text" class="form-control etiqueta-valor" name="etiquetas[{{ $index }}][valor]" placeholder="Valor (ej: Filtro, Auto)" value="{{ $etiquetaProd->pivot->valor }}" autocomplete="off">
+                                    <input type="text" class="form-control etiqueta-valor" name="etiquetas[{{ $index }}][valor]" placeholder="Valor (ej: Filtro, Auto)" value="{{ $etiquetaProd->pivot->valor }}" data-combo data-combo-fila=".etiqueta-row" data-combo-desde=".etiqueta-select" data-combo-url-con="{{ route('admin.etiquetas.valores', ['etiqueta' => '__ID__']) }}" autocomplete="off">
                                 </div>
                                 <div class="col-md-2">
                                     <button type="button" class="btn btn-outline-danger btn-eliminar-etiqueta">
@@ -426,10 +426,10 @@
                         @forelse($producto->especificaciones as $index => $espec)
                             <div class="row mb-2 especificacion-row">
                                 <div class="col-md-5 position-relative">
-                                    <input type="text" class="form-control especificacion-clave" name="especificaciones[{{ $index }}][clave]" placeholder="Clave (ej: Peso)" value="{{ $espec->clave }}" autocomplete="off">
+                                    <input type="text" class="form-control especificacion-clave" name="especificaciones[{{ $index }}][clave]" placeholder="Clave (ej: Peso)" value="{{ $espec->clave }}" data-combo="{{ route('admin.especificaciones.claves') }}" autocomplete="off">
                                 </div>
                                 <div class="col-md-5 position-relative">
-                                    <input type="text" class="form-control especificacion-valor" name="especificaciones[{{ $index }}][valor]" placeholder="Valor (ej: 1.75)" value="{{ $espec->valor }}" autocomplete="off">
+                                    <input type="text" class="form-control especificacion-valor" name="especificaciones[{{ $index }}][valor]" placeholder="Valor (ej: 1.75)" value="{{ $espec->valor }}" data-combo="{{ route('admin.especificaciones.valores') }}" data-combo-fila=".especificacion-row" data-combo-param="clave" data-combo-desde=".especificacion-clave" autocomplete="off">
                                 </div>
                                 <div class="col-md-2">
                                     <button type="button" class="btn btn-outline-danger btn-eliminar-especificacion">

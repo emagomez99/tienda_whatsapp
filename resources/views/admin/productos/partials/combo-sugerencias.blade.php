@@ -109,7 +109,7 @@
             if (escrito !== '' && !existe) {
                 var nuevo = document.createElement('div');
                 nuevo.className = 'combo-item combo-nuevo';
-                nuevo.innerHTML = '<i class="bi bi-plus-circle"></i> Usar «' + escrito.replace(/</g, '&lt;') + '»';
+                nuevo.innerHTML = '<i class="bi bi-plus-circle"></i> Crear «' + escrito.replace(/</g, '&lt;') + '»';
                 nuevo.addEventListener('mousedown', function (e) { e.preventDefault(); elegir(escrito); });
                 lista.appendChild(nuevo);
                 opciones.push({ el: nuevo, valor: escrito });
