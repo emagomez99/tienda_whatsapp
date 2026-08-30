@@ -64,8 +64,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="id_proveedor" class="form-label">Código Proveedor
-                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
-                                   title="Código interno del proveedor. Aparece en el detalle del producto y se usa en búsquedas. El botón ↺ genera uno automático con el prefijo del proveedor."></i>
+                                @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.id_proveedor')])
                             </label>
                             <div class="input-group">
                                 <input type="text" class="form-control @error('id_proveedor') is-invalid @enderror" id="id_proveedor" name="id_proveedor" value="{{ old('id_proveedor', $producto->id_proveedor) }}">
@@ -81,8 +80,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="moneda_id" class="form-label">Moneda
-                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
-                                   title="Moneda en la que se expresa el precio. Si el precio no aplica, dejá sin seleccionar."></i>
+                                @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.moneda')])
                             </label>
                             <select class="form-select @error('moneda_id') is-invalid @enderror" id="moneda_id" name="moneda_id">
                                 <option value="">Seleccionar moneda</option>
@@ -98,8 +96,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="precio" class="form-label">Precio *
-                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
-                                   title="Precio de venta al público. Solo se muestra en la tienda si la configuración 'Mostrar precios' está activa."></i>
+                                @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.precio')])
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
@@ -113,8 +110,7 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Stock actual
-                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
-                                   title="El stock no se edita directamente. Usá 'Ajustar' para registrar entradas o salidas con trazabilidad completa en el historial."></i>
+                                @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.stock_edicion')])
                             </label>
                             <div class="input-group">
                                 <span class="form-control bg-light fw-semibold text-center" style="max-width: 80px;">{{ $producto->stock }}</span>
@@ -129,8 +125,7 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label d-block">Disponible
-                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
-                                   title="Si está desactivado, el producto no aparece en la tienda aunque tenga stock."></i>
+                                @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.disponible')])
                             </label>
                             <div class="form-check form-switch">
                                 <input type="checkbox" class="form-check-input" id="disponible" name="disponible" value="1" {{ old('disponible', $producto->disponible) ? 'checked' : '' }}>
@@ -139,8 +134,7 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label d-block">Por Encargue
-                                <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
-                                   title="Permite que el cliente lo solicite aunque no haya stock. Aparece con la etiqueta 'Disponible por encargue' en la tienda."></i>
+                                @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.por_encargue')])
                             </label>
                             <div class="form-check form-switch">
                                 <input type="checkbox" class="form-check-input" id="por_encargue" name="por_encargue" value="1" {{ old('por_encargue', $producto->por_encargue) ? 'checked' : '' }}>
@@ -153,41 +147,9 @@
 
             <!-- Card: SEO -->
             <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-search"></i> SEO
-                        <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="top"
-                           title="Si dejás estos campos vacíos, se usa el nombre del producto como título y un resumen de la descripción detallada como meta description."></i>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="meta_title" class="form-label">Meta title</label>
-                        <input type="text" class="form-control @error('meta_title') is-invalid @enderror" id="meta_title" name="meta_title" maxlength="60"
-                               placeholder="{{ $producto->descripcion }}"
-                               value="{{ old('meta_title', $producto->getRawOriginal('meta_title')) }}">
-                        @error('meta_title')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted contador-caracteres" data-max="60">0/60</small>
-                    </div>
-                    <div class="mb-0">
-                        <label for="meta_description" class="form-label">Meta description</label>
-                        <textarea class="form-control @error('meta_description') is-invalid @enderror" id="meta_description" name="meta_description" rows="2" maxlength="160">{{ old('meta_description', $producto->getRawOriginal('meta_description')) }}</textarea>
-                        @error('meta_description')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted contador-caracteres" data-max="160">0/160</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card: Imagen principal -->
-            @php $modoImagen = App\Models\Configuracion::modoImagenProducto(); @endphp
-            <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-image"></i> Imagen Principal
-                        <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="top"
-                           title="Imagen que aparece en el listado de productos y en la vista de detalle. Se recomienda fondo blanco o transparente."></i>
+                        @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.imagen_principal'), 'grande' => true])
                     </h5>
                     @if($producto->url_imagen)
                         <button type="button" id="btn-cambiar-principal" class="btn btn-sm btn-outline-secondary">
@@ -296,8 +258,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-images"></i> Imágenes Adicionales
-                        <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="top"
-                           title="Se muestran en el carrusel de la vista detallada del producto. Podés agregar varias antes de guardar. Con ★ podés promover cualquiera como imagen principal."></i>
+                        @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.imagenes_adicionales'), 'grande' => true])
                     </h5>
                     <button type="button" id="btn-abrir-agregar" class="btn btn-sm btn-outline-primary">
                         <i class="bi bi-plus"></i> Agregar
@@ -385,8 +346,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Etiquetas
-                        <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="right"
-                           title="Categorizan el producto y habilitan filtros en la tienda. Cada etiqueta tiene un nombre y un valor específico para este producto. Ej: Marca → Toyota, Aplicación → Filtro de aceite."></i>
+                        @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.etiquetas'), 'lugar' => 'right', 'grande' => true])
                     </h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-etiqueta">
                         <i class="bi bi-plus"></i> Agregar
@@ -449,8 +409,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Especificaciones
-                        <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="right"
-                           title="Tabla de características técnicas. Aparece en el detalle del producto. Ej: Peso → 1.75 kg, Material → Acero inoxidable."></i>
+                        @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.especificaciones'), 'lugar' => 'right', 'grande' => true])
                     </h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-especificacion">
                         <i class="bi bi-plus"></i> Agregar
@@ -494,6 +453,7 @@
                     </div>
                 </div>
             </div>
+            @include('admin.productos.partials.card-seo')
         </div>
 
         <div class="col-md-4">

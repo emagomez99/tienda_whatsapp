@@ -1,10 +1,11 @@
 {{--
-    JS del campo de dirección web. Compartido por create y edit.
+    JS de la dirección web. Compartido por create y edit.
 
-    Con "Generar automáticamente" prendido el campo se completa solo desde el nombre
-    y queda de sólo lectura (readonly, no disabled: así se puede copiar la dirección,
-    y además el valor igual se envía -- el servidor lo recalcula por su cuenta, no
-    depende de que el navegador lo omita).
+    Dos modos:
+      - automática (por defecto): se muestra una línea de sólo lectura que se
+        actualiza a medida que se escribe el nombre.
+      - manual: al tocar "Editar" aparece el campo y se apaga la generación
+        automática (el input oculto autogenerar_slug pasa a 0).
 
     La vista previa la calcula el servidor (admin.productos.preview-slug) en vez de
     reimplementar Str::slug() acá: una transliteración propia diverge de la de PHP en
@@ -13,31 +14,41 @@
 --}}
 <script>
     (function () {
-        var descInput  = document.getElementById('descripcion');
-        var slugInput  = document.getElementById('slug');
-        var autoSwitch = document.getElementById('autogenerar_slug');
-        if (!slugInput || !autoSwitch) return;
+        var campo = document.getElementById('slug-campo');
+        if (!campo) return;
 
-        var urlPreview = slugInput.dataset.urlPreview;
-        var debounceId = null;
+        var descInput = document.getElementById('descripcion');
+        var input     = document.getElementById('slug');
+        var oculto    = document.getElementById('autogenerar_slug');
+        var vista     = document.getElementById('slug-vista');
+        var edicion   = document.getElementById('slug-edicion');
+        var preview   = document.getElementById('slug-preview');
+        var btnEditar = document.getElementById('slug-editar');
+        var btnAuto   = document.getElementById('slug-auto');
+
+        var urlPreview     = input.dataset.urlPreview;
+        var debounceId     = null;
         var ultimaPeticion = 0;
 
+        function esAutomatica() {
+            return oculto.value === '1';
+        }
+
         function pedirPreview() {
-            if (!descInput || !urlPreview) return;
+            if (!descInput || !urlPreview || !esAutomatica()) return;
 
             // Las respuestas pueden llegar desordenadas: sólo se aplica la más reciente.
             var peticion = ++ultimaPeticion;
-            var descripcion = descInput.value;
 
-            fetch(urlPreview + '?descripcion=' + encodeURIComponent(descripcion), {
+            fetch(urlPreview + '?descripcion=' + encodeURIComponent(descInput.value), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin'
             })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (data) {
-                    if (!data || peticion !== ultimaPeticion) return;
-                    if (!autoSwitch.checked) return;
-                    slugInput.value = data.slug || '';
+                    if (!data || peticion !== ultimaPeticion || !esAutomatica()) return;
+                    preview.textContent = data.slug || '';
+                    input.value         = data.slug || '';
                 })
                 .catch(function () {
                     // Sin preview es preferible no mostrar nada a mostrar algo distinto
@@ -45,39 +56,47 @@
                 });
         }
 
-        function pedirPreviewConDebounce() {
-            clearTimeout(debounceId);
-            debounceId = setTimeout(pedirPreview, 300);
-        }
-
-        function aplicarEstado() {
-            slugInput.readOnly = autoSwitch.checked;
-            slugInput.classList.toggle('bg-light', autoSwitch.checked);
-            if (autoSwitch.checked) {
-                pedirPreview();
-            }
-        }
-
-        autoSwitch.addEventListener('change', aplicarEstado);
-
         if (descInput) {
             descInput.addEventListener('input', function () {
-                if (autoSwitch.checked) {
-                    pedirPreviewConDebounce();
-                }
+                if (!esAutomatica()) return;
+                clearTimeout(debounceId);
+                debounceId = setTimeout(pedirPreview, 300);
             });
         }
 
-        // Filtra caracteres inválidos mientras se escribe a mano (switch apagado).
-        // No es una generación de slug: sólo descarta lo que el servidor rechazaría
-        // con la misma regla (regex /^[a-z0-9-]+$/), así que no puede divergir.
-        slugInput.addEventListener('input', function () {
-            if (this.readOnly) return;
+        // Al ocultar el botón su tooltip queda flotando en pantalla, así que se cierra
+        // a mano antes de cambiar de vista.
+        function cerrarTooltip(boton) {
+            if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) return;
+            var t = bootstrap.Tooltip.getInstance(boton);
+            if (t) t.hide();
+        }
+
+        btnEditar.addEventListener('click', function () {
+            cerrarTooltip(btnEditar);
+            oculto.value = '0';
+            vista.classList.add('d-none');
+            edicion.classList.remove('d-none');
+            input.focus();
+            input.select();
+        });
+
+        btnAuto.addEventListener('click', function () {
+            cerrarTooltip(btnAuto);
+            oculto.value = '1';
+            edicion.classList.add('d-none');
+            vista.classList.remove('d-none');
+            pedirPreview();
+        });
+
+        // Filtra caracteres inválidos mientras se escribe a mano. No genera el slug:
+        // sólo descarta lo que el servidor rechazaría con la misma regla
+        // (regex /^[a-z0-9-]+$/), así que no puede divergir.
+        input.addEventListener('input', function () {
             var pos = this.selectionStart;
             this.value = this.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
             this.setSelectionRange(pos, pos);
+            preview.textContent = this.value;
         });
-
-        aplicarEstado();
     })();
 </script>

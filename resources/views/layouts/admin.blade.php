@@ -285,5 +285,18 @@
     </script>
     @include('partials.modal-confirmar')
     @stack('scripts')
+
+    {{-- Va DESPUÉS del stack para que los popovers que agreguen las vistas también
+         queden inicializados. getOrCreateInstance evita duplicar la instancia si
+         alguna vista ya lo hizo por su cuenta. --}}
+    <script>
+        (function () {
+            if (typeof bootstrap === 'undefined' || !bootstrap.Popover) return;
+
+            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (el) {
+                bootstrap.Popover.getOrCreateInstance(el);
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -43,7 +43,7 @@
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="proveedor_id" class="form-label">Proveedor *</label>
+                            <label for="proveedor_id" class="form-label">Proveedor * @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.proveedor')])</label>
                             <select class="form-select @error('proveedor_id') is-invalid @enderror" id="proveedor_id" name="proveedor_id" required>
                                 <option value="">Seleccionar proveedor</option>
                                 @php $defaultProveedor = old('proveedor_id', $proveedores->count() === 1 ? $proveedores->first()->id : ''); @endphp
@@ -58,7 +58,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="id_proveedor" class="form-label">Código Proveedor</label>
+                            <label for="id_proveedor" class="form-label">Código Proveedor @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.id_proveedor')])</label>
                             <div class="input-group">
                                 <input type="text" class="form-control @error('id_proveedor') is-invalid @enderror" id="id_proveedor" name="id_proveedor" value="{{ old('id_proveedor') }}">
                                 <button type="button" class="btn btn-outline-secondary" id="btn-generar-codigo" title="Generar código">
@@ -72,7 +72,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="moneda_id" class="form-label">Moneda</label>
+                            <label for="moneda_id" class="form-label">Moneda @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.moneda')])</label>
                             <select class="form-select @error('moneda_id') is-invalid @enderror" id="moneda_id" name="moneda_id">
                                 <option value="">Sin moneda</option>
                                 @foreach($monedas as $moneda)
@@ -86,7 +86,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="precio" class="form-label">Precio *</label>
+                            <label for="precio" class="form-label">Precio * @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.precio')])</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
                                 <input type="number" step="0.01" min="0" class="form-control @error('precio') is-invalid @enderror" id="precio" name="precio" value="{{ old('precio', 0) }}" required>
@@ -98,21 +98,21 @@
                     </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="stock" class="form-label">Stock *</label>
+                            <label for="stock" class="form-label">Stock * @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.stock_inicial')])</label>
                             <input type="number" min="0" class="form-control @error('stock') is-invalid @enderror" id="stock" name="stock" value="{{ old('stock', 0) }}" required>
                             @error('stock')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label d-block">Disponible</label>
+                            <label class="form-label d-block">Disponible @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.disponible')])</label>
                             <div class="form-check form-switch">
                                 <input type="checkbox" class="form-check-input" id="disponible" name="disponible" value="1" {{ old('disponible', true) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="disponible">Mostrar en tienda</label>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label d-block">Por Encargue</label>
+                            <label class="form-label d-block">Por Encargue @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.por_encargue')])</label>
                             <div class="form-check form-switch">
                                 <input type="checkbox" class="form-check-input" id="por_encargue" name="por_encargue" value="1" {{ old('por_encargue') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="por_encargue">Disponible sin stock</label>
@@ -123,34 +123,6 @@
             </div>
 
             <!-- Card: SEO -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-search"></i> SEO
-                        <i class="bi bi-question-circle text-muted ms-1 fs-6" data-bs-toggle="tooltip" data-bs-placement="top"
-                           title="Si dejás estos campos vacíos, se usa el nombre del producto como título y un resumen de la descripción detallada como meta description."></i>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="meta_title" class="form-label">Meta title</label>
-                        <input type="text" class="form-control @error('meta_title') is-invalid @enderror" id="meta_title" name="meta_title" maxlength="60" value="{{ old('meta_title') }}">
-                        @error('meta_title')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted contador-caracteres" data-max="60">0/60</small>
-                    </div>
-                    <div class="mb-0">
-                        <label for="meta_description" class="form-label">Meta description</label>
-                        <textarea class="form-control @error('meta_description') is-invalid @enderror" id="meta_description" name="meta_description" rows="2" maxlength="160">{{ old('meta_description') }}</textarea>
-                        @error('meta_description')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted contador-caracteres" data-max="160">0/160</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card de Imagen -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-image"></i> Imagen del Producto</h5>
@@ -265,7 +237,7 @@
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Etiquetas</h5>
+                    <h5 class="mb-0">Etiquetas @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.etiquetas'), 'lugar' => 'right', 'grande' => true])</h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-etiqueta">
                         <i class="bi bi-plus"></i> Agregar
                     </button>
@@ -301,7 +273,7 @@
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Especificaciones</h5>
+                    <h5 class="mb-0">Especificaciones @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.especificaciones'), 'lugar' => 'right', 'grande' => true])</h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-especificacion">
                         <i class="bi bi-plus"></i> Agregar
                     </button>
@@ -326,6 +298,7 @@
                     </div>
                 </div>
             </div>
+            @include('admin.productos.partials.card-seo')
         </div>
 
         <div class="col-md-4">
