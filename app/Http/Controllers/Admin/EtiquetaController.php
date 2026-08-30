@@ -87,16 +87,32 @@ class EtiquetaController extends Controller
             ->with('success', 'Etiqueta eliminada correctamente');
     }
 
+    /**
+     * Valores ya usados para esta etiqueta, para el desplegable del formulario.
+     *
+     * Con q vacío devuelve los primeros valores en orden alfabético, que es lo que
+     * permite abrir la lista y mirar qué hay sin tener que adivinar cómo empieza.
+     * El corte va en la consulta y no con ->take() sobre la colección: la etiqueta
+     * Modelo tiene 2.297 valores distintos y traerlos todos para descartar casi
+     * todos en PHP no tiene sentido.
+     */
     public function buscarValores(Request $request, Etiqueta $etiqueta)
     {
-        $buscar = $request->get('q', '');
+        $buscar = trim($request->get('q', ''));
 
-        $valores = DB::table('producto_etiqueta')
-            ->where('etiqueta_id', $etiqueta->id)
-            ->where('valor', 'ilike', "%{$buscar}%")
+        $query = DB::table('producto_etiqueta')
+            ->select('valor')
             ->distinct()
-            ->pluck('valor')
-            ->take(10);
+            ->where('etiqueta_id', $etiqueta->id)
+            ->where('valor', '!=', '');
+
+        if ($buscar !== '') {
+            $query->where('valor', 'ilike', "%{$buscar}%");
+        }
+
+        $valores = $query->orderBy('valor')
+            ->limit(ProductoController::MAX_SUGERENCIAS)
+            ->pluck('valor');
 
         return response()->json($valores);
     }

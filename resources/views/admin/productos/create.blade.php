@@ -243,6 +243,7 @@
                     </button>
                 </div>
                 <div class="card-body">
+                    @include('admin.productos.partials.etiquetas-bloqueo')
                     <div id="etiquetas-container">
                         <div class="row mb-2 etiqueta-row">
                             <div class="col-md-5">
@@ -254,8 +255,7 @@
                                 </select>
                             </div>
                             <div class="col-md-5 position-relative">
-                                <input type="text" class="form-control etiqueta-valor" name="etiquetas[0][valor]" placeholder="Valor (ej: Filtro, Auto)" autocomplete="off">
-                                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
+                                <input type="text" class="form-control etiqueta-valor" name="etiquetas[0][valor]" placeholder="Valor (ej: Filtro, Auto)" data-combo data-combo-fila=".etiqueta-row" data-combo-desde=".etiqueta-select" data-combo-url-con="{{ route('admin.etiquetas.valores', ['etiqueta' => '__ID__']) }}" autocomplete="off">
                             </div>
                             <div class="col-md-2">
                                 <button type="button" class="btn btn-outline-danger btn-eliminar-etiqueta">
@@ -264,7 +264,13 @@
                             </div>
                         </div>
                     </div>
-                    <small class="text-muted" id="etiquetas-hint">Selecciona una etiqueta y asigna un valor especifico para este producto.</small>
+                    <div class="d-none" id="etiquetas-hint">
+                        <small class="text-muted d-block">Elegí una etiqueta y escribí el valor que le corresponde a este producto.</small>
+                        <small class="text-muted d-block mt-1">
+                            Las marcadas como <span class="badge bg-danger">Obligatoria</span>
+                            las exige el proveedor: sin completarlas no vas a poder guardar.
+                        </small>
+                    </div>
                     @error('etiquetas')
                         <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ $message }}</div>
                     @enderror
@@ -282,12 +288,10 @@
                     <div id="especificaciones-container">
                         <div class="row mb-2 especificacion-row">
                             <div class="col-md-5 position-relative">
-                                <input type="text" class="form-control especificacion-clave" name="especificaciones[0][clave]" placeholder="Clave (ej: Peso)" autocomplete="off">
-                                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
+                                <input type="text" class="form-control especificacion-clave" name="especificaciones[0][clave]" placeholder="Clave (ej: Peso)" data-combo="{{ route('admin.especificaciones.claves') }}" autocomplete="off">
                             </div>
                             <div class="col-md-5 position-relative">
-                                <input type="text" class="form-control especificacion-valor" name="especificaciones[0][valor]" placeholder="Valor (ej: 1.75)" autocomplete="off">
-                                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
+                                <input type="text" class="form-control especificacion-valor" name="especificaciones[0][valor]" placeholder="Valor (ej: 1.75)" data-combo="{{ route('admin.especificaciones.valores') }}" data-combo-fila=".especificacion-row" data-combo-param="clave" data-combo-desde=".especificacion-clave" autocomplete="off">
                             </div>
                             <div class="col-md-2">
                                 <button type="button" class="btn btn-outline-danger btn-eliminar-especificacion">
@@ -322,13 +326,6 @@
     #detalle-editor { min-height: 120px; background: #fff; }
     .ql-toolbar { border-radius: 6px 6px 0 0; }
     .ql-container { border-radius: 0 0 6px 6px; font-size: 1rem; }
-    .autocomplete-suggestions .list-group-item {
-        cursor: pointer;
-        padding: 0.5rem 0.75rem;
-    }
-    .autocomplete-suggestions .list-group-item:hover {
-        background-color: #e9ecef;
-    }
     .etiqueta-bloqueada {
         pointer-events: none;
         background-color: #fff5f5;
@@ -344,7 +341,12 @@
 @push('scripts')
 <script src="{{ asset('vendor/quill/quill.min.js') }}"></script>
 @include('admin.productos.partials.slug-script')
+@include('admin.productos.partials.combo-sugerencias')
 <script>
+    {{-- URLs para las plantillas de fila que se arman dentro de JS --}}
+    const COMBO_URL_ETIQUETA      = @json(route('admin.etiquetas.valores', ['etiqueta' => '__ID__']));
+    const COMBO_URL_ESPEC_CLAVES  = @json(route('admin.especificaciones.claves'));
+    const COMBO_URL_ESPEC_VALORES = @json(route('admin.especificaciones.valores'));
     var quill = new Quill('#detalle-editor', {
         theme: 'snow',
         placeholder: 'Descripción completa del producto, características, usos, etc.',
@@ -413,8 +415,7 @@
                 </select>
             </div>
             <div class="col-md-5 position-relative">
-                <input type="text" class="form-control etiqueta-valor" name="etiquetas[${etiquetaIndex}][valor]" placeholder="Valor (ej: Filtro, Auto)" autocomplete="off">
-                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
+                <input type="text" class="form-control etiqueta-valor" name="etiquetas[${etiquetaIndex}][valor]" placeholder="Valor (ej: Filtro, Auto)" data-combo data-combo-fila=".etiqueta-row" data-combo-desde=".etiqueta-select" data-combo-url-con="${COMBO_URL_ETIQUETA}" autocomplete="off">
             </div>
             <div class="col-md-2">
                 <button type="button" class="btn btn-outline-danger btn-eliminar-etiqueta">
@@ -425,7 +426,6 @@
         if (preselectedId) {
             newRow.querySelector('.etiqueta-select').value = preselectedId;
         }
-        setupAutocomplete(newRow.querySelector('.etiqueta-valor'));
         etiquetaIndex++;
         return newRow;
     }
@@ -530,161 +530,16 @@
 
     // Autocompletado para valores de etiquetas
     let debounceTimer;
-    function setupAutocomplete(input) {
-        input.addEventListener('input', function() {
-            clearTimeout(debounceTimer);
-            const valor = this.value;
-            const row = this.closest('.etiqueta-row');
-            const select = row.querySelector('.etiqueta-select');
-            const etiquetaId = select.value;
-            const suggestionsDiv = row.querySelector('.autocomplete-suggestions');
-
-            if (!etiquetaId || valor.length < 3) {
-                suggestionsDiv.style.display = 'none';
-                return;
-            }
-
-            debounceTimer = setTimeout(() => {
-                fetch(`/admin/etiquetas/${etiquetaId}/valores?q=${encodeURIComponent(valor)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        suggestionsDiv.innerHTML = '';
-                        if (data.length > 0) {
-                            data.forEach(item => {
-                                const div = document.createElement('a');
-                                div.href = '#';
-                                div.className = 'list-group-item list-group-item-action';
-                                div.textContent = item;
-                                div.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    input.value = item;
-                                    suggestionsDiv.style.display = 'none';
-                                });
-                                suggestionsDiv.appendChild(div);
-                            });
-                            suggestionsDiv.style.display = 'block';
-                        } else {
-                            suggestionsDiv.style.display = 'none';
-                        }
-                    });
-            }, 300);
-        });
-
-        input.addEventListener('blur', function() {
-            setTimeout(() => {
-                const suggestionsDiv = this.closest('.etiqueta-row').querySelector('.autocomplete-suggestions');
-                suggestionsDiv.style.display = 'none';
-            }, 200);
-        });
-    }
 
     // Inicializar autocompletado en campos existentes
-    document.querySelectorAll('.etiqueta-valor').forEach(setupAutocomplete);
 
     // Autocompletado para especificaciones (claves)
     let debounceTimerEspecClave;
-    function setupAutocompleteEspecClave(input) {
-        input.addEventListener('input', function() {
-            clearTimeout(debounceTimerEspecClave);
-            const valor = this.value;
-            const suggestionsDiv = this.parentElement.querySelector('.autocomplete-suggestions');
-
-            if (valor.length < 3) {
-                suggestionsDiv.style.display = 'none';
-                return;
-            }
-
-            debounceTimerEspecClave = setTimeout(() => {
-                fetch(`/admin/especificaciones/claves?q=${encodeURIComponent(valor)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        suggestionsDiv.innerHTML = '';
-                        if (data.length > 0) {
-                            data.forEach(item => {
-                                const div = document.createElement('a');
-                                div.href = '#';
-                                div.className = 'list-group-item list-group-item-action';
-                                div.textContent = item;
-                                div.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    input.value = item;
-                                    suggestionsDiv.style.display = 'none';
-                                });
-                                suggestionsDiv.appendChild(div);
-                            });
-                            suggestionsDiv.style.display = 'block';
-                        } else {
-                            suggestionsDiv.style.display = 'none';
-                        }
-                    });
-            }, 300);
-        });
-
-        input.addEventListener('blur', function() {
-            setTimeout(() => {
-                const suggestionsDiv = this.parentElement.querySelector('.autocomplete-suggestions');
-                suggestionsDiv.style.display = 'none';
-            }, 200);
-        });
-    }
 
     // Autocompletado para especificaciones (valores)
     let debounceTimerEspecValor;
-    function setupAutocompleteEspecValor(input) {
-        input.addEventListener('input', function() {
-            clearTimeout(debounceTimerEspecValor);
-            const valor = this.value;
-            const row = this.closest('.especificacion-row');
-            const claveInput = row.querySelector('.especificacion-clave');
-            const clave = claveInput ? claveInput.value : '';
-            const suggestionsDiv = this.parentElement.querySelector('.autocomplete-suggestions');
-
-            if (valor.length < 3) {
-                suggestionsDiv.style.display = 'none';
-                return;
-            }
-
-            debounceTimerEspecValor = setTimeout(() => {
-                let url = `/admin/especificaciones/valores?q=${encodeURIComponent(valor)}`;
-                if (clave) {
-                    url += `&clave=${encodeURIComponent(clave)}`;
-                }
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        suggestionsDiv.innerHTML = '';
-                        if (data.length > 0) {
-                            data.forEach(item => {
-                                const div = document.createElement('a');
-                                div.href = '#';
-                                div.className = 'list-group-item list-group-item-action';
-                                div.textContent = item;
-                                div.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    input.value = item;
-                                    suggestionsDiv.style.display = 'none';
-                                });
-                                suggestionsDiv.appendChild(div);
-                            });
-                            suggestionsDiv.style.display = 'block';
-                        } else {
-                            suggestionsDiv.style.display = 'none';
-                        }
-                    });
-            }, 300);
-        });
-
-        input.addEventListener('blur', function() {
-            setTimeout(() => {
-                const suggestionsDiv = this.parentElement.querySelector('.autocomplete-suggestions');
-                suggestionsDiv.style.display = 'none';
-            }, 200);
-        });
-    }
 
     // Inicializar autocompletado en campos de especificaciones existentes
-    document.querySelectorAll('.especificacion-clave').forEach(setupAutocompleteEspecClave);
-    document.querySelectorAll('.especificacion-valor').forEach(setupAutocompleteEspecValor);
 
     document.getElementById('agregar-especificacion').addEventListener('click', function() {
         const container = document.getElementById('especificaciones-container');
@@ -692,12 +547,10 @@
         newRow.className = 'row mb-2 especificacion-row';
         newRow.innerHTML = `
             <div class="col-md-5 position-relative">
-                <input type="text" class="form-control especificacion-clave" name="especificaciones[${especificacionIndex}][clave]" placeholder="Clave (ej: Peso)" autocomplete="off">
-                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
+                <input type="text" class="form-control especificacion-clave" name="especificaciones[${especificacionIndex}][clave]" placeholder="Clave (ej: Peso)" data-combo="${COMBO_URL_ESPEC_CLAVES}" autocomplete="off">
             </div>
             <div class="col-md-5 position-relative">
-                <input type="text" class="form-control especificacion-valor" name="especificaciones[${especificacionIndex}][valor]" placeholder="Valor (ej: 1.75)" autocomplete="off">
-                <div class="autocomplete-suggestions list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
+                <input type="text" class="form-control especificacion-valor" name="especificaciones[${especificacionIndex}][valor]" placeholder="Valor (ej: 1.75)" data-combo="${COMBO_URL_ESPEC_VALORES}" data-combo-fila=".especificacion-row" data-combo-param="clave" data-combo-desde=".especificacion-clave" autocomplete="off">
             </div>
             <div class="col-md-2">
                 <button type="button" class="btn btn-outline-danger btn-eliminar-especificacion">
@@ -706,8 +559,6 @@
             </div>
         `;
         container.appendChild(newRow);
-        setupAutocompleteEspecClave(newRow.querySelector('.especificacion-clave'));
-        setupAutocompleteEspecValor(newRow.querySelector('.especificacion-valor'));
         especificacionIndex++;
     });
 

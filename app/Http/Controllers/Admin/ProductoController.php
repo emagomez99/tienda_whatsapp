@@ -16,6 +16,14 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductoController extends Controller
 {
+    /**
+     * Tope de sugerencias en los desplegables del formulario. Con 50 se pueden
+     * recorrer con la vista las etiquetas que tienen pocos valores (Fabricante
+     * tiene 11) sin traer las que tienen miles (Modelo tiene 2.297), donde de
+     * todos modos hay que escribir para encontrar algo.
+     */
+    const MAX_SUGERENCIAS = 50;
+
     public function __construct()
     {
         $this->middleware('permiso:productos.ver')->only(['index', 'show', 'buscarParaPedido', 'buscarEspecificacionClaves', 'buscarEspecificacionValores', 'historial']);
@@ -538,32 +546,43 @@ class ProductoController extends Controller
         ]);
     }
 
+    /**
+     * Claves de especificación ya usadas, para el desplegable del formulario.
+     *
+     * El corte va en la consulta y no con ->take() sobre la colección: así no se
+     * traen todas las claves distintas de la base para descartar casi todas en PHP.
+     */
     public function buscarEspecificacionClaves(Request $request)
     {
-        $buscar = $request->get('q', '');
+        $buscar = trim($request->get('q', ''));
 
-        $claves = ProductoEspecificacion::where('clave', 'ilike', "%{$buscar}%")
-            ->distinct()
-            ->pluck('clave')
-            ->take(10);
+        $query = ProductoEspecificacion::query()->select('clave')->distinct();
+
+        if ($buscar !== '') {
+            $query->where('clave', 'ilike', "%{$buscar}%");
+        }
+
+        $claves = $query->orderBy('clave')->limit(self::MAX_SUGERENCIAS)->pluck('clave');
 
         return response()->json($claves);
     }
 
     public function buscarEspecificacionValores(Request $request)
     {
-        $buscar = $request->get('q', '');
-        $clave = $request->get('clave', '');
+        $buscar = trim($request->get('q', ''));
+        $clave  = trim($request->get('clave', ''));
 
-        $query = ProductoEspecificacion::where('valor', 'ilike', "%{$buscar}%");
+        $query = ProductoEspecificacion::query()->select('valor')->distinct();
 
-        if (!empty($clave)) {
+        if ($buscar !== '') {
+            $query->where('valor', 'ilike', "%{$buscar}%");
+        }
+
+        if ($clave !== '') {
             $query->where('clave', $clave);
         }
 
-        $valores = $query->distinct()
-            ->pluck('valor')
-            ->take(10);
+        $valores = $query->orderBy('valor')->limit(self::MAX_SUGERENCIAS)->pluck('valor');
 
         return response()->json($valores);
     }
