@@ -11,8 +11,46 @@
     @csrf
     @method('PUT')
 
+
+<ul class="nav nav-tabs mb-0" id="tabs-config" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pane-apariencia" type="button" role="tab">
+            <i class="bi bi-palette"></i> Apariencia
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-tienda" type="button" role="tab">
+            <i class="bi bi-shop"></i> Tienda
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-redes" type="button" role="tab">
+            <i class="bi bi-share"></i> Redes Sociales
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-seo" type="button" role="tab">
+            <i class="bi bi-search"></i> SEO
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-whatsapp" type="button" role="tab">
+            <i class="bi bi-whatsapp"></i> WhatsApp
+        </button>
+    </li>
+    @if(auth()->user()->esSuperAdmin())
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-avanzada" type="button" role="tab">
+            <i class="bi bi-star-fill"></i> Avanzada
+        </button>
+    </li>
+    @endif
+</ul>
+
+<div class="tab-content border border-top-0 rounded-bottom bg-white p-3 p-md-4">
+<div class="tab-pane fade show active" id="pane-apariencia" role="tabpanel">
     <div class="row">
-        <div class="col-lg-6 mb-4">
+        <div class="col-12">
             <div class="card h-100">
                 <div class="card-header bg-light">
                     <h5 class="mb-0"><i class="bi bi-palette"></i> Apariencia</h5>
@@ -69,20 +107,11 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Mostrar nombre de la tienda</label>
-                        <div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_nombre_tienda" id="nombre_si" value="true" {{ old('mostrar_nombre_tienda', App\Models\Configuracion::obtener('mostrar_nombre_tienda', 'true')) === 'true' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="nombre_si">
-                                    <i class="bi bi-eye"></i> Sí
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_nombre_tienda" id="nombre_no" value="false" {{ old('mostrar_nombre_tienda', App\Models\Configuracion::obtener('mostrar_nombre_tienda', 'true')) === 'false' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="nombre_no">
-                                    <i class="bi bi-eye-slash"></i> No, solo logo
-                                </label>
-                            </div>
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="mostrar_nombre_tienda" value="false">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   id="mostrar_nombre_tienda" name="mostrar_nombre_tienda" value="true" {{ old('mostrar_nombre_tienda', App\Models\Configuracion::obtener('mostrar_nombre_tienda', 'true')) === 'true' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="mostrar_nombre_tienda">Mostrar el nombre junto al logo</label>
                         </div>
                     </div>
 
@@ -133,8 +162,11 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-lg-6 mb-4">
+    </div>
+</div>
+<div class="tab-pane fade" id="pane-tienda" role="tabpanel">
+    <div class="row">
+        <div class="col-12">
             <div class="card h-100">
                 <div class="card-header bg-light">
                     <h5 class="mb-0"><i class="bi bi-shop"></i> Tienda</h5>
@@ -150,77 +182,41 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Mostrar Precios</label>
-                        <div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_precios" id="precios_si" value="true" {{ old('mostrar_precios', App\Models\Configuracion::obtener('mostrar_precios', 'true')) === 'true' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="precios_si">
-                                    <i class="bi bi-eye"></i> Sí
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_precios" id="precios_no" value="false" {{ old('mostrar_precios', App\Models\Configuracion::obtener('mostrar_precios', 'true')) === 'false' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="precios_no">
-                                    <i class="bi bi-eye-slash"></i> Ocultar
-                                </label>
-                            </div>
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="mostrar_precios" value="false">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   id="mostrar_precios" name="mostrar_precios" value="true" {{ old('mostrar_precios', App\Models\Configuracion::obtener('mostrar_precios', 'true')) === 'true' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="mostrar_precios">Mostrar los precios en la tienda</label>
                         </div>
                         <small class="text-muted">Si se ocultan, los clientes no verán el precio en ningun lugar de la tienda</small>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Mostrar Proveedor en Productos</label>
-                        <div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_proveedor" id="proveedor_si" value="true" {{ old('mostrar_proveedor', App\Models\Configuracion::obtener('mostrar_proveedor', 'false')) === 'true' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="proveedor_si">
-                                    <i class="bi bi-eye"></i> Sí
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_proveedor" id="proveedor_no" value="false" {{ old('mostrar_proveedor', App\Models\Configuracion::obtener('mostrar_proveedor', 'false')) === 'false' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="proveedor_no">
-                                    <i class="bi bi-eye-slash"></i> Ocultar
-                                </label>
-                            </div>
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="mostrar_proveedor" value="false">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   id="mostrar_proveedor" name="mostrar_proveedor" value="true" {{ old('mostrar_proveedor', App\Models\Configuracion::obtener('mostrar_proveedor', 'false')) === 'true' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="mostrar_proveedor">Mostrar el proveedor en la ficha del producto</label>
                         </div>
                         <small class="text-muted">Si se oculta, los clientes no verán el nombre del proveedor en la ficha del producto</small>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Solicitar Dirección de Envío</label>
-                        <div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="pedir_direccion_envio" id="direccion_si" value="true" {{ old('pedir_direccion_envio', App\Models\Configuracion::obtener('pedir_direccion_envio', 'true')) === 'true' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="direccion_si">
-                                    <i class="bi bi-geo-alt"></i> Sí
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="pedir_direccion_envio" id="direccion_no" value="false" {{ old('pedir_direccion_envio', App\Models\Configuracion::obtener('pedir_direccion_envio', 'true')) === 'false' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="direccion_no">
-                                    <i class="bi bi-geo-alt-fill"></i> No
-                                </label>
-                            </div>
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="pedir_direccion_envio" value="false">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   id="pedir_direccion_envio" name="pedir_direccion_envio" value="true" {{ old('pedir_direccion_envio', App\Models\Configuracion::obtener('pedir_direccion_envio', 'true')) === 'true' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="pedir_direccion_envio">Pedir dirección de envío al finalizar el pedido</label>
                         </div>
                         <small class="text-muted">Si se desactiva, el cliente no deberá ingresar su dirección al hacer el pedido</small>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Mostrar Productos sin Stock</label>
-                        <div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_productos_sin_stock" id="sin_stock_si" value="true" {{ old('mostrar_productos_sin_stock', App\Models\Configuracion::obtener('mostrar_productos_sin_stock', 'true')) === 'true' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="sin_stock_si">
-                                    <i class="bi bi-eye"></i> Sí
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mostrar_productos_sin_stock" id="sin_stock_no" value="false" {{ old('mostrar_productos_sin_stock', App\Models\Configuracion::obtener('mostrar_productos_sin_stock', 'true')) === 'false' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="sin_stock_no">
-                                    <i class="bi bi-eye-slash"></i> Ocultar
-                                </label>
-                            </div>
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="mostrar_productos_sin_stock" value="false">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   id="mostrar_productos_sin_stock" name="mostrar_productos_sin_stock" value="true" {{ old('mostrar_productos_sin_stock', App\Models\Configuracion::obtener('mostrar_productos_sin_stock', 'true')) === 'true' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="mostrar_productos_sin_stock">Mostrar productos sin stock</label>
                         </div>
                         <small class="text-muted">Si se ocultan, solo se verán productos disponibles</small>
                     </div>
@@ -248,7 +244,8 @@
             </div>
         </div>
     </div>
-
+</div>
+<div class="tab-pane fade" id="pane-redes" role="tabpanel">
     <div class="row">
         <div class="col-12 mb-4">
             <div class="card">
@@ -336,21 +333,28 @@
             </div>
         </div>
     </div>
-
+</div>
+<div class="tab-pane fade" id="pane-seo" role="tabpanel">
     <div class="row">
         <div class="col-12 mb-4">
             <div class="card">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="bi bi-search"></i> SEO</h5>
+                    <h5 class="mb-0"><i class="bi bi-search"></i> SEO <span class="fw-normal">— Cómo se ve en Google</span></h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-3">
-                        Valores por defecto que se usan cuando una página, producto o menú no tiene su propio
-                        título/descripción SEO cargado.
-                    </p>
+                    <div class="alert alert-light border d-flex gap-2 py-2 px-3 mb-4">
+                        <i class="bi bi-info-circle text-primary mt-1"></i>
+                        <div class="small">
+                            <span class="fw-semibold d-block mb-1">Esto es lo que Google muestra de tu tienda.</span>
+                            <span class="text-muted">
+                                Se usa en las páginas que no tienen su propio título o descripción cargado.
+                                Conviene que mencione tus marcas o rubros: es lo que la gente busca.
+                            </span>
+                        </div>
+                    </div>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="seo_titulo_default" class="form-label">Meta title por defecto</label>
+                            <label for="seo_titulo_default" class="form-label">Título en Google</label>
                             <input type="text" class="form-control @error('seo_titulo_default') is-invalid @enderror"
                                    id="seo_titulo_default" name="seo_titulo_default" maxlength="60"
                                    value="{{ old('seo_titulo_default', App\Models\Configuracion::seoTituloDefault()) }}">
@@ -360,7 +364,7 @@
                             <small class="text-muted contador-caracteres" data-max="60">0/60</small>
                         </div>
                         <div class="col-md-6">
-                            <label for="seo_keywords" class="form-label">Palabras clave (separadas por coma)</label>
+                            <label for="seo_keywords" class="form-label">Palabras clave <span class="text-muted fw-normal">(separadas por coma)</span></label>
                             <input type="text" class="form-control @error('seo_keywords') is-invalid @enderror"
                                    id="seo_keywords" name="seo_keywords"
                                    value="{{ old('seo_keywords', App\Models\Configuracion::seoKeywords()) }}">
@@ -369,7 +373,7 @@
                             @enderror
                         </div>
                         <div class="col-12">
-                            <label for="seo_descripcion_default" class="form-label">Meta description por defecto</label>
+                            <label for="seo_descripcion_default" class="form-label">Descripción en Google</label>
                             <textarea class="form-control @error('seo_descripcion_default') is-invalid @enderror"
                                       id="seo_descripcion_default" name="seo_descripcion_default" rows="2" maxlength="160">{{ old('seo_descripcion_default', App\Models\Configuracion::seoDescripcionDefault()) }}</textarea>
                             @error('seo_descripcion_default')
@@ -387,7 +391,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6">
-                            <label for="google_site_verification" class="form-label">Google Search Console (código de verificación)</label>
+                            <label for="google_site_verification" class="form-label">Código de verificación de Google Search Console</label>
                             <input type="text" class="form-control @error('google_site_verification') is-invalid @enderror"
                                    id="google_site_verification" name="google_site_verification"
                                    value="{{ old('google_site_verification', App\Models\Configuracion::googleSiteVerification()) }}">
@@ -403,22 +407,11 @@
                             </p>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">¿Declarar ubicación de la tienda?</label>
-                            <div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="ubicacion_activa" id="ubicacion_si" value="true"
-                                           {{ old('ubicacion_activa', App\Models\Configuracion::ubicacionActiva() ? 'true' : 'false') === 'true' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="ubicacion_si">
-                                        <i class="bi bi-check-circle text-success"></i> Sí
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="ubicacion_activa" id="ubicacion_no" value="false"
-                                           {{ old('ubicacion_activa', App\Models\Configuracion::ubicacionActiva() ? 'true' : 'false') === 'false' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="ubicacion_no">
-                                        <i class="bi bi-x-circle text-danger"></i> No
-                                    </label>
-                                </div>
+                            <div class="form-check form-switch">
+                                <input type="hidden" name="ubicacion_activa" value="false">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                       id="ubicacion_activa" name="ubicacion_activa" value="true" {{ old('ubicacion_activa', App\Models\Configuracion::ubicacionActiva() ? 'true' : 'false') === 'true' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="ubicacion_activa">Declarar la ubicación de la tienda</label>
                             </div>
                             <small class="text-muted">Si elegís "No", los campos de abajo se guardan pero no se usan en el SEO.</small>
                         </div>
@@ -470,20 +463,11 @@
                         </div>
                         <div class="col-12"><hr></div>
                         <div class="col-12">
-                            <label class="form-label">Permitir que los buscadores indexen la tienda</label>
-                            <div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="robots_index" id="robots_si" value="true" {{ old('robots_index', App\Models\Configuracion::robotsIndex() ? 'true' : 'false') === 'true' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="robots_si">
-                                        <i class="bi bi-check-circle text-success"></i> Sí
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="robots_index" id="robots_no" value="false" {{ old('robots_index', App\Models\Configuracion::robotsIndex() ? 'true' : 'false') === 'false' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="robots_no">
-                                        <i class="bi bi-x-circle text-danger"></i> No
-                                    </label>
-                                </div>
+                            <div class="form-check form-switch">
+                                <input type="hidden" name="robots_index" value="false">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                       id="robots_index" name="robots_index" value="true" {{ old('robots_index', App\Models\Configuracion::robotsIndex() ? 'true' : 'false') === 'true' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="robots_index">Permitir que Google indexe la tienda</label>
                             </div>
                             <small class="text-muted">Desactivalo mientras armás la tienda para evitar que Google la indexe antes de tiempo.</small>
                         </div>
@@ -492,7 +476,8 @@
             </div>
         </div>
     </div>
-
+</div>
+<div class="tab-pane fade" id="pane-whatsapp" role="tabpanel">
     <div class="row">
         <div class="col-12 mb-4">
             <div class="card">
@@ -581,7 +566,8 @@
             </div>
         </div>
     </div>
-
+</div>
+<div class="tab-pane fade" id="pane-avanzada" role="tabpanel">
     @if(auth()->user()->esSuperAdmin())
     <div class="row">
         <div class="col-12 mb-4">
@@ -611,24 +597,12 @@
                             </small>
                             <div class="row g-3 align-items-start">
                                 <div class="col-md-5">
-                                    <label class="form-label small mb-1">Habilitar imágenes adicionales</label>
-                                    <div class="d-flex gap-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="imagenes_adicionales_activas"
-                                                   id="img_ad_si" value="true"
-                                                   {{ old('imagenes_adicionales_activas', $imgAdicionalesActivas ? 'true' : 'false') === 'true' ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="img_ad_si">
-                                                <i class="bi bi-check-circle text-success"></i> Sí
-                                            </label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="imagenes_adicionales_activas"
-                                                   id="img_ad_no" value="false"
-                                                   {{ old('imagenes_adicionales_activas', $imgAdicionalesActivas ? 'true' : 'false') === 'false' ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="img_ad_no">
-                                                <i class="bi bi-x-circle text-danger"></i> No
-                                            </label>
-                                        </div>
+                                    <div class="form-check form-switch">
+                                        <input type="hidden" name="imagenes_adicionales_activas" value="false">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="imagenes_adicionales_activas" name="imagenes_adicionales_activas" value="true"
+                                               {{ old('imagenes_adicionales_activas', $imgAdicionalesActivas ? 'true' : 'false') === 'true' ? 'checked' : '' }}>
+                                        <label class="form-check-label small" for="imagenes_adicionales_activas">Habilitar imágenes adicionales</label>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -698,14 +672,14 @@
         </div>
     </div>
     @endif
+</div>
+</div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="d-grid">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="bi bi-check-circle"></i> Guardar Configuraciones
-                </button>
-            </div>
+    <div class="position-sticky bottom-0 bg-white border-top py-3 mt-3" style="z-index:5;">
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-circle"></i> Guardar cambios
+            </button>
         </div>
     </div>
 </form>
