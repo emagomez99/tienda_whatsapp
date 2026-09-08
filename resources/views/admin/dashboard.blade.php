@@ -280,7 +280,7 @@
                     'url'      => route('admin.pedidos.create'),
                     'icono'    => 'bi-bag-plus',
                     'titulo'   => 'Nuevo Pedido',
-                    'detalle'  => 'Cargar un pedido a mano',
+                    'detalle'  => 'Cargar un nuevo pedido',
                     'destacar' => true,
                 ];
             }
@@ -299,7 +299,7 @@
                     'url'     => route('admin.proveedores.create'),
                     'icono'   => 'bi-truck',
                     'titulo'  => 'Nuevo Proveedor',
-                    'detalle' => 'Dar de alta a quien te provee',
+                    'detalle' => 'Dar de alta un nuevo proveedor',
                 ];
             }
 
@@ -308,7 +308,7 @@
                     'url'     => route('admin.configuraciones.index'),
                     'icono'   => 'bi-sliders',
                     'titulo'  => 'Configuración',
-                    'detalle' => 'Ajustes de la tienda',
+                    'detalle' => 'Ir a los ajustes de la tienda',
                 ];
             }
         @endphp
