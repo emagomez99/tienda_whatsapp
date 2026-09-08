@@ -2,6 +2,62 @@
 
 @section('title', 'Dashboard')
 
+@push('styles')
+<style>
+    .accion-rapida {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        padding: .65rem .9rem;
+        text-decoration: none;
+        color: inherit;
+        border-bottom: 1px solid rgba(0,0,0,.055);
+        transition: background-color .15s ease;
+    }
+    .accion-rapida:last-child { border-bottom: 0; }
+    .accion-rapida:hover  { background-color: rgba(0,0,0,.03); color: inherit; }
+    .accion-rapida:focus-visible {
+        outline: 2px solid var(--bs-primary);
+        outline-offset: -2px;
+    }
+    /* La destacada se marca con un filete lateral y no con un fondo fuerte: se
+       distingue igual y no compite con los badges de estado de la pantalla. */
+    .accion-rapida.destacada {
+        box-shadow: inset 3px 0 0 var(--bs-primary);
+        background-color: rgba(var(--bs-primary-rgb), .04);
+    }
+    .accion-rapida.destacada:hover { background-color: rgba(var(--bs-primary-rgb), .09); }
+
+    .accion-icono {
+        flex: 0 0 2.1rem;
+        height: 2.1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: .5rem;
+        font-size: .95rem;
+    }
+    .accion-texto  { flex: 1 1 auto; min-width: 0; line-height: 1.25; }
+    .accion-titulo { display: block; font-size: .875rem; font-weight: 600; }
+    .accion-detalle {
+        display: block;
+        font-size: .72rem;
+        color: var(--bs-secondary-color, #6c757d);
+    }
+    .accion-flecha {
+        color: #adb5bd;
+        font-size: .8rem;
+        transition: transform .15s ease;
+    }
+    .accion-rapida:hover .accion-flecha { transform: translateX(3px); }
+
+    @media (prefers-reduced-motion: reduce) {
+        .accion-rapida, .accion-flecha { transition: none; }
+        .accion-rapida:hover .accion-flecha { transform: none; }
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="mb-0"><i class="bi bi-speedometer2"></i> Dashboard</h3>
@@ -203,28 +259,82 @@
 
     {{-- Panel lateral --}}
     <div class="col-md-4">
-        {{-- Acciones rápidas --}}
+        {{-- Acciones rápidas.
+
+             Cada acción es una fila con ícono, qué hace y adónde lleva, en vez de
+             cuatro botones iguales apilados: con botones idénticos había que leer el
+             texto de cada uno para distinguirlos. El pedido va primero porque es lo
+             que más se hace en el día, y es la única destacada -- si se destacan todas,
+             no se destaca ninguna.
+
+             Sólo se muestran las acciones que el usuario puede ejecutar: ofrecer un
+             botón que después devuelve "no tenés permiso" es peor que no ofrecerlo. --}}
+        @php
+            // auth()->user() y no $user: el layout define esa variable en su propio
+            // cuerpo, que Blade evalúa DESPUÉS de capturar esta sección.
+            $usuario  = auth()->user();
+            $acciones = [];
+
+            if ($usuario->puede('pedidos.gestionar')) {
+                $acciones[] = [
+                    'url'      => route('admin.pedidos.create'),
+                    'icono'    => 'bi-bag-plus',
+                    'titulo'   => 'Nuevo Pedido',
+                    'detalle'  => 'Cargar un pedido a mano',
+                    'destacar' => true,
+                ];
+            }
+
+            if ($usuario->puede('productos.crear')) {
+                $acciones[] = [
+                    'url'     => route('admin.productos.create'),
+                    'icono'   => 'bi-box-seam',
+                    'titulo'  => 'Nuevo Producto',
+                    'detalle' => 'Sumar un artículo al catálogo',
+                ];
+            }
+
+            if ($usuario->puede('proveedores.crear')) {
+                $acciones[] = [
+                    'url'     => route('admin.proveedores.create'),
+                    'icono'   => 'bi-truck',
+                    'titulo'  => 'Nuevo Proveedor',
+                    'detalle' => 'Dar de alta a quien te provee',
+                ];
+            }
+
+            if ($usuario->puede('configuraciones.ver')) {
+                $acciones[] = [
+                    'url'     => route('admin.configuraciones.index'),
+                    'icono'   => 'bi-sliders',
+                    'titulo'  => 'Configuración',
+                    'detalle' => 'Ajustes de la tienda',
+                ];
+            }
+        @endphp
+
+        @if(count($acciones))
         <div class="card shadow-sm mb-3">
             <div class="card-header py-2">
-                <span class="fw-semibold"><i class="bi bi-lightning"></i> Acciones rápidas</span>
+                <span class="fw-semibold"><i class="bi bi-lightning-charge-fill text-warning"></i> Acciones rápidas</span>
             </div>
-            <div class="card-body py-2">
-                <div class="d-grid gap-2">
-                    <a href="{{ route('admin.productos.create') }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus-circle"></i> Nuevo Producto
+            <div class="card-body p-0">
+                @foreach($acciones as $accion)
+                    @php $destacar = !empty($accion['destacar']); @endphp
+                    <a href="{{ $accion['url'] }}" class="accion-rapida{{ $destacar ? ' destacada' : '' }}">
+                        <span class="accion-icono {{ $destacar ? 'bg-primary text-white' : 'bg-primary bg-opacity-10 text-primary' }}">
+                            <i class="bi {{ $accion['icono'] }}"></i>
+                        </span>
+                        <span class="accion-texto">
+                            <span class="accion-titulo">{{ $accion['titulo'] }}</span>
+                            <span class="accion-detalle">{{ $accion['detalle'] }}</span>
+                        </span>
+                        <i class="bi bi-chevron-right accion-flecha"></i>
                     </a>
-                    <a href="{{ route('admin.proveedores.create') }}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-plus-circle"></i> Nuevo Proveedor
-                    </a>
-                    <a href="{{ route('admin.pedidos.create') }}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-plus-circle"></i> Nuevo Pedido
-                    </a>
-                    <a href="{{ route('admin.configuraciones.index') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-sliders"></i> Configuración
-                    </a>
-                </div>
+                @endforeach
             </div>
         </div>
+        @endif
 
         {{-- Resumen pedidos --}}
         <div class="card shadow-sm">
