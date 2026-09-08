@@ -221,25 +221,57 @@
                         <small class="text-muted">Si se ocultan, solo se verán productos disponibles</small>
                     </div>
 
-                    {{-- La moneda por defecto se marca en la propia moneda, no acá:
-                         así se borra junto con ella y se ve al lado de su cotización. --}}
-                    @if(auth()->user()->puede('monedas.ver'))
+                    {{-- "¿En qué moneda cobrás?" se contesta sin pensar y se configura
+                         una sola vez. Antes era un switch en cada moneda del ABM, que
+                         obligaba a entender qué es una moneda de referencia para editar
+                         cualquier cotización. --}}
+                    @if(auth()->user()->puede('monedas.ver') && $monedas->isNotEmpty())
+                    @php $monedaTienda = App\Models\Moneda::base(); @endphp
                     <div class="mb-3">
-                        <label class="form-label">Moneda por defecto</label>
-                        @php $monedaPorDefecto = App\Models\Moneda::porDefecto(); @endphp
-                        <div class="form-control bg-light d-flex justify-content-between align-items-center">
-                            <span>
-                                @if($monedaPorDefecto)
-                                    {{ $monedaPorDefecto->nombre }} ({{ $monedaPorDefecto->simbolo }} {{ $monedaPorDefecto->codigo }})
-                                @else
-                                    <span class="text-muted">Sin moneda por defecto</span>
-                                @endif
-                            </span>
-                            <a href="{{ route('admin.monedas.index') }}" class="small text-decoration-none">
-                                <i class="bi bi-pencil"></i> Cambiar
-                            </a>
-                        </div>
-                        <small class="text-muted">Se preselecciona al cargar un nuevo producto. Se marca desde Configuración → Monedas.</small>
+                        <label for="moneda_tienda" class="form-label">¿En qué moneda cobrás?</label>
+                        <select class="form-select @error('moneda_tienda') is-invalid @enderror"
+                                id="moneda_tienda" name="moneda_tienda">
+                            @foreach($monedas as $moneda)
+                                <option value="{{ $moneda->id }}"
+                                    {{ old('moneda_tienda', $monedaTienda ? $monedaTienda->id : null) == $moneda->id ? 'selected' : '' }}>
+                                    {{ $moneda->nombre }} ({{ $moneda->simbolo }} {{ $moneda->codigo }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('moneda_tienda')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">
+                            Las cotizaciones de las demás monedas se escriben en ésta. Se configura una vez.
+                        </small>
+                    </div>
+                    @endif
+
+                    {{-- Va al lado de "en qué moneda cobrás" y no en el ABM: las dos son
+                         decisiones de la tienda, no propiedades de una moneda. Repartidas
+                         en dos pantallas obligaban a entender la diferencia para saber
+                         dónde buscar cada una. --}}
+                    @if(auth()->user()->puede('monedas.ver') && $monedas->isNotEmpty())
+                    @php $monedaFavorita = App\Models\Moneda::porDefecto(); @endphp
+                    <div class="mb-3">
+                        <label for="moneda_favorita" class="form-label">¿En qué moneda vendés más?</label>
+                        <select class="form-select @error('moneda_favorita') is-invalid @enderror"
+                                id="moneda_favorita" name="moneda_favorita">
+                            <option value="">Ninguna en particular</option>
+                            @foreach($monedas as $moneda)
+                                <option value="{{ $moneda->id }}"
+                                    {{ old('moneda_favorita', $monedaFavorita ? $monedaFavorita->id : null) == $moneda->id ? 'selected' : '' }}>
+                                    {{ $moneda->nombre }} ({{ $moneda->simbolo }} {{ $moneda->codigo }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('moneda_favorita')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">
+                            Viene elegida al cargar un producto nuevo, para no tener que cambiarla cada vez.
+                            Puede no ser la moneda en la que cobrás.
+                        </small>
                     </div>
                     @endif
                 </div>

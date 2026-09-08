@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Configuracion;
+use App\Models\Moneda;
+use App\Models\Producto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,8 +20,9 @@ class ConfiguracionController extends Controller
     public function index()
     {
         $configuraciones = Configuracion::orderBy('clave')->get();
+        $monedas         = Moneda::where('activa', true)->orderBy('nombre')->get();
 
-        return view('admin.configuraciones.index', compact('configuraciones'));
+        return view('admin.configuraciones.index', compact('configuraciones', 'monedas'));
     }
 
     public function update(Request $request)
@@ -27,6 +30,8 @@ class ConfiguracionController extends Controller
         $paletasValidas = implode(',', array_keys(Configuracion::paletas()));
 
         $request->validate([
+            'moneda_tienda'              => 'nullable|exists:monedas,id',
+            'moneda_favorita'            => 'nullable|exists:monedas,id',
             'mostrar_precios'            => 'required|in:true,false',
             'mostrar_productos_sin_stock'=> 'required|in:true,false',
             'mostrar_nombre_tienda'      => 'required|in:true,false',
@@ -146,7 +151,79 @@ class ConfiguracionController extends Controller
             Configuracion::establecer('favicon', '', 'Favicon de la tienda');
         }
 
+        $aviso = $this->aplicarMonedaDeLaTienda($request->input('moneda_tienda'));
+        $this->aplicarMonedaFavorita($request->input('moneda_favorita'));
+
         return redirect()->route('admin.configuraciones.index')
-            ->with('success', 'Configuraciones actualizadas correctamente');
+            ->with('success', 'Configuraciones actualizadas correctamente' . $aviso);
+    }
+
+    /**
+     * Cambia en qué moneda cobra la tienda.
+     *
+     * Vive en Ajustes y no en el ABM de monedas porque es un dato de la tienda que se
+     * contesta una vez -- "¿en qué moneda cobrás?" -- y no una propiedad que haya que
+     * decidir cada vez que se edita una moneda cualquiera.
+     *
+     * Marcarla dispara Moneda::reexpresarLasDemas(), que divide las otras cotizaciones
+     * por la de ésta: es un cambio de unidad de medida, así que las equivalencias
+     * reales no se mueven y los precios tampoco. El recálculo posterior recorre el
+     * catálogo entero -- todas las cotizaciones cambiaron a la vez -- y en la práctica
+     * sólo corrige redondeos.
+     *
+     * @return string Texto a agregar al mensaje de éxito. Vacío si no cambió nada.
+     */
+    private function aplicarMonedaDeLaTienda($monedaId)
+    {
+        if (!$monedaId) {
+            return '';
+        }
+
+        $nueva = Moneda::find($monedaId);
+
+        if (!$nueva || $nueva->es_base) {
+            return '';
+        }
+
+        $nueva->es_base = true;
+        $nueva->save();
+
+        $recalculados = Producto::recalcularPreciosEnMargen();
+
+        $aviso = '. Ahora cobrás en ' . $nueva->nombre
+               . ': las cotizaciones de las demás monedas se reexpresaron solas y los precios no se movieron';
+
+        return $aviso . ($recalculados > 0 ? ' (se ajustó el redondeo de ' . $recalculados . ').' : '.');
+    }
+
+    /**
+     * Cambia qué moneda viene elegida al cargar un producto.
+     *
+     * A diferencia de la moneda de la tienda, ésta puede no existir: es una comodidad
+     * de carga, no una pieza estructural. Marcarla degrada a la anterior desde el
+     * modelo (ver Moneda::boot), así que acá sólo hay que encender la nueva o apagar
+     * la que hubiera.
+     */
+    private function aplicarMonedaFavorita($monedaId)
+    {
+        if ($monedaId) {
+            $nueva = Moneda::find($monedaId);
+
+            if ($nueva && !$nueva->es_default) {
+                $nueva->es_default = true;
+                $nueva->save();
+            }
+
+            return;
+        }
+
+        // Se consulta por la marca y no con porDefecto(), que filtra por activa: si
+        // quedó una favorita inactiva por un camino viejo, hay que poder apagarla.
+        $actual = Moneda::where('es_default', true)->first();
+
+        if ($actual) {
+            $actual->es_default = false;
+            $actual->save();
+        }
     }
 }

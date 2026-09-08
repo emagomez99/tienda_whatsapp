@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Support\PrecioVenta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Moneda con cotización contra una moneda base.
@@ -32,7 +33,9 @@ class Moneda extends Model
         'activa'     => 'boolean',
         'es_base'    => 'boolean',
         'es_default' => 'boolean',
-        'cotizacion' => 'decimal:6',
+        // 10 decimales: una moneda débil expresada contra una fuerte (el peso contra
+        // el dólar es 1/1500) se queda sin cifras significativas con menos.
+        'cotizacion' => 'decimal:10',
     ];
 
     /**
@@ -63,6 +66,8 @@ class Moneda extends Model
         // builder y no por save(), para no volver a entrar en este mismo hook.
         static::saved(function ($moneda) {
             if ($moneda->es_base) {
+                $moneda->reexpresarLasDemas();
+
                 static::where('id', '!=', $moneda->id)
                     ->where('es_base', true)
                     ->update(['es_base' => false, 'updated_at' => now()]);
@@ -86,6 +91,37 @@ class Moneda extends Model
     public function productosDeCompra()
     {
         return $this->hasMany(Producto::class, 'moneda_compra_id');
+    }
+
+    /**
+     * Reexpresa las demás cotizaciones cuando esta moneda pasa a ser la de la tienda.
+     *
+     * Cambiar la moneda de la tienda es un cambio de UNIDAD DE MEDIDA, no de valor:
+     * que los precios pasen a leerse en dólares no hace que nada valga distinto. Si
+     * el dólar valía 1500 y pasa a ser la unidad, todas las demás se dividen por
+     * 1500 y las equivalencias entre ellas quedan exactamente iguales.
+     *
+     * Sin esto la escala queda mezclada: el dólar en 1 y el peso todavía en 1, o sea
+     * "1 peso = 1 dólar", y el recálculo de precios escribe ese disparate en los
+     * 30.000 productos sin que nadie lo note.
+     *
+     * No reescala cuando no hay contra qué: si esta moneda ya era la de la tienda su
+     * cotización anterior es 1, y si es un alta nueva nunca estuvo cotizada respecto
+     * de las otras. En ese segundo caso las cotizaciones viejas sí hay que revisarlas
+     * a mano, porque no existe un factor que las relacione.
+     */
+    protected function reexpresarLasDemas()
+    {
+        $anterior = (float) $this->getOriginal('cotizacion');
+
+        if ($anterior <= 0 || abs($anterior - 1.0) < 0.0000000001) {
+            return 0;
+        }
+
+        return static::where('id', '!=', $this->id)->update([
+            'cotizacion' => DB::raw('cotizacion / ' . $anterior),
+            'updated_at' => now(),
+        ]);
     }
 
     /** Unidad contra la que se miden todas las cotizaciones. Siempre hay una. */

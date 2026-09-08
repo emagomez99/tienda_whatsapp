@@ -53,9 +53,13 @@ class MonedaController extends Controller
     {
         $validated = $this->normalizarCotizacion($this->validar($request));
 
-        $validated['activa']     = $request->boolean('activa');
-        $validated['es_base']    = $request->boolean('es_base');
-        $validated['es_default'] = $request->boolean('es_default');
+        $validated['activa'] = $request->boolean('activa');
+        // Ni la moneda de la tienda ni la favorita se eligen dando de alta una moneda:
+        // las dos son ajustes de la tienda y viven en Ajustes. Además, un alta nueva
+        // nunca estuvo cotizada contra las demás, así que no habría contra qué
+        // reexpresarlas si naciera siendo la de la tienda.
+        $validated['es_base']    = false;
+        $validated['es_default'] = false;
 
         $moneda = Moneda::create($validated);
 
@@ -81,9 +85,12 @@ class MonedaController extends Controller
     {
         $validated = $this->normalizarCotizacion($this->validar($request, $moneda));
 
-        $validated['activa']     = $request->boolean('activa');
-        $validated['es_base']    = $request->boolean('es_base');
-        $validated['es_default'] = $request->boolean('es_default');
+        $validated['activa'] = $request->boolean('activa');
+        // Ninguna de las dos marcas se edita acá: se eligen en Ajustes. Se conservan
+        // los valores actuales y no se leen del request, o editar el nombre de una
+        // moneda le sacaría la marca sin querer.
+        $validated['es_base']    = $moneda->es_base;
+        $validated['es_default'] = $moneda->es_default;
 
         // Desactivar una moneda en uso rompe los formularios que la ofrecen y deja
         // productos apuntando a una moneda que ya no se puede elegir.
@@ -100,24 +107,13 @@ class MonedaController extends Controller
             if ($validated['es_default']) {
                 return back()->withInput()->with(
                     'error',
-                    'No se puede desactivar "' . $moneda->nombre . '" mientras venga preseleccionada: '
-                    . 'destildá esa marca, o marcá otra moneda como preseleccionada.'
+                    'No se puede desactivar "' . $moneda->nombre . '" mientras sea la moneda '
+                    . 'que viene elegida al cargar un producto. Elegí otra en Configuración → Ajustes.'
                 );
             }
         }
 
-        // Si dejaba de ser base habría cero bases y las cotizaciones perderían su
-        // unidad de medida. Se cambia de base marcando OTRA, no desmarcando ésta.
-        if ($moneda->es_base && !$validated['es_base']) {
-            return back()->withInput()->with(
-                'error',
-                'No se puede dejar la tienda sin moneda de referencia: marcá otra como referencia y ésta deja de serlo sola.'
-            );
-        }
-
         $cotizacionAnterior = (float) $moneda->cotizacion;
-        $eraBase            = $moneda->es_base;
-        $eraDefault         = $moneda->es_default;
 
         $moneda->update($validated);
 
@@ -127,18 +123,6 @@ class MonedaController extends Controller
         // cotización hay que reescribirlo, o el catálogo queda con precios viejos.
         if ((float) $moneda->cotizacion !== $cotizacionAnterior) {
             $mensaje .= '. ' . $this->resumenDeRecalculo(Producto::recalcularPreciosEnMargen($moneda->id));
-        }
-
-        // Cambiar de base no reescala las demás cotizaciones: son números cargados a
-        // mano y recalcularlos sería inventar valores que nadie cotizó. Quedan
-        // expresadas contra la base vieja hasta que alguien las vuelva a cargar, y
-        // eso hay que decirlo, no dejarlo pasar en silencio.
-        if (!$eraBase && $moneda->es_base) {
-            $mensaje .= ' Ahora las cotizaciones se escriben en ' . $moneda->codigo . ': revisá las de las demás monedas.';
-        }
-
-        if (!$eraDefault && $moneda->es_default) {
-            $mensaje .= ' Los productos nuevos van a venir en ' . $moneda->codigo . '.';
         }
 
         return redirect()->route('admin.monedas.index')->with('success', $mensaje);
@@ -169,8 +153,6 @@ class MonedaController extends Controller
             'simbolo'    => 'required|string|max:3',
             'cotizacion' => 'required|numeric|min:0.000001',
             'activa'     => 'boolean',
-            'es_base'    => 'boolean',
-            'es_default' => 'boolean',
             // Contra qué moneda está expresada la cotización que se acaba de cargar.
             // Ausente = contra la base, que es como se guarda internamente.
             'cotizacion_referencia_id' => [
@@ -178,7 +160,7 @@ class MonedaController extends Controller
                 'exists:monedas,id',
                 function ($atributo, $valor, $fallar) use ($moneda) {
                     if ($moneda && (int) $valor === (int) $moneda->id) {
-                        $fallar('Una moneda no se puede cotizar contra sí misma: elegí otra moneda de referencia.');
+                        $fallar('Una moneda no se puede cotizar contra sí misma: elegí otra.');
                     }
                 },
             ],
@@ -240,7 +222,7 @@ class MonedaController extends Controller
     private function motivoParaNoTocar(Moneda $moneda, $accion)
     {
         if ($moneda->es_base) {
-            return 'No se puede ' . $accion . ' tu moneda de referencia: es en la que están escritas todas las cotizaciones.';
+            return 'No se puede ' . $accion . ' la moneda de tu tienda: es en la que están todos tus precios.';
         }
 
         $usos = $moneda->usos();

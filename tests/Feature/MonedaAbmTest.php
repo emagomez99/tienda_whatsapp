@@ -56,17 +56,61 @@ class MonedaAbmTest extends TestCase
 
     protected function comoAdmin()
     {
+        // firstOrCreate y no create: hay tests que piden el admin más de una vez y el
+        // email es único.
         $admin = $this->enTenant(function () {
-            return User::create([
-                'name'     => 'Admin de prueba',
-                'email'    => 'admin@' . self::TENANT_DOMAIN,
-                'password' => bcrypt('secreto'),
-                'is_admin' => true,
-                'activo'   => true,
-            ]);
+            return User::firstOrCreate(
+                ['email' => 'admin@' . self::TENANT_DOMAIN],
+                [
+                    'name'     => 'Admin de prueba',
+                    'password' => bcrypt('secreto'),
+                    'is_admin' => true,
+                    'activo'   => true,
+                ]
+            );
         });
 
         return $this->actingAs($admin);
+    }
+
+    /**
+     * Cambia en qué moneda cobra la tienda, por el camino real: la pregunta vive en
+     * Ajustes, no en el ABM de monedas. El resto del payload son los campos que ese
+     * formulario exige y que no tienen nada que ver con monedas.
+     */
+    protected function cambiarMonedaDeLaTienda(Moneda $moneda)
+    {
+        return $this->comoAdmin()->put($this->urlTenant('admin/configuraciones'), [
+            'moneda_tienda'               => $moneda->id,
+            'nombre_tienda'               => 'Tienda de prueba',
+            'mostrar_precios'             => 'true',
+            'mostrar_productos_sin_stock' => 'true',
+            'mostrar_nombre_tienda'       => 'true',
+            'mostrar_proveedor'           => 'false',
+            'paleta'                      => 'azul',
+            'posicion_menu'               => 'superior',
+            'pedir_direccion_envio'       => 'true',
+            'robots_index'                => 'true',
+            'ubicacion_activa'            => 'false',
+        ]);
+    }
+
+    /** Elige la moneda que viene preseleccionada al cargar un producto. null = ninguna. */
+    protected function elegirMonedaFavorita(Moneda $moneda = null)
+    {
+        return $this->comoAdmin()->put($this->urlTenant('admin/configuraciones'), [
+            'moneda_favorita'             => $moneda ? $moneda->id : '',
+            'nombre_tienda'               => 'Tienda de prueba',
+            'mostrar_precios'             => 'true',
+            'mostrar_productos_sin_stock' => 'true',
+            'mostrar_nombre_tienda'       => 'true',
+            'mostrar_proveedor'           => 'false',
+            'paleta'                      => 'azul',
+            'posicion_menu'               => 'superior',
+            'pedir_direccion_envio'       => 'true',
+            'robots_index'                => 'true',
+            'ubicacion_activa'            => 'false',
+        ]);
     }
 
     /** Producto que usa la moneda indicada como moneda de venta. */
@@ -95,7 +139,7 @@ class MonedaAbmTest extends TestCase
         $admin->get($this->urlTenant('admin/monedas'))
             ->assertStatus(200)
             ->assertSee('Dólar', false)
-            ->assertSee('Referencia', false);
+            ->assertSee('Tu moneda', false);
 
         $admin->get($this->urlTenant('admin/monedas/create'))->assertStatus(200);
         $admin->get($this->urlTenant('admin/monedas/' . $this->dolar->id . '/edit'))->assertStatus(200);
@@ -117,7 +161,7 @@ class MonedaAbmTest extends TestCase
         });
 
         $this->assertNotNull($euro);
-        $this->assertSame('1650.500000', (string) $euro->cotizacion);
+        $this->assertSame(1650.5, (float) $euro->cotizacion);
         $this->assertFalse($euro->es_base);
         $this->assertTrue($euro->activa);
     }
@@ -149,7 +193,7 @@ class MonedaAbmTest extends TestCase
 
             $this->assertSame('Dólar Estadounidense', $dolar->nombre);
             $this->assertSame('U$D', $dolar->simbolo);
-            $this->assertSame('1750.000000', (string) $dolar->cotizacion);
+            $this->assertSame(1750.0, (float) $dolar->cotizacion);
         });
     }
 
@@ -158,14 +202,8 @@ class MonedaAbmTest extends TestCase
     /** @test */
     public function solo_hay_una_moneda_base_a_la_vez()
     {
-        $this->comoAdmin()->put($this->urlTenant('admin/monedas/' . $this->dolar->id), [
-            'nombre'     => 'Dólar',
-            'codigo'     => 'USD',
-            'simbolo'    => 'U$S',
-            'cotizacion' => 1500,
-            'activa'     => 1,
-            'es_base'    => 1,
-        ])->assertRedirect(route('admin.monedas.index'));
+        $this->cambiarMonedaDeLaTienda($this->dolar)
+            ->assertRedirect(route('admin.configuraciones.index'));
 
         $this->enTenant(function () {
             $this->assertTrue($this->dolar->fresh()->es_base);
@@ -188,25 +226,35 @@ class MonedaAbmTest extends TestCase
 
             $dolar = $this->dolar->fresh();
 
-            $this->assertSame('1.000000', (string) $dolar->cotizacion);
+            $this->assertSame(1.0, (float) $dolar->cotizacion);
             $this->assertTrue($dolar->activa, 'La base no puede quedar desactivada.');
             $this->assertFalse($this->peso->fresh()->es_base);
         });
     }
 
-    /** @test */
-    public function no_se_puede_quitar_la_marca_de_base()
+    /**
+     * El ABM ya no manda es_base -- la pregunta vive en Ajustes --, así que editar la
+     * moneda de la tienda no puede degradarla sin querer. Sin esto, un `boolean()`
+     * sobre un campo ausente dejaría la tienda sin moneda al renombrarla.
+     *
+     * @test
+     */
+    public function editar_la_moneda_de_la_tienda_no_le_quita_la_marca()
     {
         $this->comoAdmin()->put($this->urlTenant('admin/monedas/' . $this->peso->id), [
-            'nombre'     => 'Peso',
+            'nombre'     => 'Peso Argentino',
             'codigo'     => 'ARS',
             'simbolo'    => '$',
             'cotizacion' => 1,
             'activa'     => 1,
-        ])->assertSessionHas('error');
+        ])->assertRedirect(route('admin.monedas.index'));
 
         $this->enTenant(function () {
-            $this->assertTrue($this->peso->fresh()->es_base);
+            $peso = $this->peso->fresh();
+
+            $this->assertSame('Peso Argentino', $peso->nombre);
+            $this->assertTrue($peso->es_base, 'Renombrarla no puede dejar la tienda sin moneda.');
+            $this->assertSame(1, Moneda::where('es_base', true)->count());
         });
     }
 
@@ -245,7 +293,7 @@ class MonedaAbmTest extends TestCase
         $respuesta = $this->comoAdmin()->delete($this->urlTenant('admin/monedas/' . $this->peso->id));
 
         $respuesta->assertRedirect(route('admin.monedas.index'));
-        $this->assertStringContainsString('moneda de referencia', session('error'));
+        $this->assertStringContainsString('moneda de tu tienda', session('error'));
 
         $this->enTenant(function () {
             $this->assertNotNull(Moneda::find($this->peso->id));
@@ -290,10 +338,10 @@ class MonedaAbmTest extends TestCase
 
             $base = Moneda::base();
             $this->assertSame('ARS', $base->codigo);
-            $this->assertSame('1.000000', (string) $base->cotizacion);
+            $this->assertSame(1.0, (float) $base->cotizacion);
 
             // Las demás arrancan en 1: la cotización real la carga el administrador.
-            $this->assertSame('1.000000', (string) Moneda::firstWhere('codigo', 'USD')->cotizacion);
+            $this->assertSame(1.0, (float) Moneda::firstWhere('codigo', 'USD')->cotizacion);
             $this->assertSame(1, Moneda::where('es_base', true)->count());
         });
 
@@ -329,7 +377,7 @@ class MonedaAbmTest extends TestCase
         $this->enTenant(function () {
             $euro = Moneda::firstWhere('codigo', 'EUR');
 
-            $this->assertSame('1740.000000', (string) $euro->cotizacion);
+            $this->assertSame(1740.0, (float) $euro->cotizacion);
         });
     }
 
@@ -370,7 +418,7 @@ class MonedaAbmTest extends TestCase
         ])->assertRedirect(route('admin.monedas.index'));
 
         $this->enTenant(function () {
-            $this->assertSame('1600.000000', (string) $this->dolar->fresh()->cotizacion);
+            $this->assertSame(1600.0, (float) $this->dolar->fresh()->cotizacion);
         });
     }
 
@@ -387,8 +435,80 @@ class MonedaAbmTest extends TestCase
         ])->assertSessionHasErrors('cotizacion_referencia_id');
 
         $this->enTenant(function () {
-            $this->assertSame('1500.000000', (string) $this->dolar->fresh()->cotizacion);
+            $this->assertSame(1500.0, (float) $this->dolar->fresh()->cotizacion);
         });
+    }
+
+    /**
+     * Las marcas se ven en la tabla, pero el listado ya no explica el concepto: en qué
+     * moneda cobra la tienda se configura en Ajustes. Lo único que queda es el aviso
+     * del estado roto, y sólo cuando efectivamente lo está.
+     *
+     * @test
+     */
+    public function el_listado_no_explica_la_moneda_de_la_tienda()
+    {
+        $this->comoAdmin()
+            ->get($this->urlTenant('admin/monedas'))
+            ->assertStatus(200)
+            ->assertSee('Tu moneda', false)
+            ->assertDontSee('Ponés tus precios en', false)
+            ->assertDontSee('Falta definir en qué moneda cobrás', false);
+    }
+
+    /** @test */
+    public function sin_moneda_de_la_tienda_el_listado_avisa()
+    {
+        $this->enTenant(function () {
+            // Estado roto: sin moneda de la tienda no hay contra qué cotizar.
+            Moneda::query()->update(['es_base' => false]);
+        });
+
+        $this->comoAdmin()
+            ->get($this->urlTenant('admin/monedas'))
+            ->assertStatus(200)
+            ->assertSee('Falta definir en qué moneda cobrás', false);
+    }
+
+    /**
+     * Venta y compra son dos datos distintos y van en columnas propias: un proveedor
+     * que cobra en dólares con precios de venta en pesos es el caso normal del modo
+     * margen, y apilados en una celda había que adivinar cuál era cuál.
+     *
+     * @test
+     */
+    public function el_listado_separa_los_productos_de_venta_de_los_de_compra()
+    {
+        $this->enTenant(function () {
+            $proveedor = Proveedor::create(['nombre' => 'Proveedor de prueba']);
+
+            // Se compra en dólares y se vende en pesos: cada moneda cuenta en una
+            // columna distinta.
+            foreach (range(1, 3) as $i) {
+                Producto::create([
+                    'proveedor_id'     => $proveedor->id,
+                    'descripcion'      => 'Producto ' . $i,
+                    'precio'           => 100,
+                    'moneda_id'        => $this->peso->id,
+                    'precio_compra'    => 10,
+                    'moneda_compra_id' => $this->dolar->id,
+                    'stock'            => 1,
+                ]);
+            }
+        });
+
+        $respuesta = $this->comoAdmin()
+            ->get($this->urlTenant('admin/monedas'))
+            ->assertStatus(200)
+            ->assertSee('Prod. venta')
+            ->assertSee('Prod. compra');
+
+        $monedas = $respuesta->viewData('monedas')->keyBy('codigo');
+
+        $this->assertSame(3, $monedas['ARS']->productos_count);
+        $this->assertSame(0, $monedas['ARS']->productos_de_compra_count);
+        $this->assertSame(0, $monedas['USD']->productos_count);
+        $this->assertSame(3, $monedas['USD']->productos_de_compra_count);
     }
 
     /** @test */
@@ -413,13 +533,14 @@ class MonedaAbmTest extends TestCase
 
         $admin->get($this->urlTenant('admin/monedas/' . $this->peso->id . '/edit'))
             ->assertStatus(200)
-            ->assertSee('Tu moneda de referencia no se cotiza')
-            // El input sigue en el DOM (la validación lo exige) pero oculto.
-            ->assertSee('id="bloque-cotizacion" style="display:none;"', false);
+            ->assertSee('Es la moneda en la que cobrás: no se cotiza', false)
+            // El campo no se dibuja: sólo va el valor 1 oculto, que la validación exige.
+            ->assertSee('<input type="hidden" name="cotizacion" value="1">', false)
+            ->assertDontSee('id="cotizacion"', false);
 
         $admin->get($this->urlTenant('admin/monedas'))
             ->assertStatus(200)
-            ->assertSee('Unidad de referencia');
+            ->assertSee('Es tu moneda');
     }
 
     /** @test */
@@ -438,7 +559,7 @@ class MonedaAbmTest extends TestCase
             $peso = $this->peso->fresh();
 
             $this->assertTrue($peso->es_base);
-            $this->assertSame('1.000000', (string) $peso->cotizacion);
+            $this->assertSame(1.0, (float) $peso->cotizacion);
         });
     }
 
@@ -521,6 +642,89 @@ class MonedaAbmTest extends TestCase
         });
     }
 
+    // ─── Cambio de la moneda de la tienda ────────────────────────────────────
+    //
+    // Cambiar cuál es la moneda de la tienda es un cambio de UNIDAD DE MEDIDA, no de
+    // valor: que los precios pasen a expresarse contra el dólar no hace que nada valga
+    // distinto. Un producto de 65.625 pesos sigue costando eso. Si el precio se mueve,
+    // el sistema perdió plata del cliente en una operación de configuración.
+
+    /** Producto por margen: 35 USD de costo, se vende en pesos con 25% de ganancia. */
+    protected function crearProductoPorMargen()
+    {
+        return $this->enTenant(function () {
+            $proveedor = Proveedor::create(['nombre' => 'Proveedor de prueba']);
+
+            // El precio derivado lo calcula ajustarPrecioSegunModo(), no el create():
+            // hay que pasar por él igual que hace el controlador.
+            $producto = new Producto([
+                'proveedor_id'      => $proveedor->id,
+                'descripcion'       => 'Producto por margen',
+                'precio_compra'     => 35,
+                'moneda_compra_id'  => $this->dolar->id,
+                'moneda_id'         => $this->peso->id,
+                'margen_ganancia'   => 25,
+                'modo_precio_venta' => Producto::MODO_PRECIO_MARGEN,
+                'stock'             => 1,
+            ]);
+
+            $producto->ajustarPrecioSegunModo();
+            $producto->save();
+
+            return $producto;
+        });
+    }
+
+    /** @test */
+    public function cambiar_la_moneda_de_la_tienda_no_mueve_el_precio_de_los_productos()
+    {
+        $producto = $this->crearProductoPorMargen();
+
+        // 35 USD * 1500 = 52.500 ARS, + 25% = 65.625.
+        $this->enTenant(function () use ($producto) {
+            $this->assertSame('65625.00', (string) $producto->fresh()->precio);
+        });
+
+        // La tienda pasa a cobrar en dólares.
+        $this->cambiarMonedaDeLaTienda($this->dolar)
+            ->assertRedirect(route('admin.configuraciones.index'));
+
+        $this->enTenant(function () use ($producto) {
+            // El producto se sigue vendiendo en pesos y sigue costando 35 dólares:
+            // nada de lo que el usuario cargó cambió, así que el precio tampoco.
+            $this->assertSame('65625.00', (string) $producto->fresh()->precio);
+        });
+    }
+
+    /** @test */
+    public function cambiar_la_moneda_de_la_tienda_reexpresa_las_cotizaciones()
+    {
+        $this->enTenant(function () {
+            Moneda::create(['nombre' => 'Euro', 'codigo' => 'EUR', 'simbolo' => '€', 'cotizacion' => 1736]);
+        });
+
+        $this->cambiarMonedaDeLaTienda($this->dolar)
+            ->assertRedirect(route('admin.configuraciones.index'));
+
+        $this->enTenant(function () {
+            $usd = Moneda::firstWhere('codigo', 'USD');
+            $ars = Moneda::firstWhere('codigo', 'ARS');
+            $eur = Moneda::firstWhere('codigo', 'EUR');
+
+            $this->assertTrue($usd->es_base);
+            $this->assertFalse($ars->es_base);
+
+            // Todo se reexpresa dividiendo por la cotización vieja del dólar.
+            $this->assertSame(1.0, (float) $usd->cotizacion);
+            $this->assertEqualsWithDelta(1 / 1500, (float) $ars->cotizacion, 0.000001);
+            $this->assertEqualsWithDelta(1736 / 1500, (float) $eur->cotizacion, 0.000001);
+
+            // Y las equivalencias reales quedan intactas: 1 USD sigue siendo 1500 ARS.
+            $this->assertEqualsWithDelta(1500, PrecioVenta::factor($usd->cotizacion, $ars->cotizacion), 0.5);
+            $this->assertEqualsWithDelta(1736, PrecioVenta::factor($eur->cotizacion, $ars->cotizacion), 0.5);
+        });
+    }
+
     // ─── Moneda por defecto ──────────────────────────────────────────────────
     //
     // Es una marca distinta de la base y se comprueba aparte: la base dice contra qué
@@ -531,19 +735,32 @@ class MonedaAbmTest extends TestCase
     /** @test */
     public function la_base_y_la_preseleccionada_pueden_ser_monedas_distintas()
     {
-        $this->comoAdmin()->put($this->urlTenant('admin/monedas/' . $this->dolar->id), [
-            'nombre'     => 'Dólar',
-            'codigo'     => 'USD',
-            'simbolo'    => 'U$S',
-            'cotizacion' => 1500,
-            'activa'     => 1,
-            'es_default' => 1,
-        ])->assertRedirect(route('admin.monedas.index'));
+        $this->elegirMonedaFavorita($this->dolar)
+            ->assertRedirect(route('admin.configuraciones.index'));
 
         $this->enTenant(function () {
             $this->assertSame('ARS', Moneda::base()->codigo);
             $this->assertSame('USD', Moneda::porDefecto()->codigo);
             $this->assertFalse(Moneda::base()->es_default);
+        });
+    }
+
+    /** @test */
+    public function se_puede_dejar_la_tienda_sin_moneda_favorita()
+    {
+        $this->elegirMonedaFavorita($this->dolar);
+
+        $this->enTenant(function () {
+            $this->assertNotNull(Moneda::porDefecto());
+        });
+
+        // A diferencia de la moneda de la tienda, ésta es opcional: sin favorita el
+        // formulario de producto simplemente abre sin moneda elegida.
+        $this->elegirMonedaFavorita(null);
+
+        $this->enTenant(function () {
+            $this->assertNull(Moneda::porDefecto());
+            $this->assertSame(0, Moneda::where('es_default', true)->count());
         });
     }
 
@@ -587,7 +804,6 @@ class MonedaAbmTest extends TestCase
             'codigo'     => 'USD',
             'simbolo'    => 'U$S',
             'cotizacion' => 1500,
-            'es_default' => 1,
         ])->assertSessionHas('error');
 
         $this->enTenant(function () {

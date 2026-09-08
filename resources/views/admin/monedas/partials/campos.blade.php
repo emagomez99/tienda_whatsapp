@@ -8,10 +8,11 @@
 --}}
 @php
     $monedaEditada = isset($moneda) ? $moneda : null;
-    $esBase        = old('es_base', $monedaEditada ? $monedaEditada->es_base : false);
-    $esDefault     = old('es_default', $monedaEditada ? $monedaEditada->es_default : false);
-    $codigoBase    = $base ? $base->codigo : 'la moneda de referencia';
-    $defaultActual = App\Models\Moneda::porDefecto();
+    // En qué moneda cobra la tienda se contesta una sola vez, en Ajustes, y no es un
+    // campo de este formulario: acá sólo se sabe si ESTA es la elegida, para no
+    // pedirle una cotización contra sí misma.
+    $esBase        = $monedaEditada ? $monedaEditada->es_base : false;
+    $codigoBase    = $base ? $base->codigo : 'la moneda de la tienda';
 @endphp
 
 <div class="row">
@@ -49,11 +50,12 @@
 </div>
 
 <div class="mb-3">
-    {{-- La base no se cotiza: es la unidad de medida. Decir "1 peso equivale a 0,00058
-         euros" es cierto pero no es una cotización que nadie cargue, y puesto en el
-         formulario invita a completar un campo que no existe. Los dos bloques están
-         siempre en el DOM y se alternan en vivo al marcar/desmarcar "es la base". --}}
-    <div id="bloque-cotizacion" style="{{ $esBase ? 'display:none;' : '' }}">
+    {{-- La moneda en la que cobra la tienda no se cotiza: es la unidad de medida.
+         Decir "1 peso equivale a 0,00058 euros" es cierto, pero no es una cotización
+         que nadie cargue, y un campo vacío invita a completarlo. Se muestra un bloque
+         o el otro según el caso, resuelto en el servidor: ya no hay nada que alternar
+         en vivo porque el switch dejó de existir. --}}
+    @if(!$esBase)
         <label for="cotizacion" class="form-label">Cotización *</label>
         <div class="input-group">
             <span class="input-group-text">1 <span id="cotizacion-codigo" class="fw-semibold ms-1">{{ $monedaEditada ? $monedaEditada->codigo : '—' }}</span></span>
@@ -64,7 +66,7 @@
                    value="{{ old('cotizacion', $monedaEditada ? rtrim(rtrim($monedaEditada->cotizacion, '0'), '.') : '1') }}"
                    required>
             <select class="form-select" id="cotizacion_referencia_id" name="cotizacion_referencia_id"
-                    style="max-width:14rem;" {{ $esBase ? 'disabled' : '' }}>
+                    style="max-width:14rem;">
                 @foreach($monedas as $m)
                     @if(!$monedaEditada || $m->id !== $monedaEditada->id)
                         <option value="{{ $m->id }}"
@@ -83,20 +85,23 @@
             <div class="invalid-feedback d-block">{{ $message }}</div>
         @enderror
         <div class="form-text" id="cotizacion-ayuda">
-            Cargala como la leas: "1 dólar equivale a 1500 pesos" o "1 euro equivale a 1,16 dólares", da igual.
-            Si cambiás la moneda de referencia, el número se reexpresa solo.
+            Cambiá la moneda de la derecha y el número se reexpresa solo.
         </div>
         <div class="mt-2 small text-muted" id="equivalencias"></div>
-    </div>
+    @else
+        {{-- La validación exige la cotización; para la moneda de la tienda vale 1 por
+             definición y el modelo la fuerza igual. Va oculta para no pedir un dato
+             que no se elige. --}}
+        <input type="hidden" name="cotizacion" value="1">
 
-    <div id="bloque-cotizacion-base" class="alert alert-light border mb-0 py-2 px-3"
-         style="{{ $esBase ? '' : 'display:none;' }}">
-        <i class="bi bi-info-circle text-primary"></i>
-        <span class="small">
-            <strong>Tu moneda de referencia no se cotiza.</strong>
-            Es en la que escribís el resto de las cotizaciones.
-        </span>
-    </div>
+        <div class="alert alert-light border mb-0 py-2 px-3">
+            <i class="bi bi-info-circle text-primary"></i>
+            <span class="small">
+                <strong>Es la moneda en la que cobrás: no se cotiza.</strong>
+                Las demás se cotizan contra ella. Se cambia desde Configuración → Ajustes.
+            </span>
+        </div>
+    @endif
 </div>
 
 <div class="mb-3">
@@ -108,41 +113,7 @@
     <div class="form-text">Sólo las monedas activas se pueden elegir al cargar un producto.</div>
 </div>
 
-<div class="mb-3">
-    <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="es_base" name="es_base" value="1"
-               {{ $esBase ? 'checked' : '' }}>
-        <label class="form-check-label" for="es_base">Es la moneda de referencia</label>
-    </div>
-    <div class="form-text">
-        Todas las cotizaciones se escriben en esta moneda. Cuando decís "el dólar está a 1500",
-        ese 1500 son pesos: el peso es tu moneda de referencia.
-        <br>
-        Hay una sola. Si marcás ésta,
-        @if($base && (!$monedaEditada || $base->id !== $monedaEditada->id))
-            <strong>{{ $base->codigo }}</strong> deja de serlo y vas a tener que revisar las cotizaciones de las demás monedas.
-        @else
-            la que estuviera marcada deja de serlo.
-        @endif
-    </div>
-</div>
-
-<div class="mb-3">
-    <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="es_default" name="es_default" value="1"
-               {{ $esDefault ? 'checked' : '' }}>
-        <label class="form-check-label" for="es_default">Viene preseleccionada al cargar un producto</label>
-    </div>
-    <div class="form-text">
-        No es lo mismo que la de referencia: en la de referencia escribís las cotizaciones, ésta es sólo
-        cuál aparece elegida de entrada al cargar un producto. Si vendés casi todo en una moneda, marcá
-        ésa aunque no sea la de referencia.
-        @if($defaultActual && (!$monedaEditada || $defaultActual->id !== $monedaEditada->id))
-            Hoy es <strong>{{ $defaultActual->codigo }}</strong>, y dejaría de serlo.
-        @endif
-    </div>
-</div>
-
+@if(!$esBase)
 @push('scripts')
 <script>
     (function () {
@@ -153,14 +124,11 @@
             return [$m->id => ['codigo' => $m->codigo, 'cotizacion' => (float) $m->cotizacion]];
         }));
 
-        var esBase     = document.getElementById('es_base');
-        var cotizacion = document.getElementById('cotizacion');
-        var referencia = document.getElementById('cotizacion_referencia_id');
-        var codigo     = document.getElementById('codigo');
+        var cotizacion  = document.getElementById('cotizacion');
+        var referencia  = document.getElementById('cotizacion_referencia_id');
+        var codigo      = document.getElementById('codigo');
         var etiqueta    = document.getElementById('cotizacion-codigo');
         var salida      = document.getElementById('equivalencias');
-        var bloqueLibre = document.getElementById('bloque-cotizacion');
-        var bloqueBase  = document.getElementById('bloque-cotizacion-base');
         var refAnterior = referencia.value;
 
         function formatear(n) {
@@ -179,9 +147,6 @@
         }
 
         function pintarEquivalencias() {
-            // La base no se cotiza: no hay equivalencia propia que mostrar.
-            if (esBase.checked) { salida.textContent = ''; return; }
-
             var propia = enBase();
             var sigla  = (codigo.value || '—').toUpperCase();
 
@@ -212,22 +177,6 @@
             pintarEquivalencias();
         }
 
-        // Al marcar "es la base" desaparece el campo de cotización: la base es la
-        // unidad de medida y no se cotiza contra nada. El input sigue en el DOM con
-        // valor 1 porque la validación lo exige, y el modelo lo fuerza igual.
-        function sincronizarBase() {
-            bloqueLibre.style.display = esBase.checked ? 'none' : '';
-            bloqueBase.style.display  = esBase.checked ? '' : 'none';
-            referencia.disabled       = esBase.checked;
-
-            if (esBase.checked) {
-                cotizacion.value = '1';
-            }
-
-            pintarEquivalencias();
-        }
-
-        esBase.addEventListener('change', sincronizarBase);
         referencia.addEventListener('change', reexpresar);
         cotizacion.addEventListener('input', pintarEquivalencias);
         codigo.addEventListener('input', function () {
@@ -240,3 +189,4 @@
     })();
 </script>
 @endpush
+@endif

@@ -10,26 +10,27 @@
     </a>
 </div>
 
-<div class="alert alert-light border d-flex gap-2 py-2 px-3 mb-4">
-    <i class="bi bi-info-circle text-primary mt-1"></i>
-    <div class="small">
-        @if($base)
-            <span class="fw-semibold d-block mb-1">Las cotizaciones se escriben en {{ $base->nombre }}.</span>
-            <span class="text-muted">
-                Cuando decís "el dólar está a 1500", ese 1500 son {{ $base->nombre }}: por eso
-                {{ $base->codigo }} es tu moneda de referencia y no se cotiza contra nada.
-                Al guardar una cotización se recalculan solos los precios de los productos que
-                trabajan con margen de ganancia.
+{{-- Sin banner explicativo a propósito: en qué moneda cobra la tienda se configura en
+     Ajustes, así que explicarlo acá era enseñar un concepto para una pantalla donde no
+     se decide nada de eso. Lo que hace cada marca se aprende donde se marca, y las
+     consecuencias de guardar una cotización se avisan cuando pasan (el overlay de
+     recálculo y el mensaje posterior), que llega mejor que un cartel permanente.
+
+     Lo único que sobrevive es el estado roto: sin moneda de la tienda no hay contra
+     qué cotizar y la pantalla no funciona. --}}
+@if(!$base)
+    <div class="alert alert-warning d-flex gap-2 py-2 px-3 mb-4">
+        <i class="bi bi-exclamation-triangle mt-1"></i>
+        <div class="small">
+            <span class="fw-semibold d-block mb-1">Falta definir en qué moneda cobrás.</span>
+            <span>
+                Las cotizaciones se escriben contra ella, así que hasta configurarla no se pueden
+                convertir precios.
+                <a href="{{ route('admin.configuraciones.index') }}" class="fw-semibold">Ir a Ajustes</a>.
             </span>
-        @else
-            <span class="fw-semibold d-block mb-1">Falta elegir la moneda de referencia.</span>
-            <span class="text-muted">
-                Es la moneda en la que vas a escribir todas las cotizaciones. Marcá una para poder
-                convertir precios entre monedas.
-            </span>
-        @endif
+        </div>
     </div>
-</div>
+@endif
 
 @php $filtrosActivos = request()->hasAny(['buscar']); @endphp
 <div class="card mb-4">
@@ -69,7 +70,17 @@
                             <th>Moneda</th>
                             <th class="text-end">Cotización</th>
                             <th>Estado</th>
-                            <th class="text-center">Productos</th>
+                            {{-- Venta y compra en columnas propias: apiladas en una sola
+                                 celda había que pasar el mouse por cada badge para saber
+                                 cuál era cuál, y son dos datos que se comparan entre sí
+                                 (un proveedor en dólares con precios en pesos es
+                                 justamente lo que el modo margen resuelve). --}}
+                            <th class="text-end" title="Productos con precio de venta en esta moneda">
+                                Prod. venta
+                            </th>
+                            <th class="text-end" title="Productos con precio de compra en esta moneda">
+                                Prod. compra
+                            </th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -82,10 +93,10 @@
                                     <span class="text-muted">({{ $moneda->codigo }})</span>
                                     <span class="badge bg-light text-muted fw-normal">{{ $moneda->simbolo }}</span>
                                     @if($moneda->es_base)
-                                        <span class="badge bg-primary ms-1" title="Las cotizaciones de las demás monedas se escriben en ésta">Referencia</span>
+                                        <span class="badge bg-primary ms-1" title="Es la moneda en la que trabaja tu tienda">Tu moneda</span>
                                     @endif
                                     @if($moneda->es_default)
-                                        <span class="badge bg-info ms-1" title="Viene preseleccionada al cargar un producto">Por defecto</span>
+                                        <span class="badge bg-info ms-1" title="Viene elegida al cargar un producto nuevo">Favorita</span>
                                     @endif
                                 </td>
                                 <td class="text-end">
@@ -93,7 +104,7 @@
                                          la unidad de medida, no un valor cargado. --}}
                                     @if($moneda->es_base)
                                         <span class="text-muted">—</span>
-                                        <div class="text-muted" style="font-size:.75rem;">Unidad de referencia</div>
+                                        <div class="text-muted" style="font-size:.75rem;">Es tu moneda</div>
                                     @else
                                         <span class="fw-semibold">{{ rtrim(rtrim(number_format($moneda->cotizacion, 6, ',', '.'), '0'), ',') }}</span>
                                         @if($base)
@@ -108,9 +119,18 @@
                                         <span class="badge bg-secondary">Inactiva</span>
                                     @endif
                                 </td>
-                                <td class="text-center">
-                                    <span class="badge bg-secondary" title="Productos que se venden en esta moneda">{{ $moneda->productos_count }}</span>
-                                    <span class="badge bg-light text-muted" title="Productos que se compran en esta moneda">{{ $moneda->productos_de_compra_count }}</span>
+                                {{-- El cero se atenúa: en una tabla de conteos lo que se
+                                     busca es dónde hay algo, y un cero con el mismo peso
+                                     visual que un 30.900 compite por la atención. --}}
+                                <td class="text-end" style="font-variant-numeric:tabular-nums;">
+                                    <span class="{{ $moneda->productos_count > 0 ? 'fw-semibold' : 'text-muted opacity-50' }}">
+                                        {{ number_format($moneda->productos_count, 0, ',', '.') }}
+                                    </span>
+                                </td>
+                                <td class="text-end" style="font-variant-numeric:tabular-nums;">
+                                    <span class="{{ $moneda->productos_de_compra_count > 0 ? 'fw-semibold' : 'text-muted opacity-50' }}">
+                                        {{ number_format($moneda->productos_de_compra_count, 0, ',', '.') }}
+                                    </span>
                                 </td>
                                 <td>
                                     <div class="btn-group">
@@ -119,7 +139,7 @@
                                         </a>
                                         @if($moneda->es_base || $enUso)
                                             <button type="button" class="btn btn-sm btn-outline-danger" disabled
-                                                    title="{{ $moneda->es_base ? 'Es tu moneda de referencia' : 'Está en uso por productos' }}">
+                                                    title="{{ $moneda->es_base ? 'Es la moneda de tu tienda' : 'Está en uso por productos' }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         @else
@@ -174,7 +194,7 @@
                             <th class="text-start fw-normal">
                                 {{ $origen->nombre }} <span class="text-muted">({{ $origen->codigo }})</span>
                                 @if($origen->es_base)
-                                    <span class="badge bg-primary ms-1">Referencia</span>
+                                    <span class="badge bg-primary ms-1">Tu moneda</span>
                                 @endif
                             </th>
                             @foreach($todas as $destino)
