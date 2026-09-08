@@ -127,10 +127,16 @@ document.addEventListener('submit', function (e) {
         let debounceTimer = null;
         let cargando = false;
 
+        // El menú llega de dos formas: en el path (/catalogo/{slug}) o como ?menu=.
+        // Se toma del servidor, que ya lo resolvió, en vez de leerlo de la URL: en las
+        // URLs con slug no existe ?menu=, así que al paginar o buscar no se mandaba
+        // menu_id y el AJAX devolvía el catálogo entero en vez del rubro elegido.
+        const MENU_ID = @json($menuActual->id ?? null);
+
         function obtenerParametrosURL() {
             const url = new URL(window.location);
             return {
-                menu: url.searchParams.get('menu'),
+                menu: MENU_ID || url.searchParams.get('menu'),
                 proveedor: url.searchParams.get('proveedor'),
                 etiqueta: url.searchParams.get('etiqueta'),
                 etiqueta_valor: url.searchParams.get('etiqueta_valor'),
