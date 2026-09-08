@@ -75,11 +75,13 @@
         $nombreAdmin = App\Models\Configuracion::nombreTienda();
         $configActive = request()->routeIs('admin.configuraciones.*')
             || request()->routeIs('admin.etiquetas.*')
+            || request()->routeIs('admin.monedas.*')
             || request()->routeIs('admin.menus.*')
             || request()->routeIs('admin.usuarios.*')
             || request()->routeIs('admin.perfiles.*');
         $verConfigGrupo = $user->puede('configuraciones.ver')
             || $user->puede('etiquetas.ver')
+            || $user->puede('monedas.ver')
             || $user->puede('menus.ver')
             || $user->puede('usuarios.ver')
             || $user->puede('perfiles.ver');
@@ -199,6 +201,12 @@
                             <a href="{{ route('admin.etiquetas.index') }}"
                                class="admin-drawer-sub {{ request()->routeIs('admin.etiquetas.*') ? 'active' : '' }}">
                                 <i class="bi bi-tags me-2"></i> Etiquetas
+                            </a>
+                        @endif
+                        @if($user->puede('monedas.ver'))
+                            <a href="{{ route('admin.monedas.index') }}"
+                               class="admin-drawer-sub {{ request()->routeIs('admin.monedas.*') ? 'active' : '' }}">
+                                <i class="bi bi-currency-exchange me-2"></i> Monedas
                             </a>
                         @endif
                         @if($user->puede('menus.ver'))

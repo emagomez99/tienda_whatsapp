@@ -184,11 +184,8 @@ class Configuracion extends Model
         return (int) self::obtener('max_imagenes_adicionales', '3');
     }
 
-    public static function monedaDefaultId()
-    {
-        $valor = self::obtener('moneda_default', null);
-        return $valor ? (int) $valor : null;
-    }
+    // La moneda por defecto ya no vive acá: es la marca `es_default` de la propia
+    // moneda, y se administra desde el ABM de monedas (ver Moneda::porDefecto).
 
     public static function mostrarProveedor()
     {

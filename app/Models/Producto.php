@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PrecioVenta;
 use App\Support\StockResult;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,6 +50,10 @@ class Producto extends Model
         'meta_description',
         'precio',
         'moneda_id',
+        'precio_compra',
+        'moneda_compra_id',
+        'margen_ganancia',
+        'modo_precio_venta',
         'disponible',
         'stock',
         'por_encargue',
@@ -57,19 +62,174 @@ class Producto extends Model
 
     protected $casts = [
         'precio' => 'decimal:2',
+        'precio_compra' => 'decimal:2',
+        'margen_ganancia' => 'decimal:2',
         'disponible' => 'boolean',
         'por_encargue' => 'boolean',
         'stock' => 'integer',
     ];
+
+    /**
+     * Cuánto cuesta el producto y cuánto se le gana es información interna: no tiene
+     * por qué salir de la administración. Ocultarlos acá cubre de una sola vez
+     * cualquier serialización del modelo (toJson, response()->json, @json) presente
+     * o futura, en vez de depender de que cada call site se acuerde de sacarlos.
+     */
+    protected $hidden = [
+        'precio_compra',
+        'moneda_compra_id',
+        'margen_ganancia',
+        'modo_precio_venta',
+    ];
+
+    // ─── Precio de venta ─────────────────────────────────────────────────────
+    //
+    // El precio de venta se PERSISTE siempre en la columna `precio`, incluso en modo
+    // margen, donde es un valor derivado. No es un accessor calculado a propósito:
+    // el carrito, los pedidos, la grilla de la tienda, el orderBy('precio'), los
+    // filtros por precio, el schema.org y el sitemap leen la columna, y un accessor
+    // los dejaría a todos afuera del cálculo o los obligaría a cargar dos monedas por
+    // producto para poder ordenar 30.000 filas.
+    //
+    // El costo de eso es que el valor derivado hay que mantenerlo al día: lo hacen
+    // ajustarPrecioSegunModo() al guardar un producto y recalcularPreciosEnMargen()
+    // al cambiar una cotización.
+
+    /** Precio fijo: el valor lo carga el usuario y no se deriva de nada. */
+    const MODO_PRECIO_MANUAL = 'manual';
+
+    /** El precio de venta sale del costo de compra más un margen. */
+    const MODO_PRECIO_MARGEN = 'margen';
 
     public function proveedor()
     {
         return $this->belongsTo(Proveedor::class);
     }
 
+    /** Moneda de VENTA: la del precio que ve el cliente. */
     public function moneda()
     {
         return $this->belongsTo(Moneda::class);
+    }
+
+    /** Moneda de COMPRA: la del costo declarado por el proveedor. */
+    public function monedaCompra()
+    {
+        return $this->belongsTo(Moneda::class, 'moneda_compra_id');
+    }
+
+    public function esPrecioPorMargen()
+    {
+        return $this->modo_precio_venta === self::MODO_PRECIO_MARGEN;
+    }
+
+    /**
+     * Precio de venta que le corresponde al producto según su modo.
+     * Indeterminado si está en modo manual o si le falta algún dato de la compra.
+     */
+    public function precioVentaCalculado()
+    {
+        if (!$this->esPrecioPorMargen()) {
+            return PrecioVenta::indeterminado();
+        }
+
+        $compra = $this->monedaCompra;
+        $venta  = $this->moneda;
+
+        if (!$compra || !$venta) {
+            return PrecioVenta::indeterminado();
+        }
+
+        return PrecioVenta::calcular(
+            $this->precio_compra,
+            $compra->cotizacion,
+            $venta->cotizacion,
+            $this->margen_ganancia
+        );
+    }
+
+    /**
+     * Deja `precio` consistente con el modo de venta, antes de guardar.
+     *
+     * En modo margen el precio es derivado y se calcula SIEMPRE en el servidor: la
+     * vista previa del formulario es sólo una ayuda visual y el valor que mande el
+     * navegador no se usa.
+     */
+    public function ajustarPrecioSegunModo()
+    {
+        if (!$this->esPrecioPorMargen()) {
+            return $this;
+        }
+
+        $calculo = $this->precioVentaCalculado();
+
+        if ($calculo->esCalculable()) {
+            $this->precio = $calculo->monto;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Reescribe el precio de todos los productos en modo margen, en un solo UPDATE.
+     *
+     * Un cambio de cotización afecta a todo el catálogo a la vez; hacerlo producto
+     * por producto serían 30.000 SELECT + 30.000 UPDATE por cada vez que se actualiza
+     * el dólar. La fórmula la aporta PrecioVenta para que no exista una segunda copia
+     * de la cuenta dando vueltas.
+     *
+     * El `IS DISTINCT FROM` acota el UPDATE a las filas que realmente cambian, así el
+     * número que se le informa al usuario es "cuántos precios cambiaron" y no "cuántos
+     * productos miré".
+     *
+     * @param  int|null $monedaId Limita el recálculo a los productos que usan esa
+     *                            moneda (de compra o de venta). null = todos.
+     * @return int Cantidad de productos cuyo precio cambió.
+     */
+    public static function recalcularPreciosEnMargen($monedaId = null)
+    {
+        $precio = PrecioVenta::expresionSql('productos', 'mc', 'mv');
+
+        $sql = 'UPDATE productos SET precio = ' . $precio . ', updated_at = now()'
+             . ' FROM monedas mc, monedas mv'
+             . ' WHERE productos.modo_precio_venta = ?'
+             . '   AND productos.moneda_compra_id = mc.id'
+             . '   AND productos.moneda_id = mv.id'
+             . '   AND productos.precio_compra IS NOT NULL'
+             . '   AND productos.margen_ganancia IS NOT NULL'
+             . '   AND productos.precio IS DISTINCT FROM ' . $precio;
+
+        $bindings = [self::MODO_PRECIO_MARGEN];
+
+        if ($monedaId !== null) {
+            $sql .= ' AND (productos.moneda_compra_id = ? OR productos.moneda_id = ?)';
+            $bindings[] = $monedaId;
+            $bindings[] = $monedaId;
+        }
+
+        return DB::affectingStatement($sql, $bindings);
+    }
+
+    /**
+     * Cuántos productos entran en el recálculo de esa moneda.
+     *
+     * Es el mismo universo que recorre recalcularPreciosEnMargen(), sin el
+     * `IS DISTINCT FROM` -- ése sólo se puede evaluar comparando contra el precio
+     * nuevo, que todavía no existe. Sirve para avisarle al usuario cuánto se va a
+     * mover ANTES de moverlo; si las dos consultas se separan, el aviso miente.
+     */
+    public static function contarEnMargenPorMoneda($monedaId)
+    {
+        return static::where('modo_precio_venta', self::MODO_PRECIO_MARGEN)
+            ->whereNotNull('precio_compra')
+            ->whereNotNull('margen_ganancia')
+            ->whereNotNull('moneda_compra_id')
+            ->whereNotNull('moneda_id')
+            ->where(function ($q) use ($monedaId) {
+                $q->where('moneda_compra_id', $monedaId)
+                  ->orWhere('moneda_id', $monedaId);
+            })
+            ->count();
     }
 
     public function etiquetas()

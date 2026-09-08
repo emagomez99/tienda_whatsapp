@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EtiquetaController;
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\MonedaController;
 use App\Http\Controllers\Admin\PedidoController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\ProveedorController;
@@ -92,6 +93,7 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::resource('perfiles', PerfilController::class)->parameters(['perfiles' => 'perfil']);
         Route::resource('etiquetas', EtiquetaController::class);
         Route::get('/etiquetas/{etiqueta}/valores', [EtiquetaController::class, 'buscarValores'])->name('etiquetas.valores');
+        Route::resource('monedas', MonedaController::class)->except(['show']);
 
         Route::get('/configuraciones', [ConfiguracionController::class, 'index'])->name('configuraciones.index');
         Route::put('/configuraciones', [ConfiguracionController::class, 'update'])->name('configuraciones.update');

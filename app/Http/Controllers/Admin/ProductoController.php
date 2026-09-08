@@ -13,6 +13,7 @@ use App\Models\StockMovimiento;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ProductoController extends Controller
 {
@@ -75,7 +76,7 @@ class ProductoController extends Controller
         $monedas = Moneda::where('activa', true)->orderBy('nombre')->get();
         $etiquetasObligatorias = $this->mapEtiquetasObligatorias($proveedores);
         $etiquetasAplicables = $this->mapEtiquetasAplicables($proveedores);
-        $monedaDefaultId = \App\Models\Configuracion::monedaDefaultId();
+        $monedaDefaultId = Moneda::idPorDefecto();
         $imagenesAdicionalesActivas = Configuracion::imagenesAdicionalesActivas();
         $maxImagenesAdicionales     = Configuracion::maxImagenesAdicionales();
 
@@ -101,8 +102,6 @@ class ProductoController extends Controller
             'detalle' => 'nullable|string',
             'meta_title' => 'nullable|string|max:60',
             'meta_description' => 'nullable|string|max:160',
-            'precio' => 'required|numeric|min:0',
-            'moneda_id' => 'nullable|exists:monedas,id',
             'disponible' => 'boolean',
             'stock' => 'required|integer|min:0',
             'por_encargue' => 'boolean',
@@ -118,9 +117,9 @@ class ProductoController extends Controller
             'especificaciones' => 'nullable|array',
             'especificaciones.*.clave' => 'nullable|string|max:255',
             'especificaciones.*.valor' => 'nullable|string|max:255',
-        ], [
+        ] + $this->reglasDePrecio($request), [
             'slug.regex' => 'La dirección web solo puede tener letras minúsculas, números y guiones.',
-        ]);
+        ] + $this->mensajesDePrecio());
 
         // Switch "Generar automáticamente" prendido (o ausente, ej. una API externa):
         // ignoramos cualquier slug que haya llegado y dejamos que el boot() del modelo
@@ -150,7 +149,9 @@ class ProductoController extends Controller
         $stockInicial = (int) $validated['stock'];
         $validated['stock'] = 0;
 
-        $producto = Producto::create($validated);
+        $producto = new Producto($this->sinPrecioDerivado($validated));
+        $producto->ajustarPrecioSegunModo();
+        $producto->save();
 
         if ($stockInicial > 0) {
             $producto->registrarMovimiento(
@@ -222,11 +223,12 @@ class ProductoController extends Controller
         $monedas = Moneda::where('activa', true)->orderBy('nombre')->get();
         $etiquetasObligatorias = $this->mapEtiquetasObligatorias($proveedores);
         $etiquetasAplicables = $this->mapEtiquetasAplicables($proveedores);
+        $monedaDefaultId = Moneda::idPorDefecto();
         $imagenesAdicionalesActivas = Configuracion::imagenesAdicionalesActivas();
         $maxImagenesAdicionales     = Configuracion::maxImagenesAdicionales();
 
         return view('admin.productos.edit', compact(
-            'producto', 'proveedores', 'etiquetas', 'monedas',
+            'producto', 'proveedores', 'etiquetas', 'monedas', 'monedaDefaultId',
             'etiquetasObligatorias', 'etiquetasAplicables',
             'imagenesAdicionalesActivas', 'maxImagenesAdicionales'
         ));
@@ -247,8 +249,6 @@ class ProductoController extends Controller
             'detalle'              => 'nullable|string',
             'meta_title'           => 'nullable|string|max:60',
             'meta_description'     => 'nullable|string|max:160',
-            'precio'               => 'required|numeric|min:0',
-            'moneda_id'            => 'nullable|exists:monedas,id',
             'disponible'           => 'boolean',
             'por_encargue'         => 'boolean',
             'imagen_archivo'       => 'nullable|image|max:2048',
@@ -268,9 +268,9 @@ class ProductoController extends Controller
             'especificaciones'     => 'nullable|array',
             'especificaciones.*.clave' => 'nullable|string|max:255',
             'especificaciones.*.valor' => 'nullable|string|max:255',
-        ], [
+        ] + $this->reglasDePrecio($request), [
             'slug.regex' => 'La dirección web solo puede tener letras minúsculas, números y guiones.',
-        ]);
+        ] + $this->mensajesDePrecio());
 
         // Cambiar el slug es seguro: la URL resuelve por id, así que las direcciones
         // ya publicadas siguen funcionando (redirigen 301 a la nueva).
@@ -370,7 +370,9 @@ class ProductoController extends Controller
 
         $this->validarEtiquetasObligatorias($request, $validated['proveedor_id']);
 
-        $producto->update($validated);
+        $producto->fill($this->sinPrecioDerivado($validated));
+        $producto->ajustarPrecioSegunModo();
+        $producto->save();
 
         // Sincronizar etiquetas con valores
         $this->sincronizarEtiquetas($producto, $request->input('etiquetas', []));
@@ -404,6 +406,75 @@ class ProductoController extends Controller
 
         return redirect()->route('admin.productos.index')
             ->with('success', 'Producto eliminado correctamente');
+    }
+
+    /**
+     * Reglas del bloque de precio. Son las mismas en el alta y en la edición, y
+     * dependen del modo elegido: en modo manual el precio lo carga el usuario, en
+     * modo margen sale de la compra y lo que llegue en `precio` se descarta.
+     */
+    private function reglasDePrecio(Request $request)
+    {
+        // Una request que no manda el modo -- un formulario viejo, un import por
+        // HTTP -- se interpreta como "precio fijo", que es como funcionaba esto
+        // antes de que hubiera modos. Se completa acá, del mismo modo que el slug
+        // más arriba, para que las reglas de abajo puedan darlo por presente.
+        if (!$request->filled('modo_precio_venta')) {
+            $request->merge(['modo_precio_venta' => Producto::MODO_PRECIO_MANUAL]);
+        }
+
+        $modo = $request->input('modo_precio_venta');
+
+        // Sin moneda de venta el precio no significa nada: no se sabe si son pesos o
+        // dólares. Con precio en cero (producto sin precio publicado) sí se puede
+        // dejar vacía, que es como se cargan los catálogos que no muestran precios.
+        $monedaVentaObligatoria = Rule::requiredIf(function () use ($request, $modo) {
+            return $modo === Producto::MODO_PRECIO_MARGEN || (float) $request->input('precio') > 0;
+        });
+
+        return [
+            'modo_precio_venta' => 'required|in:' . Producto::MODO_PRECIO_MANUAL . ',' . Producto::MODO_PRECIO_MARGEN,
+            'precio'            => 'nullable|numeric|min:0|required_if:modo_precio_venta,' . Producto::MODO_PRECIO_MANUAL,
+            'moneda_id'         => ['nullable', 'exists:monedas,id', $monedaVentaObligatoria],
+            'moneda_compra_id'  => 'nullable|exists:monedas,id|required_if:modo_precio_venta,' . Producto::MODO_PRECIO_MARGEN,
+            'precio_compra'     => 'nullable|numeric|min:0|required_if:modo_precio_venta,' . Producto::MODO_PRECIO_MARGEN,
+            'margen_ganancia'   => 'nullable|numeric|min:0|max:99999.99|required_if:modo_precio_venta,' . Producto::MODO_PRECIO_MARGEN,
+        ];
+    }
+
+    private function mensajesDePrecio()
+    {
+        return [
+            'modo_precio_venta.required'  => 'Elegí si el precio de venta es fijo o se calcula por margen.',
+            'modo_precio_venta.in'        => 'Elegí si el precio de venta es fijo o se calcula por margen.',
+            'precio.required_if'          => 'Cargá el precio de venta, o pasá a "Por margen" para que lo calcule el sistema.',
+            'precio.numeric'              => 'El precio de venta tiene que ser un número.',
+            'precio.min'                  => 'El precio de venta no puede ser negativo.',
+            'moneda_id.required'          => 'Elegí la moneda de venta: sin ella el precio no dice nada.',
+            'moneda_compra_id.required_if' => 'Para calcular el precio por margen hace falta saber en qué moneda comprás.',
+            'precio_compra.required_if'   => 'Para calcular el precio por margen hace falta el precio de compra.',
+            'precio_compra.numeric'       => 'El precio de compra tiene que ser un número.',
+            'precio_compra.min'           => 'El precio de compra no puede ser negativo.',
+            'margen_ganancia.required_if' => 'Indicá el margen de ganancia, en porcentaje.',
+            'margen_ganancia.numeric'     => 'El margen de ganancia tiene que ser un número.',
+            'margen_ganancia.min'         => 'El margen de ganancia no puede ser negativo.',
+            'margen_ganancia.max'         => 'El margen de ganancia es demasiado grande.',
+        ];
+    }
+
+    /**
+     * En modo margen el precio de venta es un valor derivado: se saca de los datos
+     * validados para que lo escriba el servidor y no el navegador. La vista previa
+     * del formulario manda el campo igual (está oculto, no ausente), y confiar en él
+     * sería dejar que cualquiera fije el precio con una request armada a mano.
+     */
+    private function sinPrecioDerivado(array $validated)
+    {
+        if (($validated['modo_precio_venta'] ?? null) === Producto::MODO_PRECIO_MARGEN) {
+            unset($validated['precio']);
+        }
+
+        return $validated;
     }
 
     private function eliminarImagenLocal(Producto $producto): void

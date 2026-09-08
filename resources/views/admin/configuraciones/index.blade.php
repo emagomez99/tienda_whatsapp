@@ -221,23 +221,25 @@
                         <small class="text-muted">Si se ocultan, solo se verán productos disponibles</small>
                     </div>
 
-                    @if($monedas->isNotEmpty())
+                    {{-- La moneda por defecto se marca en la propia moneda, no acá:
+                         así se borra junto con ella y se ve al lado de su cotización. --}}
+                    @if(auth()->user()->puede('monedas.ver'))
                     <div class="mb-3">
-                        <label for="moneda_default" class="form-label">Moneda por defecto</label>
-                        <select class="form-select @error('moneda_default') is-invalid @enderror"
-                                id="moneda_default" name="moneda_default">
-                            <option value="">Sin moneda por defecto</option>
-                            @foreach($monedas as $moneda)
-                                <option value="{{ $moneda->id }}"
-                                    {{ old('moneda_default', App\Models\Configuracion::monedaDefaultId()) == $moneda->id ? 'selected' : '' }}>
-                                    {{ $moneda->nombre }} ({{ $moneda->simbolo }} {{ $moneda->codigo }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('moneda_default')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted">Se preseleccionará al cargar un nuevo producto.</small>
+                        <label class="form-label">Moneda por defecto</label>
+                        @php $monedaPorDefecto = App\Models\Moneda::porDefecto(); @endphp
+                        <div class="form-control bg-light d-flex justify-content-between align-items-center">
+                            <span>
+                                @if($monedaPorDefecto)
+                                    {{ $monedaPorDefecto->nombre }} ({{ $monedaPorDefecto->simbolo }} {{ $monedaPorDefecto->codigo }})
+                                @else
+                                    <span class="text-muted">Sin moneda por defecto</span>
+                                @endif
+                            </span>
+                            <a href="{{ route('admin.monedas.index') }}" class="small text-decoration-none">
+                                <i class="bi bi-pencil"></i> Cambiar
+                            </a>
+                        </div>
+                        <small class="text-muted">Se preselecciona al cargar un nuevo producto. Se marca desde Configuración → Monedas.</small>
                     </div>
                     @endif
                 </div>

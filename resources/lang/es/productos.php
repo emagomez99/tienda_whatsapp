@@ -19,9 +19,15 @@ return [
 
         'proveedor' => 'Quién te provee este producto. Determina qué etiquetas son obligatorias al cargarlo.',
 
-        'moneda' => 'Moneda en la que se expresa el precio. Si el precio no aplica, dejá sin seleccionar.',
+        'moneda' => 'Moneda en la que se le cobra al cliente. Es la que se muestra en la tienda junto al precio.',
 
-        'precio' => "Precio de venta al público. Solo se muestra en la tienda si la configuración 'Mostrar precios' está activa.",
+        'precio' => "Precio de venta al público. Podés fijarlo vos o dejar que salga del costo de compra más un margen. Solo se muestra en la tienda si la configuración 'Mostrar precios' está activa.",
+
+        'compra' => 'Cuánto te cuesta el producto y en qué moneda te lo cobra el proveedor. Es opcional: sirve para calcular el precio de venta por margen y para que el sistema lo actualice solo cuando cambia la cotización.',
+
+        'venta' => 'Cuánto le cobrás al cliente. Con "Precio fijo" el valor lo ponés vos y no se mueve. Con "Por margen" lo calcula el sistema a partir del costo de compra, convertido a la moneda de venta.',
+
+        'margen_ganancia' => 'Cuánto le sumás al costo, en porcentaje. Con un costo de 100 y un margen de 40, el precio de venta es 140. El sistema lo recalcula solo cada vez que actualizás la cotización de las monedas involucradas.',
 
         // El alta permite escribir el stock; la edición no (se ajusta con movimientos).
         'stock_inicial' => 'Cantidad con la que arranca el producto. Después no se edita directamente: se modifica con ajustes, para que cada entrada y salida quede registrada en el historial.',
@@ -41,6 +47,17 @@ return [
         'etiquetas' => 'Categorizan el producto y habilitan los filtros de la tienda. Se eligen de una lista común a todos los productos y cada uno le pone su valor. Ej: Marca → Toyota, Aplicación → Filtro de aceite. Si el proveedor elegido tiene etiquetas obligatorias, hay que completarlas para poder guardar.',
 
         'especificaciones' => 'Campos personalizados, exclusivos de este producto: el nombre lo escribís vos y no se comparte con los demás. Arman la tabla de características del detalle. Ej: Peso → 1.75 kg, Material → Acero inoxidable.',
+
+    ],
+
+    // Textos del bloque de precio (admin.productos.partials.card-precio).
+    'precio' => [
+
+        'compra_opcional' => 'Si no llevás el costo, dejalo vacío y cargá directamente el precio de venta.',
+
+        'calculado_en_servidor' => 'Se recalcula al guardar y cada vez que cambie la cotización.',
+
+        'faltan_datos' => 'Completá la moneda y el precio de compra, la moneda de venta y el margen para ver el precio.',
 
     ],
 

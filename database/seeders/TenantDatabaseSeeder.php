@@ -38,12 +38,17 @@ class TenantDatabaseSeeder extends Seeder
         Configuracion::establecer('posicion_menu', 'superior', 'Posición del menú de navegación');
         Configuracion::establecer('modo_imagen_producto', 'solo_url', 'Modo de carga de imágenes de productos');
 
-        // Monedas
+        // Monedas. El peso es la base: su cotización es 1 y las demás se miden contra
+        // ella. Las otras arrancan también en 1 porque no hay ninguna cotización que
+        // inventar que sea menos falsa que otra -- las carga el administrador desde
+        // el ABM de monedas, y hasta entonces no interviene en ningún precio.
         Moneda::create([
-            'nombre'  => 'Peso Argentino',
-            'codigo'  => 'ARS',
-            'simbolo' => '$',
-            'activa'  => true,
+            'nombre'     => 'Peso Argentino',
+            'codigo'     => 'ARS',
+            'simbolo'    => '$',
+            'activa'     => true,
+            'es_base'    => true,
+            'es_default' => true,
         ]);
         Moneda::create([
             'nombre'  => 'Dólar Estadounidense',

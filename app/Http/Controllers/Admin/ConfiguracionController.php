@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Configuracion;
-use App\Models\Moneda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -19,9 +18,8 @@ class ConfiguracionController extends Controller
     public function index()
     {
         $configuraciones = Configuracion::orderBy('clave')->get();
-        $monedas = Moneda::where('activa', true)->orderBy('nombre')->get();
 
-        return view('admin.configuraciones.index', compact('configuraciones', 'monedas'));
+        return view('admin.configuraciones.index', compact('configuraciones'));
     }
 
     public function update(Request $request)
@@ -43,7 +41,6 @@ class ConfiguracionController extends Controller
             'modo_imagen_producto'        => 'nullable|in:ambos,solo_url,solo_archivo',
             'imagenes_adicionales_activas'=> 'nullable|in:true,false',
             'max_imagenes_adicionales'    => 'nullable|integer|min:1|max:20',
-            'moneda_default'             => 'nullable|exists:monedas,id',
             'mostrar_proveedor'          => 'required|in:true,false',
             'social_instagram'           => 'nullable|url|max:255',
             'social_facebook'            => 'nullable|url|max:255',
@@ -87,8 +84,6 @@ class ConfiguracionController extends Controller
             ? $request->template_whatsapp
             : Configuracion::templateWhatsappDefault();
         Configuracion::establecer('template_whatsapp', $templateWhatsapp, 'Template del mensaje de WhatsApp');
-
-        Configuracion::establecer('moneda_default', $request->input('moneda_default', ''), 'Moneda por defecto para nuevos productos');
 
         Configuracion::establecer('seo_titulo_default', $request->input('seo_titulo_default', ''), 'Meta title por defecto de la tienda');
         Configuracion::establecer('seo_descripcion_default', $request->input('seo_descripcion_default', ''), 'Meta description por defecto de la tienda');

@@ -78,36 +78,6 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="moneda_id" class="form-label">Moneda
-                                @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.moneda')])
-                            </label>
-                            <select class="form-select @error('moneda_id') is-invalid @enderror" id="moneda_id" name="moneda_id">
-                                <option value="">Seleccionar moneda</option>
-                                @foreach($monedas as $moneda)
-                                    <option value="{{ $moneda->id }}" {{ old('moneda_id', $producto->moneda_id) == $moneda->id ? 'selected' : '' }}>
-                                        {{ $moneda->nombre }} ({{ $moneda->codigo }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('moneda_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="precio" class="form-label">Precio *
-                                @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.precio')])
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" min="0" class="form-control @error('precio') is-invalid @enderror" id="precio" name="precio" value="{{ old('precio', $producto->precio) }}" required>
-                            </div>
-                            @error('precio')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Stock actual
                                 @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.stock_edicion')])
@@ -144,6 +114,8 @@
                     </div>
                 </div>
             </div>
+
+            @include('admin.productos.partials.card-precio')
 
             <!-- Card: Imagen principal -->
             @php $modoImagen = App\Models\Configuracion::modoImagenProducto(); @endphp

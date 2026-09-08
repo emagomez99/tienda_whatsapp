@@ -99,7 +99,9 @@
                                          data-producto-id="{{ $prod->public_id }}"
                                          data-url="{{ route('carrito.actualizar', $prod) }}"
                                          data-stock-url="{{ route('carrito.stock', $prod) }}"
-                                         data-precio="{{ $prod->precio }}"
+                                         {{-- Con los precios ocultos no se manda el número: el JS sólo lo usa
+                                              para reescribir el subtotal y el total, que en ese caso ni existen. --}}
+                                         data-precio="{{ $mostrarPrecios ? $prod->precio : 0 }}"
                                          data-stock="{{ $prod->stock ?? '' }}"
                                          data-moneda-id="{{ $prod->moneda_id ?? '' }}"
                                          data-moneda-simbolo="{{ $prod->moneda ? $prod->moneda->simbolo : '$' }}"
