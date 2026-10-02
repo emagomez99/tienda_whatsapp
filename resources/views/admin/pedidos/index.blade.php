@@ -15,17 +15,23 @@
 {{-- Filtros: búsqueda y rango de fechas. El estado va aparte, en pestañas con contadores. --}}
 @php
     $filtrosActivos = request()->filled('buscar') || $rango->estaActivo();
+    // En celular los filtros arrancan cerrados: siempre hay un rango (por defecto los
+    // últimos 30 días) y abiertos ocupan media pantalla. Se abren solos si hay búsqueda.
+    $abrirFiltros = request()->filled('buscar');
     // Parámetros que se conservan al cambiar de pestaña de estado.
     $conBusqueda = array_filter(['buscar' => request('buscar')]);
 @endphp
 <div class="card mb-3">
     <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
          style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#filtros-pedidos"
-         aria-expanded="{{ $filtrosActivos ? 'true' : 'false' }}">
-        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1" style="font-size:.6rem;">activo</span>' : '' !!}</span>
-        <i class="bi bi-chevron-down filtros-chevron" style="transition:transform .2s;{{ $filtrosActivos ? 'transform:rotate(180deg);' : '' }}"></i>
+         aria-expanded="{{ $abrirFiltros ? 'true' : 'false' }}">
+        <span class="small text-truncate">
+            <i class="bi bi-funnel me-1 text-muted"></i><span class="fw-semibold text-muted">Filtros</span>
+            <span class="text-muted ms-1" id="filtros-resumen"></span>
+        </span>
+        <i class="bi bi-chevron-down filtros-chevron flex-shrink-0 ms-2" style="transition:transform .2s;{{ $abrirFiltros ? 'transform:rotate(180deg);' : '' }}"></i>
     </div>
-    <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-pedidos">
+    <div class="collapse d-md-block{{ $abrirFiltros ? ' show' : '' }}" id="filtros-pedidos">
     <div class="card-body py-3">
         <form action="{{ route('admin.pedidos.index') }}" method="GET">
             @if($estado)
@@ -72,7 +78,7 @@
         'cancelado'  => ['Cancelados',  $porEstado['cancelado'] ?? 0],
     ];
 @endphp
-<ul class="nav nav-tabs mb-0">
+<ul class="nav nav-tabs mb-0 nav-estados">
     @foreach($pestanas as $valor => $pestana)
         <li class="nav-item">
             <a class="nav-link {{ $estado === ($valor ?: null) ? 'active' : '' }}"
@@ -88,7 +94,29 @@
         @if($pedidos->isEmpty())
             <div class="p-4 text-muted text-center">{{ $filtrosActivos || $estado ? 'No hay pedidos con estos filtros.' : 'No hay pedidos.' }}</div>
         @else
-            <div class="table-responsive">
+            {{-- Celular: una tarjeta por pedido, sin scroll lateral. --}}
+            <div class="list-group list-group-flush d-md-none">
+                @foreach($pedidos as $pedido)
+                    <a href="{{ route('admin.pedidos.show', $pedido) }}" class="list-group-item list-group-item-action py-3">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div style="min-width: 0;">
+                                <div class="fw-semibold text-truncate">{{ $pedido->nombre }} {{ $pedido->apellido }}</div>
+                                <div class="small text-muted">
+                                    <code>#{{ $pedido->id }}</code> · {{ $pedido->created_at->format('d/m/Y H:i') }}
+                                </div>
+                            </div>
+                            <div class="text-end flex-shrink-0">
+                                @include('admin.pedidos.partials.estado-badge')
+                                @foreach($pedido->totales as $pt)
+                                    <div class="small fw-semibold mt-1">{{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}</div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+
+            <div class="table-responsive d-none d-md-block">
                 <table class="table table-hover align-middle mb-0">
                     @php $mostrarLocalidad = App\Models\Configuracion::pedirDireccionEnvio(); @endphp
                     <thead class="table-light">
@@ -118,15 +146,7 @@
                                     <div class="lh-sm">{{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}</div>
                                 @endforeach
                             </td>
-                            <td>
-                                @if($pedido->esPendiente())
-                                    <span class="badge bg-warning text-dark">Pendiente</span>
-                                @elseif($pedido->esConfirmado())
-                                    <span class="badge bg-success">Confirmado</span>
-                                @else
-                                    <span class="badge bg-danger">Cancelado</span>
-                                @endif
-                            </td>
+                            <td>@include('admin.pedidos.partials.estado-badge')</td>
                             <td>{{ $pedido->created_at->format('d/m/Y H:i') }}</td>
                             <td>
                                 <a href="{{ route('admin.pedidos.show', $pedido) }}" class="btn btn-sm btn-outline-primary">
@@ -138,9 +158,11 @@
                     </tbody>
                 </table>
             </div>
-            <div class="p-3">
-                {{ $pedidos->links('vendor.pagination.tienda') }}
-            </div>
+            @if($pedidos->hasPages())
+                <div class="p-3">
+                    {{ $pedidos->links('vendor.pagination.tienda') }}
+                </div>
+            @endif
         @endif
     </div>
 </div>
@@ -150,6 +172,9 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 <style>
     #fechas { cursor: pointer; }
+    .nav-estados { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+    .nav-estados::-webkit-scrollbar { display: none; }
+    .nav-estados .nav-link { white-space: nowrap; }
 </style>
 @endpush
 
@@ -189,6 +214,8 @@
             if (desde.value + '|' + hasta.value !== inicial) form.submit();
         }
     });
+
+    document.getElementById('filtros-resumen').textContent = '· ' + (document.getElementById('fechas').value || 'Todas las fechas');
 
     limpiar.addEventListener('click', function () {
         calendario.clear();
