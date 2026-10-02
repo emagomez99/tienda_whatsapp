@@ -78,7 +78,7 @@
         'cancelado'  => ['Cancelados',  $porEstado['cancelado'] ?? 0],
     ];
 @endphp
-<ul class="nav nav-tabs mb-0 nav-estados">
+<ul class="nav nav-tabs mb-0 nav-desplazable">
     @foreach($pestanas as $valor => $pestana)
         <li class="nav-item">
             <a class="nav-link {{ $estado === ($valor ?: null) ? 'active' : '' }}"
@@ -172,9 +172,6 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 <style>
     #fechas { cursor: pointer; }
-    .nav-estados { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-    .nav-estados::-webkit-scrollbar { display: none; }
-    .nav-estados .nav-link { white-space: nowrap; }
 </style>
 @endpush
 

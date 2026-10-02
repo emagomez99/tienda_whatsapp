@@ -12,7 +12,7 @@
     @method('PUT')
 
 
-<ul class="nav nav-tabs mb-0" id="tabs-config" role="tablist">
+<ul class="nav nav-tabs mb-0 nav-desplazable" id="tabs-config" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pane-apariencia" type="button" role="tab">
             <i class="bi bi-palette"></i> Apariencia
@@ -818,10 +818,33 @@
         return !!boton;
     }
 
+    // En celular la barra se desliza: que la pestaña elegida quede a la vista, centrada.
+    // Sólo en horizontal (scrollIntoView también movería la página).
+    // Se mide un instante después: recién ahí la pestaña tiene el estilo de activa.
+    // Con la página oculta no hay animación posible: se desliza directo.
+    function centrar(boton, comportamiento) {
+        setTimeout(function () {
+            var barra = document.getElementById('tabs-config');
+            var caja  = boton.getBoundingClientRect();
+            barra.scrollTo({
+                left: barra.scrollLeft + (caja.left - barra.getBoundingClientRect().left) - (barra.clientWidth - caja.width) / 2,
+                behavior: document.hidden ? 'auto' : comportamiento
+            });
+        }, 50);
+    }
+
+    // Al cargar, el ancho de las pestañas cambia cuando llega la fuente de íconos:
+    // se vuelve a centrar la activa con las medidas finales.
+    window.addEventListener('load', function () {
+        var activa = document.querySelector('#tabs-config .nav-link.active');
+        if (activa) centrar(activa, 'auto');
+    });
+
     botones.forEach(function (boton) {
         boton.addEventListener('shown.bs.tab', function () {
             var destino = boton.getAttribute('data-bs-target');
             history.replaceState(null, '', destino);
+            centrar(boton, 'smooth');
             try { sessionStorage.setItem(CLAVE, destino); } catch (e) {}
         });
     });

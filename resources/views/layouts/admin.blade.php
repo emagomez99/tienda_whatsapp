@@ -86,6 +86,12 @@
         #adminDrawer nav::-webkit-scrollbar { width: 4px; }
         #adminDrawer nav::-webkit-scrollbar-thumb { background: rgba(var(--admin-texto-rgb), .15); border-radius: 2px; }
         #adminDrawer nav::-webkit-scrollbar-track { background: transparent; }
+
+        /* Pestañas en un solo renglón que se deslizan de costado cuando no entran
+           (celular), en vez de partirse en varios renglones. */
+        .nav-desplazable { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+        .nav-desplazable::-webkit-scrollbar { display: none; }
+        .nav-desplazable .nav-link { white-space: nowrap; }
     </style>
     @stack('styles')
 </head>
