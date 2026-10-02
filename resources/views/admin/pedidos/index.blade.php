@@ -12,9 +12,14 @@
     @endif
 </div>
 
-{{-- Filtros --}}
-@php $filtrosActivos = request()->hasAny(['buscar','estado']); @endphp
-<div class="card mb-4">
+{{-- Filtros: búsqueda y rango de fechas. El estado va aparte, en pestañas con contadores. --}}
+@php
+    $filtrosActivos = request()->filled('buscar') || $rango->estaActivo();
+    // Parámetros que se conservan al cambiar de pestaña de estado o al limpiar filtros.
+    $conBusqueda = array_filter(['buscar' => request('buscar')]);
+    $conEstado   = array_filter(['estado' => $estado]);
+@endphp
+<div class="card mb-3">
     <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
          style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#filtros-pedidos"
          aria-expanded="{{ $filtrosActivos ? 'true' : 'false' }}">
@@ -22,43 +27,66 @@
         <i class="bi bi-chevron-down filtros-chevron" style="transition:transform .2s;{{ $filtrosActivos ? 'transform:rotate(180deg);' : '' }}"></i>
     </div>
     <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-pedidos">
-    <div class="card-body">
+    <div class="card-body py-3">
         <form action="{{ route('admin.pedidos.index') }}" method="GET">
-            <div class="row g-3 align-items-end">
+            @if($estado)
+                <input type="hidden" name="estado" value="{{ $estado }}">
+            @endif
+            <div class="row g-2 align-items-end">
                 <div class="col-md-5">
-                    <label class="form-label">Buscar</label>
-                    <input type="text" name="buscar" class="form-control" placeholder="Buscar..." value="{{ request('buscar') }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Estado</label>
-                    <select name="estado" class="form-select">
-                        <option value="">Todos</option>
-                        <option value="pendiente"  {{ request('estado') === 'pendiente'  ? 'selected' : '' }}>Pendiente</option>
-                        <option value="confirmado" {{ request('estado') === 'confirmado' ? 'selected' : '' }}>Confirmado</option>
-                        <option value="cancelado"  {{ request('estado') === 'cancelado'  ? 'selected' : '' }}>Cancelado</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-search"></i> Buscar
-                    </button>
-                </div>
-                @if(request('buscar') || request('estado'))
-                    <div class="col-md-2">
-                        <a href="{{ route('admin.pedidos.index') }}" class="btn btn-outline-secondary w-100">Limpiar</a>
+                    <label for="buscar" class="form-label small mb-1">Buscar</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="buscar" id="buscar" class="form-control"
+                               placeholder="Nombre, email, celular o #123" value="{{ request('buscar') }}">
                     </div>
-                @endif
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="desde" class="form-label small mb-1">Desde</label>
+                    <input type="date" name="desde" id="desde" class="form-control" value="{{ $rango->desdeTexto() }}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="hasta" class="form-label small mb-1">Hasta</label>
+                    <input type="date" name="hasta" id="hasta" class="form-control" value="{{ $rango->hastaTexto() }}">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">Filtrar</button>
+                    @if($filtrosActivos)
+                        <a href="{{ route('admin.pedidos.index', $conEstado) }}" class="btn btn-outline-secondary" title="Quitar búsqueda y fechas">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    @endif
+                </div>
             </div>
-            <small class="text-muted fst-italic mt-2 d-block">Nombre, apellido, email, celular — o <code>#123</code> para buscar por ID</small>
         </form>
     </div>
     </div>
 </div>
 
-<div class="card">
+{{-- Estado en pestañas: cada una dice cuántos pedidos hay dentro de la búsqueda y las fechas. --}}
+@php
+    $pestanas = [
+        null         => ['Todos',       $porEstado->sum()],
+        'pendiente'  => ['Pendientes',  $porEstado['pendiente'] ?? 0],
+        'confirmado' => ['Confirmados', $porEstado['confirmado'] ?? 0],
+        'cancelado'  => ['Cancelados',  $porEstado['cancelado'] ?? 0],
+    ];
+@endphp
+<ul class="nav nav-tabs mb-0">
+    @foreach($pestanas as $valor => $pestana)
+        <li class="nav-item">
+            <a class="nav-link {{ $estado === ($valor ?: null) ? 'active' : '' }}"
+               href="{{ route('admin.pedidos.index', array_merge($conBusqueda, $rango->parametros(), array_filter(['estado' => $valor]))) }}">
+                {{ $pestana[0] }} <span class="badge rounded-pill bg-secondary bg-opacity-25 text-body ms-1">{{ $pestana[1] }}</span>
+            </a>
+        </li>
+    @endforeach
+</ul>
+
+<div class="card border-top-0 rounded-top-0">
     <div class="card-body p-0">
         @if($pedidos->isEmpty())
-            <div class="p-4 text-muted text-center">No hay pedidos.</div>
+            <div class="p-4 text-muted text-center">{{ $filtrosActivos || $estado ? 'No hay pedidos con estos filtros.' : 'No hay pedidos.' }}</div>
         @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">

@@ -7,7 +7,9 @@ use App\Models\Pedido;
 use App\Models\PedidoProducto;
 use App\Models\Producto;
 use App\Models\StockMovimiento;
+use App\Support\RangoFechas;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PedidoController extends Controller
 {
@@ -19,11 +21,12 @@ class PedidoController extends Controller
 
     public function index(Request $request)
     {
-        $query = Pedido::orderBy('created_at', 'desc');
+        $rango = RangoFechas::desdeTextos($request->query('desde'), $request->query('hasta'));
 
-        if ($request->filled('estado')) {
-            $query->where('estado', $request->estado);
-        }
+        // Búsqueda y fechas primero, sin el estado: así los contadores de cada pestaña
+        // de estado dicen cuántos hay de cada uno dentro de lo que se está buscando.
+        $query = Pedido::query();
+        $rango->aplicarA($query, 'created_at');
 
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
@@ -40,9 +43,25 @@ class PedidoController extends Controller
             }
         }
 
-        $pedidos = $query->with('totales.moneda')->paginate(20)->withQueryString();
+        $porEstado = (clone $query)
+            ->select('estado', DB::raw('COUNT(*) as cantidad'))
+            ->groupBy('estado')
+            ->pluck('cantidad', 'estado');
 
-        return view('admin.pedidos.index', compact('pedidos'));
+        $estado = in_array($request->query('estado'), ['pendiente', 'confirmado', 'cancelado'], true)
+            ? $request->query('estado')
+            : null;
+
+        $pedidos = $query
+            ->when($estado, function ($q) use ($estado) {
+                $q->where('estado', $estado);
+            })
+            ->orderBy('created_at', 'desc')
+            ->with('totales.moneda')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.pedidos.index', compact('pedidos', 'rango', 'porEstado', 'estado'));
     }
 
     public function create()

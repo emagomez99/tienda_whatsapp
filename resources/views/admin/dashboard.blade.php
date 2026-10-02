@@ -155,7 +155,7 @@
         </a>
     </div>
     <div class="col-6 col-md-2">
-        <a href="{{ route('admin.pedidos.index', ['estado' => 'confirmado']) }}" class="text-decoration-none">
+        <a href="{{ route('admin.pedidos.index', ['estado' => 'confirmado'] + $rangoDelMes) }}" class="text-decoration-none">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body py-2 px-3">
                     <div class="text-muted mb-0" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Confirmados {{ $mes->nombreCorto() }}</div>
@@ -376,19 +376,19 @@
                 <span class="fw-semibold"><i class="bi bi-bar-chart"></i> Pedidos de {{ $mes->nombre() }}</span>
             </div>
             <div class="card-body p-0">
-                <a href="{{ route('admin.pedidos.index', ['estado' => 'pendiente']) }}" class="text-decoration-none">
+                <a href="{{ route('admin.pedidos.index', ['estado' => 'pendiente'] + $rangoDelMes) }}" class="text-decoration-none">
                     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                         <span class="small"><i class="bi bi-hourglass-split text-warning me-1"></i> Pendientes</span>
                         <span class="badge bg-warning text-dark">{{ $pedidosStats['pendientes_mes'] }}</span>
                     </div>
                 </a>
-                <a href="{{ route('admin.pedidos.index', ['estado' => 'confirmado']) }}" class="text-decoration-none">
+                <a href="{{ route('admin.pedidos.index', ['estado' => 'confirmado'] + $rangoDelMes) }}" class="text-decoration-none">
                     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                         <span class="small"><i class="bi bi-check-circle text-success me-1"></i> Confirmados</span>
                         <span class="badge bg-success">{{ $pedidosStats['confirmados'] }}</span>
                     </div>
                 </a>
-                <a href="{{ route('admin.pedidos.index', ['estado' => 'cancelado']) }}" class="text-decoration-none">
+                <a href="{{ route('admin.pedidos.index', ['estado' => 'cancelado'] + $rangoDelMes) }}" class="text-decoration-none">
                     <div class="d-flex justify-content-between align-items-center px-3 py-2">
                         <span class="small"><i class="bi bi-x-circle text-danger me-1"></i> Cancelados</span>
                         <span class="badge bg-danger">{{ $pedidosStats['cancelados'] }}</span>

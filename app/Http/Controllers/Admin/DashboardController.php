@@ -8,6 +8,7 @@ use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\User;
 use App\Support\Mes;
+use App\Support\RangoFechas;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,8 @@ class DashboardController extends Controller
         $hayMesAnterior = $mes->esPosteriorA($masViejo);
 
         $periodo = [$mes->inicio(), $mes->fin()];
+        // Para que los links a Pedidos abran filtrados por el mismo mes.
+        $rangoDelMes = RangoFechas::delMes($mes)->parametros();
 
         $stats = [
             'productos'            => Producto::count(),
@@ -88,7 +91,7 @@ class DashboardController extends Controller
             ->get();
 
         return view('admin.dashboard', compact(
-            'stats', 'pedidosStats', 'pedidosRecientes', 'productosRecientes', 'mes', 'meses', 'hayMesAnterior'
+            'stats', 'pedidosStats', 'pedidosRecientes', 'productosRecientes', 'mes', 'meses', 'hayMesAnterior', 'rangoDelMes'
         ));
     }
 }
