@@ -109,29 +109,22 @@ class Configuracion extends Model
             return ColorHex::desde($color);
         }
 
-        $sugeridos = self::coloresSugeridos();
-        $paleta    = self::obtener('paleta', 'azul');
-        $sugerido  = $sugeridos[$paleta] ?? $sugeridos['azul'];
+        $paleta = self::obtener('paleta', 'azul');
 
-        return ColorHex::desde($sugerido['hex']);
+        return ColorHex::desde(self::PALETAS_ANTERIORES[$paleta] ?? self::PALETAS_ANTERIORES['azul']);
     }
 
-    /**
-     * Atajos del selector de color. Las claves son las de las paletas cerradas
-     * anteriores: colorPrimario() las usa de respaldo para tiendas viejas.
-     */
-    public static function coloresSugeridos()
-    {
-        return [
-            'azul'    => ['nombre' => 'Azul',    'hex' => '#0d6efd'],
-            'verde'   => ['nombre' => 'Verde',   'hex' => '#198754'],
-            'rojo'    => ['nombre' => 'Rojo',    'hex' => '#dc3545'],
-            'naranja' => ['nombre' => 'Naranja', 'hex' => '#fd7e14'],
-            'morado'  => ['nombre' => 'Morado',  'hex' => '#6f42c1'],
-            'cyan'    => ['nombre' => 'Cyan',    'hex' => '#0dcaf0'],
-            'oscuro'  => ['nombre' => 'Oscuro',  'hex' => '#212529'],
-        ];
-    }
+    // Paletas cerradas que existían antes de liberar el color. Solo se usan de
+    // respaldo en colorPrimario(), para tiendas que todavía no eligieron un color.
+    const PALETAS_ANTERIORES = [
+        'azul'    => '#0d6efd',
+        'verde'   => '#198754',
+        'rojo'    => '#dc3545',
+        'naranja' => '#fd7e14',
+        'morado'  => '#6f42c1',
+        'cyan'    => '#0dcaf0',
+        'oscuro'  => '#212529',
+    ];
 
     public static function posicionMenu()
     {

@@ -80,15 +80,16 @@ class ColorPrimarioTest extends TestCase
         $this->assertSame('#a1b2c3', $this->colorGuardado());
     }
 
-    public function test_ajustes_muestra_el_selector_con_el_color_actual()
+    public function test_ajustes_muestra_el_selector_y_la_vista_previa_con_el_color_actual()
     {
         $this->guardarColor('#a1b2c3');
 
         $this->comoAdmin()->get($this->urlTenant('admin/configuraciones'))
             ->assertOk()
-            ->assertSee('id="color_primario_picker"', false)
+            ->assertSee('type="color"', false)
             ->assertSee('value="#a1b2c3"', false)
-            ->assertSee('data-color="#198754"', false);
+            ->assertSee('id="cabecera_preview"', false)
+            ->assertSee('background-color: #a1b2c3; color: #212529;', false);
     }
 
     public function test_un_color_mal_formado_se_rechaza()
