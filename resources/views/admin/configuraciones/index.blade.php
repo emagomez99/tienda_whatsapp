@@ -49,123 +49,123 @@
 
 <div class="tab-content border border-top-0 rounded-bottom bg-white p-3 p-md-4">
 <div class="tab-pane fade show active" id="pane-apariencia" role="tabpanel">
-                    @php
-                        $logoActual   = App\Models\Configuracion::logo();
-                        $logoAlto     = (int) old('logo_alto', App\Models\Configuracion::logoAlto());
-                        $colorActual  = App\Models\Configuracion::colorPrimario();
-                        $colorElegido = old('color_primario', $colorActual->hex());
-                        if (! App\Support\ColorHex::esValido($colorElegido)) {
-                            $colorElegido = $colorActual->hex();
-                        }
-                        $colorPreview = App\Support\ColorHex::desde($colorElegido);
-                        $mostrarNombrePreview = old('mostrar_nombre_tienda', App\Models\Configuracion::obtener('mostrar_nombre_tienda', 'true')) === 'true';
-                    @endphp
-
-                    {{-- Vista previa de la cabecera de la tienda. Refleja en tiempo real el
-                         color, el logo (incluso uno recién elegido, antes de guardar), su
-                         tamaño y el nombre. El texto pasa a oscuro solo si el color es claro. --}}
-                    {{-- Fija bajo la barra del admin: sigue a la vista mientras se ajustan los controles de abajo. --}}
-                    <div class="mb-4 pb-2 bg-white" style="position: sticky; top: 60px; z-index: 1010;">
-                        <div class="form-label pt-2">Vista previa de la cabecera</div>
-                        <div id="cabecera_preview" class="rounded px-3 d-flex align-items-center justify-content-between gap-3"
-                             style="min-height: 72px; background-color: {{ $colorPreview->hex() }}; color: {{ $colorPreview->textoLegible()->hex() }};">
-                            <div class="d-flex align-items-center gap-2 fw-bold text-truncate">
-                                <img id="cabecera_preview_logo" src="{{ $logoActual ? url('storage/' . $logoActual) : '' }}" alt="Logo"
-                                     class="{{ $logoActual ? '' : 'd-none' }}"
-                                     style="height: {{ $logoAlto }}px; width: auto; max-width: 320px; object-fit: contain;">
-                                <i id="cabecera_preview_icono" class="bi bi-shop {{ $logoActual ? 'd-none' : '' }}"></i>
-                                <span id="cabecera_preview_nombre" class="{{ $logoActual && ! $mostrarNombrePreview ? 'd-none' : '' }}">{{ old('nombre_tienda', App\Models\Configuracion::nombreTienda()) }}</span>
-                            </div>
-                            <i class="bi bi-cart3 fs-5"></i>
-                        </div>
-                    </div>
-
-                    {{-- Logo y favicon: tarjetas compactas con miniatura, botones y nombre del archivo
-                         elegido. Los <input type="file"> van ocultos y se abren desde los botones. --}}
-                    @php $faviconActual = App\Models\Configuracion::favicon(); @endphp
-                    <div class="row g-3 mb-4">
-                        <div class="col-lg-8">
-                            <div class="ajuste-tarjeta h-100">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="imagen-miniatura" style="width: 128px; height: 72px;">
-                                        <img id="logo_miniatura" src="{{ $logoActual ? url('storage/' . $logoActual) : '' }}" alt="Logo"
-                                             class="{{ $logoActual ? '' : 'd-none' }}" style="max-height: 56px; max-width: 112px;">
-                                        <i class="bi bi-image text-muted fs-3 {{ $logoActual ? 'd-none' : '' }}" data-miniatura-vacia="logo"></i>
-                                    </div>
-                                    <div class="flex-grow-1" style="min-width: 0;">
-                                        <div class="fw-semibold">Logo</div>
-                                        <div class="small text-muted text-truncate" id="logo_estado"
-                                             data-texto-inicial="JPG, PNG o GIF, hasta 2 MB. Los bordes transparentes se recortan solos.">
-                                            JPG, PNG o GIF, hasta 2 MB. Los bordes transparentes se recortan solos.
-                                        </div>
-                                        <div class="d-flex flex-wrap gap-2 mt-2">
-                                            <label for="logo" class="btn btn-sm btn-outline-primary mb-0">
-                                                <i class="bi bi-upload"></i> {{ $logoActual ? 'Cambiar' : 'Subir' }}
-                                            </label>
-                                            @if($logoActual)
-                                                <input type="checkbox" class="btn-check" id="eliminar_logo" name="eliminar_logo" value="1" autocomplete="off">
-                                                <label class="btn btn-sm btn-outline-danger mb-0" for="eliminar_logo">
-                                                    <i class="bi bi-trash"></i> Quitar
-                                                </label>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                <input type="file" class="d-none" id="logo" name="logo" accept="image/*"
-                                       data-miniatura="logo_miniatura" data-estado="logo_estado" data-quitar="eliminar_logo">
-                                @error('logo')
-                                    <div class="small text-danger mt-2">{{ $message }}</div>
-                                @enderror
-
-                                <div class="mt-3">
-                                    <label for="logo_alto" class="form-label d-flex justify-content-between small mb-0">
-                                        <span>Tamaño en la tienda</span>
-                                        <span class="text-muted"><span id="logo_alto_valor">{{ $logoAlto }}</span> px de alto · en celular hasta 44 px</span>
-                                    </label>
-                                    <input type="range" class="form-range" id="logo_alto" name="logo_alto"
-                                           min="{{ App\Models\Configuracion::LOGO_ALTO_MIN }}" max="{{ App\Models\Configuracion::LOGO_ALTO_MAX }}" step="2"
-                                           value="{{ $logoAlto }}">
-                                    @error('logo_alto')
-                                        <div class="small text-danger">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-4">
-                            <div class="ajuste-tarjeta h-100">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="imagen-miniatura" style="width: 56px; height: 56px;">
-                                        <img id="favicon_miniatura" src="{{ $faviconActual ? url('storage/' . $faviconActual) : '' }}" alt="Favicon"
-                                             class="{{ $faviconActual ? '' : 'd-none' }}" style="width: 32px; height: 32px; object-fit: contain;">
-                                        <i class="bi bi-app text-muted fs-4 {{ $faviconActual ? 'd-none' : '' }}" data-miniatura-vacia="favicon"></i>
-                                    </div>
-                                    <div class="flex-grow-1" style="min-width: 0;">
-                                        <div class="fw-semibold">Favicon</div>
-                                        <div class="small text-muted text-truncate" id="favicon_estado"
-                                             data-texto-inicial="ICO, PNG, JPG o SVG, 32×32 o 64×64.">
-                                            ICO, PNG, JPG o SVG, 32×32 o 64×64.
-                                        </div>
-                                        <div class="d-flex flex-wrap gap-2 mt-2">
-                                            <label for="favicon" class="btn btn-sm btn-outline-primary mb-0">
-                                                <i class="bi bi-upload"></i> {{ $faviconActual ? 'Cambiar' : 'Subir' }}
-                                            </label>
-                                            @if($faviconActual)
-                                                <input type="checkbox" class="btn-check" id="eliminar_favicon" name="eliminar_favicon" value="1" autocomplete="off">
-                                                <label class="btn btn-sm btn-outline-danger mb-0" for="eliminar_favicon">
-                                                    <i class="bi bi-trash"></i> Quitar
-                                                </label>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                <input type="file" class="d-none" id="favicon" name="favicon" accept=".ico,.png,.jpg,.jpeg,.svg"
-                                       data-miniatura="favicon_miniatura" data-estado="favicon_estado" data-quitar="eliminar_favicon">
-                                @error('favicon')
-                                    <div class="small text-danger mt-2">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
+                    @php
+                        $logoActual   = App\Models\Configuracion::logo();
+                        $logoAlto     = (int) old('logo_alto', App\Models\Configuracion::logoAlto());
+                        $colorActual  = App\Models\Configuracion::colorPrimario();
+                        $colorElegido = old('color_primario', $colorActual->hex());
+                        if (! App\Support\ColorHex::esValido($colorElegido)) {
+                            $colorElegido = $colorActual->hex();
+                        }
+                        $colorPreview = App\Support\ColorHex::desde($colorElegido);
+                        $mostrarNombrePreview = old('mostrar_nombre_tienda', App\Models\Configuracion::obtener('mostrar_nombre_tienda', 'true')) === 'true';
+                    @endphp
+
+                    {{-- Vista previa de la cabecera de la tienda. Refleja en tiempo real el
+                         color, el logo (incluso uno recién elegido, antes de guardar), su
+                         tamaño y el nombre. El texto pasa a oscuro solo si el color es claro. --}}
+                    {{-- Fija bajo la barra del admin: sigue a la vista mientras se ajustan los controles de abajo. --}}
+                    <div class="mb-4 pb-2 bg-white" style="position: sticky; top: 60px; z-index: 1010;">
+                        <div class="form-label pt-2">Vista previa de la cabecera</div>
+                        <div id="cabecera_preview" class="rounded px-3 d-flex align-items-center justify-content-between gap-3"
+                             style="min-height: 72px; background-color: {{ $colorPreview->hex() }}; color: {{ $colorPreview->textoLegible()->hex() }};">
+                            <div class="d-flex align-items-center gap-2 fw-bold text-truncate">
+                                <img id="cabecera_preview_logo" src="{{ $logoActual ? url('storage/' . $logoActual) : '' }}" alt="Logo"
+                                     class="{{ $logoActual ? '' : 'd-none' }}"
+                                     style="height: {{ $logoAlto }}px; width: auto; max-width: 320px; object-fit: contain;">
+                                <i id="cabecera_preview_icono" class="bi bi-shop {{ $logoActual ? 'd-none' : '' }}"></i>
+                                <span id="cabecera_preview_nombre" class="{{ $logoActual && ! $mostrarNombrePreview ? 'd-none' : '' }}">{{ old('nombre_tienda', App\Models\Configuracion::nombreTienda()) }}</span>
+                            </div>
+                            <i class="bi bi-cart3 fs-5"></i>
+                        </div>
+                    </div>
+
+                    {{-- Logo y favicon: tarjetas compactas con miniatura, botones y nombre del archivo
+                         elegido. Los <input type="file"> van ocultos y se abren desde los botones. --}}
+                    @php $faviconActual = App\Models\Configuracion::favicon(); @endphp
+                    <div class="row g-3 mb-4">
+                        <div class="col-lg-8">
+                            <div class="ajuste-tarjeta h-100">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="imagen-miniatura" style="width: 128px; height: 72px;">
+                                        <img id="logo_miniatura" src="{{ $logoActual ? url('storage/' . $logoActual) : '' }}" alt="Logo"
+                                             class="{{ $logoActual ? '' : 'd-none' }}" style="max-height: 56px; max-width: 112px;">
+                                        <i class="bi bi-image text-muted fs-3 {{ $logoActual ? 'd-none' : '' }}" data-miniatura-vacia="logo"></i>
+                                    </div>
+                                    <div class="flex-grow-1" style="min-width: 0;">
+                                        <div class="fw-semibold">Logo</div>
+                                        <div class="small text-muted text-truncate" id="logo_estado"
+                                             data-texto-inicial="JPG, PNG o GIF, hasta 2 MB. Los bordes transparentes se recortan solos.">
+                                            JPG, PNG o GIF, hasta 2 MB. Los bordes transparentes se recortan solos.
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                            <label for="logo" class="btn btn-sm btn-outline-primary mb-0">
+                                                <i class="bi bi-upload"></i> {{ $logoActual ? 'Cambiar' : 'Subir' }}
+                                            </label>
+                                            @if($logoActual)
+                                                <input type="checkbox" class="btn-check" id="eliminar_logo" name="eliminar_logo" value="1" autocomplete="off">
+                                                <label class="btn btn-sm btn-outline-danger mb-0" for="eliminar_logo">
+                                                    <i class="bi bi-trash"></i> Quitar
+                                                </label>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="file" class="d-none" id="logo" name="logo" accept="image/*"
+                                       data-miniatura="logo_miniatura" data-estado="logo_estado" data-quitar="eliminar_logo">
+                                @error('logo')
+                                    <div class="small text-danger mt-2">{{ $message }}</div>
+                                @enderror
+
+                                <div class="mt-3">
+                                    <label for="logo_alto" class="form-label d-flex justify-content-between small mb-0">
+                                        <span>Tamaño en la tienda</span>
+                                        <span class="text-muted"><span id="logo_alto_valor">{{ $logoAlto }}</span> px de alto · en celular hasta 44 px</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="logo_alto" name="logo_alto"
+                                           min="{{ App\Models\Configuracion::LOGO_ALTO_MIN }}" max="{{ App\Models\Configuracion::LOGO_ALTO_MAX }}" step="2"
+                                           value="{{ $logoAlto }}">
+                                    @error('logo_alto')
+                                        <div class="small text-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="ajuste-tarjeta h-100">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="imagen-miniatura" style="width: 56px; height: 56px;">
+                                        <img id="favicon_miniatura" src="{{ $faviconActual ? url('storage/' . $faviconActual) : '' }}" alt="Favicon"
+                                             class="{{ $faviconActual ? '' : 'd-none' }}" style="width: 32px; height: 32px; object-fit: contain;">
+                                        <i class="bi bi-app text-muted fs-4 {{ $faviconActual ? 'd-none' : '' }}" data-miniatura-vacia="favicon"></i>
+                                    </div>
+                                    <div class="flex-grow-1" style="min-width: 0;">
+                                        <div class="fw-semibold">Favicon</div>
+                                        <div class="small text-muted text-truncate" id="favicon_estado"
+                                             data-texto-inicial="ICO, PNG, JPG o SVG, 32×32 o 64×64.">
+                                            ICO, PNG, JPG o SVG, 32×32 o 64×64.
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                            <label for="favicon" class="btn btn-sm btn-outline-primary mb-0">
+                                                <i class="bi bi-upload"></i> {{ $faviconActual ? 'Cambiar' : 'Subir' }}
+                                            </label>
+                                            @if($faviconActual)
+                                                <input type="checkbox" class="btn-check" id="eliminar_favicon" name="eliminar_favicon" value="1" autocomplete="off">
+                                                <label class="btn btn-sm btn-outline-danger mb-0" for="eliminar_favicon">
+                                                    <i class="bi bi-trash"></i> Quitar
+                                                </label>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="file" class="d-none" id="favicon" name="favicon" accept=".ico,.png,.jpg,.jpeg,.svg"
+                                       data-miniatura="favicon_miniatura" data-estado="favicon_estado" data-quitar="eliminar_favicon">
+                                @error('favicon')
+                                    <div class="small text-danger mt-2">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
 
                     @php $posicionMenu = old('posicion_menu', App\Models\Configuracion::posicionMenu()); @endphp
@@ -219,7 +219,7 @@
                     </div>
 </div>
 <div class="tab-pane fade" id="pane-tienda" role="tabpanel">
-                    <div class="ajuste-seccion">Contacto</div>
+                    <div class="ajuste-seccion">Pedidos</div>
                     <div class="row g-3 mb-4">
                         <div class="col-lg-6">
                             <div class="ajuste-tarjeta h-100">
@@ -232,41 +232,79 @@
                                 <div class="small text-muted mt-1">Adonde llegan los pedidos de los clientes.</div>
                             </div>
                         </div>
+                        <div class="col-lg-6">
+                            @include('admin.configuraciones.partials.interruptor', [
+                                'nombre' => 'pedir_direccion_envio',
+                                'titulo' => 'Pedir dirección de envío',
+                                'ayuda'  => 'Al finalizar el pedido. Si se desactiva, el cliente no la carga.',
+                                'activo' => App\Models\Configuracion::obtener('pedir_direccion_envio', 'true') === 'true',
+                            ])
+                        </div>
                     </div>
 
                     <div class="ajuste-seccion">Qué ve el cliente</div>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            @include('admin.configuraciones.partials.interruptor', [
-                                'nombre' => 'mostrar_precios',
-                                'titulo' => 'Mostrar los precios',
-                                'ayuda'  => 'Si se ocultan, no aparecen en ningún lugar de la tienda.',
-                                'activo' => App\Models\Configuracion::obtener('mostrar_precios', 'true') === 'true',
-                            ])
+                        <div class="col-lg-7">
+                            <div class="row g-3">
+                            <div class="col-12">
+                                @include('admin.configuraciones.partials.interruptor', [
+                                    'nombre' => 'mostrar_precios',
+                                    'titulo' => 'Mostrar los precios',
+                                    'ayuda'  => 'Si se ocultan, no aparecen en ningún lugar de la tienda.',
+                                    'activo' => App\Models\Configuracion::obtener('mostrar_precios', 'true') === 'true',
+                                ])
+                            </div>
+                            <div class="col-12">
+                                @include('admin.configuraciones.partials.interruptor', [
+                                    'nombre' => 'mostrar_productos_sin_stock',
+                                    'titulo' => 'Mostrar productos sin stock',
+                                    'ayuda'  => 'Si se ocultan, solo se ven los disponibles.',
+                                    'activo' => App\Models\Configuracion::obtener('mostrar_productos_sin_stock', 'true') === 'true',
+                                ])
+                            </div>
+                            <div class="col-12">
+                                @include('admin.configuraciones.partials.interruptor', [
+                                    'nombre' => 'mostrar_proveedor',
+                                    'titulo' => 'Mostrar el proveedor',
+                                    'ayuda'  => 'En la ficha de cada producto.',
+                                    'activo' => App\Models\Configuracion::obtener('mostrar_proveedor', 'false') === 'true',
+                                ])
+                            </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            @include('admin.configuraciones.partials.interruptor', [
-                                'nombre' => 'mostrar_productos_sin_stock',
-                                'titulo' => 'Mostrar productos sin stock',
-                                'ayuda'  => 'Si se ocultan, solo se ven los disponibles.',
-                                'activo' => App\Models\Configuracion::obtener('mostrar_productos_sin_stock', 'true') === 'true',
-                            ])
-                        </div>
-                        <div class="col-md-6">
-                            @include('admin.configuraciones.partials.interruptor', [
-                                'nombre' => 'mostrar_proveedor',
-                                'titulo' => 'Mostrar el proveedor',
-                                'ayuda'  => 'En la ficha de cada producto.',
-                                'activo' => App\Models\Configuracion::obtener('mostrar_proveedor', 'false') === 'true',
-                            ])
-                        </div>
-                        <div class="col-md-6">
-                            @include('admin.configuraciones.partials.interruptor', [
-                                'nombre' => 'pedir_direccion_envio',
-                                'titulo' => 'Pedir dirección de envío',
-                                'ayuda'  => 'Al finalizar el pedido.',
-                                'activo' => App\Models\Configuracion::obtener('pedir_direccion_envio', 'true') === 'true',
-                            ])
+                        <div class="col-lg-5">
+                            {{-- Vista previa del listado y de la ficha de producto: responde en tiempo
+                                 real a los tres switches de la izquierda, con el color elegido en
+                                 Apariencia. Usa productos y proveedores reales de la tienda si los hay. --}}
+                            <div class="ajuste-tarjeta" id="preview_cards" style="position: sticky; top: 76px;">
+                                <div class="small text-muted mb-2">Vista previa en el listado</div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        @include('admin.configuraciones.partials.card-producto-preview', ['producto' => $ejemploConStock, 'sinStock' => false, 'ejemplo' => 'Producto de ejemplo'])
+                                    </div>
+                                    <div class="col-6">
+                                        <div id="preview_card_sin_stock" class="h-100">
+                                            @include('admin.configuraciones.partials.card-producto-preview', ['producto' => $ejemploSinStock, 'sinStock' => true, 'ejemplo' => 'Producto agotado'])
+                                        </div>
+                                        <div id="preview_card_oculta" class="preview-card-oculta h-100 d-none">
+                                            <i class="bi bi-eye-slash fs-4"></i>
+                                            <span class="small">Los productos sin stock no se muestran</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- El proveedor no está en la card del listado sino en la ficha (ver
+                                     tienda/partials/producto-show-desktop.blade.php): se muestra ahí. --}}
+                                <div class="small text-muted mt-3 mb-2">Vista previa en la ficha del producto</div>
+                                <div class="border rounded p-2 small bg-white">
+                                    <div class="fw-semibold">{{ $ejemploConStock ? $ejemploConStock->descripcion : 'Producto de ejemplo' }}</div>
+                                    <div class="text-muted">Código: {{ $ejemploConStock && $ejemploConStock->id_proveedor ? $ejemploConStock->id_proveedor : 'ABC-123' }}</div>
+                                    <div class="text-muted" data-preview-proveedor>Proveedor: {{ $proveedorEjemplo }}</div>
+                                    <div class="fw-bold preview-card-precio mt-1" data-preview-precio>
+                                        {{ $ejemploConStock ? $ejemploConStock->precio_con_moneda : (optional(App\Models\Moneda::base())->simbolo ?: '$') . number_format(15000, 2) }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -335,7 +373,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
+                        </div>
                         <div class="col-md-6">
                             <label for="social_facebook" class="visually-hidden">Facebook</label>
                             <div class="input-group">
@@ -347,7 +385,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
+                        </div>
                         <div class="col-md-6">
                             <label for="social_twitter" class="visually-hidden">Twitter / X</label>
                             <div class="input-group">
@@ -359,7 +397,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
+                        </div>
                         <div class="col-md-6">
                             <label for="social_tiktok" class="visually-hidden">TikTok</label>
                             <div class="input-group">
@@ -371,7 +409,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
+                        </div>
                         <div class="col-md-6">
                             <label for="social_youtube" class="visually-hidden">YouTube</label>
                             <div class="input-group">
@@ -383,7 +421,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
+                        </div>
                         <div class="col-md-6">
                             <label for="social_whatsapp" class="visually-hidden">WhatsApp</label>
                             <div class="input-group">
@@ -558,17 +596,17 @@
                         @enderror
                         <div class="small text-muted mt-3 mb-1">Variables: tocá una para insertarla donde está el cursor. Pasá el mouse para ver qué contiene.</div>
                         <div class="d-flex flex-wrap gap-1">
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{pedido_id}" title="Número de pedido">{pedido_id}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{nombre}" title="Nombre del cliente">{nombre}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{apellido}" title="Apellido del cliente">{apellido}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{email}" title="Email del cliente">{email}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{celular}" title="Celular del cliente">{celular}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{direccion}" title="Dirección">{direccion}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{localidad}" title="Localidad">{localidad}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{provincia}" title="Provincia">{provincia}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{cp}" title="Código postal">{cp}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{productos}" title="Productos: nombre, código y cantidad">{productos}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{productos+detalles}" title="Productos con etiquetas e info técnica">{productos+detalles}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{pedido_id}" title="Número de pedido">{pedido_id}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{nombre}" title="Nombre del cliente">{nombre}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{apellido}" title="Apellido del cliente">{apellido}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{email}" title="Email del cliente">{email}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{celular}" title="Celular del cliente">{celular}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{direccion}" title="Dirección">{direccion}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{localidad}" title="Localidad">{localidad}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{provincia}" title="Provincia">{provincia}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{cp}" title="Código postal">{cp}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{productos}" title="Productos: nombre, código y cantidad">{productos}</button>
+                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{productos+detalles}" title="Productos con etiquetas e info técnica">{productos+detalles}</button>
                                     <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{total}" title="Total del pedido (si los precios están visibles)">{total}</button>
                         </div>
                     </div>
@@ -642,10 +680,11 @@
 </div>
 </div>
 
-    <div class="position-sticky bottom-0 bg-white border-top py-3 mt-3" style="z-index:5;">
-        <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-primary btn-lg">
-                <i class="bi bi-check-circle"></i> Guardar cambios
+    <div class="position-sticky bottom-0 bg-white border-top py-2 mt-3" style="z-index:5;">
+        <div class="d-flex justify-content-end align-items-center gap-3">
+            <span class="small text-muted d-none d-sm-inline">Los cambios de todas las pestañas se guardan juntos.</span>
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-check2"></i> Guardar
             </button>
         </div>
     </div>
@@ -684,6 +723,20 @@
         box-shadow: inset 0 0 0 1px var(--bs-primary);
     }
     .btn-check:focus-visible + .ajuste-opcion { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+    .preview-card { font-size: .85rem; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.07); border: none; }
+    .preview-card-nombre { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .preview-card-precio { color: var(--preview-primario, #0d6efd); font-size: 1rem; }
+    .preview-card-boton { background: var(--preview-primario, #0d6efd) !important; border-color: var(--preview-primario, #0d6efd) !important; color: var(--preview-primario-texto, #fff) !important; opacity: 1 !important; }
+    .preview-card-agotado {
+        position: absolute; inset: 0; background: rgba(255,255,255,.6);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .preview-card-agotado span { background: rgba(0,0,0,.48); color: #fff; padding: .15rem .6rem; border-radius: 4px; font-size: .75rem; }
+    .preview-card-oculta {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .25rem;
+        min-height: 200px; border: 2px dashed var(--bs-border-color); border-radius: 10px;
+        color: var(--bs-secondary-color, #6c757d); text-align: center; padding: .75rem;
+    }
     .imagen-miniatura {
         flex-shrink: 0;
         display: flex;
@@ -721,6 +774,57 @@ document.querySelectorAll('.contador-caracteres').forEach(function (contador) {
     campo.addEventListener('input', actualizar);
     actualizar();
 });
+
+// Color de texto legible (blanco u oscuro) sobre un fondo. Replica
+// ColorHex::textoLegible() (contraste WCAG) para las vistas previas.
+function textoLegibleSobre(hex) {
+    function luminancia(color) {
+        return [1, 3, 5].map(function (i) {
+            var c = parseInt(color.substr(i, 2), 16) / 255;
+            return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        }).reduce(function (total, c, i) {
+            return total + c * [0.2126, 0.7152, 0.0722][i];
+        }, 0);
+    }
+    function contraste(a, b) {
+        var la = luminancia(a), lb = luminancia(b);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+    return contraste(hex, '#ffffff') >= contraste(hex, '#212529') ? '#ffffff' : '#212529';
+}
+
+// Tienda: cards de producto que responden a los switches y al color principal.
+(function () {
+    var contenedor  = document.getElementById('preview_cards');
+    var precios     = document.getElementById('mostrar_precios');
+    var sinStock    = document.getElementById('mostrar_productos_sin_stock');
+    var proveedor   = document.getElementById('mostrar_proveedor');
+    var color       = document.getElementById('color_primario');
+    var cardAgotada = document.getElementById('preview_card_sin_stock');
+    var cardOculta  = document.getElementById('preview_card_oculta');
+
+    function actualizar() {
+        contenedor.style.setProperty('--preview-primario', color.value);
+        contenedor.style.setProperty('--preview-primario-texto', textoLegibleSobre(color.value));
+
+        contenedor.querySelectorAll('[data-preview-precio]').forEach(function (precio) {
+            precio.classList.toggle('d-none', !precios.checked);
+        });
+
+        cardAgotada.classList.toggle('d-none', !sinStock.checked);
+        cardOculta.classList.toggle('d-none', sinStock.checked);
+
+        contenedor.querySelectorAll('[data-preview-proveedor]').forEach(function (linea) {
+            linea.classList.toggle('d-none', !proveedor.checked);
+        });
+    }
+
+    precios.addEventListener('change', actualizar);
+    sinStock.addEventListener('change', actualizar);
+    proveedor.addEventListener('change', actualizar);
+    color.addEventListener('input', actualizar);
+    actualizar();
+})();
 
 // WhatsApp: tocar una variable la inserta donde está el cursor.
 (function () {
@@ -792,7 +896,6 @@ document.querySelectorAll('input[type=file][data-miniatura]').forEach(function (
 });
 
 // Vista previa de la cabecera: color, logo, tamaño y nombre en tiempo real.
-// La elección del color de texto replica ColorHex::textoLegible() (contraste WCAG).
 (function () {
     var preview       = document.getElementById('cabecera_preview');
     var logo          = document.getElementById('cabecera_preview_logo');
@@ -807,20 +910,6 @@ document.querySelectorAll('input[type=file][data-miniatura]').forEach(function (
     var campoNombre   = document.getElementById('nombre_tienda');
     var mostrarNombre = document.getElementById('mostrar_nombre_tienda');
 
-    function luminancia(hex) {
-        return [1, 3, 5].map(function (i) {
-            var c = parseInt(hex.substr(i, 2), 16) / 255;
-            return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-        }).reduce(function (total, c, i) {
-            return total + c * [0.2126, 0.7152, 0.0722][i];
-        }, 0);
-    }
-
-    function contraste(a, b) {
-        var la = luminancia(a), lb = luminancia(b);
-        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
-    }
-
     // Un logo nuevo elegido gana sobre "eliminar logo", igual que al guardar.
     function hayLogo() {
         if (archivo.files.length) return true;
@@ -831,7 +920,7 @@ document.querySelectorAll('input[type=file][data-miniatura]').forEach(function (
         var hex = color.value.toLowerCase();
         colorValor.textContent = hex;
         preview.style.backgroundColor = hex;
-        preview.style.color = contraste(hex, '#ffffff') >= contraste(hex, '#212529') ? '#ffffff' : '#212529';
+        preview.style.color = textoLegibleSobre(hex);
 
         altoValor.textContent = alto.value;
         logo.style.height = alto.value + 'px';

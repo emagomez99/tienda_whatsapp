@@ -59,9 +59,40 @@
 @endpush
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0"><i class="bi bi-speedometer2"></i> Dashboard</h3>
-    <small class="text-muted">{{ now()->translatedFormat('l j \d\e F') }}</small>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h3 class="mb-0"><i class="bi bi-speedometer2"></i> Dashboard</h3>
+        <small class="text-muted">{{ now()->translatedFormat('l j \d\e F') }}</small>
+    </div>
+
+    {{-- Mes de las ventas: cambia Confirmados, Facturado y la lista de pedidos. --}}
+    <form method="GET" action="{{ route('admin.dashboard') }}" class="d-flex align-items-center gap-1" aria-label="Mes de las estadísticas">
+        @if($hayMesAnterior)
+            <a href="{{ route('admin.dashboard', ['mes' => $mes->anterior()->parametro()]) }}"
+               class="btn btn-sm btn-outline-secondary" title="Mes anterior" aria-label="Mes anterior">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        @else
+            <span class="btn btn-sm btn-outline-secondary disabled" aria-hidden="true"><i class="bi bi-chevron-left"></i></span>
+        @endif
+
+        <select name="mes" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+            @foreach($meses as $opcion)
+                <option value="{{ $opcion->parametro() }}" {{ $opcion->equals($mes) ? 'selected' : '' }}>
+                    {{ ucfirst($opcion->nombre()) }}
+                </option>
+            @endforeach
+        </select>
+
+        @if($mes->siguiente())
+            <a href="{{ route('admin.dashboard', ['mes' => $mes->siguiente()->parametro()]) }}"
+               class="btn btn-sm btn-outline-secondary" title="Mes siguiente" aria-label="Mes siguiente">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        @else
+            <span class="btn btn-sm btn-outline-secondary disabled" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+        @endif
+    </form>
 </div>
 
 {{-- Stats compactos --}}
@@ -127,7 +158,7 @@
         <a href="{{ route('admin.pedidos.index', ['estado' => 'confirmado']) }}" class="text-decoration-none">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body py-2 px-3">
-                    <div class="text-muted mb-0" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Confirmados</div>
+                    <div class="text-muted mb-0" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Confirmados {{ $mes->nombreCorto() }}</div>
                     <span class="fs-4 fw-bold text-success lh-1">{{ $pedidosStats['confirmados'] }}</span>
                 </div>
             </div>
@@ -137,7 +168,7 @@
         <div class="card border-0 shadow-sm h-100 bg-success text-white">
             <div class="card-body py-2 px-3">
                 <div class="mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;opacity:.85">
-                    Facturado {{ now()->translatedFormat('M') }}
+                    Facturado {{ $mes->nombreCorto() }}
                 </div>
                 @forelse($pedidosStats['totales_mes'] as $tm)
                     <div class="fw-bold lh-1 {{ $loop->first ? 'fs-5' : 'fs-6 mt-1' }}">
@@ -157,12 +188,15 @@
     <div class="col-md-8">
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center py-2">
-                <span class="fw-semibold"><i class="bi bi-bag-check"></i> Últimos pedidos</span>
+                <span class="fw-semibold">
+                    <i class="bi bi-bag-check"></i>
+                    {{ $mes->esActual() ? 'Últimos pedidos' : 'Pedidos de ' . $mes->nombre() }}
+                </span>
                 <a href="{{ route('admin.pedidos.index') }}" class="btn btn-sm btn-outline-primary py-0">Ver todos</a>
             </div>
             <div class="card-body p-0">
                 @if($pedidosRecientes->isEmpty())
-                    <p class="text-muted p-3 mb-0 small">No hay pedidos aún.</p>
+                    <p class="text-muted p-3 mb-0 small">{{ $mes->esActual() ? 'No hay pedidos aún.' : 'No hubo pedidos en ' . $mes->nombre() . '.' }}</p>
                 @else
                     <div class="table-responsive">
                         <table class="table table-hover table-sm align-middle mb-0">
@@ -339,13 +373,13 @@
         {{-- Resumen pedidos --}}
         <div class="card shadow-sm">
             <div class="card-header py-2">
-                <span class="fw-semibold"><i class="bi bi-bar-chart"></i> Estado de pedidos</span>
+                <span class="fw-semibold"><i class="bi bi-bar-chart"></i> Pedidos de {{ $mes->nombre() }}</span>
             </div>
             <div class="card-body p-0">
                 <a href="{{ route('admin.pedidos.index', ['estado' => 'pendiente']) }}" class="text-decoration-none">
                     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                         <span class="small"><i class="bi bi-hourglass-split text-warning me-1"></i> Pendientes</span>
-                        <span class="badge bg-warning text-dark">{{ $pedidosStats['pendientes'] }}</span>
+                        <span class="badge bg-warning text-dark">{{ $pedidosStats['pendientes_mes'] }}</span>
                     </div>
                 </a>
                 <a href="{{ route('admin.pedidos.index', ['estado' => 'confirmado']) }}" class="text-decoration-none">

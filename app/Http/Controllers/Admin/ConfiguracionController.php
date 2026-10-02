@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Configuracion;
 use App\Models\Moneda;
 use App\Models\Producto;
+use App\Models\Proveedor;
 use App\Support\ColorHex;
 use App\Support\RecortadorDeMargenes;
 use Illuminate\Http\Request;
@@ -24,7 +25,19 @@ class ConfiguracionController extends Controller
         $configuraciones = Configuracion::orderBy('clave')->get();
         $monedas         = Moneda::where('activa', true)->orderBy('nombre')->get();
 
-        return view('admin.configuraciones.index', compact('configuraciones', 'monedas'));
+        // Productos reales para la vista previa de la card en la pestaña Tienda. Si no
+        // hay ninguno que sirva, la vista muestra uno de ejemplo.
+        $ejemploConStock = Producto::with(['moneda', 'proveedor'])->disponibles()->whereNotNull('url_imagen')->first()
+            ?: Producto::with(['moneda', 'proveedor'])->disponibles()->first();
+        $ejemploSinStock = Producto::with('moneda')
+            ->where('disponible', true)->where('stock', '<=', 0)->where('por_encargue', false)
+            ->first();
+        $proveedorEjemplo = optional(optional($ejemploConStock)->proveedor)->nombre
+            ?: (Proveedor::orderBy('nombre')->value('nombre') ?: 'Distribuidora Ejemplo');
+
+        return view('admin.configuraciones.index', compact(
+            'configuraciones', 'monedas', 'ejemploConStock', 'ejemploSinStock', 'proveedorEjemplo'
+        ));
     }
 
     public function update(Request $request)
