@@ -35,7 +35,7 @@
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-whatsapp" type="button" role="tab">
-            <i class="bi bi-whatsapp"></i> WhatsApp
+            <i class="bi bi-whatsapp"></i> Pedidos
         </button>
     </li>
     @if(auth()->user()->esSuperAdmin())
@@ -219,29 +219,6 @@
                     </div>
 </div>
 <div class="tab-pane fade" id="pane-tienda" role="tabpanel">
-                    <div class="ajuste-seccion">Pedidos</div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-lg-6">
-                            <div class="ajuste-tarjeta h-100">
-                                @include('partials.intl-tel-input', [
-                                    'inputId'   => 'whatsapp-input',
-                                    'fieldName' => 'whatsapp_admin',
-                                    'value'     => App\Models\Configuracion::obtener('whatsapp_admin', ''),
-                                    'label'     => 'WhatsApp de la tienda',
-                                ])
-                                <div class="small text-muted mt-1">Adonde llegan los pedidos de los clientes.</div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            @include('admin.configuraciones.partials.interruptor', [
-                                'nombre' => 'pedir_direccion_envio',
-                                'titulo' => 'Pedir dirección de envío',
-                                'ayuda'  => 'Al finalizar el pedido. Si se desactiva, el cliente no la carga.',
-                                'activo' => App\Models\Configuracion::obtener('pedir_direccion_envio', 'true') === 'true',
-                            ])
-                        </div>
-                    </div>
-
                     <div class="ajuste-seccion">Qué ve el cliente</div>
                     <div class="row g-3 mb-4">
                         <div class="col-lg-7">
@@ -578,36 +555,79 @@
                     </div>
 </div>
 <div class="tab-pane fade" id="pane-whatsapp" role="tabpanel">
-                    <div class="ajuste-tarjeta">
-                        <div class="d-flex justify-content-between align-items-start gap-3">
-                            <div>
-                                <label for="template_whatsapp" class="fw-semibold d-block">Mensaje del pedido</label>
-                                <div class="small text-muted">Es el texto que se arma al enviar un pedido por WhatsApp. Usá <code>*texto*</code> para negrita.</div>
+                    <div class="ajuste-seccion">Cómo llega el pedido</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-lg-6">
+                            <div class="ajuste-tarjeta h-100">
+                                @include('partials.intl-tel-input', [
+                                    'inputId'   => 'whatsapp-input',
+                                    'fieldName' => 'whatsapp_admin',
+                                    'value'     => App\Models\Configuracion::obtener('whatsapp_admin', ''),
+                                    'label'     => 'WhatsApp de la tienda',
+                                ])
+                                <div class="small text-muted mt-1">Adonde llegan los pedidos de los clientes.</div>
                             </div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" id="btn-reset-template">
-                                <i class="bi bi-arrow-counterclockwise"></i> Restaurar
-                            </button>
                         </div>
-                        <textarea class="form-control font-monospace mt-2 @error('template_whatsapp') is-invalid @enderror"
-                                  id="template_whatsapp" name="template_whatsapp" rows="10"
-                                  placeholder="{{ App\Models\Configuracion::templateWhatsappDefault() }}">{{ App\Models\Configuracion::templateWhatsapp() }}</textarea>
-                        @error('template_whatsapp')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <div class="small text-muted mt-3 mb-1">Variables: tocá una para insertarla donde está el cursor. Pasá el mouse para ver qué contiene.</div>
-                        <div class="d-flex flex-wrap gap-1">
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{pedido_id}" title="Número de pedido">{pedido_id}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{nombre}" title="Nombre del cliente">{nombre}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{apellido}" title="Apellido del cliente">{apellido}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{email}" title="Email del cliente">{email}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{celular}" title="Celular del cliente">{celular}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{direccion}" title="Dirección">{direccion}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{localidad}" title="Localidad">{localidad}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{provincia}" title="Provincia">{provincia}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{cp}" title="Código postal">{cp}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{productos}" title="Productos: nombre, código y cantidad">{productos}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{productos+detalles}" title="Productos con etiquetas e info técnica">{productos+detalles}</button>
-                                    <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp" data-variable="{total}" title="Total del pedido (si los precios están visibles)">{total}</button>
+                        <div class="col-lg-6">
+                            @include('admin.configuraciones.partials.interruptor', [
+                                'nombre' => 'pedir_direccion_envio',
+                                'titulo' => 'Pedir dirección de envío',
+                                'ayuda'  => 'Al finalizar el pedido. Si se desactiva, el cliente no la carga.',
+                                'activo' => App\Models\Configuracion::obtener('pedir_direccion_envio', 'true') === 'true',
+                            ])
+                        </div>
+                    </div>
+
+                    <div class="ajuste-seccion">Mensaje de WhatsApp</div>
+                    <div class="row g-3">
+                        <div class="col-lg-7">
+                            <div class="ajuste-tarjeta h-100">
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <label for="template_whatsapp" class="fw-semibold d-block">Plantilla</label>
+                                        <div class="small text-muted">
+                                            Usá <code>*texto*</code> para negrita y <code>_texto_</code> para cursiva.
+                                            Lo que quede vacío (por ejemplo la dirección, si no se pide) se quita solo, con su título.
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" id="btn-reset-template">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Restaurar
+                                    </button>
+                                </div>
+                                <textarea class="form-control font-monospace mt-2 @error('template_whatsapp') is-invalid @enderror"
+                                          id="template_whatsapp" name="template_whatsapp" rows="14"
+                                          placeholder="{{ App\Models\Configuracion::templateWhatsappDefault() }}">{{ App\Models\Configuracion::templateWhatsapp() }}</textarea>
+                                @error('template_whatsapp')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="small text-muted mt-3 mb-1">Variables: tocá una para insertarla donde está el cursor. Pasá el mouse para ver qué contiene.</div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach(App\Support\MensajeWhatsapp::VARIABLES as $variable => $descripcion)
+                                        <button type="button" class="btn btn-sm btn-light border font-monospace variable-whatsapp"
+                                                data-variable="{{ '{' . $variable . '}' }}" title="{{ $descripcion }}">{{ '{' . $variable . '}' }}</button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-5">
+                            {{-- Vista previa con un pedido de ejemplo. La arma el servidor con la misma
+                                 clase que el envío real (MensajeWhatsapp), así es exactamente lo que llega. --}}
+                            <div class="whatsapp-preview" style="position: sticky; top: 76px;">
+                                <div class="whatsapp-preview-cabecera">
+                                    <i class="bi bi-whatsapp"></i>
+                                    <span class="fw-semibold">Vista previa</span>
+                                    <span class="small opacity-75 ms-auto">pedido de ejemplo</span>
+                                </div>
+                                <div class="whatsapp-preview-chat">
+                                    <div class="whatsapp-preview-burbuja">
+                                        <div id="whatsapp-preview-texto"></div>
+                                        <div class="whatsapp-preview-hora">12:34 <i class="bi bi-check2-all"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="small text-muted mt-2">
+                                Respeta "Pedir dirección de envío" (arriba) y "Mostrar los precios" (pestaña Tienda), aunque no los hayas guardado.
+                            </div>
                         </div>
                     </div>
 </div>
@@ -737,6 +757,21 @@
         min-height: 200px; border: 2px dashed var(--bs-border-color); border-radius: 10px;
         color: var(--bs-secondary-color, #6c757d); text-align: center; padding: .75rem;
     }
+    .whatsapp-preview { border-radius: .75rem; overflow: hidden; border: 1px solid var(--bs-border-color); }
+    .whatsapp-preview-cabecera {
+        display: flex; align-items: center; gap: .5rem;
+        background: #075e54; color: #fff; padding: .6rem .9rem;
+    }
+    .whatsapp-preview-chat { background: #efeae2; padding: 1rem; max-height: 520px; overflow-y: auto; }
+    .whatsapp-preview-burbuja {
+        background: #d9fdd3; border-radius: .5rem .5rem 0 .5rem; padding: .5rem .65rem .3rem;
+        margin-left: 12%; box-shadow: 0 1px .5px rgba(0,0,0,.13);
+        font-size: .875rem; line-height: 1.4; word-break: break-word;
+    }
+    #whatsapp-preview-texto { white-space: pre-wrap; }
+    .whatsapp-preview-burbuja.cargando { opacity: .6; }
+    .whatsapp-preview-hora { text-align: right; font-size: .68rem; color: #667781; margin-top: .15rem; }
+    .whatsapp-preview-hora .bi { color: #53bdeb; }
     .imagen-miniatura {
         flex-shrink: 0;
         display: flex;
@@ -759,7 +794,9 @@
 @push('scripts')
 <script>
 document.getElementById('btn-reset-template').addEventListener('click', function () {
-    document.getElementById('template_whatsapp').value = @json(App\Models\Configuracion::templateWhatsappDefault());
+    var plantilla = document.getElementById('template_whatsapp');
+    plantilla.value = @json(App\Models\Configuracion::templateWhatsappDefault());
+    plantilla.dispatchEvent(new Event('input'));   // actualiza la vista previa
 });
 
 // Contador de caracteres para los campos de SEO
@@ -826,6 +863,67 @@ function textoLegibleSobre(hex) {
     actualizar();
 })();
 
+// Pedidos: vista previa del mensaje de WhatsApp. La arma el servidor con la plantilla
+// y los switches que hay en pantalla; acá sólo se le da el formato de WhatsApp.
+(function () {
+    var plantilla  = document.getElementById('template_whatsapp');
+    var direccion  = document.getElementById('pedir_direccion_envio');
+    var precios    = document.getElementById('mostrar_precios');
+    var destino    = document.getElementById('whatsapp-preview-texto');
+    var burbuja    = destino.parentElement;
+    var url        = @json(route('admin.configuraciones.vista-previa-whatsapp'));
+    var token      = document.querySelector('meta[name="csrf-token"]').content;
+    var espera     = null;
+    var pedido     = 0;
+
+    // *negrita*, _cursiva_, ~tachado~ y ```monoespaciado```, como los muestra WhatsApp.
+    function formatoWhatsapp(texto) {
+        var div = document.createElement('div');
+        div.textContent = texto;
+        return div.innerHTML
+            .replace(/```([\s\S]+?)```/g, '<code>$1</code>')
+            .replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>')
+            .replace(/(^|[\s(])_([^_\n]+)_/g, '$1<em>$2</em>')
+            .replace(/~([^~\n]+)~/g, '<del>$1</del>');
+    }
+
+    function actualizar() {
+        var este = ++pedido;
+        burbuja.classList.add('cargando');
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+            body: JSON.stringify({
+                plantilla: plantilla.value,
+                pedir_direccion: direccion.checked,
+                mostrar_precios: precios.checked
+            })
+        })
+            .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
+            .then(function (datos) {
+                if (este !== pedido) return;   // llegó tarde: ya hay una más nueva
+                destino.innerHTML = formatoWhatsapp(datos.mensaje);
+            })
+            .catch(function () {
+                if (este === pedido) destino.textContent = 'No se pudo generar la vista previa.';
+            })
+            .finally(function () {
+                if (este === pedido) burbuja.classList.remove('cargando');
+            });
+    }
+
+    function programar() {
+        clearTimeout(espera);
+        espera = setTimeout(actualizar, 300);
+    }
+
+    plantilla.addEventListener('input', programar);
+    direccion.addEventListener('change', programar);
+    precios.addEventListener('change', programar);
+    actualizar();
+})();
+
 // WhatsApp: tocar una variable la inserta donde está el cursor.
 (function () {
     var mensaje = document.getElementById('template_whatsapp');
@@ -836,6 +934,7 @@ function textoLegibleSobre(hex) {
             mensaje.value = mensaje.value.slice(0, inicio) + variable + mensaje.value.slice(fin);
             mensaje.focus();
             mensaje.selectionStart = mensaje.selectionEnd = inicio + variable.length;
+            mensaje.dispatchEvent(new Event('input'));   // actualiza la vista previa
         });
     });
 })();

@@ -6,6 +6,7 @@ use App\Models\Configuracion;
 use App\Models\Pedido;
 use App\Models\PedidoProducto;
 use App\Models\Producto;
+use App\Support\MensajeWhatsapp;
 use Illuminate\Http\Request;
 
 class CarritoController extends Controller
@@ -309,29 +310,22 @@ class CarritoController extends Controller
             ]);
         }
 
-        // Construir mensaje usando el template configurable
-        $template = Configuracion::templateWhatsapp();
-        $mensaje = str_replace(
-            ['{pedido_id}', '{nombre}', '{apellido}', '{email}', '{celular}', '{direccion}', '{localidad}', '{provincia}', '{cp}', '{productos+detalles}', '{productos}', '{total}'],
-            [$pedido->id, $request->nombre, $request->apellido, $request->email, $request->celular, $request->direccion ?? '', $request->localidad ?? '', $request->provincia ?? '', $request->cp ?? '', rtrim($productosTextoDetalle), rtrim($productosTexto), $totalTexto],
-            $template
-        );
-
-        // Si no se pidió dirección, eliminar líneas donde el valor después de ":" quedó vacío
-        // (p.ej. "Dirección: " tras reemplazar {direccion} con "")
-        // Usamos trim() en vez de regex alfanumérico para no eliminar encabezados como "✅ *Sección:*"
-        if (!$pedirDireccion) {
-            $lineas = explode("\n", $mensaje);
-            $lineas = array_filter($lineas, function ($linea) {
-                if (strpos($linea, ':') !== false) {
-                    $partes = explode(':', $linea, 2);
-                    if (trim($partes[1]) === '') return false;
-                }
-                return trim($linea) !== '';
-            });
-            $mensaje = implode("\n", array_values($lineas));
-            $mensaje = preg_replace('/\n{3,}/', "\n\n", $mensaje);
-        }
+        // Mensaje con la plantilla configurable. MensajeWhatsapp limpia lo que queda de
+        // los datos vacíos (la dirección cuando no se pide, un email que falta...).
+        $mensaje = MensajeWhatsapp::armar(Configuracion::templateWhatsapp(), [
+            'pedido_id'          => $pedido->id,
+            'nombre'             => $request->nombre,
+            'apellido'           => $request->apellido,
+            'email'              => $request->email,
+            'celular'            => $request->celular,
+            'direccion'          => $pedirDireccion ? $request->direccion : '',
+            'localidad'          => $pedirDireccion ? $request->localidad : '',
+            'provincia'          => $pedirDireccion ? $request->provincia : '',
+            'cp'                 => $pedirDireccion ? $request->cp : '',
+            'productos'          => rtrim($productosTexto),
+            'productos+detalles' => rtrim($productosTextoDetalle),
+            'total'              => $totalTexto,
+        ]);
 
         // Obtener número de WhatsApp del administrador
         $whatsapp = Configuracion::whatsappAdmin();

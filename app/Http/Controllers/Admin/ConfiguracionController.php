@@ -8,6 +8,7 @@ use App\Models\Moneda;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Support\ColorHex;
+use App\Support\MensajeWhatsapp;
 use App\Support\RecortadorDeMargenes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +17,7 @@ class ConfiguracionController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permiso:configuraciones.ver')->only(['index']);
+        $this->middleware('permiso:configuraciones.ver')->only(['index', 'vistaPreviaWhatsapp']);
         $this->middleware('permiso:configuraciones.editar')->only(['update']);
     }
 
@@ -38,6 +39,27 @@ class ConfiguracionController extends Controller
         return view('admin.configuraciones.index', compact(
             'configuraciones', 'monedas', 'ejemploConStock', 'ejemploSinStock', 'proveedorEjemplo'
         ));
+    }
+
+    /**
+     * Mensaje de WhatsApp armado con un pedido de ejemplo, para la vista previa de
+     * Ajustes → Pedidos. Usa la plantilla y los switches que hay en pantalla (aunque
+     * no se hayan guardado) y la misma clase que el envío real.
+     */
+    public function vistaPreviaWhatsapp(Request $request)
+    {
+        $request->validate(['plantilla' => 'nullable|string|max:2000']);
+
+        $plantilla = $request->filled('plantilla')
+            ? $request->input('plantilla')
+            : Configuracion::templateWhatsappDefault();
+
+        $valores = MensajeWhatsapp::valoresDeEjemplo(
+            $request->boolean('pedir_direccion'),
+            $request->boolean('mostrar_precios')
+        );
+
+        return response()->json(['mensaje' => MensajeWhatsapp::armar($plantilla, $valores)]);
     }
 
     public function update(Request $request)

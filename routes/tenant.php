@@ -97,6 +97,7 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
 
         Route::get('/configuraciones', [ConfiguracionController::class, 'index'])->name('configuraciones.index');
         Route::put('/configuraciones', [ConfiguracionController::class, 'update'])->name('configuraciones.update');
+        Route::post('/configuraciones/vista-previa-whatsapp', [ConfiguracionController::class, 'vistaPreviaWhatsapp'])->name('configuraciones.vista-previa-whatsapp');
 
         Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
         Route::get('/pedidos/create', [PedidoController::class, 'create'])->name('pedidos.create');
