@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ColorHex;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -73,6 +74,18 @@ class Configuracion extends Model
         return self::obtener('logo', null);
     }
 
+    // Alto del logo en la cabecera de la tienda, en px. El ancho se ajusta solo.
+    const LOGO_ALTO_MIN     = 24;
+    const LOGO_ALTO_MAX     = 80;
+    const LOGO_ALTO_DEFAULT = 40;
+
+    public static function logoAlto()
+    {
+        $alto = (int) self::obtener('logo_alto', self::LOGO_ALTO_DEFAULT);
+
+        return max(self::LOGO_ALTO_MIN, min(self::LOGO_ALTO_MAX, $alto));
+    }
+
     public static function favicon()
     {
         return self::obtener('favicon', null);
@@ -83,64 +96,41 @@ class Configuracion extends Model
         return self::obtener('mostrar_nombre_tienda', 'true') === 'true';
     }
 
-    public static function paleta()
+    /**
+     * Color principal de la tienda. Es libre (cualquier #rrggbb); si todavía no se
+     * eligió ninguno se usa el de la paleta predefinida que tenía guardada, así las
+     * tiendas que existían antes de liberar el color se siguen viendo igual.
+     */
+    public static function colorPrimario()
     {
-        return self::obtener('paleta', 'azul');
+        $color = self::obtener('color_primario', '');
+
+        if (ColorHex::esValido($color)) {
+            return ColorHex::desde($color);
+        }
+
+        $sugeridos = self::coloresSugeridos();
+        $paleta    = self::obtener('paleta', 'azul');
+        $sugerido  = $sugeridos[$paleta] ?? $sugeridos['azul'];
+
+        return ColorHex::desde($sugerido['hex']);
     }
 
-    public static function paletas()
+    /**
+     * Atajos del selector de color. Las claves son las de las paletas cerradas
+     * anteriores: colorPrimario() las usa de respaldo para tiendas viejas.
+     */
+    public static function coloresSugeridos()
     {
         return [
-            'azul' => [
-                'nombre' => 'Azul (Por defecto)',
-                'primary' => '#0d6efd',
-                'navbar' => 'bg-primary',
-                'navbar_admin' => 'bg-dark',
-            ],
-            'verde' => [
-                'nombre' => 'Verde',
-                'primary' => '#198754',
-                'navbar' => 'bg-success',
-                'navbar_admin' => 'bg-dark',
-            ],
-            'rojo' => [
-                'nombre' => 'Rojo',
-                'primary' => '#dc3545',
-                'navbar' => 'bg-danger',
-                'navbar_admin' => 'bg-dark',
-            ],
-            'naranja' => [
-                'nombre' => 'Naranja',
-                'primary' => '#fd7e14',
-                'navbar' => 'bg-warning',
-                'navbar_admin' => 'bg-dark',
-            ],
-            'morado' => [
-                'nombre' => 'Morado',
-                'primary' => '#6f42c1',
-                'navbar' => 'bg-purple',
-                'navbar_admin' => 'bg-dark',
-            ],
-            'cyan' => [
-                'nombre' => 'Cyan',
-                'primary' => '#0dcaf0',
-                'navbar' => 'bg-info',
-                'navbar_admin' => 'bg-dark',
-            ],
-            'oscuro' => [
-                'nombre' => 'Oscuro',
-                'primary' => '#212529',
-                'navbar' => 'bg-dark',
-                'navbar_admin' => 'bg-secondary',
-            ],
+            'azul'    => ['nombre' => 'Azul',    'hex' => '#0d6efd'],
+            'verde'   => ['nombre' => 'Verde',   'hex' => '#198754'],
+            'rojo'    => ['nombre' => 'Rojo',    'hex' => '#dc3545'],
+            'naranja' => ['nombre' => 'Naranja', 'hex' => '#fd7e14'],
+            'morado'  => ['nombre' => 'Morado',  'hex' => '#6f42c1'],
+            'cyan'    => ['nombre' => 'Cyan',    'hex' => '#0dcaf0'],
+            'oscuro'  => ['nombre' => 'Oscuro',  'hex' => '#212529'],
         ];
-    }
-
-    public static function getPaletaActual()
-    {
-        $paletas = self::paletas();
-        $paletaSeleccionada = self::paleta();
-        return $paletas[$paletaSeleccionada] ?? $paletas['azul'];
     }
 
     public static function posicionMenu()

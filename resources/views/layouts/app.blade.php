@@ -59,14 +59,26 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     @php
-        $paleta = App\Models\Configuracion::getPaletaActual();
+        $colorPrimario = App\Models\Configuracion::colorPrimario();
+        $textoSobrePrimario = $colorPrimario->textoLegible();
         $menuEnSidebar = App\Models\Configuracion::menuEnSidebar();
     @endphp
     <style>
         :root {
-            --color-primary: {{ $paleta['primary'] }};
+            --color-primary: {{ $colorPrimario->hex() }};
+            /* Texto legible sobre el color principal: blanco u oscuro según su contraste. */
+            --color-primary-texto: {{ $textoSobrePrimario->hex() }};
+            --color-primary-texto-rgb: {{ $textoSobrePrimario->rgb() }};
+            --logo-alto: {{ App\Models\Configuracion::logoAlto() }}px;
         }
         .navbar-brand { font-weight: bold; }
+        /* Logo: el alto lo elige la tienda en Ajustes (--logo-alto). En el celular se
+           limita a 44px y el ancho tiene tope para que un logo apaisado no empuje el menú. */
+        .logo-tienda { width: auto; height: min(var(--logo-alto), 44px); max-width: 160px; object-fit: contain; }
+        @media (min-width: 992px) {
+            .logo-tienda { height: var(--logo-alto); max-width: 320px; }
+        }
+        .logo-tienda-drawer { width: auto; height: auto; max-height: 40px; max-width: 180px; object-fit: contain; }
         /* Product cards */
         .producto-card {
             border: none;
@@ -129,6 +141,8 @@
             background-color: var(--color-primary) !important;
             border-color: var(--color-primary) !important;
         }
+        .btn-primary, .btn-primary:hover, .btn-primary:focus, .bg-custom-primary { color: var(--color-primary-texto) !important; }
+        .text-sobre-primario { color: var(--color-primary-texto) !important; }
         .btn-primary:hover {
             background-color: color-mix(in srgb, var(--color-primary) 85%, black) !important;
             border-color: color-mix(in srgb, var(--color-primary) 85%, black) !important;
@@ -146,41 +160,41 @@
         .drawer-item {
             display: block;
             width: 100%;
-            color: rgba(255,255,255,.92);
+            color: rgba(var(--color-primary-texto-rgb), .92);
             text-decoration: none;
             padding: .9rem 1.5rem;
             font-size: 1rem;
             border: none;
             background: none;
-            border-bottom: 1px solid rgba(255,255,255,.1);
+            border-bottom: 1px solid rgba(var(--color-primary-texto-rgb), .1);
             text-align: left;
             cursor: pointer;
         }
         .drawer-item:hover, .drawer-item:focus {
-            background: rgba(255,255,255,.1);
-            color: #fff;
+            background: rgba(var(--color-primary-texto-rgb), .1);
+            color: var(--color-primary-texto);
             outline: none;
         }
         .drawer-chevron { transition: transform .2s ease; font-size: .85rem; opacity: .7; }
         .drawer-item[aria-expanded="true"] .drawer-chevron { transform: rotate(180deg); }
         .drawer-subitem {
             display: block;
-            color: rgba(255,255,255,.75);
+            color: rgba(var(--color-primary-texto-rgb), .75);
             text-decoration: none;
             padding: .7rem 1.5rem .7rem 2.25rem;
             font-size: .95rem;
-            border-bottom: 1px solid rgba(255,255,255,.07);
+            border-bottom: 1px solid rgba(var(--color-primary-texto-rgb), .07);
             background: rgba(0,0,0,.18);
         }
-        .drawer-subitem:hover { background: rgba(0,0,0,.3); color: #fff; }
+        .drawer-subitem:hover { background: rgba(0,0,0,.3); color: var(--color-primary-texto); }
         .drawer-footer-link {
             display: block;
-            color: rgba(255,255,255,.8);
+            color: rgba(var(--color-primary-texto-rgb), .8);
             text-decoration: none;
             padding: .5rem 0;
             font-size: .95rem;
         }
-        .drawer-footer-link:hover { color: #fff; }
+        .drawer-footer-link:hover { color: var(--color-primary-texto); }
 
         /* Estilos para submenús anidados */
         .dropdown-menu .dropend .dropdown-menu {
@@ -236,7 +250,7 @@
         $mostrarNombre = App\Models\Configuracion::mostrarNombreTienda();
         $nombreTienda = App\Models\Configuracion::nombreTienda();
     @endphp
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <nav class="navbar navbar-expand-lg {{ $colorPrimario->esClaro() ? 'navbar-light' : 'navbar-dark' }} navbar-custom sticky-top">
         <div class="container">
 
             {{-- === BARRA MOBILE: 3 columnas flex, oculta en desktop === --}}
@@ -254,7 +268,7 @@
                 <a class="navbar-brand mb-0 d-flex align-items-center" href="{{ route('tienda.index') }}">
                     @if($logoTienda)
                         <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ $nombreTienda }}"
-                             style="max-height: 40px;" class="{{ $mostrarNombre ? 'me-2' : '' }}">
+                             class="logo-tienda {{ $mostrarNombre ? 'me-2' : '' }}">
                     @else
                         <i class="bi bi-shop me-2"></i>
                     @endif
@@ -266,7 +280,7 @@
                 {{-- Derecha: carrito --}}
                 <div style="flex:1; text-align:right;">
                     <a href="{{ route('carrito.index') }}"
-                       class="text-white text-decoration-none position-relative p-1 {{ request()->routeIs('carrito.*') ? 'opacity-75' : '' }}"
+                       class="text-sobre-primario text-decoration-none position-relative p-1 {{ request()->routeIs('carrito.*') ? 'opacity-75' : '' }}"
                        style="font-size: 1.4rem; line-height: 1;">
                         <i class="bi bi-cart3"></i>
                         <span class="cart-badge-mobile badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle{{ $cantidadCarrito > 0 ? '' : ' d-none' }}"
@@ -281,7 +295,7 @@
             <a class="navbar-brand d-none d-lg-flex align-items-center" href="{{ route('tienda.index') }}">
                 @if($logoTienda)
                     <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ $nombreTienda }}"
-                         style="max-height: 40px;" class="{{ $mostrarNombre ? 'me-2' : '' }}">
+                         class="logo-tienda {{ $mostrarNombre ? 'me-2' : '' }}">
                 @else
                     <i class="bi bi-shop me-2"></i>
                 @endif
@@ -335,22 +349,22 @@
 
     {{-- Drawer mobile --}}
     <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="menuDrawer" aria-labelledby="menuDrawerLabel">
-        <div class="offcanvas-header" style="border-bottom: 1px solid rgba(255,255,255,.15);">
-            <a class="text-white text-decoration-none fw-bold fs-5" href="{{ route('tienda.index') }}" id="menuDrawerLabel">
+        <div class="offcanvas-header" style="border-bottom: 1px solid rgba(var(--color-primary-texto-rgb), .15);">
+            <a class="text-sobre-primario text-decoration-none fw-bold fs-5" href="{{ route('tienda.index') }}" id="menuDrawerLabel">
                 @if($logoTienda)
-                    <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ $nombreTienda }}" style="max-height:32px;">
+                    <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ $nombreTienda }}" class="logo-tienda-drawer">
                     @if($mostrarNombre) <span class="ms-2">{{ $nombreTienda }}</span> @endif
                 @else
                     <i class="bi bi-shop me-2"></i>{{ $nombreTienda }}
                 @endif
             </a>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+            <button type="button" class="btn-close {{ $colorPrimario->esClaro() ? '' : 'btn-close-white' }}" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
         </div>
         <div class="offcanvas-body d-flex flex-column p-0">
             <nav class="flex-grow-1 overflow-auto">
                 @include('components.menu-drawer')
             </nav>
-            <div class="p-3" style="border-top: 1px solid rgba(255,255,255,.15);">
+            <div class="p-3" style="border-top: 1px solid rgba(var(--color-primary-texto-rgb), .15);">
                 @auth
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('admin.dashboard') }}" class="drawer-footer-link">

@@ -74,7 +74,29 @@
                         @error('logo')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <small class="text-muted">Formatos: JPG, PNG, GIF. Máx: 2MB</small>
+                        <small class="text-muted">Formatos: JPG, PNG, GIF. Máx: 2MB. Si tiene bordes transparentes, se recortan solos al subirlo.</small>
+
+                        @php $logoAlto = (int) old('logo_alto', App\Models\Configuracion::logoAlto()); @endphp
+                        <div class="mt-3">
+                            <label for="logo_alto" class="form-label d-flex justify-content-between mb-1">
+                                <span>Tamaño del logo en la tienda</span>
+                                <span class="text-muted"><span id="logo_alto_valor">{{ $logoAlto }}</span> px de alto</span>
+                            </label>
+                            <input type="range" class="form-range @error('logo_alto') is-invalid @enderror" id="logo_alto" name="logo_alto"
+                                   min="{{ App\Models\Configuracion::LOGO_ALTO_MIN }}" max="{{ App\Models\Configuracion::LOGO_ALTO_MAX }}" step="2"
+                                   value="{{ $logoAlto }}">
+                            @error('logo_alto')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            @if($logoActual)
+                                {{-- Vista previa sobre el color de la cabecera, con el alto real. --}}
+                                <div class="rounded px-3 d-flex align-items-center" style="min-height: 96px; background-color: {{ App\Models\Configuracion::colorPrimario()->hex() }};">
+                                    <img src="{{ url('storage/' . $logoActual) }}" alt="Vista previa del logo" id="logo_alto_preview"
+                                         style="height: {{ $logoAlto }}px; width: auto; max-width: 100%;">
+                                </div>
+                            @endif
+                            <div class="form-text">En el celular se limita a 44 px para dejar lugar al menú y al carrito.</div>
+                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -116,24 +138,40 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Paleta de Colores</label>
+                        <label class="form-label" for="color_primario_hex">Color principal</label>
                         @php
-                            $paletas = App\Models\Configuracion::paletas();
-                            $paletaActual = App\Models\Configuracion::paleta();
+                            $colorActual = App\Models\Configuracion::colorPrimario();
+                            $colorElegido = old('color_primario', $colorActual->hex());
                         @endphp
-                        <div class="row g-2">
-                            @foreach($paletas as $clave => $paleta)
-                                <div class="col-6">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="paleta" id="paleta_{{ $clave }}" value="{{ $clave }}" {{ old('paleta', $paletaActual) === $clave ? 'checked' : '' }}>
-                                        <label class="form-check-label d-flex align-items-center gap-2" for="paleta_{{ $clave }}">
-                                            <span class="rounded-circle d-inline-block border" style="width: 18px; height: 18px; background-color: {{ $paleta['primary'] }};"></span>
-                                            {{ $paleta['nombre'] }}
-                                        </label>
-                                    </div>
-                                </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="color" class="form-control form-control-color" id="color_primario_picker"
+                                   value="{{ App\Support\ColorHex::esValido($colorElegido) ? $colorElegido : $colorActual->hex() }}"
+                                   title="Elegir color">
+                            <input type="text" class="form-control font-monospace @error('color_primario') is-invalid @enderror"
+                                   id="color_primario_hex" name="color_primario" value="{{ $colorElegido }}"
+                                   maxlength="7" pattern="#[0-9a-fA-F]{6}" placeholder="#0d6efd" style="max-width: 8rem;" required>
+                        </div>
+                        @error('color_primario')
+                            <div class="invalid-feedback d-block">Ingresá un color en formato #rrggbb (por ejemplo #0d6efd).</div>
+                        @enderror
+
+                        <div class="d-flex flex-wrap gap-2 mt-2" aria-label="Colores sugeridos">
+                            @foreach(App\Models\Configuracion::coloresSugeridos() as $sugerido)
+                                <button type="button" class="btn btn-sm btn-light border d-flex align-items-center gap-1 color-sugerido"
+                                        data-color="{{ $sugerido['hex'] }}" title="{{ $sugerido['hex'] }}">
+                                    <span class="rounded-circle d-inline-block border" style="width: 14px; height: 14px; background-color: {{ $sugerido['hex'] }};"></span>
+                                    {{ $sugerido['nombre'] }}
+                                </button>
                             @endforeach
                         </div>
+
+                        {{-- Vista previa: el color de texto se ajusta solo (blanco u oscuro) para que siempre se lea. --}}
+                        <div id="color_primario_preview" class="rounded px-3 py-2 mt-2 d-flex align-items-center justify-content-between"
+                             style="background-color: {{ $colorActual->hex() }}; color: {{ $colorActual->textoLegible()->hex() }};">
+                            <span class="fw-bold">{{ App\Models\Configuracion::nombreTienda() }}</span>
+                            <i class="bi bi-cart3"></i>
+                        </div>
+                        <div class="form-text">Elegí cualquier color. El texto de la cabecera y los botones pasa a oscuro automáticamente si el color es claro.</div>
                     </div>
 
                     <div class="mb-3">
@@ -736,6 +774,67 @@ document.querySelectorAll('.contador-caracteres').forEach(function (contador) {
     campo.addEventListener('input', actualizar);
     actualizar();
 });
+
+// Tamaño del logo: muestra el valor y ajusta la vista previa mientras se arrastra.
+(function () {
+    var rango   = document.getElementById('logo_alto');
+    var valor   = document.getElementById('logo_alto_valor');
+    var preview = document.getElementById('logo_alto_preview');
+
+    rango.addEventListener('input', function () {
+        valor.textContent = rango.value;
+        if (preview) preview.style.height = rango.value + 'px';
+    });
+})();
+
+// Color principal: selector, campo hex y atajos sincronizados, con vista previa.
+// La elección del color de texto replica ColorHex::textoLegible() (contraste WCAG).
+(function () {
+    var picker  = document.getElementById('color_primario_picker');
+    var campo   = document.getElementById('color_primario_hex');
+    var preview = document.getElementById('color_primario_preview');
+    var patron  = /^#[0-9a-fA-F]{6}$/;
+
+    function luminancia(hex) {
+        return [1, 3, 5].map(function (i) {
+            var c = parseInt(hex.substr(i, 2), 16) / 255;
+            return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        }).reduce(function (total, c, i) {
+            return total + c * [0.2126, 0.7152, 0.0722][i];
+        }, 0);
+    }
+
+    function contraste(a, b) {
+        var la = luminancia(a), lb = luminancia(b);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+
+    function aplicar(hex) {
+        if (!patron.test(hex)) return;
+        hex = hex.toLowerCase();
+        picker.value = hex;
+        preview.style.backgroundColor = hex;
+        preview.style.color = contraste(hex, '#ffffff') >= contraste(hex, '#212529') ? '#ffffff' : '#212529';
+    }
+
+    picker.addEventListener('input', function () {
+        campo.value = picker.value;
+        aplicar(picker.value);
+    });
+
+    campo.addEventListener('input', function () {
+        aplicar(campo.value.trim());
+    });
+
+    document.querySelectorAll('.color-sugerido').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            campo.value = boton.dataset.color;
+            aplicar(boton.dataset.color);
+        });
+    });
+
+    aplicar(campo.value.trim());
+})();
 </script>
 @endpush
 @endsection

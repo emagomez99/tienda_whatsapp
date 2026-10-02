@@ -34,7 +34,7 @@ class TenantDatabaseSeeder extends Seeder
         Configuracion::establecer('whatsapp_admin', '', 'Número de WhatsApp del administrador');
         Configuracion::establecer('nombre_tienda', 'Mi Tienda', 'Nombre de la tienda');
         Configuracion::establecer('mostrar_nombre_tienda', 'true', 'Mostrar nombre en el header');
-        Configuracion::establecer('paleta', 'azul', 'Paleta de colores');
+        Configuracion::establecer('color_primario', '#0d6efd', 'Color principal de la tienda');
         Configuracion::establecer('posicion_menu', 'superior', 'Posición del menú de navegación');
         Configuracion::establecer('modo_imagen_producto', 'solo_url', 'Modo de carga de imágenes de productos');
 

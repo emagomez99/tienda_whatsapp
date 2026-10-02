@@ -5,7 +5,7 @@
 
 @if($menuItems->count() > 0)
     <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header bg-primary text-sobre-primario">
             <h6 class="mb-0"><i class="bi bi-list"></i> Menú</h6>
         </div>
         <div class="card-body p-0">

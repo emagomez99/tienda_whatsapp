@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Configuracion;
 use App\Models\Moneda;
 use App\Models\Producto;
+use App\Support\ColorHex;
+use App\Support\RecortadorDeMargenes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,8 +29,6 @@ class ConfiguracionController extends Controller
 
     public function update(Request $request)
     {
-        $paletasValidas = implode(',', array_keys(Configuracion::paletas()));
-
         $request->validate([
             'moneda_tienda'              => 'nullable|exists:monedas,id',
             'moneda_favorita'            => 'nullable|exists:monedas,id',
@@ -39,7 +39,8 @@ class ConfiguracionController extends Controller
             'nombre_tienda'              => 'required|string|max:255',
             'logo'                       => 'nullable|image|max:2048',
             'favicon'                    => 'nullable|mimes:ico,png,jpg,jpeg,svg|max:512',
-            'paleta'                     => 'required|in:' . $paletasValidas,
+            'logo_alto'                  => 'nullable|integer|between:' . Configuracion::LOGO_ALTO_MIN . ',' . Configuracion::LOGO_ALTO_MAX,
+            'color_primario'             => ['required', 'regex:' . ColorHex::PATRON],
             'posicion_menu'              => 'required|in:superior,lateral',
             'pedir_direccion_envio'      => 'required|in:true,false',
             'template_whatsapp'          => 'nullable|string|max:2000',
@@ -73,7 +74,8 @@ class ConfiguracionController extends Controller
         Configuracion::establecer('mostrar_nombre_tienda', $request->mostrar_nombre_tienda, 'Mostrar nombre en cabecera');
         Configuracion::establecer('whatsapp_admin', $request->whatsapp_admin ?? '', 'Número de WhatsApp del administrador');
         Configuracion::establecer('nombre_tienda', $request->nombre_tienda, 'Nombre de la tienda');
-        Configuracion::establecer('paleta', $request->paleta, 'Paleta de colores');
+        Configuracion::establecer('logo_alto', (string) ($request->input('logo_alto') ?: Configuracion::LOGO_ALTO_DEFAULT), 'Alto del logo en la cabecera (px)');
+        Configuracion::establecer('color_primario', ColorHex::desde($request->color_primario)->hex(), 'Color principal de la tienda');
         Configuracion::establecer('posicion_menu', $request->posicion_menu, 'Posición del menú en la tienda');
         Configuracion::establecer('pedir_direccion_envio', $request->pedir_direccion_envio, 'Solicitar dirección de envío en el checkout');
         Configuracion::establecer('mostrar_proveedor', $request->mostrar_proveedor, 'Mostrar proveedor en ficha de producto');
@@ -120,6 +122,8 @@ class ConfiguracionController extends Controller
                 Storage::disk('public')->delete($logoAnterior);
             }
             $logoPath = $request->file('logo')->store($tenantDir . '/config', 'public');
+            // Sin el aire transparente alrededor, el logo usa todo el alto de la cabecera.
+            RecortadorDeMargenes::recortar(Storage::disk('public')->path($logoPath));
             Configuracion::establecer('logo', $logoPath, 'Logo de la tienda');
         }
 
