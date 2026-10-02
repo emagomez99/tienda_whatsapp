@@ -18,7 +18,7 @@
         </div>
     @endif
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-lg-8 col-xl-9">
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-box-seam"></i> Información del Producto</h5>
@@ -281,19 +281,12 @@
             @include('admin.productos.partials.card-seo')
         </div>
 
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <button type="submit" class="btn btn-primary w-100 mb-2">
-                        <i class="bi bi-check-circle"></i> Guardar Producto
-                    </button>
-                    <a href="{{ route('admin.productos.index') }}" class="btn btn-outline-secondary w-100">
-                        Cancelar
-                    </a>
-                </div>
-            </div>
+        <div class="col-lg-4 col-xl-3">
+            @include('admin.productos.partials.vista-previa')
         </div>
     </div>
+
+    @include('admin.productos.partials.barra-guardar', ['textoGuardar' => 'Crear producto', 'cancelarUrl' => route('admin.productos.index')])
 </form>
 
 @push('styles')

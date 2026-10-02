@@ -24,7 +24,7 @@
         </div>
     @endif
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-lg-8 col-xl-9">
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-box-seam"></i> Información del Producto</h5>
@@ -430,24 +430,17 @@
             @include('admin.productos.partials.card-seo')
         </div>
 
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <button type="submit" class="btn btn-primary w-100 mb-2">
-                        <i class="bi bi-check-circle"></i> Actualizar Producto
-                    </button>
-                    @if(request('_back_url'))
-                        <input type="hidden" name="_back_url" value="{{ request('_back_url') }}">
-                    @else
-                        <input type="hidden" name="_back" value="{{ request('_back', '') }}">
-                    @endif
-                    <a href="{{ $backUrl }}" class="btn btn-outline-secondary w-100">
-                        Cancelar
-                    </a>
-                </div>
-            </div>
+        <div class="col-lg-4 col-xl-3">
+            @include('admin.productos.partials.vista-previa')
         </div>
     </div>
+
+    @if(request('_back_url'))
+        <input type="hidden" name="_back_url" value="{{ request('_back_url') }}">
+    @else
+        <input type="hidden" name="_back" value="{{ request('_back', '') }}">
+    @endif
+    @include('admin.productos.partials.barra-guardar', ['textoGuardar' => 'Guardar cambios', 'cancelarUrl' => $backUrl])
 </form>
 
 <!-- Modal: ajuste de stock -->
