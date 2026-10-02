@@ -16,29 +16,41 @@
 
 @section('content')
 @if(!$menuEnSidebar)
-<div class="container py-4">
+<div class="container">
 @endif
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="input-group search-bar shadow-sm">
+    <header class="listado-head">
+        <div class="listado-head-text">
+            @if($menuActual)
+                <nav class="crumbs" aria-label="Ruta de navegación">
+                    <a href="{{ route('tienda.index') }}">Inicio</a>
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    <span aria-current="page">{{ $menuActual->nombre }}</span>
+                </nav>
+            @endif
+            <h1 class="page-title">{{ $menuActual ? $menuActual->nombre : 'Catálogo' }}</h1>
+        </div>
+
+        <div class="listado-search" role="search">
+            <div class="search-box">
+                <i class="bi bi-search search-box-icon" aria-hidden="true"></i>
                 <input type="text"
                        id="buscar-productos"
-                       class="form-control"
-                       placeholder="Buscar productos..."
+                       class="search-box-input"
+                       placeholder="Buscar productos…"
                        value="{{ request('buscar') }}"
-                       autocomplete="off">
-                <button class="btn btn-primary px-3" type="button" id="btn-buscar">
-                    <i class="bi bi-search"></i>
-                </button>
-                <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda" style="display: none;">
+                       autocomplete="off"
+                       aria-label="Buscar productos">
+                <button type="button" class="search-box-clear" id="btn-limpiar-busqueda"
+                        style="display: none;" aria-label="Limpiar búsqueda">
                     <i class="bi bi-x-lg"></i>
                 </button>
+                <button type="button" class="btn btn-primary search-box-btn" id="btn-buscar">Buscar</button>
             </div>
-            <small class="text-muted" id="busqueda-contexto" style="display: none;">
-                <i class="bi bi-info-circle"></i> Buscando dentro de los productos filtrados
+            <small class="search-context" id="busqueda-contexto" style="display: none;">
+                <i class="bi bi-funnel"></i> Buscando dentro de los productos filtrados
             </small>
         </div>
-    </div>
+    </header>
 
     {{-- Filtros en cascada si el menú los tiene configurados --}}
     @include('components.filtros-cascada', ['menuActual' => $menuActual ?? null, 'filtrosAplicados' => $filtrosAplicados ?? []])
@@ -46,11 +58,14 @@
     {{-- Contenedor de productos (actualizable via AJAX) --}}
     <div id="productos-container">
         @if(isset($filtrosIncompletos) && $filtrosIncompletos)
-            <div class="alert alert-info" id="mensaje-filtros-pendientes">
-                <i class="bi bi-hand-index"></i> <strong>Selecciona los filtros</strong> para ver los productos disponibles.
+            {{-- Mismo aviso que arma EstadoProductos.filtrosPendientes() en el layout. --}}
+            <div class="tienda-aviso" id="mensaje-filtros-pendientes">
+                <div class="tienda-aviso-icon"><i class="bi bi-funnel"></i></div>
+                <div class="tienda-aviso-title">Seleccioná los filtros</div>
+                <p class="mb-0">Completalos arriba para ver los productos disponibles.</p>
             </div>
         @else
-            @include('tienda.partials.productos-grid', ['productos' => $productos, 'mostrarPrecios' => $mostrarPrecios, 'menuEnSidebar' => $menuEnSidebar])
+            @include('tienda.partials.productos-grid', ['productos' => $productos, 'mostrarPrecios' => $mostrarPrecios])
         @endif
     </div>
 @if(!$menuEnSidebar)
@@ -58,10 +73,6 @@
 @endif
 
 @push('scripts')
-<style>
-.qty-grid::-webkit-outer-spin-button,
-.qty-grid::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-</style>
 <script>
 // +/- del grid (delegado para funcionar con carga dinámica)
 document.addEventListener('click', function (e) {
@@ -160,15 +171,7 @@ document.addEventListener('submit', function (e) {
             if (urlParams.especificacion) params.append('especificacion', urlParams.especificacion);
             if (busqueda) params.append('buscar', busqueda);
 
-            // Mostrar loading
-            productosContainer.innerHTML = `
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Buscando productos...</p>
-                </div>
-            `;
+            productosContainer.innerHTML = EstadoProductos.cargando();
 
             try {
                 const response = await fetch(`/productos/ajax?${params.toString()}`);
@@ -190,11 +193,7 @@ document.addEventListener('submit', function (e) {
 
             } catch (error) {
                 console.error('Error buscando productos:', error);
-                productosContainer.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-triangle"></i> Error al buscar productos.
-                    </div>
-                `;
+                productosContainer.innerHTML = EstadoProductos.error('Probá de nuevo en un momento.');
             } finally {
                 cargando = false;
             }
@@ -229,6 +228,7 @@ document.addEventListener('submit', function (e) {
                 inputBuscar.value = '';
                 btnLimpiarBusqueda.style.display = 'none';
                 buscarProductos();
+                inputBuscar.focus();
             });
 
             // Mostrar si ya hay búsqueda
@@ -257,19 +257,16 @@ document.addEventListener('submit', function (e) {
                 if (busqueda) params.append('buscar', busqueda);
                 params.append('page', page);
 
-                productosContainer.innerHTML = `
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
-                    </div>
-                `;
+                productosContainer.innerHTML = EstadoProductos.cargando();
+                productosContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
                 fetch(`/productos/ajax?${params.toString()}`)
                     .then(r => r.json())
                     .then(data => {
                         productosContainer.innerHTML = data.html;
-                        productosContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    })
+                    .catch(() => {
+                        productosContainer.innerHTML = EstadoProductos.error('Probá de nuevo en un momento.');
                     });
             }
         });

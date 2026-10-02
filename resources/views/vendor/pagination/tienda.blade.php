@@ -114,6 +114,11 @@
     </ul>
 </nav>
 
+{{--
+    Lo usan la tienda y el admin. Los colores salen de las variables de tienda.css
+    (--color-primary es la paleta del tenant); el admin no carga esa hoja y cae en
+    los valores por defecto de cada var().
+--}}
 <style>
 .pagination-wrapper {
     padding: 1rem 0;
@@ -124,31 +129,32 @@
 }
 
 .pagination-modern .page-item .page-link {
-    border: none;
-    border-radius: 0.5rem;
+    border: 1px solid var(--line, transparent);
+    border-radius: 0.6rem;
     padding: 0.5rem 0.85rem;
-    font-weight: 500;
-    color: #495057;
-    background-color: #f8f9fa;
+    font-weight: 600;
+    color: var(--ink-2, #495057);
+    background-color: var(--surface, #f8f9fa);
     transition: all 0.2s ease;
     min-width: 40px;
     text-align: center;
 }
 
 .pagination-modern .page-item .page-link:hover {
-    background-color: #e9ecef;
-    color: #212529;
+    background-color: var(--primary-soft, #e9ecef);
+    color: var(--ink, #212529);
     transform: translateY(-1px);
 }
 
 .pagination-modern .page-item.active .page-link {
-    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    background: var(--color-primary, #0d6efd);
+    border-color: var(--color-primary, #0d6efd);
     color: white;
-    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary, #0d6efd) 30%, transparent);
 }
 
 .pagination-modern .page-item.disabled .page-link {
-    background-color: #f8f9fa;
+    background-color: var(--surface, #f8f9fa);
     color: #adb5bd;
     cursor: not-allowed;
 }

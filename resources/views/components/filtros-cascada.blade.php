@@ -6,40 +6,39 @@
     @endphp
 
     @php $hayFiltrosActivos = !empty($filtrosAplicados); @endphp
-    <div class="card mb-4" id="filtros-cascada">
-        <div class="card-header bg-light py-2"
+    <div class="filtros-card" id="filtros-cascada">
+        <div class="filtros-head"
              id="filtros-toggle-header"
              role="button"
-             style="cursor:pointer;"
              onclick="toggleFiltrosMobile(this)">
-            <div class="d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-funnel"></i> Filtrar productos</span>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-secondary" id="contador-resultados" style="display: none;">
-                        <i class="bi bi-box"></i> <span id="total-productos">0</span> productos
-                    </span>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-limpiar"
-                            style="display: none;"
-                            onclick="event.stopPropagation();">
-                        <i class="bi bi-x-circle"></i> Limpiar
-                    </button>
-                    <i class="bi bi-chevron-down d-lg-none transition-chevron" id="filtros-chevron"
-                       style="transition: transform .25s;"></i>
-                </div>
+            <span class="filtros-title">
+                <span class="filtros-title-icon"><i class="bi bi-sliders"></i></span>
+                Filtrar productos
+            </span>
+            <div class="filtros-tools">
+                <span class="filtros-count" id="contador-resultados" style="display: none;">
+                    <span id="total-productos">0</span> productos
+                </span>
+                <button type="button" class="filtros-clear" id="btn-limpiar"
+                        style="display: none;"
+                        onclick="event.stopPropagation();">
+                    <i class="bi bi-x-lg"></i> Limpiar
+                </button>
+                <i class="bi bi-chevron-down d-lg-none" id="filtros-chevron"></i>
             </div>
         </div>
         <div id="filtros-body-collapse">
-        <div class="card-body py-3">
-            <div class="row g-2 align-items-end">
+        <div class="filtros-body">
+            <div class="row g-3 align-items-end">
                 @foreach($etiquetasFiltro as $index => $etiqueta)
                     <div class="col-6 col-md-4">
-                        <label for="filtro_{{ $etiqueta->id }}" class="form-label small fw-bold mb-1">
+                        <label for="filtro_{{ $etiqueta->id }}" class="form-label">
                             {{ $etiqueta->nombre }}
                             @if($filtrosRequeridos)
                                 <span class="text-danger">*</span>
                             @endif
                         </label>
-                        <select class="form-select form-select-sm filtro-select"
+                        <select class="form-select filtro-select"
                                 id="filtro_{{ $etiqueta->id }}"
                                 data-etiqueta-id="{{ $etiqueta->id }}"
                                 data-orden="{{ $index }}"
@@ -59,25 +58,7 @@
     </div>
 
     @push('scripts')
-    <style>
-    @media (max-width: 991.98px) {
-        #filtros-body-collapse {
-            overflow: hidden;
-            transition: max-height .3s ease;
-        }
-        #filtros-body-collapse.filtros-collapsed {
-            max-height: 0 !important;
-        }
-        #filtros-body-collapse.filtros-expanded {
-            max-height: 500px;
-        }
-        #filtros-chevron.rotado { transform: rotate(180deg); }
-    }
-    @media (min-width: 992px) {
-        #filtros-toggle-header { cursor: default !important; }
-        #filtros-chevron { display: none; }
-    }
-    </style>
+    {{-- Los estilos del colapsable mobile están en public/css/tienda.css. --}}
     <script>
     function toggleFiltrosMobile(header) {
         if (window.innerWidth >= 992) return;
@@ -212,11 +193,7 @@
 
                 // En modo compuesto, solo cargar si todos están completos
                 if (filtrosRequeridos && !todosLosFiltrosCompletos()) {
-                    productosContainer.innerHTML = `
-                        <div class="alert alert-info">
-                            <i class="bi bi-hand-index"></i> <strong>Selecciona los filtros</strong> para ver los productos disponibles.
-                        </div>
-                    `;
+                    productosContainer.innerHTML = EstadoProductos.filtrosPendientes();
                     contadorResultados.style.display = 'none';
                     btnLimpiar.style.display = hayFiltrosSeleccionados() ? 'inline-block' : 'none';
                     actualizarUIBusqueda();
@@ -225,19 +202,7 @@
 
                 cargandoProductos = true;
 
-                // Mostrar loading
-                const mensajeCarga = busqueda
-                    ? `Buscando "<strong>${busqueda}</strong>" en productos filtrados...`
-                    : 'Buscando productos...';
-
-                productosContainer.innerHTML = `
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
-                        <p class="mt-2 text-muted">${mensajeCarga}</p>
-                    </div>
-                `;
+                productosContainer.innerHTML = EstadoProductos.cargando();
 
                 try {
                     const params = new URLSearchParams({ menu_id: menuId, page: pagina });
@@ -273,11 +238,7 @@
 
                 } catch (error) {
                     console.error('Error cargando productos:', error);
-                    productosContainer.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle"></i> Error al cargar productos. Intenta nuevamente.
-                        </div>
-                    `;
+                    productosContainer.innerHTML = EstadoProductos.error('Probá de nuevo en un momento.');
                 } finally {
                     cargandoProductos = false;
                 }
@@ -526,11 +487,7 @@
 
                 if (filtrosRequeridos) {
                     // Modo compuesto: mostrar mensaje y recargar primer filtro
-                    productosContainer.innerHTML = `
-                        <div class="alert alert-info">
-                            <i class="bi bi-hand-index"></i> <strong>Selecciona los filtros</strong> para ver los productos disponibles.
-                        </div>
-                    `;
+                    productosContainer.innerHTML = EstadoProductos.filtrosPendientes();
                     const primerSelect = selectores[0];
                     if (primerSelect) {
                         await cargarValoresFiltro(primerSelect.dataset.etiquetaId, primerSelect, false, true);

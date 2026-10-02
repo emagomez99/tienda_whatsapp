@@ -7,7 +7,13 @@
 {{-- Canónica explícita: se puede llegar acá con cualquier slug (resuelve por el id). --}}
 @section('meta_canonical', $producto->url())
 
-@php $maxStock = $producto->estaDisponible() ? $producto->stockMaximo() : null; @endphp
+@php
+    $maxStock = $producto->estaDisponible() ? $producto->stockMaximo() : null;
+    // Compartidos por la ficha desktop y la mobile, y por sus partials.
+    $galeria = $producto->galeria();
+    $etiquetasVisibles = $producto->etiquetas->where('visible_usuarios', true);
+    $mostrarProveedor = $producto->proveedor && App\Models\Configuracion::mostrarProveedor();
+@endphp
 
 @push('schema')
 <script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::productSchema($producto)) !!}</script>
@@ -25,8 +31,9 @@
 @if($producto->estaDisponible())
 @push('styles')
 <style>
+/* Deja lugar para la barra fija de compra de la ficha mobile. */
 @media (max-width: 767.98px) {
-    body { padding-bottom: 68px; }
+    body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
 }
 </style>
 @endpush
@@ -37,7 +44,7 @@
 (function () {
     var maxStock = {{ $maxStock ?? 'null' }};
     var urlAgregar = '{{ route('carrito.agregar', $producto) }}';
-    var descripcion = '{{ addslashes($producto->descripcion) }}';
+    var descripcion = @json($producto->descripcion);
 
     // Inicializar cada formulario de agregar (desktop y mobile)
     document.querySelectorAll('.form-agregar').forEach(function (form) {
@@ -100,20 +107,28 @@
     var carouselDesktopEl = document.getElementById('carousel-producto-desktop');
     if (carouselDesktopEl) {
         new bootstrap.Carousel(carouselDesktopEl, { touch: true, ride: false });
-    }
 
-    // Sincronizar puntos indicadores del carousel desktop
-    var carouselDesktop = document.getElementById('carousel-producto-desktop');
-    if (carouselDesktop) {
-        var dotsWrap = carouselDesktop.nextElementSibling;
-        carouselDesktop.addEventListener('slid.bs.carousel', function (e) {
-            if (!dotsWrap) return;
-            dotsWrap.querySelectorAll('button[data-bs-slide-to]').forEach(function (dot) {
-                var idx = parseInt(dot.getAttribute('data-bs-slide-to'));
-                dot.style.backgroundColor = idx === e.to ? '#555' : '#ccc';
+        // Las miniaturas están fuera del carousel: se marca a mano la activa.
+        var miniaturas = document.querySelectorAll('#thumbs-producto-desktop .pdp-thumb');
+        carouselDesktopEl.addEventListener('slid.bs.carousel', function (e) {
+            miniaturas.forEach(function (miniatura, idx) {
+                var activa = idx === e.to;
+                miniatura.classList.toggle('activa', activa);
+                miniatura.setAttribute('aria-current', activa ? 'true' : 'false');
             });
         });
     }
+
+    // Volver: al listado de donde vino, o a la tienda si se entró directo a la ficha
+    document.querySelectorAll('.btn-volver').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (history.length > 1) {
+                history.back();
+            } else {
+                window.location = btn.dataset.volver;
+            }
+        });
+    });
 
     // Compartir
     document.querySelectorAll('.btn-compartir').forEach(function (btn) {

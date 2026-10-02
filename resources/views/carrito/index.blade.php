@@ -3,33 +3,36 @@
 @section('title', 'Carrito')
 
 @section('content')
-<div class="container py-4">
+<div class="container">
 
-    <div class="d-flex align-items-center gap-2 mb-4">
-        <h3 class="mb-0"><i class="bi bi-cart3"></i> Mi Carrito</h3>
+    <div class="cart-head">
+        <h1 class="page-title">Mi carrito</h1>
         @if(!empty($productos))
-            <span class="badge bg-secondary rounded-pill">{{ count($productos) }}</span>
+            <span class="count-pill">{{ count($productos) }} {{ count($productos) === 1 ? 'producto' : 'productos' }}</span>
         @endif
     </div>
 
     @if(!empty($ajustes))
-        <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle-fill me-1"></i>
-            <strong>El stock de algunos productos fue ajustado:</strong>
-            <ul class="mb-0 mt-1">
-                @foreach($ajustes as $ajuste)
-                    <li>{{ $ajuste }}</li>
-                @endforeach
-            </ul>
+        <div class="tienda-nota tienda-nota-warn">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>
+                <strong>El stock de algunos productos fue ajustado:</strong>
+                <ul>
+                    @foreach($ajustes as $ajuste)
+                        <li>{{ $ajuste }}</li>
+                    @endforeach
+                </ul>
+            </div>
         </div>
     @endif
 
     @if(empty($productos))
-        <div class="text-center py-5 d-flex flex-column align-items-center justify-content-center" style="min-height: 50vh;">
-            <i class="bi bi-cart-x" style="font-size: 3.5rem; color: #dee2e6;"></i>
-            <p class="text-muted mt-3 mb-3">Tu carrito está vacío.</p>
-            <a href="{{ route('tienda.index') }}" class="btn btn-primary">
-                <i class="bi bi-arrow-left"></i> Ver productos
+        <div class="tienda-aviso py-5">
+            <div class="tienda-aviso-icon"><i class="bi bi-cart3"></i></div>
+            <div class="tienda-aviso-title">Tu carrito está vacío</div>
+            <p class="mb-0">Explorá el catálogo y agregá los productos que necesites.</p>
+            <a href="{{ route('tienda.index') }}" class="btn btn-primary px-4">
+                <i class="bi bi-grid me-1"></i> Ver productos
             </a>
         </div>
     @else
@@ -37,160 +40,156 @@
 
             {{-- Columna de items --}}
             <div class="col-lg-8">
-                <div class="d-flex flex-column gap-3">
+                <div class="cart-list">
                     @foreach($productos as $item)
-                        @php $prod = $item['producto']; @endphp
+                        @php
+                            $prod = $item['producto'];
+                            $simbolo = $prod->moneda ? $prod->moneda->simbolo : '$';
+                        @endphp
                         {{-- TODO(public_id): public_id se usa acá sólo como identificador
                              único para los ids del DOM; sirve igual $prod->id. Al eliminar
                              la columna hay que reemplazarlo en los 5 lugares de este archivo
                              a la vez, o el JS deja de encontrar sus elementos (ids vacíos)
                              y el carrito deja de recalcular sin tirar ningún error. --}}
-                        <div class="card border-0 shadow-sm" id="fila-{{ $prod->public_id }}">
-                            <div class="card-body p-3">
-                                <div class="ci-grid">
+                        <div class="cart-item" id="fila-{{ $prod->public_id }}">
+                            <div class="ci-grid">
 
-                                    {{-- Imagen --}}
-                                    <div class="ci-img rounded bg-light overflow-hidden d-flex align-items-center justify-content-center"
-                                         style="width:60px; height:60px;">
-                                        <img src="{{ $prod->imagen_url ?? '/img/no-image.svg' }}"
-                                             alt="{{ $prod->descripcion }}"
-                                             style="width:100%; height:100%; object-fit:contain;"
-                                             onerror="this.onerror=null;this.src='/img/no-image.svg';">
-                                    </div>
+                                {{-- Imagen --}}
+                                <a href="{{ $prod->url() }}" class="ci-img">
+                                    <img src="{{ $prod->imagen_url ?? '/img/no-image.svg' }}"
+                                         alt="{{ $prod->descripcion }}"
+                                         loading="lazy"
+                                         onerror="this.onerror=null;this.src='/img/no-image.svg';">
+                                </a>
 
-                                    {{-- Nombre y código --}}
-                                    <div class="ci-name" style="min-width:0;">
-                                        <div class="fw-semibold lh-sm">{{ $prod->descripcion }}</div>
-                                        @if($prod->id_proveedor)
-                                            <small class="text-muted">{{ $prod->id_proveedor }}</small>
-                                        @endif
-                                        @if($prod->etiquetas->count() > 0)
-                                            <div class="mt-1">
-                                                <button class="btn btn-link btn-sm p-0 text-muted text-decoration-none"
-                                                        type="button"
-                                                        data-bs-toggle="collapse"
-                                                        data-bs-target="#detalle-{{ $prod->public_id }}">
-                                                    <i class="bi bi-tags"></i>
-                                                    <small>Ver etiquetas</small>
-                                                </button>
-                                                <div class="collapse mt-1" id="detalle-{{ $prod->public_id }}">
-                                                    <div class="d-flex flex-wrap gap-1">
-                                                        @foreach($prod->etiquetas as $etiqueta)
-                                                            <span class="badge bg-light text-dark border">
-                                                                {{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}
-                                                            </span>
-                                                        @endforeach
-                                                    </div>
-                                                </div>
+                                {{-- Nombre y código --}}
+                                <div class="ci-name">
+                                    <a href="{{ $prod->url() }}" class="ci-title">{{ $prod->descripcion }}</a>
+                                    @if($prod->id_proveedor)
+                                        <div class="ci-code">Cód. {{ $prod->id_proveedor }}</div>
+                                    @endif
+                                    @if($prod->etiquetas->count() > 0)
+                                        <button class="ci-tags-btn"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#detalle-{{ $prod->public_id }}"
+                                                aria-expanded="false">
+                                            <i class="bi bi-tags"></i> Ver etiquetas
+                                        </button>
+                                        <div class="collapse" id="detalle-{{ $prod->public_id }}">
+                                            <div class="d-flex flex-wrap gap-1 pt-2">
+                                                @foreach($prod->etiquetas as $etiqueta)
+                                                    <span class="chip">
+                                                        <span class="chip-k">{{ $etiqueta->nombre }}</span> {{ $etiqueta->pivot->valor }}
+                                                    </span>
+                                                @endforeach
                                             </div>
-                                        @endif
-                                    </div>
-
-                                    {{-- Precio unitario --}}
-                                    @if($mostrarPrecios)
-                                        <div class="ci-price text-center">
-                                            <div class="text-muted small">Precio</div>
-                                            <div class="small">{{ $prod->moneda ? $prod->moneda->simbolo : '$' }}{{ number_format($prod->precio, 2, ',', '.') }}</div>
                                         </div>
                                     @endif
-
-                                    {{-- Cantidad --}}
-                                    <div class="ci-qty qty-control d-flex align-items-center"
-                                         data-producto-id="{{ $prod->public_id }}"
-                                         data-url="{{ route('carrito.actualizar', $prod) }}"
-                                         data-stock-url="{{ route('carrito.stock', $prod) }}"
-                                         {{-- Con los precios ocultos no se manda el número: el JS sólo lo usa
-                                              para reescribir el subtotal y el total, que en ese caso ni existen. --}}
-                                         data-precio="{{ $mostrarPrecios ? $prod->precio : 0 }}"
-                                         data-stock="{{ $prod->stock ?? '' }}"
-                                         data-moneda-id="{{ $prod->moneda_id ?? '' }}"
-                                         data-moneda-simbolo="{{ $prod->moneda ? $prod->moneda->simbolo : '$' }}"
-                                         data-moneda-nombre="{{ $prod->moneda ? $prod->moneda->nombre : '' }}">
-                                        <button type="button"
-                                                class="btn btn-outline-secondary btn-sm btn-decrement"
-                                                style="width:32px; height:32px; padding:0;"
-                                                {{ $item['cantidad'] <= 1 ? 'disabled' : '' }}>
-                                            <i class="bi bi-dash"></i>
-                                        </button>
-                                        <input type="number"
-                                               value="{{ $item['cantidad'] }}"
-                                               min="1"
-                                               class="form-control form-control-sm text-center qty-input mx-1"
-                                               style="width:48px; height:32px;">
-                                        <button type="button"
-                                                class="btn btn-outline-secondary btn-sm btn-increment"
-                                                style="width:32px; height:32px; padding:0;">
-                                            <i class="bi bi-plus"></i>
-                                        </button>
-                                    </div>
-
-                                    {{-- Subtotal --}}
-                                    @if($mostrarPrecios)
-                                        <div class="ci-sub fw-semibold" id="subtotal-{{ $prod->public_id }}">
-                                            {{ $prod->moneda ? $prod->moneda->simbolo : '$' }}{{ number_format($item['subtotal'], 2, ',', '.') }}
-                                        </div>
-                                    @endif
-
-                                    {{-- Eliminar --}}
-                                    <form class="ci-del" action="{{ route('carrito.eliminar', $prod) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                                class="btn btn-link text-danger p-0"
-                                                title="Eliminar">
-                                            <i class="bi bi-trash" style="font-size: 1.1rem;"></i>
-                                        </button>
-                                    </form>
-
                                 </div>
 
-                                <div class="qty-feedback text-warning small mt-1" style="min-height: 1rem; font-size: .75rem;"></div>
+                                {{-- Precio unitario --}}
+                                @if($mostrarPrecios)
+                                    <div class="ci-price">
+                                        <div class="ci-label">Precio</div>
+                                        <div class="ci-price-value">{{ $simbolo }}{{ number_format($prod->precio, 2, ',', '.') }}</div>
+                                    </div>
+                                @endif
+
+                                {{-- Cantidad --}}
+                                <div class="ci-qty qty-control qty-stepper"
+                                     data-producto-id="{{ $prod->public_id }}"
+                                     data-url="{{ route('carrito.actualizar', $prod) }}"
+                                     data-stock-url="{{ route('carrito.stock', $prod) }}"
+                                     {{-- Con los precios ocultos no se manda el número: el JS sólo lo usa
+                                          para reescribir el subtotal y el total, que en ese caso ni existen. --}}
+                                     data-precio="{{ $mostrarPrecios ? $prod->precio : 0 }}"
+                                     data-stock="{{ $prod->stock ?? '' }}"
+                                     data-moneda-id="{{ $prod->moneda_id ?? '' }}"
+                                     data-moneda-simbolo="{{ $simbolo }}"
+                                     data-moneda-nombre="{{ $prod->moneda ? $prod->moneda->nombre : '' }}">
+                                    <button type="button" class="btn-decrement" aria-label="Restar uno"
+                                            {{ $item['cantidad'] <= 1 ? 'disabled' : '' }}>
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number"
+                                           value="{{ $item['cantidad'] }}"
+                                           min="1"
+                                           class="qty-input"
+                                           aria-label="Cantidad">
+                                    <button type="button" class="btn-increment" aria-label="Sumar uno">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+
+                                {{-- Subtotal --}}
+                                @if($mostrarPrecios)
+                                    <div class="ci-sub" id="subtotal-{{ $prod->public_id }}">
+                                        {{ $simbolo }}{{ number_format($item['subtotal'], 2, ',', '.') }}
+                                    </div>
+                                @endif
+
+                                {{-- Eliminar --}}
+                                <form class="ci-del" action="{{ route('carrito.eliminar', $prod) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="ci-del-btn" title="Eliminar"
+                                            aria-label="Eliminar {{ $prod->descripcion }}">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
+
                             </div>
+
+                            <div class="qty-feedback"></div>
                         </div>
                     @endforeach
-                </div>
-
-                <div class="mt-3 text-center text-lg-start">
-                    <a href="{{ route('tienda.index') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-arrow-left"></i> Seguir comprando
-                    </a>
                 </div>
             </div>
 
             {{-- Resumen del pedido --}}
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm" style="position: sticky; top: 1rem;">
-                    <div class="card-body p-4">
-                        <h5 class="fw-semibold mb-3">Resumen del pedido</h5>
+                <aside class="cart-summary">
+                    <h2 class="cart-summary-title">Resumen del pedido</h2>
 
-                        @if($mostrarPrecios)
-                            <div id="total-carrito" class="mb-4">
-                                @foreach($totalesPorMoneda as $grupo)
-                                    @php $simbolo = $grupo['moneda'] ? $grupo['moneda']->simbolo : '$'; @endphp
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="text-muted">{{ $grupo['moneda'] ? $grupo['moneda']->nombre : 'Total' }}</span>
-                                        <span class="fw-semibold text-primary">{{ $simbolo }}{{ number_format($grupo['total'], 2, ',', '.') }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
+                    @if($mostrarPrecios)
+                        <div id="total-carrito">
+                            @foreach($totalesPorMoneda as $grupo)
+                                @php $simbolo = $grupo['moneda'] ? $grupo['moneda']->simbolo : '$'; @endphp
+                                <div class="summary-row">
+                                    <span class="summary-row-label">{{ $grupo['moneda'] ? $grupo['moneda']->nombre : 'Total' }}</span>
+                                    <span class="summary-row-value">{{ $simbolo }}{{ number_format($grupo['total'], 2, ',', '.') }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="summary-divider"></div>
+                    @endif
 
-                        <a href="{{ route('carrito.checkout') }}" class="btn btn-success w-100 py-2">
-                            <i class="bi bi-whatsapp me-1"></i> Finalizar pedido
+                    <p class="summary-note">
+                        <i class="bi bi-whatsapp"></i>
+                        <span>El pedido se confirma con el vendedor por WhatsApp.</span>
+                    </p>
+
+                    <a href="{{ route('carrito.checkout') }}" class="btn btn-success btn-cta w-100">
+                        <i class="bi bi-whatsapp"></i> Finalizar pedido
+                    </a>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <a href="{{ route('tienda.index') }}" class="link-quiet">
+                            <i class="bi bi-arrow-left"></i> Seguir comprando
                         </a>
-
-                        <form action="{{ route('carrito.vaciar') }}" method="POST" class="mt-2"
+                        <form action="{{ route('carrito.vaciar') }}" method="POST"
                               data-confirmar="¿Vaciar el carrito?"
                               data-confirmar-detalle="Se quitan todos los productos que agregaste."
                               data-confirmar-boton="Sí, vaciar">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-link text-danger w-100 btn-sm">
-                                <i class="bi bi-trash"></i> Vaciar carrito
+                            <button type="submit" class="link-quiet is-danger">
+                                <i class="bi bi-trash3"></i> Vaciar
                             </button>
                         </form>
                     </div>
-                </div>
+                </aside>
             </div>
 
         </div>
@@ -198,42 +197,6 @@
 </div>
 
 @if(!empty($productos))
-<style>
-/* Mobile: CSS Grid de 2 filas */
-.ci-grid {
-    display: grid;
-    grid-template-columns: 60px 1fr auto;
-    grid-template-rows: auto auto;
-    column-gap: 12px;
-    row-gap: 8px;
-    align-items: center;
-}
-.ci-img   { grid-column: 1; grid-row: 1 / 3; align-self: center; }
-.ci-name  { grid-column: 2; grid-row: 1; }
-.ci-del   { grid-column: 3; grid-row: 1; align-self: start; }
-.ci-price { display: none; }
-.ci-qty   { grid-column: 2; grid-row: 2; }
-.ci-sub   { grid-column: 3; grid-row: 2; text-align: right; white-space: nowrap; }
-
-/* Desktop: Flexbox de 1 fila */
-@media (min-width: 576px) {
-    .ci-grid {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-    .ci-img   { flex-shrink: 0; align-self: auto; }
-    .ci-name  { flex: 1 1 0; min-width: 0; }
-    .ci-price { display: block; flex-shrink: 0; text-align: center; min-width: 64px; }
-    .ci-qty   { flex-shrink: 0; }
-    .ci-sub   { flex-shrink: 0; min-width: 70px; text-align: right; white-space: normal; }
-    .ci-del   { flex-shrink: 0; align-self: auto; }
-}
-
-.qty-input::-webkit-outer-spin-button,
-.qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.qty-input { -moz-appearance: textfield; }
-</style>
 <script>
 (function () {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
@@ -244,7 +207,7 @@
         const precio = parseFloat(control.dataset.precio);
         const productoId = control.dataset.productoId;
         const input = control.querySelector('.qty-input');
-        const feedback = control.closest('.card-body').querySelector('.qty-feedback');
+        const feedback = control.closest('.cart-item').querySelector('.qty-feedback');
         const btnDec = control.querySelector('.btn-decrement');
 
         input.value = nuevaCantidad;
@@ -308,11 +271,12 @@
         });
         var elTotal = document.getElementById('total-carrito');
         if (elTotal) {
+            // Mismo markup que las filas .summary-row que arma el servidor.
             var html = '';
             Object.values(grupos).forEach(function (g) {
-                html += '<div class="d-flex justify-content-between mb-1">' +
-                    '<span class="text-muted">' + g.nombre + '</span>' +
-                    '<span class="fw-semibold text-primary">' + g.simbolo + formatNum(g.total) + '</span>' +
+                html += '<div class="summary-row">' +
+                    '<span class="summary-row-label">' + g.nombre + '</span>' +
+                    '<span class="summary-row-value">' + g.simbolo + formatNum(g.total) + '</span>' +
                     '</div>';
             });
             elTotal.innerHTML = html;
@@ -330,7 +294,7 @@
         const btnDec = control.querySelector('.btn-decrement');
         const btnInc = control.querySelector('.btn-increment');
         const productoId = control.dataset.productoId;
-        const feedback = control.closest('.card-body').querySelector('.qty-feedback');
+        const feedback = control.closest('.cart-item').querySelector('.qty-feedback');
 
         btnDec.addEventListener('click', function () {
             const actual = parseInt(input.value) || 1;

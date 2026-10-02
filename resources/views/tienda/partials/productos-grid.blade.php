@@ -1,105 +1,106 @@
 @if($productos->isEmpty())
-    <div class="text-center py-5 text-muted">
-        <i class="bi bi-search" style="font-size:2.5rem;opacity:.25;"></i>
-        <p class="mt-3 mb-0 fs-6">No se encontraron productos.</p>
+    <div class="tienda-aviso">
+        <div class="tienda-aviso-icon"><i class="bi bi-search"></i></div>
+        <div class="tienda-aviso-title">No encontramos productos</div>
+        <p class="mb-0">Probá con otra búsqueda o cambiá los filtros.</p>
     </div>
 @else
-    <div class="row row-cols-1 row-cols-md-2 {{ $menuEnSidebar ? 'row-cols-lg-2 row-cols-xl-3' : 'row-cols-lg-3 row-cols-xl-4' }} g-3 g-md-4">
+    {{-- En la card se muestra un resumen: el detalle completo está en la ficha. --}}
+    @php
+        $maxEtiquetas = 3;
+        $maxEspecificaciones = 4;
+    @endphp
+    <div class="productos-grid">
         @foreach($productos as $producto)
-            <div class="col">
-                <div class="card h-100 producto-card">
+            @php
+                $etiquetasVisibles = $producto->etiquetas->where('visible_usuarios', true);
+                $agotado = !($producto->stock > 0) && !$producto->por_encargue;
+            @endphp
+            <article class="producto-card{{ $agotado ? ' is-agotado' : '' }}">
 
-                    {{-- Imagen --}}
-                    <a href="{{ $producto->url() }}" class="producto-img-wrap position-relative d-block" style="height:220px;">
-                        <img src="{{ $producto->imagen_url ?? '/img/no-image.svg' }}"
-                             class="card-img-top"
-                             alt="{{ $producto->descripcion }}"
-                             style="width:100%;height:100%;object-fit:contain;background:#fff;opacity:0;transition:opacity .15s;"
-                             onload="this.style.opacity=1"
-                             onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
+                {{-- Imagen --}}
+                <div class="producto-media">
+                    <img src="{{ $producto->imagen_url ?? '/img/no-image.svg' }}"
+                         alt="{{ $producto->descripcion }}"
+                         class="img-fade"
+                         loading="lazy"
+                         onload="this.classList.add('is-loaded')"
+                         onerror="this.onerror=null;this.src='/img/no-image.svg';this.classList.add('is-loaded');">
 
-                        @if($producto->stock > 0)
-                            {{-- En stock: sin badge --}}
-                        @elseif($producto->por_encargue)
-                            <span class="badge bg-warning text-dark position-absolute"
-                                  style="top:9px;left:9px;font-size:.72rem;">
-                                <i class="bi bi-clock"></i> Por encargue
+                    @if($producto->stock > 0)
+                        {{-- En stock: sin marca --}}
+                    @elseif($producto->por_encargue)
+                        <span class="producto-flag flag-encargue"><i class="bi bi-clock"></i> Por encargue</span>
+                    @else
+                        <span class="producto-flag flag-agotado">Sin stock</span>
+                    @endif
+                </div>
+
+                {{-- Cuerpo --}}
+                <div class="producto-body">
+                    @if($etiquetasVisibles->isNotEmpty())
+                        <div class="producto-tags">
+                            @foreach($etiquetasVisibles->take($maxEtiquetas) as $etiqueta)
+                                <span class="chip" title="{{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}">
+                                    <span class="chip-k">{{ $etiqueta->nombre }}</span> {{ $etiqueta->pivot->valor }}
+                                </span>
+                            @endforeach
+                            @if($etiquetasVisibles->count() > $maxEtiquetas)
+                                <span class="chip chip-more">+{{ $etiquetasVisibles->count() - $maxEtiquetas }}</span>
+                            @endif
+                        </div>
+                    @endif
+
+                    {{-- stretched-link: toda la card lleva a la ficha --}}
+                    <h2 class="producto-nombre">
+                        <a href="{{ $producto->url() }}" class="stretched-link">{{ $producto->descripcion }}</a>
+                    </h2>
+
+                    @if($producto->especificaciones->isNotEmpty())
+                        <dl class="producto-specs">
+                            @foreach($producto->especificaciones->take($maxEspecificaciones) as $espec)
+                                <div><dt>{{ $espec->clave }}</dt><dd title="{{ $espec->valor }}">{{ $espec->valor }}</dd></div>
+                            @endforeach
+                        </dl>
+                        @if($producto->especificaciones->count() > $maxEspecificaciones)
+                            <span class="producto-specs-more">
+                                +{{ $producto->especificaciones->count() - $maxEspecificaciones }} especificaciones
                             </span>
-                        @else
-                            <div class="producto-sin-stock-overlay">
-                                <span>Sin stock</span>
-                            </div>
                         @endif
-                    </a>
+                    @endif
 
-                    {{-- Cuerpo --}}
-                    <div class="card-body d-flex flex-column px-3 pt-3 pb-2">
-                        <h6 class="producto-nombre mb-2">
-                            <a href="{{ $producto->url() }}" class="text-decoration-none text-dark">
-                                {{ $producto->descripcion }}
-                            </a>
-                        </h6>
-
-                        @if($producto->etiquetas->where('visible_usuarios', true)->count() > 0)
-                            <div class="d-flex flex-wrap gap-1 mb-2">
-                                @foreach($producto->etiquetas->where('visible_usuarios', true) as $etiqueta)
-                                    <span class="badge fw-normal"
-                                          style="background:rgba(13,202,240,.12);color:#0a6a77;font-size:.7rem;">
-                                        {{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        @endif
-
-                        @if($producto->especificaciones->count() > 0)
-                            <div class="text-muted mb-2" style="font-size:.78rem;line-height:1.6;">
-                                @foreach($producto->especificaciones as $espec)
-                                    {{ $espec->clave }}: <strong>{{ $espec->valor }}</strong><br>
-                                @endforeach
-                            </div>
-                        @endif
-
+                    {{-- Precio y compra --}}
+                    <div class="producto-footer">
                         @if($mostrarPrecios)
-                            <div class="mt-auto pt-1">
-                                <span class="fs-5 fw-bold text-primary">{{ $producto->precio_con_moneda }}</span>
-                            </div>
+                            <div class="producto-precio">{{ $producto->precio_con_moneda }}</div>
                         @endif
-                    </div>
 
-                    {{-- Footer --}}
-                    <div class="card-footer border-0 bg-transparent px-3 pb-3 pt-1">
                         @if($producto->estaDisponible())
                             @php $maxGrid = $producto->stockMaximo(); @endphp
-                            <form class="form-agregar" data-url="{{ route('carrito.agregar', $producto) }}">
+                            <form class="form-agregar producto-comprar" data-url="{{ route('carrito.agregar', $producto) }}">
                                 @csrf
-                                <div class="d-flex gap-1 align-items-center">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-dec"
-                                            style="width:32px;height:32px;padding:0;flex-shrink:0;" disabled>
+                                <div class="qty-stepper">
+                                    <button type="button" class="btn-dec" aria-label="Restar uno" disabled>
                                         <i class="bi bi-dash"></i>
                                     </button>
                                     <input type="number" name="cantidad" value="1" min="1"
                                            @if($maxGrid !== null) max="{{ $maxGrid }}" @endif
-                                           class="form-control form-control-sm text-center qty-grid"
-                                           style="width:44px;height:32px;-moz-appearance:textfield;flex-shrink:0;">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-inc"
-                                            style="width:32px;height:32px;padding:0;flex-shrink:0;" {{ $maxGrid === 1 ? 'disabled' : '' }}>
+                                           class="qty-grid" aria-label="Cantidad">
+                                    <button type="button" class="btn-inc" aria-label="Sumar uno" {{ $maxGrid === 1 ? 'disabled' : '' }}>
                                         <i class="bi bi-plus"></i>
                                     </button>
-                                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1" style="height:32px;">
-                                        <i class="bi bi-cart-plus"></i> Agregar
-                                    </button>
                                 </div>
+                                <button type="submit" class="btn btn-primary btn-agregar">
+                                    <i class="bi bi-cart-plus"></i> Agregar
+                                </button>
                             </form>
                         @else
-                            <button class="btn btn-light btn-sm w-100 text-muted"
-                                    style="border:1px solid #e9ecef;" disabled>
-                                <i class="bi bi-x-circle me-1"></i> Sin stock
-                            </button>
+                            <button type="button" class="btn btn-ghost btn-agregar w-100" disabled>Sin stock</button>
                         @endif
                     </div>
-
                 </div>
-            </div>
+
+            </article>
         @endforeach
     </div>
 

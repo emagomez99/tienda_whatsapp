@@ -3,6 +3,7 @@
     if (!$menu->relationLoaded('childrenActivos')) {
         $menu->load('childrenActivos');
     }
+    $activo = url()->current() === $menu->url;
 @endphp
 @if($menu->childrenActivos->count() > 0)
     {{-- Menú con submenús --}}
@@ -15,7 +16,7 @@
             <ul class="dropdown-menu">
                 @if(!$menu->esContenedor())
                     <li>
-                        <a class="dropdown-item" href="{{ $menu->url }}">
+                        <a class="dropdown-item{{ $activo ? ' active' : '' }}" href="{{ $menu->url }}">
                             <strong>Ver todos</strong>
                         </a>
                     </li>
@@ -35,7 +36,7 @@
             <ul class="dropdown-menu">
                 @if(!$menu->esContenedor())
                     <li>
-                        <a class="dropdown-item" href="{{ $menu->url }}">
+                        <a class="dropdown-item{{ $activo ? ' active' : '' }}" href="{{ $menu->url }}">
                             <strong>Ver todos</strong>
                         </a>
                     </li>
@@ -51,13 +52,13 @@
     {{-- Menú sin submenús --}}
     @if($nivel === 0)
         <li class="nav-item">
-            <a class="nav-link" href="{{ $menu->url }}">
+            <a class="nav-link{{ $activo ? ' active' : '' }}" href="{{ $menu->url }}" @if($activo) aria-current="page" @endif>
                 {{ $menu->nombre }}
             </a>
         </li>
     @else
         <li>
-            <a class="dropdown-item" href="{{ $menu->url }}">
+            <a class="dropdown-item{{ $activo ? ' active' : '' }}" href="{{ $menu->url }}" @if($activo) aria-current="page" @endif>
                 {{ $menu->nombre }}
             </a>
         </li>
