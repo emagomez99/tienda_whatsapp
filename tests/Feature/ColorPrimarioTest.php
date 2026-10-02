@@ -123,6 +123,17 @@ class ColorPrimarioTest extends TestCase
         $this->assertStringContainsString('navbar-light navbar-custom', $html);
     }
 
+    public function test_el_admin_usa_el_mismo_color_con_texto_legible()
+    {
+        $this->guardarColor('#ffeb3b');
+
+        $this->comoAdmin()->get($this->urlTenant('admin/configuraciones'))
+            ->assertOk()
+            ->assertSee('--admin-color: #ffeb3b;', false)
+            ->assertSee('--admin-texto: #212529;', false)
+            ->assertSee('navbar-light admin-navbar', false);
+    }
+
     public function test_color_oscuro_mantiene_texto_blanco_en_la_tienda()
     {
         $this->guardarColor('#4a148c');

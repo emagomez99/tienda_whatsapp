@@ -12,58 +12,79 @@
     @endif
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    @php
+        // Mismo color principal que la tienda, con el texto (blanco u oscuro) que se
+        // lee encima. Ver App\Support\ColorHex.
+        $colorAdmin = App\Models\Configuracion::colorPrimario();
+        $textoAdmin = $colorAdmin->textoLegible();
+    @endphp
     <style>
+        :root {
+            --admin-color: {{ $colorAdmin->hex() }};
+            --admin-texto: {{ $textoAdmin->hex() }};
+            --admin-texto-rgb: {{ $textoAdmin->rgb() }};
+        }
         body { overflow-x: hidden; }
+        .admin-navbar { background-color: var(--admin-color); }
+        .texto-sobre-admin, .texto-sobre-admin:hover, .texto-sobre-admin:focus { color: var(--admin-texto) !important; }
         .content-wrapper { min-height: calc(100vh - 56px); }
         .navbar-brand, .navbar .nav-link { text-decoration: none; }
 
-        #adminDrawer { background-color: #343a40; width: 280px; }
+        #adminDrawer { background-color: var(--admin-color); width: 280px; }
         .admin-drawer-item {
             display: block;
             width: 100%;
-            color: rgba(255,255,255,.85);
+            color: rgba(var(--admin-texto-rgb), .85);
             text-decoration: none;
             padding: .85rem 1.5rem;
             font-size: .97rem;
             border: none;
             background: none;
-            border-bottom: 1px solid rgba(255,255,255,.08);
+            border-bottom: 1px solid rgba(var(--admin-texto-rgb), .08);
             text-align: left;
             cursor: pointer;
         }
         .admin-drawer-item:hover, .admin-drawer-item:focus {
-            background: rgba(255,255,255,.1);
-            color: #fff;
+            background: rgba(var(--admin-texto-rgb), .1);
+            color: var(--admin-texto);
             outline: none;
         }
         .admin-drawer-item.active {
-            background: rgba(255,255,255,.18);
-            color: #fff;
+            background: rgba(var(--admin-texto-rgb), .18);
+            color: var(--admin-texto);
         }
         .admin-drawer-sub {
             display: block;
-            color: rgba(255,255,255,.65);
+            color: rgba(var(--admin-texto-rgb), .65);
             text-decoration: none;
             padding: .65rem 1.5rem .65rem 2.5rem;
             font-size: .9rem;
-            border-bottom: 1px solid rgba(255,255,255,.06);
-            background: rgba(0,0,0,.2);
+            border-bottom: 1px solid rgba(var(--admin-texto-rgb), .06);
+            /* El submenú se tiñe con el color del texto y no con negro: sobre un fondo
+               oscuro aclara apenas y sobre uno claro oscurece apenas, sin ensuciar el
+               color elegido. El filete izquierdo lo marca como parte del grupo. */
+            background: rgba(var(--admin-texto-rgb), .04);
+            box-shadow: inset 2px 0 0 rgba(var(--admin-texto-rgb), .15);
         }
-        .admin-drawer-sub:hover { background: rgba(0,0,0,.32); color: #fff; }
-        .admin-drawer-sub.active { color: #fff; background: rgba(0,0,0,.3); }
+        .admin-drawer-sub:hover { background: rgba(var(--admin-texto-rgb), .1); color: var(--admin-texto); }
+        .admin-drawer-sub.active {
+            color: var(--admin-texto);
+            background: rgba(var(--admin-texto-rgb), .14);
+            box-shadow: inset 3px 0 0 rgba(var(--admin-texto-rgb), .6);
+        }
         .admin-drawer-chevron { transition: transform .2s ease; font-size: .8rem; opacity: .65; }
         .admin-drawer-toggle[aria-expanded="true"] .admin-drawer-chevron { transform: rotate(180deg); }
         .admin-drawer-footer-link {
             display: block;
-            color: rgba(255,255,255,.75);
+            color: rgba(var(--admin-texto-rgb), .75);
             text-decoration: none;
             padding: .5rem 0;
             font-size: .95rem;
         }
-        .admin-drawer-footer-link:hover { color: #fff; }
-        #adminDrawer nav { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent; }
+        .admin-drawer-footer-link:hover { color: var(--admin-texto); }
+        #adminDrawer nav { scrollbar-width: thin; scrollbar-color: rgba(var(--admin-texto-rgb), .15) transparent; }
         #adminDrawer nav::-webkit-scrollbar { width: 4px; }
-        #adminDrawer nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+        #adminDrawer nav::-webkit-scrollbar-thumb { background: rgba(var(--admin-texto-rgb), .15); border-radius: 2px; }
         #adminDrawer nav::-webkit-scrollbar-track { background: transparent; }
     </style>
     @stack('styles')
@@ -90,11 +111,11 @@
     {{-- ═══════════════════════════════════════════════
          NAVBAR
     ═══════════════════════════════════════════════ --}}
-    <nav class="navbar navbar-dark bg-dark sticky-top">
+    <nav class="navbar {{ $colorAdmin->esClaro() ? 'navbar-light' : 'navbar-dark' }} admin-navbar sticky-top">
         <div class="container-fluid d-flex align-items-center">
             {{-- Izquierda: hamburger --}}
             <div style="flex:1;">
-                <button class="btn btn-link text-white p-1"
+                <button class="btn btn-link texto-sobre-admin p-1"
                         data-bs-toggle="offcanvas" data-bs-target="#adminDrawer"
                         aria-label="Abrir menú" style="font-size:1.3rem;line-height:1;">
                     <i class="bi bi-list"></i>
@@ -112,11 +133,11 @@
 
             {{-- Derecha: acciones --}}
             <div style="flex:1;" class="d-flex align-items-center justify-content-end gap-2">
-                <a class="nav-link text-white d-none d-md-block" href="{{ route('tienda.index') }}" target="_blank" style="font-size:.9rem;">
+                <a class="nav-link texto-sobre-admin d-none d-md-block" href="{{ route('tienda.index') }}" target="_blank" style="font-size:.9rem;">
                     <i class="bi bi-shop me-1"></i> Ver Tienda
                 </a>
                 <div class="dropdown">
-                    <button class="btn btn-link text-white p-1 d-flex align-items-center gap-1"
+                    <button class="btn btn-link texto-sobre-admin p-1 d-flex align-items-center gap-1"
                             data-bs-toggle="dropdown" style="font-size:.9rem;text-decoration:none;">
                         <i class="bi bi-person-circle" style="font-size:1.2rem;"></i>
                         <span class="d-none d-md-inline">{{ $user->name }}</span>
@@ -147,15 +168,15 @@
          DRAWER (mobile + desktop)
     ═══════════════════════════════════════════════ --}}
     <div class="offcanvas offcanvas-start" tabindex="-1" id="adminDrawer" data-bs-scroll="true" data-bs-backdrop="true">
-        <div class="offcanvas-header" style="border-bottom:1px solid rgba(255,255,255,.12);">
-            <span class="text-white fw-bold fs-6">
+        <div class="offcanvas-header" style="border-bottom:1px solid rgba(var(--admin-texto-rgb), .12);">
+            <span class="texto-sobre-admin fw-bold fs-6">
                 @if($logoAdmin)
                     <img src="{{ url('storage/' . $logoAdmin) }}" alt="{{ $nombreAdmin }}" style="max-height:28px;">
                 @else
                     <i class="bi bi-gear me-1"></i> Admin
                 @endif
             </span>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+            <button type="button" class="btn-close {{ $colorAdmin->esClaro() ? '' : 'btn-close-white' }}" data-bs-dismiss="offcanvas"></button>
         </div>
         <div class="offcanvas-body d-flex flex-column p-0" style="overflow:hidden;">
             <nav class="overflow-y-auto" style="flex:1 1 0;min-height:0;">
@@ -230,7 +251,7 @@
                     </div>
                 @endif
             </nav>
-            <div class="p-3" style="border-top:1px solid rgba(255,255,255,.12);">
+            <div class="p-3" style="border-top:1px solid rgba(var(--admin-texto-rgb), .12);">
                 <a href="{{ route('tienda.index') }}" target="_blank" class="admin-drawer-footer-link">
                     <i class="bi bi-shop me-2"></i> Ver Tienda
                 </a>

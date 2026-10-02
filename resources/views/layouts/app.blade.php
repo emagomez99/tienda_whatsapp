@@ -184,9 +184,11 @@
             padding: .7rem 1.5rem .7rem 2.25rem;
             font-size: .95rem;
             border-bottom: 1px solid rgba(var(--color-primary-texto-rgb), .07);
-            background: rgba(0,0,0,.18);
+            /* Teñido con el color del texto y no con negro: no oscurece el color elegido. */
+            background: rgba(var(--color-primary-texto-rgb), .04);
+            box-shadow: inset 2px 0 0 rgba(var(--color-primary-texto-rgb), .15);
         }
-        .drawer-subitem:hover { background: rgba(0,0,0,.3); color: var(--color-primary-texto); }
+        .drawer-subitem:hover { background: rgba(var(--color-primary-texto-rgb), .1); color: var(--color-primary-texto); }
         .drawer-footer-link {
             display: block;
             color: rgba(var(--color-primary-texto-rgb), .8);
