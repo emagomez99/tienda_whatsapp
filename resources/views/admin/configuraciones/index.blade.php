@@ -285,6 +285,18 @@
                         </div>
                     </div>
 
+                    <div class="ajuste-seccion">Productos nuevos</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-lg-7">
+                            @include('admin.configuraciones.partials.interruptor', [
+                                'nombre' => 'por_encargue_por_defecto',
+                                'titulo' => 'Cargar los productos nuevos "Por encargue"',
+                                'ayuda'  => 'Al dar de alta un producto, "Por encargue" viene prendido: se puede pedir aunque no haya stock. Cada producto se puede cambiar.',
+                                'activo' => App\Models\Configuracion::porEncarguePorDefecto(),
+                            ])
+                        </div>
+                    </div>
+
                     {{-- "¿En qué moneda cobrás?" y "¿en qué moneda vendés más?" van juntas y acá,
                          no en el ABM de monedas: son decisiones de la tienda, no propiedades de
                          una moneda. Repartidas en dos pantallas obligaban a entender la
@@ -316,7 +328,7 @@
                         <div class="col-md-6">
                             <div class="ajuste-tarjeta h-100">
                                 <label for="moneda_favorita" class="fw-semibold d-block">¿En qué moneda vendés más?</label>
-                                <div class="small text-muted">Viene elegida al cargar un producto nuevo.</div>
+                                <div class="small text-muted">Viene elegida por defecto al cargar un producto nuevo.</div>
                                 <select class="form-select mt-2 @error('moneda_favorita') is-invalid @enderror" id="moneda_favorita" name="moneda_favorita">
                                     <option value="">Ninguna en particular</option>
                                     @foreach($monedas as $moneda)
@@ -793,6 +805,40 @@
 
 @push('scripts')
 <script>
+// Pestaña activa: se recuerda al cambiar (en la URL y en la sesión del navegador) para
+// que al guardar, que recarga la página, se vuelva a la misma. Si volvió con errores
+// de validación, manda la pestaña que tiene el primero, para que se vea.
+(function () {
+    var CLAVE = 'configuraciones-pestana';
+    var botones = document.querySelectorAll('#tabs-config [data-bs-toggle="tab"]');
+
+    function mostrar(destino) {
+        var boton = document.querySelector('#tabs-config [data-bs-target="' + destino + '"]');
+        if (boton) bootstrap.Tab.getOrCreateInstance(boton).show();
+        return !!boton;
+    }
+
+    botones.forEach(function (boton) {
+        boton.addEventListener('shown.bs.tab', function () {
+            var destino = boton.getAttribute('data-bs-target');
+            history.replaceState(null, '', destino);
+            try { sessionStorage.setItem(CLAVE, destino); } catch (e) {}
+        });
+    });
+
+    // Un link a otra pestaña (#pane-seo) estando ya en la página no recarga: sólo cambia el hash.
+    window.addEventListener('hashchange', function () { mostrar(location.hash); });
+
+    var conError = document.querySelector('.tab-pane .is-invalid, .tab-pane .invalid-feedback.d-block, .tab-pane .text-danger.small');
+    if (conError && mostrar('#' + conError.closest('.tab-pane').id)) return;
+
+    if (location.hash && mostrar(location.hash)) return;
+
+    var guardada = null;
+    try { guardada = sessionStorage.getItem(CLAVE); } catch (e) {}
+    if (guardada) mostrar(guardada);
+})();
+
 document.getElementById('btn-reset-template').addEventListener('click', function () {
     var plantilla = document.getElementById('template_whatsapp');
     plantilla.value = @json(App\Models\Configuracion::templateWhatsappDefault());

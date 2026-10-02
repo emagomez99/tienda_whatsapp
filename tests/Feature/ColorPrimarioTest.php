@@ -92,6 +92,28 @@ class ColorPrimarioTest extends TestCase
             ->assertSee('background-color: #a1b2c3; color: #212529;', false);
     }
 
+    public function test_guarda_el_por_encargue_por_defecto()
+    {
+        // Mismo payload que guardarColor(), más el ajuste nuevo.
+        $this->comoAdmin()->put($this->urlTenant('admin/configuraciones'), [
+            'nombre_tienda'               => 'Tienda de prueba',
+            'mostrar_precios'             => 'true',
+            'mostrar_productos_sin_stock' => 'true',
+            'mostrar_nombre_tienda'       => 'true',
+            'mostrar_proveedor'           => 'false',
+            'por_encargue_por_defecto'    => 'true',
+            'color_primario'              => '#0d6efd',
+            'posicion_menu'               => 'superior',
+            'pedir_direccion_envio'       => 'true',
+            'robots_index'                => 'true',
+            'ubicacion_activa'            => 'false',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertTrue($this->enTenant(function () {
+            return Configuracion::porEncarguePorDefecto();
+        }));
+    }
+
     public function test_un_color_mal_formado_se_rechaza()
     {
         $this->guardarColor('azul')->assertSessionHasErrors('color_primario');

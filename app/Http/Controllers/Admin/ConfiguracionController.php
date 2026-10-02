@@ -83,6 +83,7 @@ class ConfiguracionController extends Controller
             'imagenes_adicionales_activas'=> 'nullable|in:true,false',
             'max_imagenes_adicionales'    => 'nullable|integer|min:1|max:20',
             'mostrar_proveedor'          => 'required|in:true,false',
+            'por_encargue_por_defecto'   => 'nullable|in:true,false',
             'social_instagram'           => 'nullable|url|max:255',
             'social_facebook'            => 'nullable|url|max:255',
             'social_twitter'             => 'nullable|url|max:255',
@@ -114,6 +115,9 @@ class ConfiguracionController extends Controller
         Configuracion::establecer('posicion_menu', $request->posicion_menu, 'Posición del menú en la tienda');
         Configuracion::establecer('pedir_direccion_envio', $request->pedir_direccion_envio, 'Solicitar dirección de envío en el checkout');
         Configuracion::establecer('mostrar_proveedor', $request->mostrar_proveedor, 'Mostrar proveedor en ficha de producto');
+        if ($request->filled('por_encargue_por_defecto')) {
+            Configuracion::establecer('por_encargue_por_defecto', $request->por_encargue_por_defecto, 'Productos nuevos por encargue');
+        }
 
         Configuracion::establecer('social_instagram', $request->input('social_instagram', ''), 'Instagram');
         Configuracion::establecer('social_facebook',  $request->input('social_facebook',  ''), 'Facebook');

@@ -94,6 +94,36 @@ class ProductoFormularioTest extends TestCase
         $this->assertStringContainsString('etiquetasVisibles: ' . json_encode($visibles), $html);
     }
 
+    public function test_por_encargue_viene_apagado_por_defecto()
+    {
+        $this->comoAdmin()->get($this->urlTenant('admin/productos/create'))
+            ->assertOk()
+            ->assertSee('id="por_encargue" name="por_encargue" value="1" >', false);
+    }
+
+    public function test_con_el_ajuste_prendido_por_encargue_viene_prendido_en_el_alta()
+    {
+        $this->enTenant(function () {
+            Configuracion::establecer('por_encargue_por_defecto', 'true');
+        });
+
+        $this->comoAdmin()->get($this->urlTenant('admin/productos/create'))
+            ->assertOk()
+            ->assertSee('id="por_encargue" name="por_encargue" value="1" checked>', false);
+    }
+
+    public function test_el_ajuste_no_cambia_productos_existentes_ni_su_edicion()
+    {
+        $this->enTenant(function () {
+            Configuracion::establecer('por_encargue_por_defecto', 'true');
+        });
+
+        // El producto de prueba no es por encargue: su edición lo sigue mostrando así.
+        $this->comoAdmin()->get($this->urlTenant('admin/productos/' . $this->producto->id . '/edit'))
+            ->assertOk()
+            ->assertDontSee('id="por_encargue" name="por_encargue" value="1" checked', false);
+    }
+
     public function test_con_precios_ocultos_la_vista_previa_lo_avisa()
     {
         $this->enTenant(function () {

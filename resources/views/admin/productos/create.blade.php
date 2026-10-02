@@ -88,7 +88,7 @@
                         <div class="col-md-4 mb-3">
                             <label class="form-label d-block">Por Encargue @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.por_encargue')])</label>
                             <div class="form-check form-switch">
-                                <input type="checkbox" class="form-check-input" id="por_encargue" name="por_encargue" value="1" {{ old('por_encargue') ? 'checked' : '' }}>
+                                <input type="checkbox" class="form-check-input" id="por_encargue" name="por_encargue" value="1" {{ old('por_encargue', App\Models\Configuracion::porEncarguePorDefecto()) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="por_encargue">Disponible sin stock</label>
                             </div>
                         </div>

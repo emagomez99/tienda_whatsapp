@@ -175,6 +175,13 @@ class Configuracion extends Model
         return self::obtener('mostrar_proveedor', 'false') === 'true';
     }
 
+    // Si "Por encargue" viene prendido al dar de alta un producto. Es sólo el valor
+    // inicial del formulario: cada producto lo puede cambiar.
+    public static function porEncarguePorDefecto()
+    {
+        return self::obtener('por_encargue_por_defecto', 'false') === 'true';
+    }
+
     public static function socialInstagram()
     {
         return self::obtener('social_instagram', '');
