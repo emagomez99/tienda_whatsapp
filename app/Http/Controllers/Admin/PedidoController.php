@@ -21,7 +21,11 @@ class PedidoController extends Controller
 
     public function index(Request $request)
     {
-        $rango = RangoFechas::desdeTextos($request->query('desde'), $request->query('hasta'));
+        // Al entrar sin elegir fechas se ven los últimos 30 días. "Todas las fechas"
+        // llega como desde/hasta vacíos, que no es lo mismo que no mandarlos.
+        $rango = $request->query->has('desde') || $request->query->has('hasta')
+            ? RangoFechas::desdeTextos($request->query('desde'), $request->query('hasta'))
+            : RangoFechas::ultimosDias(30);
 
         // Búsqueda y fechas primero, sin el estado: así los contadores de cada pestaña
         // de estado dicen cuántos hay de cada uno dentro de lo que se está buscando.

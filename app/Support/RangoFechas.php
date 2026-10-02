@@ -33,6 +33,14 @@ class RangoFechas
         return new self(self::fecha($desde), self::fecha($hasta));
     }
 
+    /** Los últimos $dias días contando hoy (30 → de hace 29 días a hoy). */
+    public static function ultimosDias($dias)
+    {
+        $hoy = Carbon::today();
+
+        return new self($hoy->copy()->subDays($dias - 1), $hoy);
+    }
+
     public static function delMes(Mes $mes)
     {
         return new self($mes->inicio(), $mes->fin());
@@ -80,9 +88,13 @@ class RangoFechas
         return $this->hasta ? $this->hasta->format('Y-m-d') : '';
     }
 
-    /** Parámetros de URL del rango, para armar links que lo conserven. */
+    /**
+     * Parámetros de URL del rango, para armar links que lo conserven. Van siempre los
+     * dos, aunque estén vacíos: un listado con rango por defecto distingue "no se
+     * eligió nada" (sin parámetros) de "se eligieron todas las fechas" (vacíos).
+     */
     public function parametros()
     {
-        return array_filter(['desde' => $this->desdeTexto(), 'hasta' => $this->hastaTexto()]);
+        return ['desde' => $this->desdeTexto(), 'hasta' => $this->hastaTexto()];
     }
 }

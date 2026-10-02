@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\Mes;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +24,24 @@ class Pedido extends Model
     public function totales()
     {
         return $this->hasMany(PedidoTotal::class);
+    }
+
+    /**
+     * Meses que se ofrecen para consultar pedidos, del más reciente al más viejo: al
+     * menos los últimos 12, o desde el mes del primer pedido si es anterior.
+     *
+     * @return \App\Support\Mes[]
+     */
+    public static function mesesConsultables()
+    {
+        $masViejo     = Mes::de(Carbon::now()->subMonths(11));
+        $primerPedido = self::min('created_at');
+
+        if ($primerPedido && Mes::de(Carbon::parse($primerPedido))->esAnteriorA($masViejo)) {
+            $masViejo = Mes::de(Carbon::parse($primerPedido));
+        }
+
+        return Mes::hastaHoyDesde($masViejo);
     }
 
     public function esPendiente()

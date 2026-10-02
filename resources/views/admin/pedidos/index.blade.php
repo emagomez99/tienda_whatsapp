@@ -15,9 +15,8 @@
 {{-- Filtros: búsqueda y rango de fechas. El estado va aparte, en pestañas con contadores. --}}
 @php
     $filtrosActivos = request()->filled('buscar') || $rango->estaActivo();
-    // Parámetros que se conservan al cambiar de pestaña de estado o al limpiar filtros.
+    // Parámetros que se conservan al cambiar de pestaña de estado.
     $conBusqueda = array_filter(['buscar' => request('buscar')]);
-    $conEstado   = array_filter(['estado' => $estado]);
 @endphp
 <div class="card mb-3">
     <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
@@ -37,25 +36,26 @@
                     <label for="buscar" class="form-label small mb-1">Buscar</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" name="buscar" id="buscar" class="form-control"
+                        <input type="search" name="buscar" id="buscar" class="form-control"
                                placeholder="Nombre, email, celular o #123" value="{{ request('buscar') }}">
                     </div>
                 </div>
-                <div class="col-6 col-md-2">
-                    <label for="desde" class="form-label small mb-1">Desde</label>
-                    <input type="date" name="desde" id="desde" class="form-control" value="{{ $rango->desdeTexto() }}">
-                </div>
-                <div class="col-6 col-md-2">
-                    <label for="hasta" class="form-label small mb-1">Hasta</label>
-                    <input type="date" name="hasta" id="hasta" class="form-control" value="{{ $rango->hastaTexto() }}">
-                </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-fill">Filtrar</button>
-                    @if($filtrosActivos)
-                        <a href="{{ route('admin.pedidos.index', $conEstado) }}" class="btn btn-outline-secondary" title="Quitar búsqueda y fechas">
+                {{-- Un solo campo para el rango: muestra "Todas las fechas" o "1 oct – 15 oct 2026"
+                     y al tocarlo abre un calendario (flatpickr). Lo que viaja son desde/hasta. --}}
+                <div class="col-md-4">
+                    <label for="fechas" class="form-label small mb-1">Fechas</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                        <input type="text" id="fechas" class="form-control bg-white" placeholder="Todas las fechas" readonly>
+                        <button type="button" id="fechas-limpiar" class="btn btn-outline-secondary {{ $rango->estaActivo() ? '' : 'd-none' }}" title="Todas las fechas">
                             <i class="bi bi-x-lg"></i>
-                        </a>
-                    @endif
+                        </button>
+                    </div>
+                    <input type="hidden" name="desde" id="desde" value="{{ $rango->desdeTexto() }}">
+                    <input type="hidden" name="hasta" id="hasta" value="{{ $rango->hastaTexto() }}">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
                 </div>
             </div>
         </form>
@@ -145,3 +145,57 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<style>
+    #fechas { cursor: pointer; }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
+<script>
+// Rango de fechas en un solo campo. Al cerrar el calendario con fechas nuevas se
+// filtra; con un solo día marcado se toma ese día completo.
+(function () {
+    var desde   = document.getElementById('desde');
+    var hasta   = document.getElementById('hasta');
+    var limpiar = document.getElementById('fechas-limpiar');
+    var form    = desde.form;
+    var inicial = desde.value + '|' + hasta.value;
+
+    function aTexto(fecha) {
+        return flatpickr.formatDate(fecha, 'Y-m-d');
+    }
+
+    var calendario = flatpickr('#fechas', {
+        mode: 'range',
+        // "1 oct 2026 – 15 oct 2026": meses abreviados en minúscula, como se escriben en castellano.
+        locale: Object.assign({}, flatpickr.l10ns.es, {
+            rangeSeparator: ' – ',
+            months: {
+                shorthand: flatpickr.l10ns.es.months.shorthand.map(function (m) { return m.toLowerCase(); }),
+                longhand: flatpickr.l10ns.es.months.longhand
+            }
+        }),
+        dateFormat: 'j M Y',
+        defaultDate: [desde.value, hasta.value].filter(Boolean).map(function (v) { return flatpickr.parseDate(v, 'Y-m-d'); }),
+        onClose: function (fechas) {
+            if (!fechas.length) return;
+            desde.value = aTexto(fechas[0]);
+            hasta.value = aTexto(fechas[fechas.length - 1]);
+            if (desde.value + '|' + hasta.value !== inicial) form.submit();
+        }
+    });
+
+    limpiar.addEventListener('click', function () {
+        calendario.clear();
+        desde.value = '';
+        hasta.value = '';
+        form.submit();
+    });
+})();
+</script>
+@endpush

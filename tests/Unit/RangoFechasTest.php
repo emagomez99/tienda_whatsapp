@@ -28,7 +28,7 @@ class RangoFechasTest extends TestCase
         $rango = RangoFechas::desdeTextos(null, '');
 
         $this->assertFalse($rango->estaActivo());
-        $this->assertSame([], $rango->parametros());
+        $this->assertSame(['desde' => '', 'hasta' => ''], $rango->parametros());
     }
 
     public function test_fechas_invalidas_se_ignoran()
@@ -45,7 +45,7 @@ class RangoFechasTest extends TestCase
         $this->assertTrue($rango->estaActivo());
         $this->assertSame('2026-09-01', $rango->desdeTexto());
         $this->assertSame('', $rango->hastaTexto());
-        $this->assertSame(['desde' => '2026-09-01'], $rango->parametros());
+        $this->assertSame(['desde' => '2026-09-01', 'hasta' => ''], $rango->parametros());
     }
 
     public function test_fechas_invertidas_se_dan_vuelta()
@@ -54,6 +54,14 @@ class RangoFechasTest extends TestCase
 
         $this->assertSame('2026-09-01', $rango->desdeTexto());
         $this->assertSame('2026-09-30', $rango->hastaTexto());
+    }
+
+    public function test_ultimos_30_dias_cuenta_hoy()
+    {
+        $this->assertSame(
+            ['desde' => '2026-09-16', 'hasta' => '2026-10-15'],
+            RangoFechas::ultimosDias(30)->parametros()
+        );
     }
 
     public function test_del_mes_cubre_el_mes_entero()

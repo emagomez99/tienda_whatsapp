@@ -70,9 +70,23 @@ class PedidosFiltroFechaTest extends TestCase
         return $respuesta->viewData('pedidos')->pluck('nombre')->sort()->values()->all();
     }
 
-    public function test_sin_fechas_lista_todos()
+    public function test_al_entrar_muestra_los_ultimos_30_dias()
     {
-        $this->assertSame(['Ana', 'Bruno', 'Carla', 'Dario'], $this->nombres($this->listado()->assertOk()));
+        $respuesta = $this->listado()->assertOk();
+
+        // Hoy es 15/10: entran del 16/9 en adelante.
+        $this->assertSame(['Bruno', 'Dario'], $this->nombres($respuesta));
+        $this->assertSame('2026-09-16', $respuesta->viewData('rango')->desdeTexto());
+        $this->assertSame('2026-10-15', $respuesta->viewData('rango')->hastaTexto());
+    }
+
+    public function test_fechas_vacias_es_todas_las_fechas()
+    {
+        $respuesta = $this->listado(['desde' => '', 'hasta' => ''])->assertOk();
+
+        $this->assertSame(['Ana', 'Bruno', 'Carla', 'Dario'], $this->nombres($respuesta));
+        // Las pestañas conservan "todas las fechas" en vez de volver a los 30 días.
+        $respuesta->assertSee('admin/pedidos?desde=&amp;hasta=&amp;estado=pendiente', false);
     }
 
     public function test_el_rango_incluye_los_dos_extremos_completos()
@@ -104,7 +118,7 @@ class PedidosFiltroFechaTest extends TestCase
 
     public function test_un_estado_desconocido_se_ignora()
     {
-        $this->assertCount(4, $this->listado(['estado' => 'cualquiera'])->assertOk()->viewData('pedidos'));
+        $this->assertCount(4, $this->listado(['estado' => 'cualquiera', 'desde' => '', 'hasta' => ''])->assertOk()->viewData('pedidos'));
     }
 
     public function test_el_dashboard_enlaza_a_pedidos_filtrados_por_el_mes()
@@ -119,5 +133,19 @@ class PedidosFiltroFechaTest extends TestCase
         $this->actingAs($admin)->get($this->urlTenant('admin?mes=2026-09'))
             ->assertOk()
             ->assertSee('admin/pedidos?estado=confirmado&amp;desde=2026-09-01&amp;hasta=2026-09-30', false);
+    }
+
+    public function test_sin_fechas_el_campo_dice_todas_las_fechas()
+    {
+        $this->listado(['desde' => '', 'hasta' => ''])->assertOk()
+            ->assertSee('placeholder="Todas las fechas"', false)
+            ->assertSee('name="desde" id="desde" value=""', false);
+    }
+
+    public function test_con_fechas_las_pasa_al_campo_de_rango()
+    {
+        $this->listado(['desde' => '2026-09-01', 'hasta' => '2026-09-30'])->assertOk()
+            ->assertSee('name="desde" id="desde" value="2026-09-01"', false)
+            ->assertSee('name="hasta" id="hasta" value="2026-09-30"', false);
     }
 }

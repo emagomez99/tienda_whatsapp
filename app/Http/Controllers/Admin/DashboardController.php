@@ -9,7 +9,6 @@ use App\Models\Proveedor;
 use App\Models\User;
 use App\Support\Mes;
 use App\Support\RangoFechas;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -25,15 +24,8 @@ class DashboardController extends Controller
         // Mes de las estadísticas de pedidos (por estado, facturado, pedidos listados).
         // Productos, stock, proveedores y pendientes son conteos del momento: no tienen
         // historial que filtrar, y lo pendiente se atiende hoy sea del mes que sea.
-        //
-        // Se ofrecen al menos los últimos 12 meses, o desde el primer pedido si es anterior.
-        $hace12Meses  = Mes::de(Carbon::now()->subMonths(11));
-        $primerPedido = Pedido::min('created_at');
-        $masViejo     = $primerPedido ? Mes::de(Carbon::parse($primerPedido)) : $hace12Meses;
-        if ($hace12Meses->esAnteriorA($masViejo)) {
-            $masViejo = $hace12Meses;
-        }
-        $meses = Mes::hastaHoyDesde($masViejo);
+        $meses    = Pedido::mesesConsultables();
+        $masViejo = end($meses);
 
         $mes = Mes::desdeParametro($request->query('mes'));
         if ($mes->esAnteriorA($masViejo)) {
