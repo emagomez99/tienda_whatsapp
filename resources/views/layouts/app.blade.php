@@ -176,7 +176,8 @@
             outline: none;
         }
         .drawer-chevron { transition: transform .2s ease; font-size: .85rem; opacity: .7; }
-        .drawer-item[aria-expanded="true"] .drawer-chevron { transform: rotate(180deg); }
+        .drawer-item[aria-expanded="true"] .drawer-chevron,
+        .drawer-subitem[aria-expanded="true"] .drawer-chevron { transform: rotate(180deg); }
         .drawer-subitem {
             display: block;
             color: rgba(var(--color-primary-texto-rgb), .75);

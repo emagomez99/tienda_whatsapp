@@ -10,6 +10,10 @@
     </a>
 </div>
 
+@if($menus->count() > 0)
+    @include('admin.menus.partials.vista-previa')
+@endif
+
 <div class="card">
     <div class="card-header bg-light">
         <span>Estructura del Menú</span>

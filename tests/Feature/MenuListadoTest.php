@@ -159,4 +159,42 @@ class MenuListadoTest extends TestCase
 
         $this->assertSame(['Asus', 'Samsung'], $orden());
     }
+
+    /** @test */
+    public function la_lista_muestra_arriba_como_queda_el_menu_en_la_tienda()
+    {
+        $this->enTenant(function () {
+            Menu::create(['nombre' => 'Oculto', 'slug' => 'oculto', 'tipo_enlace' => 'ninguno', 'activo' => false, 'orden' => 9]);
+        });
+
+        $html = $this->comoAdmin()->get($this->urlTenant('admin/menus'))->assertOk()->getContent();
+
+        $vista = substr($html, strpos($html, 'id="vista-previa-menu"'), 6000);
+
+        $this->assertStringContainsString('Así se ve en la tienda', $vista);
+        // Cada opción lleva a su fila de la lista.
+        $this->assertStringContainsString('href="#menu-' . $this->ids['asus'] . '"', $vista);
+        // Los inactivos no aparecen, como en la tienda.
+        $this->assertStringNotContainsString('Oculto', $vista);
+    }
+
+    /**
+     * El menú lateral del celular llegaba sólo al segundo nivel: un submenú con
+     * submenús quedaba sin forma de abrirse.
+     *
+     * @test
+     */
+    public function el_menu_lateral_del_celular_llega_al_tercer_nivel()
+    {
+        $this->enTenant(function () {
+            Menu::create(['nombre' => 'Asus Gamer', 'slug' => 'asus-gamer', 'tipo_enlace' => 'etiqueta',
+                'enlace_id' => $this->ids['marca'], 'enlace_valor' => 'Asus', 'parent_id' => $this->ids['asus'],
+                'activo' => true, 'orden' => 0]);
+        });
+
+        $html = $this->get($this->urlTenant('/'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-bs-target="#drawer-sub-' . $this->ids['asus'] . '"', $html);
+        $this->assertStringContainsString('catalogo/asus-gamer', $html);
+    }
 }
