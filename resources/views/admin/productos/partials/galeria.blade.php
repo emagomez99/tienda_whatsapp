@@ -70,9 +70,14 @@
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
                             <input type="url" class="form-control" id="galeria-url" placeholder="Pegá la URL de una imagen (https://...)">
+                            <button type="button" class="btn btn-outline-secondary fw-bold" id="galeria-buscar-google"
+                                    title="Buscar fotos del producto en Google Imágenes" aria-label="Buscar en Google Imágenes">G</button>
                             <button type="button" class="btn btn-outline-primary" id="galeria-agregar-url">Agregar</button>
                         </div>
                         <small class="text-danger d-none" id="galeria-url-error">Tiene que empezar con http:// o https://</small>
+                        <small class="text-muted d-block" id="galeria-url-ayuda">
+                            Con <strong>G</strong> se buscan fotos del producto en Google: abrí la imagen, elegí «Copiar dirección de imagen» y pegala acá.
+                        </small>
                     </div>
                 @endif
                 @if($permiteArch)
@@ -251,6 +256,23 @@
         imagenes.push({ ficha: 'url:' + url, src: url, externa: true });
         inputUrl.value = '';
         actualizar();
+    }
+
+    // Busca el nombre del producto en Google Imágenes, en otra pestaña para no perder
+    // lo que se está cargando. Sin nombre no hay qué buscar: se lleva al campo.
+    var buscarGoogle = document.getElementById('galeria-buscar-google');
+    if (buscarGoogle) {
+        buscarGoogle.addEventListener('click', function () {
+            var nombre = document.getElementById('descripcion');
+            var texto = nombre ? nombre.value.trim() : '';
+            if (!texto) {
+                if (nombre) { nombre.focus(); nombre.classList.add('is-invalid'); }
+                setTimeout(function () { if (nombre) nombre.classList.remove('is-invalid'); }, 1500);
+                return;
+            }
+            window.open('https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(texto), '_blank', 'noopener');
+            inputUrl.focus();
+        });
     }
 
     if (inputUrl) {
