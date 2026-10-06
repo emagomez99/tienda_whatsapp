@@ -302,7 +302,9 @@ class TiendaController extends Controller
         $query->where(function ($q) use ($buscar) {
             $q->where('descripcion', 'ilike', "%{$buscar}%")
               ->orWhere('id_proveedor', 'ilike', "%{$buscar}%")
-              ->orWhereHas('etiquetas', function ($q2) use ($buscar) {
+              // Sólo lo que el cliente ve: buscar por un dato interno (un valor o una
+              // etiqueta ocultos) no tiene que traer productos que no lo muestran.
+              ->orWhereHas('etiquetasPublicas', function ($q2) use ($buscar) {
                   $q2->where('producto_etiqueta.valor', 'ilike', "%{$buscar}%");
               });
         });

@@ -133,6 +133,28 @@ class EtiquetaValorAdminTest extends TestCase
         );
     }
 
+    /**
+     * Un valor oculto es un dato interno: buscarlo no tiene que traer productos.
+     *
+     * @test
+     */
+    public function el_buscador_no_encuentra_productos_por_un_valor_oculto()
+    {
+        $total = function () {
+            return $this->get($this->urlTenant('/?buscar=afnann'))
+                ->assertStatus(200)
+                ->viewData('productos')
+                ->total();
+        };
+
+        $this->assertSame(1, $total());
+
+        $this->comoAdmin()
+            ->patch($this->urlTenant('admin/etiqueta-valores/' . $this->ids['afnann'] . '/visibilidad'));
+
+        $this->assertSame(0, $total());
+    }
+
     /** @test */
     public function renombrar_actualiza_productos_y_menus()
     {

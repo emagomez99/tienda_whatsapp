@@ -248,10 +248,13 @@ class Producto extends Model
      */
     public function etiquetasPublicas()
     {
+        // Subconsulta y no join: un join no sobrevive a whereHas, y el buscador de la
+        // tienda filtra con whereHas sobre esta misma relación.
         return $this->etiquetas()
-            ->join('etiqueta_valores', 'etiqueta_valores.id', '=', 'producto_etiqueta.etiqueta_valor_id')
             ->where('etiquetas.visible_usuarios', true)
-            ->where('etiqueta_valores.visible', true);
+            ->whereIn('producto_etiqueta.etiqueta_valor_id', function ($q) {
+                $q->select('id')->from('etiqueta_valores')->where('visible', true);
+            });
     }
 
     public function especificaciones()
