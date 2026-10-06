@@ -85,12 +85,10 @@
         simbolos: @json($monedas->mapWithKeys(function ($m) { return [$m->id => $m->simbolo]; })),
         mostrarSinStock: @json(App\Models\Configuracion::mostrarProductosSinStock()),
         // En edición el stock no es un campo: se ajusta con movimientos.
-        stockGuardado: @json($productoPrevio ? (int) $productoPrevio->stock : null),
-        imagenGuardada: @json($productoPrevio && $productoPrevio->url_imagen ? $productoPrevio->imagen_url : null)
+        stockGuardado: @json($productoPrevio ? (int) $productoPrevio->stock : null)
     };
 
     var el = function (id) { return document.getElementById(id); };
-    var imagenArchivoUrl = null;   // dataURL del archivo elegido, si hay
 
     function texto(valor) {
         var span = document.createElement('span');
@@ -115,13 +113,10 @@
         return formatearPrecio(isNaN(valor) ? 0 : valor, simbolo);
     }
 
+    // La principal es la primera de la galería (partials/galeria).
     function imagen() {
-        if (imagenArchivoUrl) return imagenArchivoUrl;
-        var url = el('imagen_url');
-        if (url && /^https?:\/\//i.test(url.value.trim())) return url.value.trim();
-        var eliminar = el('eliminar_imagen');
-        if (DATOS.imagenGuardada && !(eliminar && eliminar.value)) return DATOS.imagenGuardada;
-        return '/img/no-image.svg';
+        var primera = form.querySelector('#galeria-items .galeria-item img');
+        return primera ? primera.getAttribute('src') : '/img/no-image.svg';
     }
 
     function stock() {
@@ -188,7 +183,7 @@
 
     // Un solo listener para todo el formulario: también alcanza a las filas de
     // etiquetas y especificaciones que se agregan después. El "click" cubre los
-    // botones que cambian campos ocultos (eliminar imagen) sin disparar eventos.
+    // botones que cambian campos ocultos sin disparar eventos.
     var pendiente = false;
     function programar() {
         if (pendiente) return;
@@ -196,17 +191,6 @@
         setTimeout(function () { pendiente = false; actualizar(); }, 30);
     }
     ['input', 'change', 'click'].forEach(function (evento) { form.addEventListener(evento, programar); });
-
-    var archivo = el('imagen_archivo');
-    if (archivo) {
-        archivo.addEventListener('change', function () {
-            imagenArchivoUrl = null;
-            if (!archivo.files.length) return programar();
-            var lector = new FileReader();
-            lector.onload = function (e) { imagenArchivoUrl = e.target.result; actualizar(); };
-            lector.readAsDataURL(archivo.files[0]);
-        });
-    }
 
     actualizar();
 })();

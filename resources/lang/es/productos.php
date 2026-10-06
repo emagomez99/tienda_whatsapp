@@ -39,10 +39,7 @@ return [
         'por_encargue' => "Permite que el cliente lo solicite aunque no haya stock. Aparece con la etiqueta 'Disponible por encargue' en la tienda.",
 
         'seo' => 'Si dejás estos campos vacíos, se usa el nombre del producto como título y un resumen de la descripción detallada como meta description.',
-
-        'imagen_principal' => 'Imagen que aparece en el listado de productos y en la vista de detalle. Se recomienda fondo blanco o transparente.',
-
-        'imagenes_adicionales' => 'Se muestran en el carrusel de la vista detallada del producto. Podés agregar varias antes de guardar. Con ★ podés promover cualquiera como imagen principal.',
+        'galeria' => 'La primera imagen es la principal: la que se ve en el listado y en Google. Las demás aparecen en el carrusel de la ficha. Arrastrá para cambiar el orden, o usá ★ para pasar una al primer lugar. Se recomienda fondo blanco o transparente.',
 
         'etiquetas' => 'Categorizan el producto y habilitan los filtros de la tienda. Cuáles lleva lo define el proveedor; las marcadas con * son obligatorias. Al escribir el valor se sugieren los que ya existen, con cuántos productos los usan: elegir uno de esos evita duplicados como "Asus" y "Asuz".',
 

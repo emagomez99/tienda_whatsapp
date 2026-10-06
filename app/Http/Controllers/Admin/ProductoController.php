@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Configuracion;
 use App\Models\Etiqueta;
 use App\Models\Moneda;
 use App\Models\Producto;
 use App\Models\ProductoEspecificacion;
-use App\Models\ProductoImagen;
 use App\Models\StockMovimiento;
 use App\Models\Proveedor;
+use App\Services\GaleriaProducto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -78,13 +77,10 @@ class ProductoController extends Controller
         $etiquetasObligatorias = $this->mapEtiquetasObligatorias($proveedores);
         $etiquetasAplicables = $this->mapEtiquetasAplicables($proveedores);
         $monedaDefaultId = Moneda::idPorDefecto();
-        $imagenesAdicionalesActivas = Configuracion::imagenesAdicionalesActivas();
-        $maxImagenesAdicionales     = Configuracion::maxImagenesAdicionales();
 
         return view('admin.productos.create', compact(
             'proveedores', 'etiquetas', 'monedas',
-            'etiquetasObligatorias', 'etiquetasAplicables', 'monedaDefaultId',
-            'imagenesAdicionalesActivas', 'maxImagenesAdicionales'
+            'etiquetasObligatorias', 'etiquetasAplicables', 'monedaDefaultId'
         ));
     }
 
@@ -106,21 +102,15 @@ class ProductoController extends Controller
             'disponible' => 'boolean',
             'stock' => 'required|integer|min:0',
             'por_encargue' => 'boolean',
-            'imagen_archivo'         => 'nullable|image|max:2048',
-            'imagen_url'             => 'nullable|url|max:500',
-            'imagenes_nuevas'        => 'nullable|array',
-            'imagenes_nuevas.*'      => 'image|max:2048',
-            'imagenes_urls_nuevas'   => 'nullable|array',
-            'imagenes_urls_nuevas.*' => 'nullable|url|max:2048',
             'etiquetas' => 'nullable|array',
             'etiquetas.*.etiqueta_id' => 'nullable|exists:etiquetas,id',
             'etiquetas.*.valor' => 'nullable|string|max:255',
             'especificaciones' => 'nullable|array',
             'especificaciones.*.clave' => 'nullable|string|max:255',
             'especificaciones.*.valor' => 'nullable|string|max:255',
-        ] + $this->reglasDePrecio($request), [
+        ] + $this->reglasDePrecio($request) + GaleriaProducto::reglas(), [
             'slug.regex' => 'La dirección web solo puede tener letras minúsculas, números y guiones.',
-        ] + $this->mensajesDePrecio());
+        ] + $this->mensajesDePrecio() + GaleriaProducto::mensajes());
 
         // Switch "Generar automáticamente" prendido (o ausente, ej. una API externa):
         // ignoramos cualquier slug que haya llegado y dejamos que el boot() del modelo
@@ -136,13 +126,7 @@ class ProductoController extends Controller
             $validated['detalle'] = strip_tags($validated['detalle'], '<p><br><b><strong><i><em><u><ul><ol><li><a><h1><h2><h3><h4><blockquote><pre><code><img><table><thead><tbody><tr><th><td>');
         }
 
-        // Imagen principal (archivo tiene prioridad sobre URL)
-        if ($request->hasFile('imagen_archivo')) {
-            $validated['url_imagen'] = $request->file('imagen_archivo')->store(tenant('id') . '/productos', 'public');
-        } elseif ($request->filled('imagen_url')) {
-            $validated['url_imagen'] = $request->imagen_url;
-        }
-        unset($validated['imagen_archivo'], $validated['imagen_url']);
+        unset($validated['galeria'], $validated['galeria_archivos']);
 
         $this->validarEtiquetasObligatorias($request, $validated['proveedor_id']);
 
@@ -182,35 +166,7 @@ class ProductoController extends Controller
             }
         }
 
-        // Imágenes adicionales
-        if (Configuracion::imagenesAdicionalesActivas()) {
-            $max = Configuracion::maxImagenesAdicionales();
-            $actuales = 0;
-
-            if ($request->hasFile('imagenes_nuevas')) {
-                foreach ($request->file('imagenes_nuevas') as $archivo) {
-                    if ($actuales >= $max) break;
-                    ProductoImagen::create([
-                        'producto_id' => $producto->id,
-                        'url'         => $archivo->store(tenant('id') . '/productos', 'public'),
-                        'orden'       => 0,
-                    ]);
-                    $actuales++;
-                }
-            }
-
-            if (!empty($validated['imagenes_urls_nuevas'])) {
-                foreach ($validated['imagenes_urls_nuevas'] as $urlNueva) {
-                    if (!$urlNueva || $actuales >= $max) continue;
-                    ProductoImagen::create([
-                        'producto_id' => $producto->id,
-                        'url'         => $urlNueva,
-                        'orden'       => 0,
-                    ]);
-                    $actuales++;
-                }
-            }
-        }
+        $this->sincronizarGaleria($request, $producto);
 
         return redirect()->route('admin.productos.index')
             ->with('success', 'Producto creado correctamente');
@@ -225,13 +181,10 @@ class ProductoController extends Controller
         $etiquetasObligatorias = $this->mapEtiquetasObligatorias($proveedores);
         $etiquetasAplicables = $this->mapEtiquetasAplicables($proveedores);
         $monedaDefaultId = Moneda::idPorDefecto();
-        $imagenesAdicionalesActivas = Configuracion::imagenesAdicionalesActivas();
-        $maxImagenesAdicionales     = Configuracion::maxImagenesAdicionales();
 
         return view('admin.productos.edit', compact(
             'producto', 'proveedores', 'etiquetas', 'monedas', 'monedaDefaultId',
-            'etiquetasObligatorias', 'etiquetasAplicables',
-            'imagenesAdicionalesActivas', 'maxImagenesAdicionales'
+            'etiquetasObligatorias', 'etiquetasAplicables'
         ));
     }
 
@@ -252,26 +205,15 @@ class ProductoController extends Controller
             'meta_description'     => 'nullable|string|max:160',
             'disponible'           => 'boolean',
             'por_encargue'         => 'boolean',
-            'imagen_archivo'       => 'nullable|image|max:2048',
-            'imagen_url'           => 'nullable|url|max:500',
-            'eliminar_imagen'      => 'nullable|boolean',
-            'hacer_portada_id'     => 'nullable|integer|exists:producto_imagenes,id',
-            'imagenes_nuevas'      => 'nullable|array',
-            'imagenes_nuevas.*'    => 'image|max:2048',
-            'imagen_url_nueva'       => 'nullable|url|max:500',
-            'imagenes_urls_nuevas'   => 'nullable|array',
-            'imagenes_urls_nuevas.*' => 'nullable|url|max:2048',
-            'imagenes_eliminar'    => 'nullable|array',
-            'imagenes_eliminar.*'  => 'integer',
             'etiquetas'            => 'nullable|array',
             'etiquetas.*.etiqueta_id' => 'nullable|exists:etiquetas,id',
             'etiquetas.*.valor'    => 'nullable|string|max:255',
             'especificaciones'     => 'nullable|array',
             'especificaciones.*.clave' => 'nullable|string|max:255',
             'especificaciones.*.valor' => 'nullable|string|max:255',
-        ] + $this->reglasDePrecio($request), [
+        ] + $this->reglasDePrecio($request) + GaleriaProducto::reglas(), [
             'slug.regex' => 'La dirección web solo puede tener letras minúsculas, números y guiones.',
-        ] + $this->mensajesDePrecio());
+        ] + $this->mensajesDePrecio() + GaleriaProducto::mensajes());
 
         // Cambiar el slug es seguro: la URL resuelve por id, así que las direcciones
         // ya publicadas siguen funcionando (redirigen 301 a la nueva).
@@ -289,91 +231,15 @@ class ProductoController extends Controller
             $validated['detalle'] = strip_tags($validated['detalle'], '<p><br><b><strong><i><em><u><ul><ol><li><a><h1><h2><h3><h4><blockquote><pre><code><img><table><thead><tbody><tr><th><td>');
         }
 
-        // --- Imagen principal ---
-        if ($request->boolean('eliminar_imagen')) {
-            $this->eliminarImagenLocal($producto);
-            $validated['url_imagen'] = null;
-        } elseif ($request->hasFile('imagen_archivo')) {
-            $this->eliminarImagenLocal($producto);
-            $validated['url_imagen'] = $request->file('imagen_archivo')->store(tenant('id') . '/productos', 'public');
-        } elseif ($request->filled('imagen_url')) {
-            $this->eliminarImagenLocal($producto);
-            $validated['url_imagen'] = $request->imagen_url;
-        }
-
-        // Promover imagen adicional a principal (swap)
-        if ($request->filled('hacer_portada_id') && !$request->hasFile('imagen_archivo') && !$request->filled('imagen_url') && !$request->boolean('eliminar_imagen')) {
-            $nueva = ProductoImagen::where('id', $request->hacer_portada_id)
-                ->where('producto_id', $producto->id)
-                ->first();
-            if ($nueva) {
-                if ($producto->url_imagen) {
-                    ProductoImagen::create(['producto_id' => $producto->id, 'url' => $producto->url_imagen, 'orden' => 0]);
-                }
-                $validated['url_imagen'] = $nueva->url;
-                $nueva->delete();
-            }
-        }
-
-        // --- Imágenes adicionales ---
-        if (!empty($validated['imagenes_eliminar'])) {
-            $aEliminar = ProductoImagen::where('producto_id', $producto->id)
-                ->whereIn('id', $validated['imagenes_eliminar'])->get();
-            foreach ($aEliminar as $img) {
-                if (!$img->esExterna()) {
-                    Storage::disk('public')->delete($img->url);
-                }
-                $img->delete();
-            }
-        }
-
-        if (Configuracion::imagenesAdicionalesActivas()) {
-            $max = Configuracion::maxImagenesAdicionales();
-            $actuales = $producto->imagenes()->count();
-
-            if ($request->hasFile('imagenes_nuevas')) {
-                foreach ($request->file('imagenes_nuevas') as $archivo) {
-                    if ($actuales >= $max) break;
-                    ProductoImagen::create([
-                        'producto_id' => $producto->id,
-                        'url'         => $archivo->store(tenant('id') . '/productos', 'public'),
-                        'orden'       => 0,
-                    ]);
-                    $actuales++;
-                }
-            }
-
-            if ($request->filled('imagen_url_nueva') && $actuales < $max) {
-                ProductoImagen::create([
-                    'producto_id' => $producto->id,
-                    'url'         => $request->imagen_url_nueva,
-                    'orden'       => 0,
-                ]);
-                $actuales++;
-            }
-
-            if (!empty($validated['imagenes_urls_nuevas'])) {
-                foreach ($validated['imagenes_urls_nuevas'] as $urlNueva) {
-                    if (!$urlNueva || $actuales >= $max) continue;
-                    ProductoImagen::create([
-                        'producto_id' => $producto->id,
-                        'url'         => $urlNueva,
-                        'orden'       => 0,
-                    ]);
-                    $actuales++;
-                }
-            }
-        }
-
-        unset($validated['imagen_archivo'], $validated['imagen_url'], $validated['eliminar_imagen'],
-              $validated['hacer_portada_id'], $validated['imagenes_nuevas'],
-              $validated['imagen_url_nueva'], $validated['imagenes_urls_nuevas'], $validated['imagenes_eliminar']);
+        unset($validated['galeria'], $validated['galeria_archivos']);
 
         $this->validarEtiquetasObligatorias($request, $validated['proveedor_id']);
 
         $producto->fill($this->sinPrecioDerivado($validated));
         $producto->ajustarPrecioSegunModo();
         $producto->save();
+
+        $this->sincronizarGaleria($request, $producto);
 
         // Sincronizar etiquetas con valores
         $this->sincronizarEtiquetas($producto, $request->input('etiquetas', []));
@@ -395,6 +261,24 @@ class ProductoController extends Controller
         $backParams = $request->input('_back', '');
         $backUrl = route('admin.productos.index') . ($backParams ? '?' . $backParams : '');
         return redirect($backUrl)->with('success', 'Producto actualizado correctamente');
+    }
+
+    /**
+     * Las imágenes llegan como la galería entera, en orden (ver GaleriaProducto).
+     * Sin el campo galeria_enviada no se tocan: un pedido que no viene del formulario
+     * no tiene por qué borrar las imágenes.
+     */
+    private function sincronizarGaleria(Request $request, Producto $producto)
+    {
+        if (!$request->boolean('galeria_enviada')) {
+            return;
+        }
+
+        (new GaleriaProducto())->sincronizar(
+            $producto,
+            $request->input('galeria', []),
+            $request->file('galeria_archivos', [])
+        );
     }
 
     public function destroy(Producto $producto)

@@ -12,11 +12,13 @@
 --}}
 <div class="position-sticky bottom-0 bg-white border-top py-2 mt-3" style="z-index: 5;">
     <div class="d-flex justify-content-end align-items-center gap-2">
-        <span class="text-warning-emphasis small me-auto d-none" id="cambios-sin-guardar">
-            <i class="bi bi-circle-fill" style="font-size:.5rem; vertical-align:middle;"></i> Cambios sin guardar
+        {{-- En celular el texto se acorta para que los botones entren en una línea. --}}
+        <span class="text-warning-emphasis small me-auto text-nowrap d-none" id="cambios-sin-guardar">
+            <i class="bi bi-circle-fill" style="font-size:.5rem; vertical-align:middle;"></i>
+            <span class="d-none d-sm-inline">Cambios sin guardar</span><span class="d-sm-none">Sin guardar</span>
         </span>
-        <a href="{{ $cancelarUrl }}" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary px-4">
+        <a href="{{ $cancelarUrl }}" class="btn btn-outline-secondary text-nowrap">Cancelar</a>
+        <button type="submit" class="btn btn-primary px-3 px-sm-4 text-nowrap">
             <i class="bi bi-check2"></i> {{ $textoGuardar }}
         </button>
     </div>
