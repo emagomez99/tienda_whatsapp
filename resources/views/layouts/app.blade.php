@@ -198,30 +198,70 @@
         }
         .drawer-footer-link:hover { color: var(--color-primary-texto); }
 
-        /* Estilos para submenús anidados */
-        .dropdown-menu .dropend .dropdown-menu {
-            top: 0;
-            left: 100%;
-            margin-left: 0;
+        /* Menú desplegable de la tienda (escritorio; en celular se usa el drawer).
+           Paneles con sombra y esquinas redondeadas, opciones con el color de la
+           tienda al pasar el mouse, y submenús alineados con la opción que los abre. */
+        .navbar .dropdown-menu {
+            --menu-padding: .4rem;
+            border: 0;
+            border-radius: .75rem;
+            padding: var(--menu-padding);
+            min-width: 13rem;
+            box-shadow: 0 .5rem 1.75rem rgba(0, 0, 0, .14), 0 0 0 1px rgba(0, 0, 0, .04);
         }
-        .dropdown-menu .dropend .dropdown-toggle::after {
-            vertical-align: middle;
-            border-left: .3em solid;
-            border-top: .3em solid transparent;
-            border-bottom: .3em solid transparent;
-            border-right: 0;
-            margin-left: auto;
+        .navbar .dropdown-item {
+            border-radius: .5rem;
+            padding: .5rem .85rem;
+            color: #212529;
         }
-        .dropdown-menu .dropend .dropdown-item {
+        .navbar .dropdown-item:hover,
+        .navbar .dropdown-item:focus,
+        .navbar .dropend:hover > .dropdown-item,
+        .navbar .dropend > .dropdown-item.show {
+            background-color: color-mix(in srgb, var(--color-primary) 25%, white);
+            color: #212529;
+        }
+        .navbar .dropdown-divider { margin: .3rem .25rem; }
+
+        /* Opción que abre un submenú: texto a la izquierda, chevron a la derecha y
+           espacio entre los dos (antes la flecha quedaba pegada al texto). */
+        .dropdown-menu .dropend > .dropdown-toggle {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 1.25rem;
+        }
+        .dropdown-menu .dropend > .dropdown-toggle::after {
+            content: "\F285";                     /* bi-chevron-right */
+            font-family: "bootstrap-icons";
+            font-size: .75rem;
+            border: 0;
+            margin: 0;
+            vertical-align: 0;
+            opacity: .6;
+        }
+
+        /* El submenú sale al costado y con su primera opción a la altura de la que
+           lo abrió: se compensa el padding del panel. */
+        .dropdown-menu .dropend { position: relative; }
+        .dropdown-menu .dropend > .dropdown-menu {
+            position: absolute;
+            top: calc(-1 * var(--menu-padding));
+            left: 100%;
+            margin: 0 0 0 .25rem;
+        }
+        /* Puente invisible sobre el espacio entre los dos paneles: sin él, al cruzar
+           con el mouse se pierde el hover y el submenú se cierra. */
+        .dropdown-menu .dropend > .dropdown-menu::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: -.5rem;
+            width: .5rem;
         }
         .dropdown-menu .dropend:hover > .dropdown-menu {
             display: block;
-        }
-        .dropdown-menu .dropend > .dropdown-menu {
-            position: absolute;
         }
 
         /* Estilos para menú sidebar */
