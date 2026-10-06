@@ -96,17 +96,31 @@
             lista.innerHTML = '';
             opciones = [];
 
+            // Cada sugerencia es un texto o {valor, detalle}: el detalle (ej. cuántos
+            // productos lo usan) se muestra a la derecha, pero lo que se elige es el valor.
+            valores = valores.map(function (v) {
+                return typeof v === 'string' ? { valor: v, detalle: '' } : v;
+            });
+
             valores.forEach(function (v) {
                 var item = document.createElement('div');
-                item.className = 'combo-item';
-                item.textContent = v;
-                item.addEventListener('mousedown', function (e) { e.preventDefault(); elegir(v); });
+                item.className = 'combo-item d-flex justify-content-between gap-2';
+                var texto = document.createElement('span');
+                texto.textContent = v.valor;
+                item.appendChild(texto);
+                if (v.detalle) {
+                    var detalle = document.createElement('small');
+                    detalle.className = 'text-muted text-nowrap';
+                    detalle.textContent = v.detalle;
+                    item.appendChild(detalle);
+                }
+                item.addEventListener('mousedown', function (e) { e.preventDefault(); elegir(v.valor); });
                 lista.appendChild(item);
-                opciones.push({ el: item, valor: v });
+                opciones.push({ el: item, valor: v.valor });
             });
 
             // Crear un valor nuevo, como acción explícita.
-            var existe = valores.some(function (v) { return v.toLowerCase() === escrito.toLowerCase(); });
+            var existe = valores.some(function (v) { return v.valor.toLowerCase() === escrito.toLowerCase(); });
             // Con data-combo-sin-nuevo sólo se elige entre lo que existe: un menú que
             // filtra por un valor que ningún producto tiene quedaría vacío.
             if (escrito !== '' && !existe && !input.hasAttribute('data-combo-sin-nuevo')) {

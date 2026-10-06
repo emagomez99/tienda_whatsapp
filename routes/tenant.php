@@ -94,6 +94,7 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::resource('perfiles', PerfilController::class)->parameters(['perfiles' => 'perfil']);
         Route::resource('etiquetas', EtiquetaController::class);
         Route::get('/etiquetas/{etiqueta}/valores', [EtiquetaController::class, 'buscarValores'])->name('etiquetas.valores');
+        Route::get('/etiquetas/{etiqueta}/valores/estado', [EtiquetaController::class, 'estadoValor'])->name('etiquetas.valores.estado');
         Route::patch('/etiquetas/{etiqueta}/visibilidad', [EtiquetaController::class, 'cambiarVisibilidad'])->name('etiquetas.visibilidad');
         Route::patch('/etiqueta-valores/{valor}/visibilidad', [EtiquetaValorController::class, 'cambiarVisibilidad'])->name('etiqueta-valores.visibilidad');
         Route::put('/etiqueta-valores/{valor}', [EtiquetaValorController::class, 'update'])->name('etiqueta-valores.update');

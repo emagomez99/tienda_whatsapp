@@ -11,7 +11,7 @@ class EtiquetaController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permiso:etiquetas.ver')->only(['index', 'show', 'buscarValores']);
+        $this->middleware('permiso:etiquetas.ver')->only(['index', 'show', 'buscarValores', 'estadoValor']);
         $this->middleware('permiso:etiquetas.crear')->only(['create', 'store']);
         $this->middleware('permiso:etiquetas.editar')->only(['edit', 'update', 'cambiarVisibilidad']);
         $this->middleware('permiso:etiquetas.eliminar')->only(['destroy']);
@@ -156,7 +156,13 @@ class EtiquetaController extends Controller
     {
         $valores = $etiqueta->valoresEnUso((string) $request->get('q', ''), ProductoController::MAX_SUGERENCIAS);
 
-        return response()->json($valores);
+        return response()->json($valores->map->comoSugerencia()->values());
+    }
+
+    /** Si lo escrito ya es un valor de la etiqueta o es nuevo (ver EstadoValorEtiqueta). */
+    public function estadoValor(Request $request, Etiqueta $etiqueta)
+    {
+        return response()->json($etiqueta->estadoDeValor((string) $request->get('valor', '')));
     }
 
     private function sincronizarProveedores(Etiqueta $etiqueta, array $proveedoresConfig)

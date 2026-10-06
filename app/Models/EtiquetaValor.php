@@ -41,6 +41,22 @@ class EtiquetaValor extends Model
         return $this->hasMany(ProductoEtiqueta::class, 'etiqueta_valor_id');
     }
 
+    /**
+     * Cómo se ofrece en los autocompletados: el valor y cuántos productos lo usan,
+     * para distinguir el "oficial" de uno cargado una vez por error.
+     *
+     * @return array{valor: string, detalle: string}
+     */
+    public function comoSugerencia(): array
+    {
+        $productos = (int) $this->asignaciones_count;
+
+        return [
+            'valor'   => $this->valor,
+            'detalle' => $productos . ($productos === 1 ? ' producto' : ' productos'),
+        ];
+    }
+
     public function scopeBuscar($query, string $buscar)
     {
         $buscar = trim($buscar);

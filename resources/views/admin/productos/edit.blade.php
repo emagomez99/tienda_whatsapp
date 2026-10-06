@@ -316,73 +316,7 @@
             </div>
             @endif {{-- imagenesAdicionalesActivas --}}
 
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-tags"></i> Etiquetas
-                        @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.etiquetas'), 'lugar' => 'right', 'grande' => true])
-                    </h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-etiqueta">
-                        <i class="bi bi-plus"></i> Agregar
-                    </button>
-                </div>
-                <div class="card-body">
-                    @php
-                        $etiquetasProducto = $producto->etiquetas->keyBy('id');
-                    @endphp
-                    @include('admin.productos.partials.etiquetas-bloqueo')
-                    <div id="etiquetas-container">
-                        @forelse($producto->etiquetas as $index => $etiquetaProd)
-                            <div class="row mb-2 etiqueta-row">
-                                <div class="col-md-5">
-                                    <select class="form-select etiqueta-select" name="etiquetas[{{ $index }}][etiqueta_id]" data-index="{{ $index }}">
-                                        <option value="">Seleccionar etiqueta</option>
-                                        @foreach($etiquetas as $etiqueta)
-                                            <option value="{{ $etiqueta->id }}" {{ $etiquetaProd->id == $etiqueta->id ? 'selected' : '' }}>{{ $etiqueta->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-5 position-relative">
-                                    <input type="text" class="form-control etiqueta-valor" name="etiquetas[{{ $index }}][valor]" placeholder="Valor (ej: Filtro, Auto)" value="{{ $etiquetaProd->pivot->valor }}" data-combo data-combo-fila=".etiqueta-row" data-combo-desde=".etiqueta-select" data-combo-url-con="{{ route('admin.etiquetas.valores', ['etiqueta' => '__ID__']) }}" autocomplete="off">
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-outline-danger btn-eliminar-etiqueta">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="row mb-2 etiqueta-row">
-                                <div class="col-md-5">
-                                    <select class="form-select etiqueta-select" name="etiquetas[0][etiqueta_id]" data-index="0">
-                                        <option value="">Seleccionar etiqueta</option>
-                                        @foreach($etiquetas as $etiqueta)
-                                            <option value="{{ $etiqueta->id }}">{{ $etiqueta->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-5 position-relative">
-                                    <input type="text" class="form-control etiqueta-valor" name="etiquetas[0][valor]" placeholder="Valor (ej: Filtro, Auto)" data-combo data-combo-fila=".etiqueta-row" data-combo-desde=".etiqueta-select" data-combo-url-con="{{ route('admin.etiquetas.valores', ['etiqueta' => '__ID__']) }}" autocomplete="off">
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-outline-danger btn-eliminar-etiqueta">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        @endforelse
-                    </div>
-                    <div class="d-none" id="etiquetas-hint">
-                        <small class="text-muted d-block">Elegí una etiqueta y escribí el valor que le corresponde a este producto.</small>
-                        <small class="text-muted d-block mt-1">
-                            Las marcadas como <span class="badge bg-danger">Obligatoria</span>
-                            las exige el proveedor: sin completarlas no vas a poder guardar.
-                        </small>
-                    </div>
-                    @error('etiquetas')
-                        <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
+            @include('admin.productos.partials.etiquetas', ['valoresIniciales' => session()->hasOldInput() ? old('etiquetas', []) : $producto->etiquetas->map(function ($e) { return ['etiqueta_id' => $e->id, 'valor' => $e->pivot->valor]; })->all()])
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -452,12 +386,6 @@
     #detalle-editor { min-height: 120px; background: #fff; }
     .ql-toolbar { border-radius: 6px 6px 0 0; }
     .ql-container { border-radius: 0 0 6px 6px; font-size: 1rem; }
-    .etiqueta-bloqueada {
-        pointer-events: none;
-        background-color: #fff5f5;
-        border-color: #dc3545;
-        color: #495057;
-    }
     .img-extra-card { transition: opacity .2s, outline .15s; }
     .img-extra-card .img-overlay {
         position: absolute; inset: 0; border-radius: .375rem;
@@ -481,7 +409,6 @@
 @include('admin.productos.partials.combo-sugerencias')
 <script>
     {{-- URLs para las plantillas de fila que se arman dentro de JS --}}
-    const COMBO_URL_ETIQUETA      = @json(route('admin.etiquetas.valores', ['etiqueta' => '__ID__']));
     const COMBO_URL_ESPEC_CLAVES  = @json(route('admin.especificaciones.claves'));
     const COMBO_URL_ESPEC_VALORES = @json(route('admin.especificaciones.valores'));
     var quill = new Quill('#detalle-editor', {
@@ -505,162 +432,6 @@
     });
 
     let especificacionIndex = {{ $producto->especificaciones->count() ?: 1 }};
-    let etiquetaIndex = {{ $producto->etiquetas->count() ?: 1 }};
-
-    const etiquetasObligatoriasMapa = @json($etiquetasObligatorias);
-    const etiquetasAplicablesMapa   = @json($etiquetasAplicables);
-    const etiquetasData = @json($etiquetas->map(function ($e) { return ['id' => $e->id, 'nombre' => $e->nombre, 'visible' => (bool)$e->visible_usuarios]; })->values());
-    const etiquetasVisibilidadMapa = {};
-    etiquetasData.forEach(function(e) { etiquetasVisibilidadMapa[e.id] = e.visible; });
-
-    function getSelectedEtiquetaIds(exceptSelect) {
-        var ids = [];
-        document.querySelectorAll('.etiqueta-select').forEach(function(sel) {
-            if (sel !== exceptSelect && sel.value) {
-                ids.push(parseInt(sel.value));
-            }
-        });
-        return ids;
-    }
-
-    function buildOptionsHtml(proveedorId, excludeIds) {
-        excludeIds = excludeIds || [];
-        var html = '<option value="">Seleccionar etiqueta</option>';
-        var aplicables = (proveedorId && etiquetasAplicablesMapa.hasOwnProperty(String(proveedorId)))
-            ? etiquetasAplicablesMapa[String(proveedorId)] : null;
-        etiquetasData.forEach(function (e) {
-            if ((aplicables === null || aplicables.indexOf(e.id) !== -1) && excludeIds.indexOf(e.id) === -1) {
-                html += '<option value="' + e.id + '">' + e.nombre + '</option>';
-            }
-        });
-        return html;
-    }
-
-    function refrescarOpciones(proveedorId) {
-        document.querySelectorAll('.etiqueta-select').forEach(function(sel) {
-            var currentVal = sel.value;
-            sel.innerHTML = buildOptionsHtml(proveedorId || '', getSelectedEtiquetaIds(sel));
-            if (currentVal) sel.value = currentVal;
-        });
-    }
-
-    function crearFilaEtiqueta(preselectedId, proveedorId) {
-        const newRow = document.createElement('div');
-        newRow.className = 'row mb-2 etiqueta-row';
-        newRow.innerHTML = `
-            <div class="col-md-5">
-                <select class="form-select etiqueta-select" name="etiquetas[${etiquetaIndex}][etiqueta_id]" data-index="${etiquetaIndex}">
-                    ${buildOptionsHtml(proveedorId || '', [])}
-                </select>
-            </div>
-            <div class="col-md-5 position-relative">
-                <input type="text" class="form-control etiqueta-valor" name="etiquetas[${etiquetaIndex}][valor]" placeholder="Valor (ej: Filtro, Auto)" data-combo data-combo-fila=".etiqueta-row" data-combo-desde=".etiqueta-select" data-combo-url-con="${COMBO_URL_ETIQUETA}" autocomplete="off">
-            </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-outline-danger btn-eliminar-etiqueta">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        `;
-        if (preselectedId) {
-            newRow.querySelector('.etiqueta-select').value = preselectedId;
-        }
-        etiquetaIndex++;
-        return newRow;
-    }
-
-    function agregarFilaEtiqueta(preselectedId, proveedorId) {
-        const row = crearFilaEtiqueta(preselectedId, proveedorId);
-        document.getElementById('etiquetas-container').appendChild(row);
-        return row;
-    }
-
-    function limpiarTodasEtiquetas(proveedorId) {
-        document.getElementById('etiquetas-container').innerHTML = '';
-        agregarFilaEtiqueta(null, proveedorId);
-    }
-
-    function marcarObligatoria(row) {
-        row.setAttribute('data-obligatoria', '1');
-        const selectWrapper = row.querySelector('.col-md-5');
-        const select = row.querySelector('.etiqueta-select');
-        select.classList.add('etiqueta-bloqueada');
-        if (!selectWrapper.querySelector('.badge-obligatoria')) {
-            const badge = document.createElement('span');
-            badge.className = 'badge bg-danger badge-obligatoria mt-1 d-inline-block';
-            badge.textContent = 'Obligatoria';
-            selectWrapper.appendChild(badge);
-        }
-        row.querySelector('.btn-eliminar-etiqueta').classList.add('disabled');
-    }
-
-    function actualizarBadgeOculta(row) {
-        var select = row.querySelector('.etiqueta-select');
-        var selectWrapper = row.querySelector('.col-md-5');
-        var id = parseInt(select.value);
-        var badgeExistente = selectWrapper.querySelector('.badge-oculta');
-        if (id && etiquetasVisibilidadMapa.hasOwnProperty(id) && !etiquetasVisibilidadMapa[id]) {
-            if (!badgeExistente) {
-                var badge = document.createElement('span');
-                badge.className = 'badge bg-secondary badge-oculta mt-1 d-inline-block';
-                badge.innerHTML = '<i class="bi bi-eye-slash"></i> Oculta';
-                selectWrapper.appendChild(badge);
-            }
-        } else {
-            if (badgeExistente) badgeExistente.remove();
-        }
-    }
-
-    function limpiarObligatorias() {
-        document.querySelectorAll('.etiqueta-row').forEach(function(row) {
-            row.removeAttribute('data-obligatoria');
-            row.querySelector('.etiqueta-select').classList.remove('etiqueta-bloqueada');
-            var badge = row.querySelector('.badge-obligatoria');
-            if (badge) badge.remove();
-            row.querySelector('.btn-eliminar-etiqueta').classList.remove('disabled');
-        });
-    }
-
-    function actualizarObligatorias(proveedorId) {
-        limpiarObligatorias();
-
-        if (proveedorId && etiquetasObligatoriasMapa[proveedorId] && etiquetasObligatoriasMapa[proveedorId].length) {
-            const container = document.getElementById('etiquetas-container');
-            var insertAfter = null;
-
-            etiquetasObligatoriasMapa[proveedorId].forEach(function(etiqueta) {
-                var existingRow = null;
-                document.querySelectorAll('.etiqueta-row').forEach(function(row) {
-                    if (parseInt(row.querySelector('.etiqueta-select').value) === etiqueta.id) {
-                        existingRow = row;
-                    }
-                });
-
-                var targetRow = existingRow || crearFilaEtiqueta(etiqueta.id, proveedorId);
-
-                if (insertAfter === null) {
-                    container.insertBefore(targetRow, container.firstChild);
-                } else if (insertAfter.nextSibling) {
-                    container.insertBefore(targetRow, insertAfter.nextSibling);
-                } else {
-                    container.appendChild(targetRow);
-                }
-
-                targetRow.querySelector('.etiqueta-select').value = etiqueta.id;
-                marcarObligatoria(targetRow);
-                insertAfter = targetRow;
-            });
-        }
-
-        refrescarOpciones(proveedorId);
-    }
-
-    document.getElementById('etiquetas-container').addEventListener('change', function(e) {
-        if (e.target.classList.contains('etiqueta-select')) {
-            refrescarOpciones(document.getElementById('proveedor_id').value);
-            actualizarBadgeOculta(e.target.closest('.etiqueta-row'));
-        }
-    });
 
     document.getElementById('btn-generar-codigo').addEventListener('click', function() {
         var sel = document.getElementById('proveedor_id');
@@ -669,36 +440,6 @@
         var numero = Math.floor(100000 + Math.random() * 900000);
         document.getElementById('id_proveedor').value = prefijo ? prefijo + '-' + numero : String(numero);
     });
-
-    document.getElementById('proveedor_id').addEventListener('change', function() {
-        var proveedorId = this.value;
-        limpiarTodasEtiquetas(proveedorId);
-        actualizarObligatorias(proveedorId);
-    });
-
-    // Al cargar: filtrar selects existentes según proveedor actual y marcar obligatorias + ocultas
-    (function() {
-        var sel = document.getElementById('proveedor_id');
-        if (sel.value) {
-            actualizarObligatorias(sel.value);
-        }
-        document.querySelectorAll('.etiqueta-row').forEach(function(row) {
-            actualizarBadgeOculta(row);
-        });
-    })();
-
-    // Autocompletado para valores de etiquetas
-    let debounceTimer;
-
-    // Inicializar autocompletado en campos existentes
-
-    // Autocompletado para especificaciones (claves)
-    let debounceTimerEspecClave;
-
-    // Autocompletado para especificaciones (valores)
-    let debounceTimerEspecValor;
-
-    // Inicializar autocompletado en campos de especificaciones existentes
 
     document.getElementById('agregar-especificacion').addEventListener('click', function() {
         const container = document.getElementById('especificaciones-container');
@@ -721,12 +462,6 @@
         especificacionIndex++;
     });
 
-    document.getElementById('agregar-etiqueta').addEventListener('click', function() {
-        var proveedorId = document.getElementById('proveedor_id').value;
-        agregarFilaEtiqueta(null, proveedorId);
-        refrescarOpciones(proveedorId);
-    });
-
     document.addEventListener('click', function(e) {
         if (e.target.closest('.btn-eliminar-especificacion')) {
             const rows = document.querySelectorAll('.especificacion-row');
@@ -736,18 +471,6 @@
                 const row = e.target.closest('.especificacion-row');
                 row.querySelector('.especificacion-clave').value = '';
                 row.querySelector('.especificacion-valor').value = '';
-            }
-        }
-        if (e.target.closest('.btn-eliminar-etiqueta')) {
-            const btn = e.target.closest('.btn-eliminar-etiqueta');
-            if (btn.classList.contains('disabled')) return;
-            const rows = document.querySelectorAll('.etiqueta-row');
-            if (rows.length > 1) {
-                e.target.closest('.etiqueta-row').remove();
-            } else {
-                const row = e.target.closest('.etiqueta-row');
-                row.querySelector('.etiqueta-select').value = '';
-                row.querySelector('.etiqueta-valor').value = '';
             }
         }
     });

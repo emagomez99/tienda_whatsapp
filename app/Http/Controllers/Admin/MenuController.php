@@ -246,7 +246,7 @@ class MenuController extends Controller
      */
     public function valoresEtiqueta(Request $request, Etiqueta $etiqueta)
     {
-        return response()->json($etiqueta->valoresEnUso((string) $request->get('q', ''), 20));
+        return response()->json($etiqueta->valoresEnUso((string) $request->get('q', ''), 20)->map->comoSugerencia()->values());
     }
 
     private function buildMenusOrdenados($excluirIds = [])

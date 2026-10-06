@@ -126,8 +126,73 @@ class EtiquetaValorTest extends TestCase
             $producto->etiquetas()->sync([$marca->id => ['valor' => 'Armaf']]);
             $producto->etiquetas()->sync([$marca->id => ['valor' => 'Afnan']]);
 
-            $this->assertSame(['Afnan'], $marca->valoresEnUso('', 20)->all());
-            $this->assertSame(['Afnan'], $marca->valoresEnUso('afn', 20)->all());
+            $this->assertSame(['Afnan'], $marca->valoresEnUso('', 20)->pluck('valor')->all());
+            $this->assertSame(['Afnan'], $marca->valoresEnUso('afn', 20)->pluck('valor')->all());
+        });
+    }
+
+    /**
+     * Lo que se avisa debajo del valor en el formulario de producto.
+     *
+     * @test
+     */
+    public function el_estado_de_un_valor_distingue_existente_nuevo_y_parecido()
+    {
+        $this->enTenant(function () {
+            $categoria = Etiqueta::create(['nombre' => 'Categoria', 'visible_usuarios' => true]);
+
+            $this->crearProducto('Uno')->etiquetas()->attach($categoria->id, ['valor' => 'Notebook']);
+            $this->crearProducto('Dos')->etiquetas()->attach($categoria->id, ['valor' => 'Notebook']);
+
+            $existente = $categoria->estadoDeValor('  notebook ')->jsonSerialize();
+            $this->assertSame('existente', $existente['estado']);
+            $this->assertSame('Notebook', $existente['valor']);
+            $this->assertSame(2, $existente['productos']);
+
+            // Una letra de menos: error de tipeo, se propone el existente.
+            $tipeo = $categoria->estadoDeValor('Notebok')->jsonSerialize();
+            $this->assertSame('nuevo', $tipeo['estado']);
+            $this->assertSame(['valor' => 'Notebook', 'productos' => 2], $tipeo['parecido']);
+
+            // Otra palabra: nuevo, sin propuesta.
+            $nuevo = $categoria->estadoDeValor('Celular')->jsonSerialize();
+            $this->assertSame('nuevo', $nuevo['estado']);
+            $this->assertNull($nuevo['parecido']);
+
+            $this->assertSame('vacio', $categoria->estadoDeValor('   ')->estado());
+        });
+    }
+
+    /**
+     * Con 3 letras o menos casi todo está "a una letra" de otra cosa: no se propone.
+     *
+     * @test
+     */
+    public function no_propone_parecidos_para_textos_muy_cortos()
+    {
+        $this->enTenant(function () {
+            $marca = Etiqueta::create(['nombre' => 'Marca', 'visible_usuarios' => true]);
+            $this->crearProducto('Uno')->etiquetas()->attach($marca->id, ['valor' => 'HP']);
+            $this->crearProducto('Dos')->etiquetas()->attach($marca->id, ['valor' => 'LG']);
+
+            $this->assertNull($marca->valorParecido('HQ'));
+            $this->assertNull($marca->estadoDeValor('LH')->parecido());
+        });
+    }
+
+    /** @test */
+    public function las_sugerencias_dicen_cuantos_productos_usan_cada_valor()
+    {
+        $this->enTenant(function () {
+            $marca = Etiqueta::create(['nombre' => 'Marca', 'visible_usuarios' => true]);
+            $this->crearProducto('Uno')->etiquetas()->attach($marca->id, ['valor' => 'Asus']);
+            $this->crearProducto('Dos')->etiquetas()->attach($marca->id, ['valor' => 'Asus']);
+            $this->crearProducto('Tres')->etiquetas()->attach($marca->id, ['valor' => 'Acer']);
+
+            $this->assertSame(
+                [['valor' => 'Acer', 'detalle' => '1 producto'], ['valor' => 'Asus', 'detalle' => '2 productos']],
+                $marca->valoresEnUso('', 20)->map->comoSugerencia()->all()
+            );
         });
     }
 

@@ -132,15 +132,15 @@
 
     function etiquetas() {
         var html = '';
+        // Cada fila es una etiqueta (ver partials/etiquetas): su id y nombre van en la fila.
         form.querySelectorAll('.etiqueta-row').forEach(function (fila) {
-            var select = fila.querySelector('.etiqueta-select');
-            var valor  = fila.querySelector('.etiqueta-valor');
-            if (!select || !select.value || !valor || !valor.value.trim()) return;
-            if (DATOS.etiquetasVisibles.indexOf(select.value) === -1) return;
-            var ocultos = DATOS.valoresOcultos[select.value] || [];
+            var id    = fila.dataset.etiquetaId;
+            var valor = fila.querySelector('.etiqueta-valor');
+            if (!id || !valor || !valor.value.trim()) return;
+            if (DATOS.etiquetasVisibles.indexOf(id) === -1) return;
+            var ocultos = DATOS.valoresOcultos[id] || [];
             if (ocultos.indexOf(valor.value.trim().replace(/\s+/g, ' ').toLowerCase()) !== -1) return;
-            var nombre = select.options[select.selectedIndex].text;
-            html += '<span class="badge fw-normal vp-etiqueta">' + texto(nombre) + ': ' + texto(valor.value.trim()) + '</span>';
+            html += '<span class="badge fw-normal vp-etiqueta">' + texto(fila.dataset.nombre) + ': ' + texto(valor.value.trim()) + '</span>';
         });
         return html;
     }
