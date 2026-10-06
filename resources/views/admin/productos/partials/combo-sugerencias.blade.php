@@ -14,6 +14,7 @@
         data-combo-desde=".etiqueta-select"  selector (dentro de la fila) de donde sale
         data-combo-url-con  plantilla de URL con __ID__ a reemplazar
         data-combo-fila     selector del contenedor que hace de "fila" (por defecto, el padre)
+        data-combo-sin-nuevo  no ofrecer "Crear «...»": sólo valores existentes
 
     Funciona con teclado (flechas, Enter, Escape) y muestra "Usar ..." cuando lo
     escrito no está en la lista, para que crear un valor nuevo sea una acción
@@ -106,7 +107,9 @@
 
             // Crear un valor nuevo, como acción explícita.
             var existe = valores.some(function (v) { return v.toLowerCase() === escrito.toLowerCase(); });
-            if (escrito !== '' && !existe) {
+            // Con data-combo-sin-nuevo sólo se elige entre lo que existe: un menú que
+            // filtra por un valor que ningún producto tiene quedaría vacío.
+            if (escrito !== '' && !existe && !input.hasAttribute('data-combo-sin-nuevo')) {
                 var nuevo = document.createElement('div');
                 nuevo.className = 'combo-item combo-nuevo';
                 nuevo.innerHTML = '<i class="bi bi-plus-circle"></i> Crear «' + escrito.replace(/</g, '&lt;') + '»';

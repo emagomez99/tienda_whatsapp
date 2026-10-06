@@ -196,6 +196,44 @@ class Menu extends Model
     }
 
     /**
+     * Qué filtra este menú, en palabras: "Proveedor: Hercules", "Categoria: Drones".
+     * Null para un contenedor, que no filtra.
+     */
+    public function descripcionFiltro(): ?string
+    {
+        if ($this->esContenedor() || $this->nombre_enlace === null || $this->nombre_enlace === '') {
+            return null;
+        }
+
+        if ($this->tipo_enlace === self::TIPO_ETIQUETA) {
+            return $this->nombre_enlace;
+        }
+
+        return $this->tipo_enlace_descripcion . ': ' . $this->nombre_enlace;
+    }
+
+    /**
+     * Los filtros que un submenú de este menú hereda: el de él y los de sus ancestros,
+     * de la raíz hacia abajo. Es lo que se le muestra a quien arma un submenú para
+     * que sepa que "Asus" dentro de "Notebook" no es todo lo de Asus.
+     *
+     * @return string[]
+     */
+    public function filtrosParaSubmenus(): array
+    {
+        $filtros = [];
+
+        foreach (array_reverse($this->linaje()) as $nivel) {
+            $descripcion = $nivel->descripcionFiltro();
+            if ($descripcion !== null) {
+                $filtros[] = $descripcion;
+            }
+        }
+
+        return $filtros;
+    }
+
+    /**
      * Verificar si el menú tiene hijos
      */
     public function tieneHijos(): bool

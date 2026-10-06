@@ -27,7 +27,7 @@
                             {{ $menu->enlace_valor }}
                             @break
                         @default
-                            <span class="badge badge-tipo bg-secondary">Contenedor</span>
+                            <span class="badge badge-tipo bg-secondary">Agrupa</span>
                     @endswitch
                     @if($menu->children->count() > 0)
                         <span class="ms-2">{{ $menu->children->count() }} submenú(s)</span>

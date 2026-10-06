@@ -35,27 +35,27 @@
 
 <div class="card mt-4">
     <div class="card-header bg-light">
-        <i class="bi bi-info-circle"></i> Guía de Tipos
+        <i class="bi bi-info-circle"></i> Qué muestra cada menú
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="col-md-3">
-                <h6><span class="badge bg-secondary">Contenedor</span></h6>
-                <small class="text-muted">Solo agrupa submenús, no filtra productos</small>
+            <div class="col-md-4">
+                <h6><span class="badge bg-secondary">Agrupa</span></h6>
+                <small class="text-muted">No muestra productos: sólo despliega sus submenús.</small>
             </div>
-            <div class="col-md-3">
-                <h6><span class="badge bg-primary">Proveedor</span></h6>
-                <small class="text-muted">Filtra productos por proveedor</small>
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <h6><span class="badge bg-success">Etiqueta</span></h6>
-                <small class="text-muted">Filtra por etiqueta y opcionalmente por valor</small>
+                <small class="text-muted">Los productos con esa etiqueta (y ese valor, si se eligió uno).</small>
             </div>
-            <div class="col-md-3">
-                <h6><span class="badge bg-info">Especificación</span></h6>
-                <small class="text-muted">Filtra por valor de especificación</small>
+            <div class="col-md-4">
+                <h6><span class="badge bg-primary">Proveedor</span></h6>
+                <small class="text-muted">Todos los productos de ese proveedor.</small>
             </div>
         </div>
+        <p class="small text-muted mb-0 mt-3">
+            <i class="bi bi-diagram-2"></i> Un submenú suma lo que filtra su menú de arriba:
+            «Notebook › Asus» son las notebooks Asus, no todo lo de Asus.
+        </p>
     </div>
 </div>
 @endsection

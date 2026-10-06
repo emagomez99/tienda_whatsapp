@@ -31,11 +31,6 @@ class MenuController extends Controller
 
     public function create()
     {
-        $menusParent = $this->buildMenusOrdenados();
-        $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
-        $etiquetas = Etiqueta::orderBy('nombre')->get();
-        $etiquetasPorProveedor = $this->mapEtiquetasAplicables($proveedores);
-
         $siguienteOrdenRaiz = (Menu::whereNull('parent_id')->max('orden') ?? -1) + 1;
         $siguienteOrdenPorPadre = Menu::whereNotNull('parent_id')
             ->selectRaw('parent_id, MAX(orden) as max_orden')
@@ -43,7 +38,37 @@ class MenuController extends Controller
             ->pluck('max_orden', 'parent_id')
             ->map(function ($max) { return $max + 1; });
 
-        return view('admin.menus.create', compact('menusParent', 'proveedores', 'etiquetas', 'etiquetasPorProveedor', 'siguienteOrdenRaiz', 'siguienteOrdenPorPadre'));
+        $menu = new Menu([
+            'tipo_enlace'  => Menu::TIPO_NINGUNO,
+            'activo'       => true,
+            'orden'        => $siguienteOrdenRaiz,
+            'filtro_stock' => 'todos',
+        ]);
+
+        return view('admin.menus.create', array_merge(
+            $this->datosFormulario($this->buildMenusOrdenados()),
+            compact('menu', 'siguienteOrdenRaiz', 'siguienteOrdenPorPadre')
+        ));
+    }
+
+    /** Lo que necesita el formulario de menú, igual en alta y edición. */
+    private function datosFormulario($menusParent): array
+    {
+        $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
+
+        // Por cada posible padre, qué filtros hereda un submenú suyo.
+        $filtrosHeredados = [];
+        foreach ($menusParent as $padre) {
+            $filtrosHeredados[$padre->id] = $padre->filtrosParaSubmenus();
+        }
+
+        return [
+            'menusParent'           => $menusParent,
+            'proveedores'           => $proveedores,
+            'etiquetas'             => Etiqueta::orderBy('nombre')->get(),
+            'etiquetasPorProveedor' => $this->mapEtiquetasAplicables($proveedores),
+            'filtrosHeredados'      => $filtrosHeredados,
+        ];
     }
 
     public function store(Request $request)
@@ -111,12 +136,11 @@ class MenuController extends Controller
     public function edit(Menu $menu)
     {
         $excluirIds = array_merge([$menu->id], $this->getDescendantIds($menu));
-        $menusParent = $this->buildMenusOrdenados($excluirIds);
-        $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
-        $etiquetas = Etiqueta::orderBy('nombre')->get();
-        $etiquetasPorProveedor = $this->mapEtiquetasAplicables($proveedores);
 
-        return view('admin.menus.edit', compact('menu', 'menusParent', 'proveedores', 'etiquetas', 'etiquetasPorProveedor'));
+        return view('admin.menus.edit', array_merge(
+            $this->datosFormulario($this->buildMenusOrdenados($excluirIds)),
+            compact('menu')
+        ));
     }
 
     public function update(Request $request, Menu $menu)
