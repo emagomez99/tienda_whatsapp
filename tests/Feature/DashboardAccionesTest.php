@@ -79,7 +79,7 @@ class DashboardAccionesTest extends TestCase
             'Nuevo Pedido'    => strpos($html, 'Nuevo Pedido'),
             'Nuevo Producto'  => strpos($html, 'Nuevo Producto'),
             'Nuevo Proveedor' => strpos($html, 'Nuevo Proveedor'),
-            'Configuración'   => strpos($html, 'Ajustes de la tienda'),
+            'Configuración'   => strpos($html, 'Ir a los ajustes de la tienda'),
         ];
 
         foreach ($posiciones as $etiqueta => $posicion) {
@@ -120,7 +120,7 @@ class DashboardAccionesTest extends TestCase
         $this->assertStringContainsString('Nuevo Producto', $html);
         $this->assertStringNotContainsString('Nuevo Pedido', $html);
         $this->assertStringNotContainsString('Nuevo Proveedor', $html);
-        $this->assertStringNotContainsString('Ajustes de la tienda', $html);
+        $this->assertStringNotContainsString('Ir a los ajustes de la tienda', $html);
     }
 
     /**
