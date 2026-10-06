@@ -235,7 +235,8 @@ class Producto extends Model
     public function etiquetas()
     {
         return $this->belongsToMany(Etiqueta::class, 'producto_etiqueta')
-                    ->withPivot('valor')
+                    ->using(ProductoEtiqueta::class)
+                    ->withPivot('valor', 'etiqueta_valor_id')
                     ->withTimestamps();
     }
 
@@ -423,19 +424,24 @@ class Producto extends Model
     /**
      * Productos que tienen la etiqueta indicada y, si se pasa, con ese valor.
      *
-     * El valor se compara sin distinguir mayúsculas: se tipea a mano en cada producto,
-     * y para quien arma un menú "Afnan" y "afnan" son la misma marca. Con la igualdad
-     * exacta de Postgres el producto cargado en minúsculas quedaba fuera del menú.
-     *
-     * No se usa ilike porque trataría el % y el _ del valor como comodines.
+     * El valor se compara como lo hace EtiquetaValor: sin distinguir mayúsculas ni
+     * espacios de más. El que llega de un menú o de la URL lo tipeó alguien, y para
+     * quien arma un menú "Afnan" y "afnan " son la misma marca.
      */
     public function scopeConEtiqueta($query, $etiquetaId, $valor = null)
     {
+        $valor = EtiquetaValor::limpiar($valor);
+
         return $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $valor) {
             $q->where('etiquetas.id', $etiquetaId);
 
-            if ($valor !== null && $valor !== '') {
-                $q->whereRaw('lower(producto_etiqueta.valor) = lower(?)', [$valor]);
+            if ($valor !== '') {
+                $q->whereIn('producto_etiqueta.etiqueta_valor_id', function ($sub) use ($etiquetaId, $valor) {
+                    $sub->select('id')
+                        ->from('etiqueta_valores')
+                        ->where('etiqueta_id', $etiquetaId)
+                        ->where('normalizado', EtiquetaValor::normalizar($valor));
+                });
             }
         });
     }

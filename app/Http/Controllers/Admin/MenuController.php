@@ -222,16 +222,7 @@ class MenuController extends Controller
      */
     public function valoresEtiqueta(Request $request, Etiqueta $etiqueta)
     {
-        $buscar = $request->get('q', '');
-
-        $valores = \DB::table('producto_etiqueta')
-            ->where('etiqueta_id', $etiqueta->id)
-            ->where('valor', 'ilike', "%{$buscar}%")
-            ->distinct()
-            ->pluck('valor')
-            ->take(20);
-
-        return response()->json($valores);
+        return response()->json($etiqueta->valoresEnUso((string) $request->get('q', ''), 20));
     }
 
     private function buildMenusOrdenados($excluirIds = [])

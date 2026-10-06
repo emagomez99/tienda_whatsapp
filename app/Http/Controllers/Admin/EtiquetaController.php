@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Etiqueta;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class EtiquetaController extends Controller
 {
@@ -98,21 +97,7 @@ class EtiquetaController extends Controller
      */
     public function buscarValores(Request $request, Etiqueta $etiqueta)
     {
-        $buscar = trim($request->get('q', ''));
-
-        $query = DB::table('producto_etiqueta')
-            ->select('valor')
-            ->distinct()
-            ->where('etiqueta_id', $etiqueta->id)
-            ->where('valor', '!=', '');
-
-        if ($buscar !== '') {
-            $query->where('valor', 'ilike', "%{$buscar}%");
-        }
-
-        $valores = $query->orderBy('valor')
-            ->limit(ProductoController::MAX_SUGERENCIAS)
-            ->pluck('valor');
+        $valores = $etiqueta->valoresEnUso((string) $request->get('q', ''), ProductoController::MAX_SUGERENCIAS);
 
         return response()->json($valores);
     }

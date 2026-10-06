@@ -98,11 +98,7 @@ class CompleteHerculesProducts extends Command
 
         if ($fabricante) {
             $fabricante = ucfirst(strtolower($fabricante));
-            $etiquetaFabricanteId = $this->etiquetaFabricanteId;
-            $query->whereHas('etiquetas', function ($q) use ($fabricante, $etiquetaFabricanteId) {
-                $q->where('etiqueta_id', $etiquetaFabricanteId)
-                  ->where('valor', $fabricante);
-            });
+            $query->conEtiqueta($this->etiquetaFabricanteId, $fabricante);
             $this->info("Filtrando por fabricante: {$fabricante}");
         }
 
