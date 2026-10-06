@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Etiqueta;
 use App\Models\Menu;
+use App\Models\Producto;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -13,20 +14,76 @@ class MenuController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permiso:menus.ver')->only(['index', 'show', 'valoresEtiqueta']);
-        $this->middleware('permiso:menus.gestionar')->only(['create', 'store', 'edit', 'update', 'destroy', 'reordenar']);
+        $this->middleware('permiso:menus.ver')->only(['index', 'show', 'valoresEtiqueta', 'contarProductos']);
+        $this->middleware('permiso:menus.gestionar')->only(['create', 'store', 'edit', 'update', 'destroy', 'reordenar', 'mover']);
     }
 
     public function index()
     {
         $menus = Menu::raiz()
             ->orderBy('orden')
-            ->with(['children' => function ($query) {
-                $query->orderBy('orden')->with('children');
-            }])
+            ->orderBy('id')
+            ->with('children.children.children')
             ->get();
 
-        return view('admin.menus.index', compact('menus'));
+        // Cuántos productos muestra cada menú, contados como los cuenta la tienda.
+        // Los que sólo agrupan no muestran productos: no llevan número.
+        $productosPorMenu = [];
+        $this->recorrer($menus, function (Menu $menu) use (&$productosPorMenu) {
+            if (!$menu->esContenedor()) {
+                $productosPorMenu[$menu->id] = Producto::visiblesEnTienda()->delMenu($menu)->count();
+            }
+        });
+
+        return view('admin.menus.index', compact('menus', 'productosPorMenu'));
+    }
+
+    /**
+     * Cuántos productos mostraría un menú con lo elegido en el formulario, antes de
+     * guardarlo. Incluye lo que hereda del menú de arriba.
+     */
+    public function contarProductos(Request $request)
+    {
+        $menu = $this->menuSinGuardar($request);
+
+        // Agrupa (no muestra productos) o todavía no se eligió qué filtrar.
+        if ($menu->esContenedor() || $this->faltaElegirEnlace($menu)) {
+            return response()->json(['productos' => null]);
+        }
+
+        return response()->json(['productos' => Producto::visiblesEnTienda()->delMenu($menu)->count()]);
+    }
+
+    /** Un menú armado con los campos del formulario, sin guardar, para contar o sugerir. */
+    private function menuSinGuardar(Request $request): Menu
+    {
+        $tipo = in_array($request->input('tipo_enlace'), [Menu::TIPO_PROVEEDOR, Menu::TIPO_ETIQUETA, Menu::TIPO_ESPECIFICACION], true)
+            ? $request->input('tipo_enlace')
+            : Menu::TIPO_NINGUNO;
+
+        $menu = new Menu([
+            'tipo_enlace'  => $tipo,
+            'enlace_id'    => $request->filled('enlace_id') ? (int) $request->input('enlace_id') : null,
+            'enlace_valor' => $request->input('enlace_valor'),
+            'filtro_stock' => $request->input('filtro_stock', 'todos'),
+            'parent_id'    => $request->filled('parent_id') ? (int) $request->input('parent_id') : null,
+        ]);
+
+        return $menu;
+    }
+
+    private function faltaElegirEnlace(Menu $menu): bool
+    {
+        return in_array($menu->tipo_enlace, [Menu::TIPO_PROVEEDOR, Menu::TIPO_ETIQUETA], true) && !$menu->enlace_id;
+    }
+
+    /** Aplica $accion a cada menú del árbol, de arriba hacia abajo. */
+    private function recorrer($menus, callable $accion)
+    {
+        foreach ($menus as $menu) {
+            $accion($menu);
+            $this->recorrer($menu->children, $accion);
+        }
     }
 
     public function create()
@@ -246,7 +303,43 @@ class MenuController extends Controller
      */
     public function valoresEtiqueta(Request $request, Etiqueta $etiqueta)
     {
-        return response()->json($etiqueta->valoresEnUso((string) $request->get('q', ''), 20)->map->comoSugerencia()->values());
+        $buscar = (string) $request->get('q', '');
+        $padre  = $request->filled('parent_id') ? Menu::find((int) $request->input('parent_id')) : null;
+
+        // Dentro de otro menú sólo se ofrecen los valores de sus productos, con
+        // cuántos hay de cada uno ahí: dentro de "Notebook", las marcas de notebooks.
+        $valores = $padre
+            ? $etiqueta->valoresEnUsoEntre(Producto::visiblesEnTienda()->delMenu($padre), $buscar, 20)
+            : $etiqueta->valoresEnUso($buscar, 20);
+
+        return response()->json($valores->map->comoSugerencia()->values());
+    }
+
+    /**
+     * Sube o baja un menú un lugar entre sus hermanos. Se renumera a todos los
+     * hermanos (0, 1, 2…) porque hay menús viejos con la misma posición repetida, y
+     * con posiciones iguales "subir" no tendría con quién intercambiar.
+     */
+    public function mover(Request $request, Menu $menu)
+    {
+        $request->validate(['direccion' => 'required|in:arriba,abajo']);
+
+        $hermanos = Menu::where('parent_id', $menu->parent_id)->orderBy('orden')->orderBy('id')->get()->values();
+        $actual   = $hermanos->search(function (Menu $m) use ($menu) { return $m->id === $menu->id; });
+        $destino  = $request->input('direccion') === 'arriba' ? $actual - 1 : $actual + 1;
+
+        if ($destino >= 0 && $destino < $hermanos->count()) {
+            $orden = $hermanos->all();
+            [$orden[$actual], $orden[$destino]] = [$orden[$destino], $orden[$actual]];
+
+            foreach ($orden as $posicion => $hermano) {
+                if ((int) $hermano->orden !== $posicion) {
+                    $hermano->update(['orden' => $posicion]);
+                }
+            }
+        }
+
+        return redirect()->route('admin.menus.index')->with('menu_movido', $menu->id);
     }
 
     private function buildMenusOrdenados($excluirIds = [])

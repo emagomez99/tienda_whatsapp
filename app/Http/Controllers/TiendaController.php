@@ -74,7 +74,7 @@ class TiendaController extends Controller
             }
         }
 
-        $this->aplicarFiltroStock($query, $menuActual);
+        $query->segunDisponibilidadDelMenu($menuActual);
 
         [$filtrosAplicados, $filtrosIncompletos] = $this->aplicarFiltrosCascada($request, $query, $menuActual);
 
@@ -93,10 +93,7 @@ class TiendaController extends Controller
         $query = Producto::with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
             ->visiblesEnTienda();
 
-        // Aplicar el scope base del menú (proveedor, etiqueta, especificación)
-        $this->aplicarFiltroTipoMenu($query, $menuActual);
-
-        $this->aplicarFiltroStock($query, $menuActual);
+        $query->delMenu($menuActual);
 
         if ($request->filled('buscar')) {
             $this->aplicarFiltroBusqueda($query, $request->buscar);
@@ -128,8 +125,7 @@ class TiendaController extends Controller
         $filtros   = $request->input('filtros', []);
 
         $query = Producto::where('disponible', true);
-        $this->aplicarFiltroTipoMenu($query, $menu);
-        $this->aplicarFiltroStock($query, $menu);
+        $query->delMenu($menu);
 
         foreach ($filtros as $filtroEtiquetaId => $filtroValor) {
             if ($filtroValor && $filtroEtiquetaId != $etiquetaId) {
@@ -170,8 +166,7 @@ class TiendaController extends Controller
         if ($request->filled('menu_id')) {
             $menuActual = Menu::find($request->menu_id);
             if ($menuActual) {
-                $this->aplicarFiltroTipoMenu($query, $menuActual);
-                $this->aplicarFiltroStock($query, $menuActual);
+                $query->delMenu($menuActual);
             }
         }
 
@@ -263,42 +258,6 @@ class TiendaController extends Controller
     }
 
     // ─── Helpers privados ────────────────────────────────────────────────────
-
-    /**
-     * Filtro del menú sumado al de todos sus ancestros (ver Menu::linaje).
-     */
-    private function aplicarFiltroTipoMenu($query, Menu $menu)
-    {
-        foreach ($menu->linaje() as $nivel) {
-            $this->aplicarFiltroDeUnMenu($query, $nivel);
-        }
-    }
-
-    private function aplicarFiltroDeUnMenu($query, Menu $menu)
-    {
-        if ($menu->tipo_enlace === Menu::TIPO_PROVEEDOR) {
-            $query->where('proveedor_id', $menu->enlace_id);
-        } elseif ($menu->tipo_enlace === Menu::TIPO_ETIQUETA) {
-            $query->conEtiqueta($menu->enlace_id, $menu->enlace_valor);
-        } elseif ($menu->tipo_enlace === Menu::TIPO_ESPECIFICACION) {
-            $val = $menu->enlace_valor;
-            $query->whereHas('especificaciones', function ($q) use ($val) {
-                $q->where('valor', 'ilike', "%{$val}%");
-            });
-        }
-    }
-
-    private function aplicarFiltroStock($query, ?Menu $menu)
-    {
-        if (!$menu) return;
-        if ($menu->filtro_stock === 'con_stock') {
-            $query->where('stock', '>', 0);
-        } elseif ($menu->filtro_stock === 'con_stock_y_encargue') {
-            $query->where(function ($q) {
-                $q->where('stock', '>', 0)->orWhere('por_encargue', true);
-            });
-        }
-    }
 
     private function aplicarFiltroBusqueda($query, string $buscar)
     {

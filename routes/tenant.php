@@ -118,8 +118,11 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::delete('/pedidos/{pedido}/productos/{item}', [PedidoController::class, 'destroyProducto'])->name('pedidos.productos.destroy');
         Route::post('/pedidos/{pedido}/productos', [PedidoController::class, 'addProducto'])->name('pedidos.productos.add');
 
+        // Antes del resource: si no, menus/{menu} se queda con "contar-productos".
+        Route::get('/menus/contar-productos', [MenuController::class, 'contarProductos'])->name('menus.contar-productos');
         Route::resource('menus', MenuController::class);
         Route::post('/menus/reordenar', [MenuController::class, 'reordenar'])->name('menus.reordenar');
+        Route::post('/menus/{menu}/mover', [MenuController::class, 'mover'])->name('menus.mover');
         Route::get('/menus/etiqueta/{etiqueta}/valores', [MenuController::class, 'valoresEtiqueta'])->name('menus.etiqueta.valores');
     });
 });

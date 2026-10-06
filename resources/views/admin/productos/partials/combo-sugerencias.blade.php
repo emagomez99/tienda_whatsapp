@@ -67,7 +67,8 @@
                 base = input.dataset.comboUrlCon.replace('__ID__', encodeURIComponent(origen.value));
             }
 
-            var params = '?q=' + encodeURIComponent(consulta);
+            // La URL base puede traer ya sus parámetros (ej. ?parent_id=3).
+            var params = (base.indexOf('?') === -1 ? '?' : '&') + 'q=' + encodeURIComponent(consulta);
 
             // Parámetro extra tomado de otro campo (ej. la clave de la especificación).
             if (input.dataset.comboParam && input.dataset.comboDesde) {

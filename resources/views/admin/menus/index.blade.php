@@ -18,7 +18,12 @@
         @if($menus->count() > 0)
             <div class="list-group list-group-flush" id="menu-tree">
                 @foreach($menus as $menu)
-                    @include('admin.menus.partials.menu-item', ['menu' => $menu, 'nivel' => 0])
+                    @include('admin.menus.partials.menu-item', [
+                        'menu'      => $menu,
+                        'nivel'     => 0,
+                        'esPrimero' => $loop->first,
+                        'esUltimo'  => $loop->last,
+                    ])
                 @endforeach
             </div>
         @else
@@ -79,5 +84,27 @@
     .badge-tipo {
         font-size: 0.7rem;
     }
+    .min-w-0 { min-width: 0; }
+    /* El que se acaba de subir o bajar, para no perderlo de vista. */
+    .menu-item.recien-movido { animation: recien-movido 1.6s ease-out; }
+    @keyframes recien-movido { from { background-color: #fff3cd; } to { background-color: transparent; } }
+    @media (max-width: 575.98px) {
+        .menu-item > .d-flex { flex-wrap: wrap; }
+        .menu-item.nivel-1 { padding-left: 1.25rem !important; }
+        .menu-item.nivel-2 { padding-left: 2rem !important; }
+        .menu-item.nivel-3 { padding-left: 2.75rem !important; }
+    }
 </style>
 @endpush
+
+@if(session('menu_movido'))
+@push('scripts')
+<script>
+    // Después de subir o bajar, volver a la fila movida en vez de al principio.
+    (function () {
+        var fila = document.getElementById('menu-{{ (int) session('menu_movido') }}');
+        if (fila) fila.scrollIntoView({ block: 'center' });
+    })();
+</script>
+@endpush
+@endif

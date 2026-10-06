@@ -51,6 +51,30 @@ class Etiqueta extends Model
     }
 
     /**
+     * Como valoresEnUso, pero mirando sólo un conjunto de productos (ej. los de un
+     * menú): dentro de "Notebook", qué marcas hay entre las notebooks y cuántas de
+     * cada una, no en toda la tienda.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $productos consulta de productos
+     */
+    public function valoresEnUsoEntre($productos, string $buscar, int $limite)
+    {
+        $ids = (clone $productos)->select('productos.id');
+
+        $soloEsos = function ($q) use ($ids) {
+            $q->whereIn('producto_id', $ids);
+        };
+
+        return $this->valores()
+            ->whereHas('asignaciones', $soloEsos)
+            ->withCount(['asignaciones' => $soloEsos])
+            ->buscar($buscar)
+            ->orderBy('valor')
+            ->limit($limite)
+            ->get();
+    }
+
+    /**
      * Qué pasa con un valor escrito para esta etiqueta: si ya existe, o si es nuevo y
      * se parece a alguno que existe (ver EstadoValorEtiqueta).
      */

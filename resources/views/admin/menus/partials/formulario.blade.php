@@ -155,6 +155,9 @@
                         </select>
                     </div>
                 </div>
+
+                {{-- Cuántos productos va a mostrar, con lo elegido y lo heredado. --}}
+                <div class="alert py-2 small mt-3 mb-0 d-none seccion-con-productos" id="conteo-productos" role="status" aria-live="polite"></div>
             </div>
         </div>
 
@@ -354,17 +357,67 @@ document.addEventListener('DOMContentLoaded', function () {
         var filtros = padre.value ? (filtrosHeredados[padre.value] || []) : [];
         el('aviso-herencia').classList.toggle('d-none', filtros.length === 0);
         el('texto-herencia').textContent = filtros.join(' y ');
+
+        // Las sugerencias de valor se acotan a los productos del menú de arriba.
+        valor.setAttribute('data-combo-url-con', URL_VALORES + (padre.value ? '?parent_id=' + encodeURIComponent(padre.value) : ''));
+    }
+
+    // ── Cuántos productos va a mostrar ──────────────────────────────────────
+
+    var URL_VALORES = @json(route('admin.menus.etiqueta.valores', ['etiqueta' => '__ID__']));
+    var URL_CONTAR  = @json(route('admin.menus.contar-productos'));
+    var esperaConteo = null, pedidoConteo = 0;
+
+    function contar() {
+        clearTimeout(esperaConteo);
+        esperaConteo = setTimeout(function () {
+            var caja = el('conteo-productos');
+            volcarEnlace();
+
+            var params = new URLSearchParams({
+                tipo_enlace:  tipo(),
+                enlace_id:    enlaceId.value,
+                enlace_valor: enlaceValor.value,
+                filtro_stock: el('filtro_stock').value,
+                parent_id:    padre.value
+            });
+            var mio = ++pedidoConteo;
+
+            fetch(URL_CONTAR + '?' + params.toString(), { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (datos) {
+                    if (mio !== pedidoConteo || !datos) return;
+                    var n = datos.productos;
+
+                    caja.className = 'alert py-2 small mt-3 mb-0 seccion-con-productos';
+                    if (tipo() === 'ninguno') {
+                        caja.classList.add('d-none');
+                    } else if (n === null) {
+                        caja.classList.add('alert-light');
+                        caja.innerHTML = '<i class="bi bi-hourglass"></i> Elegí ' + (tipo() === 'proveedor' ? 'el proveedor' : 'la etiqueta') + ' para ver cuántos productos va a mostrar.';
+                    } else if (n === 0) {
+                        caja.classList.add('alert-warning');
+                        caja.innerHTML = '<i class="bi bi-exclamation-triangle"></i> <strong>No va a mostrar ningún producto.</strong> Revisá el filtro, la disponibilidad o el menú de arriba.';
+                    } else {
+                        caja.classList.add('alert-success');
+                        caja.innerHTML = '<i class="bi bi-box-seam"></i> Va a mostrar <strong>' + n.toLocaleString('es-AR') + ' ' + (n === 1 ? 'producto' : 'productos') + '</strong>.';
+                    }
+                })
+                .catch(function () {});
+        }, 300);
     }
 
     document.querySelectorAll('input[name="tipo_enlace"]').forEach(function (radio) {
         radio.addEventListener('change', mostrarSegunTipo);
+        radio.addEventListener('change', contar);
     });
-    proveedor.addEventListener('change', function () { volcarEnlace(); reconstruirDisponibles(); });
-    etiqueta.addEventListener('change', function () { valor.value = ''; volcarEnlace(); });
-    valor.addEventListener('input', volcarEnlace);
-    valor.addEventListener('change', volcarEnlace);
-    if (especif) especif.addEventListener('input', volcarEnlace);
-    padre.addEventListener('change', mostrarHerencia);
+    proveedor.addEventListener('change', function () { volcarEnlace(); reconstruirDisponibles(); contar(); });
+    etiqueta.addEventListener('change', function () { valor.value = ''; volcarEnlace(); contar(); });
+    valor.addEventListener('input', function () { volcarEnlace(); contar(); });
+    valor.addEventListener('change', function () { volcarEnlace(); contar(); });
+    if (especif) especif.addEventListener('input', function () { volcarEnlace(); contar(); });
+    padre.addEventListener('change', function () { mostrarHerencia(); contar(); });
+    el('filtro_stock').addEventListener('change', contar);
     el('menu-form').addEventListener('submit', volcarEnlace);
 
     // ── Bloque 3: filtros para el cliente ───────────────────────────────────
@@ -495,6 +548,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     mostrarSegunTipo();
+    contar();
     mostrarHerencia();
 });
 </script>

@@ -54,7 +54,8 @@ class Menu extends Model
      */
     public function children()
     {
-        return $this->hasMany(Menu::class, 'parent_id')->orderBy('orden');
+        // Con la misma posición desempata el id: es el criterio de MenuController::mover.
+        return $this->hasMany(Menu::class, 'parent_id')->orderBy('orden')->orderBy('id');
     }
 
     /**
@@ -65,6 +66,7 @@ class Menu extends Model
         return $this->hasMany(Menu::class, 'parent_id')
             ->where('activo', true)
             ->orderBy('orden')
+            ->orderBy('id')
             ->with('childrenActivos');
     }
 
@@ -233,6 +235,14 @@ class Menu extends Model
         return $filtros;
     }
 
+    /** Submenús, sub-submenús, etc.: los que se borran en cascada con este. */
+    public function cantidadDescendientes(): int
+    {
+        return $this->children->reduce(function ($total, Menu $hijo) {
+            return $total + 1 + $hijo->cantidadDescendientes();
+        }, 0);
+    }
+
     /**
      * Verificar si el menú tiene hijos
      */
@@ -305,6 +315,7 @@ class Menu extends Model
             return self::raiz()
                 ->activos()
                 ->orderBy('orden')
+                ->orderBy('id')
                 ->with('childrenActivos')
                 ->get();
         } catch (\Exception $e) {

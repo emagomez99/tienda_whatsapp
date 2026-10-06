@@ -463,6 +463,49 @@ class Producto extends Model
         });
     }
 
+    /**
+     * Los productos que muestra un menú: su filtro sumado al de cada menú de arriba
+     * (ver Menu::linaje) y su disponibilidad.
+     *
+     * Es la única definición: la tienda, el contador de la lista de menús y el del
+     * formulario la usan, así lo que dice el panel es lo que ve el cliente.
+     */
+    public function scopeDelMenu($query, Menu $menu)
+    {
+        foreach ($menu->linaje() as $nivel) {
+            if ($nivel->tipo_enlace === Menu::TIPO_PROVEEDOR) {
+                $query->where('proveedor_id', $nivel->enlace_id);
+            } elseif ($nivel->tipo_enlace === Menu::TIPO_ETIQUETA) {
+                $query->conEtiqueta($nivel->enlace_id, $nivel->enlace_valor);
+            } elseif ($nivel->tipo_enlace === Menu::TIPO_ESPECIFICACION) {
+                $valor = (string) $nivel->enlace_valor;
+                $query->whereHas('especificaciones', function ($q) use ($valor) {
+                    $q->where('valor', 'ilike', '%' . $valor . '%');
+                });
+            }
+        }
+
+        return $query->segunDisponibilidadDelMenu($menu);
+    }
+
+    /** La disponibilidad que pide el menú: todos, sólo con stock, o con stock o por encargue. */
+    public function scopeSegunDisponibilidadDelMenu($query, ?Menu $menu)
+    {
+        if (!$menu) {
+            return $query;
+        }
+
+        if ($menu->filtro_stock === 'con_stock') {
+            $query->where('stock', '>', 0);
+        } elseif ($menu->filtro_stock === 'con_stock_y_encargue') {
+            $query->where(function ($q) {
+                $q->where('stock', '>', 0)->orWhere('por_encargue', true);
+            });
+        }
+
+        return $query;
+    }
+
     public function scopeDisponibles($query)
     {
         return $query->where('disponible', true)
