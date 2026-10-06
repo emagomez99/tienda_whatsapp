@@ -284,8 +284,9 @@ class TiendaController extends Controller
         }
 
         $filtrosIncompletos = false;
+        // Sólo cuentan los filtros que el cliente ve (Menu::getEtiquetasFiltro).
         if ($menuActual && $menuActual->filtros_requeridos && $menuActual->tieneFiltros()) {
-            foreach ($menuActual->filtros_etiquetas ?? [] as $etiquetaId) {
+            foreach ($menuActual->getEtiquetasFiltro()->pluck('id') as $etiquetaId) {
                 if (empty($filtrosAplicados[$etiquetaId])) {
                     $filtrosIncompletos = true;
                     break;

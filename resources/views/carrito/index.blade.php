@@ -64,7 +64,7 @@
                                         @if($prod->id_proveedor)
                                             <small class="text-muted">{{ $prod->id_proveedor }}</small>
                                         @endif
-                                        @if($prod->etiquetas->count() > 0)
+                                        @if($prod->etiquetasPublicas->isNotEmpty())
                                             <div class="mt-1">
                                                 <button class="btn btn-link btn-sm p-0 text-muted text-decoration-none"
                                                         type="button"
@@ -75,7 +75,7 @@
                                                 </button>
                                                 <div class="collapse mt-1" id="detalle-{{ $prod->public_id }}">
                                                     <div class="d-flex flex-wrap gap-1">
-                                                        @foreach($prod->etiquetas as $etiqueta)
+                                                        @foreach($prod->etiquetasPublicas as $etiqueta)
                                                             <span class="badge bg-light text-dark border">
                                                                 {{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}
                                                             </span>

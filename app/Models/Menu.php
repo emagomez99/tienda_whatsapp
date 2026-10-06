@@ -263,6 +263,13 @@ class Menu extends Model
      * Verificar si tiene filtros configurados
      * Solo aplica para menús con enlace (no contenedores)
      */
+    /** @var \Illuminate\Support\Collection|null */
+    private $etiquetasFiltroCache = null;
+
+    /**
+     * Si el cliente ve filtros en este menú. Una etiqueta oculta no cuenta: su
+     * desplegable no se muestra.
+     */
     public function tieneFiltros(): bool
     {
         // Los contenedores no pueden tener filtros porque no tienen base de productos
@@ -270,24 +277,31 @@ class Menu extends Model
             return false;
         }
 
-        return !empty($this->filtros_etiquetas);
+        return $this->getEtiquetasFiltro()->isNotEmpty();
     }
 
     /**
-     * Obtener las etiquetas configuradas como filtros
+     * Las etiquetas de los filtros en cascada que ve el cliente, en el orden elegido.
+     *
+     * Deja afuera las ocultas: su desplegable quedaría vacío (la tienda no ofrece
+     * valores de una etiqueta oculta) y, con "completar todos los filtros", el menú
+     * no mostraría nada nunca.
      */
     public function getEtiquetasFiltro()
     {
-        if (empty($this->filtros_etiquetas)) {
-            return collect();
+        if ($this->etiquetasFiltroCache === null) {
+            $ids = $this->filtros_etiquetas ?: [];
+
+            $this->etiquetasFiltroCache = empty($ids) ? collect() : Etiqueta::whereIn('id', $ids)
+                ->where('visible_usuarios', true)
+                ->get()
+                ->sortBy(function ($etiqueta) use ($ids) {
+                    return array_search($etiqueta->id, $ids);
+                })
+                ->values();
         }
-        $ids = $this->filtros_etiquetas;
-        return Etiqueta::whereIn('id', $ids)
-            ->get()
-            ->sortBy(function ($etiqueta) use ($ids) {
-                return array_search($etiqueta->id, $ids);
-            })
-            ->values();
+
+        return $this->etiquetasFiltroCache;
     }
 
     /**

@@ -19,7 +19,9 @@ class CarritoController extends Controller
         $totalesPorMoneda = [];
 
         foreach ($carrito as $id => $cantidad) {
-            $producto = Producto::with(['especificaciones', 'etiquetas', 'moneda'])->find($id);
+            // Lo ve el cliente: sólo etiquetas y valores visibles. El mensaje de
+            // WhatsApp (enviarPedido) sí lleva todas, porque lo recibe la tienda.
+            $producto = Producto::with(['especificaciones', 'etiquetasPublicas', 'moneda'])->find($id);
             if ($producto) {
                 $subtotal = $producto->precio * $cantidad;
                 $productos[] = [

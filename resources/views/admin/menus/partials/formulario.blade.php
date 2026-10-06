@@ -306,7 +306,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     var el = function (id) { return document.getElementById(id); };
 
-    var etiquetasData         = @json($etiquetas->map(function ($e) { return ['id' => $e->id, 'nombre' => $e->nombre]; })->values());
+    var etiquetasData         = @json($etiquetas->map(function ($e) { return ['id' => $e->id, 'nombre' => $e->nombre, 'visible' => (bool) $e->visible_usuarios]; })->values());
     var etiquetasPorProveedor = @json($etiquetasPorProveedor);
     var filtrosHeredados      = @json($filtrosHeredados);
 
@@ -458,7 +458,14 @@ document.addEventListener('DOMContentLoaded', function () {
             li.className = 'list-group-item list-group-item-action py-2 px-3 d-flex justify-content-between align-items-center';
             li.dataset.id = e.id;
             li.dataset.nombre = e.nombre;
-            li.textContent = e.nombre;
+            var nombre = document.createElement('span');
+            nombre.textContent = e.nombre;
+            if (!e.visible) {
+                // Se puede elegir igual, pero el cliente no lo vería: que se note.
+                nombre.className = 'text-muted';
+                nombre.innerHTML += ' <i class="bi bi-eye-slash" title="Etiqueta oculta: el cliente no vería este filtro"></i>';
+            }
+            li.appendChild(nombre);
             var boton = document.createElement('button');
             boton.type = 'button';
             boton.className = 'btn btn-sm btn-outline-success';
@@ -476,6 +483,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var nodo = el('plantilla-filtro-elegido').content.firstElementChild.cloneNode(true);
         nodo.dataset.id = id;
         nodo.querySelector('.filtro-nombre').textContent = nombre;
+        var datos = etiquetasData.filter(function (e) { return String(e.id) === String(id); })[0];
+        nodo.querySelector('.filtro-oculta').classList.toggle('d-none', !datos || datos.visible);
         nodo.querySelector('input[type="hidden"]').value = id;
         var todos = nodo.querySelector('input[type="checkbox"]');
         todos.name = 'filtros_todos[' + id + ']';
