@@ -420,6 +420,26 @@ class Producto extends Model
         return Str::limit($texto, 160 - 3);
     }
 
+    /**
+     * Productos que tienen la etiqueta indicada y, si se pasa, con ese valor.
+     *
+     * El valor se compara sin distinguir mayúsculas: se tipea a mano en cada producto,
+     * y para quien arma un menú "Afnan" y "afnan" son la misma marca. Con la igualdad
+     * exacta de Postgres el producto cargado en minúsculas quedaba fuera del menú.
+     *
+     * No se usa ilike porque trataría el % y el _ del valor como comodines.
+     */
+    public function scopeConEtiqueta($query, $etiquetaId, $valor = null)
+    {
+        return $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $valor) {
+            $q->where('etiquetas.id', $etiquetaId);
+
+            if ($valor !== null && $valor !== '') {
+                $q->whereRaw('lower(producto_etiqueta.valor) = lower(?)', [$valor]);
+            }
+        });
+    }
+
     public function scopeDisponibles($query)
     {
         return $query->where('disponible', true)

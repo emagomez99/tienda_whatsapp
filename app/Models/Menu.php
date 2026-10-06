@@ -171,6 +171,31 @@ class Menu extends Model
     }
 
     /**
+     * El menú y sus ancestros, desde él mismo hasta la raíz.
+     *
+     * Un submenú muestra los productos que cumplen su filtro y además los de cada menú
+     * de arriba: "Notebook › Asus" son las notebooks Asus, no todo lo de Asus. Los
+     * contenedores no filtran, así que en un árbol de contenedores no cambia nada.
+     *
+     * Se cortan los ciclos por las dudas: el formulario los impide, pero el reordenar
+     * por AJAX guarda parent_id sin validarlo.
+     */
+    public function linaje(): array
+    {
+        $cadena = [];
+        $vistos = [];
+        $menu = $this;
+
+        while ($menu && !isset($vistos[$menu->id])) {
+            $vistos[$menu->id] = true;
+            $cadena[] = $menu;
+            $menu = $menu->parent;
+        }
+
+        return $cadena;
+    }
+
+    /**
      * Verificar si el menú tiene hijos
      */
     public function tieneHijos(): bool

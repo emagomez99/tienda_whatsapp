@@ -51,14 +51,7 @@ class TiendaController extends Controller
 
         // Filtros directos desde URL (modo legacy / sin slug)
         if ($request->filled('etiqueta') && is_numeric($request->etiqueta)) {
-            $etiquetaId  = (int) $request->etiqueta;
-            $etiquetaValor = $request->etiqueta_valor;
-            $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $etiquetaValor) {
-                $q->where('etiquetas.id', $etiquetaId);
-                if ($etiquetaValor) {
-                    $q->where('producto_etiqueta.valor', $etiquetaValor);
-                }
-            });
+            $query->conEtiqueta((int) $request->etiqueta, $request->etiqueta_valor);
         }
 
         if ($request->filled('proveedor') && is_numeric($request->proveedor)) {
@@ -140,19 +133,19 @@ class TiendaController extends Controller
 
         foreach ($filtros as $filtroEtiquetaId => $filtroValor) {
             if ($filtroValor && $filtroEtiquetaId != $etiquetaId) {
-                $query->whereHas('etiquetas', function ($q) use ($filtroEtiquetaId, $filtroValor) {
-                    $q->where('etiquetas.id', $filtroEtiquetaId)
-                      ->where('producto_etiqueta.valor', $filtroValor);
-                });
+                $query->conEtiqueta($filtroEtiquetaId, $filtroValor);
             }
         }
 
         $productoIds = $query->pluck('id');
 
+        // Agrupado sin distinguir mayúsculas, igual que filtra conEtiqueta: "Afnan" y
+        // "afnan" son una sola opción en el desplegable, no dos que traen lo mismo.
         $valores = DB::table('producto_etiqueta')
             ->whereIn('producto_id', $productoIds)
             ->where('etiqueta_id', $etiquetaId)
-            ->distinct()
+            ->groupByRaw('lower(valor)')
+            ->selectRaw('min(valor) as valor')
             ->orderBy('valor')
             ->pluck('valor');
 
@@ -181,14 +174,7 @@ class TiendaController extends Controller
         }
 
         if ($request->filled('etiqueta')) {
-            $etiquetaId  = $request->etiqueta;
-            $etiquetaValor = $request->etiqueta_valor;
-            $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $etiquetaValor) {
-                $q->where('etiquetas.id', $etiquetaId);
-                if ($etiquetaValor) {
-                    $q->where('producto_etiqueta.valor', $etiquetaValor);
-                }
-            });
+            $query->conEtiqueta($request->etiqueta, $request->etiqueta_valor);
         }
 
         if ($request->filled('especificacion')) {
@@ -201,10 +187,7 @@ class TiendaController extends Controller
         $filtros = $request->input('filtros', []);
         foreach ($filtros as $etiquetaId => $valor) {
             if ($valor) {
-                $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $valor) {
-                    $q->where('etiquetas.id', $etiquetaId)
-                      ->where('producto_etiqueta.valor', $valor);
-                });
+                $query->conEtiqueta($etiquetaId, $valor);
             }
         }
 
@@ -275,17 +258,22 @@ class TiendaController extends Controller
 
     // ─── Helpers privados ────────────────────────────────────────────────────
 
+    /**
+     * Filtro del menú sumado al de todos sus ancestros (ver Menu::linaje).
+     */
     private function aplicarFiltroTipoMenu($query, Menu $menu)
+    {
+        foreach ($menu->linaje() as $nivel) {
+            $this->aplicarFiltroDeUnMenu($query, $nivel);
+        }
+    }
+
+    private function aplicarFiltroDeUnMenu($query, Menu $menu)
     {
         if ($menu->tipo_enlace === Menu::TIPO_PROVEEDOR) {
             $query->where('proveedor_id', $menu->enlace_id);
         } elseif ($menu->tipo_enlace === Menu::TIPO_ETIQUETA) {
-            $query->whereHas('etiquetas', function ($q) use ($menu) {
-                $q->where('etiquetas.id', $menu->enlace_id);
-                if ($menu->enlace_valor) {
-                    $q->where('producto_etiqueta.valor', $menu->enlace_valor);
-                }
-            });
+            $query->conEtiqueta($menu->enlace_id, $menu->enlace_valor);
         } elseif ($menu->tipo_enlace === Menu::TIPO_ESPECIFICACION) {
             $val = $menu->enlace_valor;
             $query->whereHas('especificaciones', function ($q) use ($val) {
@@ -324,10 +312,7 @@ class TiendaController extends Controller
             if (preg_match('/^f(\d+)$/', $key, $matches) && $value) {
                 $etiquetaId = (int) $matches[1];
                 $filtrosAplicados[$etiquetaId] = $value;
-                $query->whereHas('etiquetas', function ($q) use ($etiquetaId, $value) {
-                    $q->where('etiquetas.id', $etiquetaId)
-                      ->where('producto_etiqueta.valor', $value);
-                });
+                $query->conEtiqueta($etiquetaId, $value);
             }
         }
 
