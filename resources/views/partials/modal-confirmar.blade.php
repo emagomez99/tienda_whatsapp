@@ -10,6 +10,8 @@
         data-confirmar-detalle="Esta acción no se puede deshacer."
         data-confirmar-boton="Sí, eliminar"
 
+    Para lo que no es un formulario: confirmarAccion({texto, detalle, boton}, callback).
+
     Sigue el mismo patrón de los modales ya existentes (ver admin/pedidos/show.blade.php).
 --}}
 <div class="modal fade" id="modalConfirmarAccion" tabindex="-1" aria-hidden="true">
@@ -40,7 +42,22 @@
         var texto        = document.getElementById('modalConfirmarTexto');
         var detalle      = document.getElementById('modalConfirmarDetalle');
         var btnAceptar   = document.getElementById('modalConfirmarAceptar');
-        var formPendiente = null;
+        var alAceptar    = null;
+
+        /**
+         * Uso desde JS, para lo que no es un formulario (ej. salir de una página con
+         * cambios sin guardar):
+         *
+         *     confirmarAccion({ texto: '...', detalle: '...', boton: '...' }, function () { ... });
+         */
+        window.confirmarAccion = function (opciones, accion) {
+            alAceptar              = accion;
+            texto.textContent      = opciones.texto;
+            btnAceptar.textContent = opciones.boton || 'Sí, continuar';
+            detalle.textContent    = opciones.detalle || '';
+            detalle.classList.toggle('d-none', !opciones.detalle);
+            modal.show();
+        };
 
         // Se intercepta en captura y sobre todo el documento para que también
         // alcance a los formularios que se agregan al DOM después de cargar.
@@ -52,37 +69,35 @@
 
             e.preventDefault();
 
-            formPendiente        = form;
-            texto.textContent    = form.getAttribute('data-confirmar');
-            btnAceptar.textContent = form.getAttribute('data-confirmar-boton') || 'Sí, continuar';
+            window.confirmarAccion({
+                texto:   form.getAttribute('data-confirmar'),
+                detalle: form.getAttribute('data-confirmar-detalle'),
+                boton:   form.getAttribute('data-confirmar-boton')
+            }, function () {
+                form.dataset.confirmado = '1';
 
-            var textoDetalle = form.getAttribute('data-confirmar-detalle');
-            detalle.textContent = textoDetalle || '';
-            detalle.classList.toggle('d-none', !textoDetalle);
-
-            modal.show();
+                // requestSubmit respeta la validación del formulario; submit() no existe
+                // en navegadores viejos con ese nombre, de ahí el fallback.
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else {
+                    form.submit();
+                }
+            });
         }, true);
 
         btnAceptar.addEventListener('click', function () {
-            if (!formPendiente) return;
+            if (!alAceptar) return;
 
-            var form = formPendiente;
-            formPendiente = null;
-            form.dataset.confirmado = '1';
+            var accion = alAceptar;
+            alAceptar = null;
             modal.hide();
-
-            // requestSubmit respeta la validación del formulario; submit() no existe
-            // en navegadores viejos con ese nombre, de ahí el fallback.
-            if (typeof form.requestSubmit === 'function') {
-                form.requestSubmit();
-            } else {
-                form.submit();
-            }
+            accion();
         });
 
-        // Si se cancela, el formulario vuelve a pedir confirmación la próxima vez.
+        // Si se cancela, la próxima vez vuelve a pedir confirmación.
         modalEl.addEventListener('hidden.bs.modal', function () {
-            formPendiente = null;
+            alAceptar = null;
         });
     })();
 </script>

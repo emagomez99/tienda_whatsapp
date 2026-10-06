@@ -135,4 +135,48 @@ class ProductoFormularioTest extends TestCase
             ->assertSee('Los precios están ocultos en la tienda.')
             ->assertDontSee('id="vp-precio"', false);
     }
+
+    public function test_la_edicion_ofrece_ver_el_producto_en_la_tienda_en_otra_pestana()
+    {
+        $this->comoAdmin()->get($this->urlTenant('admin/productos/' . $this->producto->id . '/edit'))
+            ->assertOk()
+            ->assertSee('/producto/producto-con-stock/' . $this->producto->id . '" target="_blank"', false)
+            ->assertSee('Ver en la tienda')
+            ->assertSee('id="cambios-sin-guardar"', false);
+    }
+
+    public function test_la_edicion_muestra_las_especificaciones_guardadas()
+    {
+        $this->enTenant(function () {
+            $this->producto->especificaciones()->create(['clave' => 'Peso', 'valor' => '1,5 kg']);
+        });
+
+        $this->comoAdmin()->get($this->urlTenant('admin/productos/' . $this->producto->id . '/edit'))
+            ->assertOk()
+            ->assertSee('name="especificaciones[0][clave]" value="Peso"', false)
+            ->assertSee('name="especificaciones[0][valor]" value="1,5 kg"', false);
+    }
+
+    /** Las sugerencias de especificaciones dicen cuántos productos usan cada texto. */
+    public function test_las_sugerencias_de_especificaciones_traen_la_cantidad_de_productos()
+    {
+        $this->enTenant(function () {
+            $otro = $this->producto->replicate(['public_id', 'slug']);
+            $otro->save();
+            $this->producto->especificaciones()->create(['clave' => 'Peso', 'valor' => '1 kg']);
+            $otro->especificaciones()->create(['clave' => 'Peso', 'valor' => '1 kg']);
+            $otro->especificaciones()->create(['clave' => 'Color', 'valor' => 'Rojo']);
+        });
+
+        $this->comoAdmin()->getJson($this->urlTenant('admin/especificaciones/claves'))
+            ->assertOk()
+            ->assertExactJson([
+                ['valor' => 'Color', 'detalle' => '1 producto'],
+                ['valor' => 'Peso', 'detalle' => '2 productos'],
+            ]);
+
+        $this->comoAdmin()->getJson($this->urlTenant('admin/especificaciones/valores?clave=Peso'))
+            ->assertOk()
+            ->assertExactJson([['valor' => '1 kg', 'detalle' => '2 productos']]);
+    }
 }

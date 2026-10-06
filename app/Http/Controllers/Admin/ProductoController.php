@@ -12,6 +12,7 @@ use App\Models\ProductoImagen;
 use App\Models\StockMovimiento;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -627,15 +628,29 @@ class ProductoController extends Controller
     {
         $buscar = trim($request->get('q', ''));
 
-        $query = ProductoEspecificacion::query()->select('clave')->distinct();
+        $query = ProductoEspecificacion::query()
+            ->select('clave as texto', DB::raw('count(*) as usos'))
+            ->groupBy('clave');
 
         if ($buscar !== '') {
             $query->where('clave', 'ilike', "%{$buscar}%");
         }
 
-        $claves = $query->orderBy('clave')->limit(self::MAX_SUGERENCIAS)->pluck('clave');
+        return response()->json($this->comoSugerencias($query->orderBy('clave')->limit(self::MAX_SUGERENCIAS)->get()));
+    }
 
-        return response()->json($claves);
+    /**
+     * Mismo formato que las sugerencias de etiquetas (EtiquetaValor::comoSugerencia):
+     * el texto y cuántos productos lo usan, para distinguir el usual de uno cargado
+     * una vez.
+     */
+    private function comoSugerencias($filas)
+    {
+        return $filas->map(function ($fila) {
+            $usos = (int) $fila->usos;
+
+            return ['valor' => $fila->texto, 'detalle' => $usos . ($usos === 1 ? ' producto' : ' productos')];
+        })->values();
     }
 
     public function buscarEspecificacionValores(Request $request)
@@ -643,7 +658,9 @@ class ProductoController extends Controller
         $buscar = trim($request->get('q', ''));
         $clave  = trim($request->get('clave', ''));
 
-        $query = ProductoEspecificacion::query()->select('valor')->distinct();
+        $query = ProductoEspecificacion::query()
+            ->select('valor as texto', DB::raw('count(*) as usos'))
+            ->groupBy('valor');
 
         if ($buscar !== '') {
             $query->where('valor', 'ilike', "%{$buscar}%");
@@ -653,9 +670,7 @@ class ProductoController extends Controller
             $query->where('clave', $clave);
         }
 
-        $valores = $query->orderBy('valor')->limit(self::MAX_SUGERENCIAS)->pluck('valor');
-
-        return response()->json($valores);
+        return response()->json($this->comoSugerencias($query->orderBy('valor')->limit(self::MAX_SUGERENCIAS)->get()));
     }
 
     public function buscarParaPedido(Request $request)

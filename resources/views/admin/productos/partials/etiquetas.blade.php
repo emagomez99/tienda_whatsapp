@@ -200,6 +200,13 @@
 
     // ── Aviso debajo del valor ───────────────────────────────────────────────
 
+    // Lo que tenía cada etiqueta al abrir la página: si no se tocó no hay nada que
+    // avisar (al editar, cada fila diría "valor existente" sin aportar nada).
+    var alAbrir = {};
+    INICIALES.forEach(function (fila) {
+        if (fila && fila.etiqueta_id) alAbrir[String(fila.etiqueta_id)] = (fila.valor || '').trim();
+    });
+
     function vigilar(input, estado, etiquetaId) {
         var espera = null, secuencia = 0;
 
@@ -207,7 +214,11 @@
             var escrito = input.value.trim();
             var mia = ++secuencia;
 
-            if (escrito === '') { estado.innerHTML = ''; return; }
+            if (escrito === '' || escrito === alAbrir[etiquetaId]) {
+                estado.className = 'etiqueta-estado small mt-1';
+                estado.innerHTML = '';
+                return;
+            }
 
             fetch(URL_ESTADO.replace('__ID__', etiquetaId) + '?valor=' + encodeURIComponent(escrito), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },

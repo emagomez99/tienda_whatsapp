@@ -10,9 +10,19 @@
 @endphp
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="mb-0"><i class="bi bi-pencil"></i> Editar Producto <span class="text-muted fw-normal">#{{ $producto->id }}</span></h3>
-    <a href="{{ $backUrl }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Volver
-    </a>
+    <div class="d-flex gap-2">
+        {{-- Pestaña nueva: así no se pierde lo que se esté editando acá. --}}
+        <a href="{{ $producto->url() }}" target="_blank" rel="noopener" class="btn btn-outline-primary"
+           title="{{ $producto->disponible ? 'Abrir la página del producto en la tienda' : 'No está disponible: los clientes no lo ven en los listados' }}">
+            <i class="bi bi-box-arrow-up-right"></i> Ver en la tienda
+            @unless($producto->disponible)
+                <span class="badge bg-secondary ms-1">oculto</span>
+            @endunless
+        </a>
+        <a href="{{ $backUrl }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
 </div>
 
 <form id="form-producto" action="{{ route('admin.productos.update', $producto) }}" method="POST" enctype="multipart/form-data">
@@ -318,49 +328,7 @@
 
             @include('admin.productos.partials.etiquetas', ['valoresIniciales' => session()->hasOldInput() ? old('etiquetas', []) : $producto->etiquetas->map(function ($e) { return ['etiqueta_id' => $e->id, 'valor' => $e->pivot->valor]; })->all()])
 
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Especificaciones
-                        @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.especificaciones'), 'lugar' => 'right', 'grande' => true])
-                    </h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-especificacion">
-                        <i class="bi bi-plus"></i> Agregar
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div id="especificaciones-container">
-                        @forelse($producto->especificaciones as $index => $espec)
-                            <div class="row mb-2 especificacion-row">
-                                <div class="col-md-5 position-relative">
-                                    <input type="text" class="form-control especificacion-clave" name="especificaciones[{{ $index }}][clave]" placeholder="Clave (ej: Peso)" value="{{ $espec->clave }}" data-combo="{{ route('admin.especificaciones.claves') }}" autocomplete="off">
-                                </div>
-                                <div class="col-md-5 position-relative">
-                                    <input type="text" class="form-control especificacion-valor" name="especificaciones[{{ $index }}][valor]" placeholder="Valor (ej: 1.75)" value="{{ $espec->valor }}" data-combo="{{ route('admin.especificaciones.valores') }}" data-combo-fila=".especificacion-row" data-combo-param="clave" data-combo-desde=".especificacion-clave" autocomplete="off">
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-outline-danger btn-eliminar-especificacion">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="row mb-2 especificacion-row">
-                                <div class="col-md-5 position-relative">
-                                    <input type="text" class="form-control especificacion-clave" name="especificaciones[0][clave]" placeholder="Clave (ej: Peso)" data-combo="{{ route('admin.especificaciones.claves') }}" autocomplete="off">
-                                </div>
-                                <div class="col-md-5 position-relative">
-                                    <input type="text" class="form-control especificacion-valor" name="especificaciones[0][valor]" placeholder="Valor (ej: 1.75)" data-combo="{{ route('admin.especificaciones.valores') }}" data-combo-fila=".especificacion-row" data-combo-param="clave" data-combo-desde=".especificacion-clave" autocomplete="off">
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-outline-danger btn-eliminar-especificacion">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
+            @include('admin.productos.partials.especificaciones', ['especificacionesIniciales' => session()->hasOldInput() ? old('especificaciones', []) : $producto->especificaciones->map(function ($e) { return ['clave' => $e->clave, 'valor' => $e->valor]; })->all()])
             @include('admin.productos.partials.card-seo')
         </div>
 
@@ -408,9 +376,6 @@
 @include('admin.productos.partials.slug-script')
 @include('admin.productos.partials.combo-sugerencias')
 <script>
-    {{-- URLs para las plantillas de fila que se arman dentro de JS --}}
-    const COMBO_URL_ESPEC_CLAVES  = @json(route('admin.especificaciones.claves'));
-    const COMBO_URL_ESPEC_VALORES = @json(route('admin.especificaciones.valores'));
     var quill = new Quill('#detalle-editor', {
         theme: 'snow',
         placeholder: 'Descripción completa del producto, características, usos, etc.',
@@ -431,8 +396,6 @@
         document.getElementById('detalle').value = contenido === '<p><br></p>' ? '' : contenido;
     });
 
-    let especificacionIndex = {{ $producto->especificaciones->count() ?: 1 }};
-
     document.getElementById('btn-generar-codigo').addEventListener('click', function() {
         var sel = document.getElementById('proveedor_id');
         var option = sel.options[sel.selectedIndex];
@@ -441,39 +404,6 @@
         document.getElementById('id_proveedor').value = prefijo ? prefijo + '-' + numero : String(numero);
     });
 
-    document.getElementById('agregar-especificacion').addEventListener('click', function() {
-        const container = document.getElementById('especificaciones-container');
-        const newRow = document.createElement('div');
-        newRow.className = 'row mb-2 especificacion-row';
-        newRow.innerHTML = `
-            <div class="col-md-5 position-relative">
-                <input type="text" class="form-control especificacion-clave" name="especificaciones[${especificacionIndex}][clave]" placeholder="Clave (ej: Peso)" data-combo="${COMBO_URL_ESPEC_CLAVES}" autocomplete="off">
-            </div>
-            <div class="col-md-5 position-relative">
-                <input type="text" class="form-control especificacion-valor" name="especificaciones[${especificacionIndex}][valor]" placeholder="Valor (ej: 1.75)" data-combo="${COMBO_URL_ESPEC_VALORES}" data-combo-fila=".especificacion-row" data-combo-param="clave" data-combo-desde=".especificacion-clave" autocomplete="off">
-            </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-outline-danger btn-eliminar-especificacion">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        `;
-        container.appendChild(newRow);
-        especificacionIndex++;
-    });
-
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.btn-eliminar-especificacion')) {
-            const rows = document.querySelectorAll('.especificacion-row');
-            if (rows.length > 1) {
-                e.target.closest('.especificacion-row').remove();
-            } else {
-                const row = e.target.closest('.especificacion-row');
-                row.querySelector('.especificacion-clave').value = '';
-                row.querySelector('.especificacion-valor').value = '';
-            }
-        }
-    });
 
     // === Gestor de Imagen Principal ===
     (function() {
