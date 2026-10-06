@@ -137,17 +137,20 @@ class TiendaController extends Controller
             }
         }
 
-        $productoIds = $query->pluck('id');
+        // Los productos van como subconsulta y no como lista de ids: en "Kits por
+        // Modelo" de oleomc son 30.900, que traídos a PHP y devueltos como parámetros
+        // hacían tardar este pedido un segundo.
+        $productos = $query->select('productos.id');
 
         // Los valores ocultos desde el panel no se ofrecen como opción.
         $valores = DB::table('etiqueta_valores')
             ->where('etiqueta_id', $etiquetaId)
             ->where('visible', true)
-            ->whereIn('id', function ($q) use ($productoIds, $etiquetaId) {
+            ->whereIn('id', function ($q) use ($productos, $etiquetaId) {
                 $q->select('etiqueta_valor_id')
                   ->from('producto_etiqueta')
                   ->where('etiqueta_id', $etiquetaId)
-                  ->whereIn('producto_id', $productoIds);
+                  ->whereIn('producto_id', $productos);
             })
             ->orderBy('valor')
             ->pluck('valor');

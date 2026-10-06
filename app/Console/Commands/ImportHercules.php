@@ -129,6 +129,16 @@ class ImportHercules extends Command
         $this->log('INFO', "Cache misses: {$this->stats['cache_misses']}");
         $this->log('INFO', '=== FIN DE IMPORTACIÓN ===');
 
+        // Después de una carga masiva las estadísticas de Postgres quedan viejas: en
+        // oleomc estimaba 13 productos para un fabricante que tenía 13.550, y con esa
+        // cuenta elige planes pensados para tablas casi vacías. El autovacuum las
+        // pone al día cuando quiere; acá se fuerza en el momento en que cambian.
+        if (!$dryRun && $this->stats['productos_nuevos'] > 0) {
+            foreach (['productos', 'producto_etiqueta', 'etiqueta_valores', 'producto_especificaciones', 'producto_imagenes'] as $tabla) {
+                DB::statement('ANALYZE ' . $tabla);
+            }
+        }
+
         tenancy()->end();
 
         return Command::SUCCESS;
