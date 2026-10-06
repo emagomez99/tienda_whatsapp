@@ -202,16 +202,17 @@
            Paneles con sombra y esquinas redondeadas, opciones con el color de la
            tienda al pasar el mouse, y submenús alineados con la opción que los abre. */
         .navbar .dropdown-menu {
-            --menu-padding: .4rem;
+            --menu-padding: .3rem;
             border: 0;
-            border-radius: .75rem;
+            border-radius: .6rem;
             padding: var(--menu-padding);
-            min-width: 13rem;
+            min-width: 0;                      /* el ancho lo da la opción más larga */
             box-shadow: 0 .5rem 1.75rem rgba(0, 0, 0, .14), 0 0 0 1px rgba(0, 0, 0, .04);
         }
         .navbar .dropdown-item {
-            border-radius: .5rem;
-            padding: .5rem .85rem;
+            border-radius: .4rem;
+            padding: .4rem .7rem;
+            font-size: .95rem;
             color: #212529;
         }
         .navbar .dropdown-item:hover,
@@ -229,12 +230,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 1.25rem;
+            gap: .6rem;
         }
         .dropdown-menu .dropend > .dropdown-toggle::after {
             content: "\F285";                     /* bi-chevron-right */
             font-family: "bootstrap-icons";
-            font-size: .75rem;
+            font-size: .65rem;
             border: 0;
             margin: 0;
             vertical-align: 0;
@@ -248,7 +249,7 @@
             position: absolute;
             top: calc(-1 * var(--menu-padding));
             left: 100%;
-            margin: 0 0 0 .25rem;
+            margin: 0 0 0 .2rem;
         }
         /* Puente invisible sobre el espacio entre los dos paneles: sin él, al cruzar
            con el mouse se pierde el hover y el submenú se cierra. */
