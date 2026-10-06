@@ -9,6 +9,7 @@ use App\Http\Controllers\TiendaController;
 use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EtiquetaController;
+use App\Http\Controllers\Admin\EtiquetaValorController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\MonedaController;
 use App\Http\Controllers\Admin\PedidoController;
@@ -93,6 +94,11 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::resource('perfiles', PerfilController::class)->parameters(['perfiles' => 'perfil']);
         Route::resource('etiquetas', EtiquetaController::class);
         Route::get('/etiquetas/{etiqueta}/valores', [EtiquetaController::class, 'buscarValores'])->name('etiquetas.valores');
+        Route::patch('/etiquetas/{etiqueta}/visibilidad', [EtiquetaController::class, 'cambiarVisibilidad'])->name('etiquetas.visibilidad');
+        Route::patch('/etiqueta-valores/{valor}/visibilidad', [EtiquetaValorController::class, 'cambiarVisibilidad'])->name('etiqueta-valores.visibilidad');
+        Route::put('/etiqueta-valores/{valor}', [EtiquetaValorController::class, 'update'])->name('etiqueta-valores.update');
+        Route::post('/etiqueta-valores/{valor}/fusionar', [EtiquetaValorController::class, 'fusionar'])->name('etiqueta-valores.fusionar');
+        Route::delete('/etiqueta-valores/{valor}', [EtiquetaValorController::class, 'destroy'])->name('etiqueta-valores.destroy');
         Route::resource('monedas', MonedaController::class)->except(['show']);
 
         Route::get('/configuraciones', [ConfiguracionController::class, 'index'])->name('configuraciones.index');

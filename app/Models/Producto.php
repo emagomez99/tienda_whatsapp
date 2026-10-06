@@ -240,6 +240,20 @@ class Producto extends Model
                     ->withTimestamps();
     }
 
+    /**
+     * Las etiquetas que se muestran en la tienda: etiqueta visible y valor visible.
+     *
+     * Es la única definición de "qué ve el cliente": tarjetas, ficha y meta title la
+     * usan, así que ocultar un valor desde el panel lo saca de todos lados a la vez.
+     */
+    public function etiquetasPublicas()
+    {
+        return $this->etiquetas()
+            ->join('etiqueta_valores', 'etiqueta_valores.id', '=', 'producto_etiqueta.etiqueta_valor_id')
+            ->where('etiquetas.visible_usuarios', true)
+            ->where('etiqueta_valores.visible', true);
+    }
+
     public function especificaciones()
     {
         return $this->hasMany(ProductoEspecificacion::class);
@@ -392,10 +406,10 @@ class Producto extends Model
 
         $partes = [trim((string) $this->descripcion)];
 
-        foreach ($this->etiquetas as $etiqueta) {
+        foreach ($this->etiquetasPublicas as $etiqueta) {
             $valor = trim((string) $etiqueta->pivot->valor);
 
-            if ($etiqueta->visible_usuarios && $valor !== '') {
+            if ($valor !== '') {
                 $partes[] = $valor;
             }
         }

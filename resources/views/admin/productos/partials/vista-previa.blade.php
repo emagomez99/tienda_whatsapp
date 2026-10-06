@@ -79,6 +79,9 @@
     // Datos del servidor que el formulario no tiene.
     var DATOS = {
         etiquetasVisibles: @json($etiquetas->where('visible_usuarios', true)->pluck('id')->map(function ($id) { return (string) $id; })->values()),
+        // Valores ocultos desde el panel, por etiqueta, en su forma normalizada
+        // (EtiquetaValor::normalizar): tampoco se muestran en la tienda.
+        valoresOcultos: @json(App\Models\EtiquetaValor::where('visible', false)->get(['etiqueta_id', 'normalizado'])->groupBy('etiqueta_id')->map(function ($valores) { return $valores->pluck('normalizado'); })),
         simbolos: @json($monedas->mapWithKeys(function ($m) { return [$m->id => $m->simbolo]; })),
         mostrarSinStock: @json(App\Models\Configuracion::mostrarProductosSinStock()),
         // En edición el stock no es un campo: se ajusta con movimientos.
@@ -134,6 +137,8 @@
             var valor  = fila.querySelector('.etiqueta-valor');
             if (!select || !select.value || !valor || !valor.value.trim()) return;
             if (DATOS.etiquetasVisibles.indexOf(select.value) === -1) return;
+            var ocultos = DATOS.valoresOcultos[select.value] || [];
+            if (ocultos.indexOf(valor.value.trim().replace(/\s+/g, ' ').toLowerCase()) !== -1) return;
             var nombre = select.options[select.selectedIndex].text;
             html += '<span class="badge fw-normal vp-etiqueta">' + texto(nombre) + ': ' + texto(valor.value.trim()) + '</span>';
         });

@@ -36,7 +36,9 @@ class ProductoTituloTest extends TestCase
             $relacion->push($etiqueta);
         }
 
-        $producto->setRelation('etiquetas', $relacion);
+        // El meta title lee etiquetasPublicas: qué etiquetas y valores se ven lo decide
+        // esa relación en SQL (cubierto en Feature\EtiquetaValorVisibleTest).
+        $producto->setRelation('etiquetasPublicas', $relacion);
 
         return $producto;
     }
@@ -68,14 +70,12 @@ class ProductoTituloTest extends TestCase
     }
 
     /** @test */
-    public function ignora_las_etiquetas_no_visibles_y_las_vacias()
+    public function ignora_las_etiquetas_vacias()
     {
         $producto = $this->producto('Mantecol', [
             'Calorias' => '1500',
             'Tamanio'  => '',
-            'Interna'  => 'no mostrar',
         ]);
-        $producto->etiquetas->last()->visible_usuarios = false;
 
         $this->assertSame('Mantecol · 1500', $producto->meta_title);
     }

@@ -41,7 +41,7 @@ class TiendaController extends Controller
             }
         }
 
-        $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
+        $query = Producto::with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
             ->visiblesEnTienda();
 
         // Filtro por búsqueda
@@ -90,7 +90,7 @@ class TiendaController extends Controller
     {
         $menuActual = Menu::where('slug', $slug)->where('activo', true)->firstOrFail();
 
-        $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
+        $query = Producto::with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
             ->visiblesEnTienda();
 
         // Aplicar el scope base del menú (proveedor, etiqueta, especificación)
@@ -139,13 +139,16 @@ class TiendaController extends Controller
 
         $productoIds = $query->pluck('id');
 
-        // Agrupado sin distinguir mayúsculas, igual que filtra conEtiqueta: "Afnan" y
-        // "afnan" son una sola opción en el desplegable, no dos que traen lo mismo.
-        $valores = DB::table('producto_etiqueta')
-            ->whereIn('producto_id', $productoIds)
+        // Los valores ocultos desde el panel no se ofrecen como opción.
+        $valores = DB::table('etiqueta_valores')
             ->where('etiqueta_id', $etiquetaId)
-            ->groupByRaw('lower(valor)')
-            ->selectRaw('min(valor) as valor')
+            ->where('visible', true)
+            ->whereIn('id', function ($q) use ($productoIds, $etiquetaId) {
+                $q->select('etiqueta_valor_id')
+                  ->from('producto_etiqueta')
+                  ->where('etiqueta_id', $etiquetaId)
+                  ->whereIn('producto_id', $productoIds);
+            })
             ->orderBy('valor')
             ->pluck('valor');
 
@@ -157,7 +160,7 @@ class TiendaController extends Controller
      */
     public function productosAjax(Request $request)
     {
-        $query = Producto::with(['proveedor', 'etiquetas', 'especificaciones', 'moneda'])
+        $query = Producto::with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
             ->visiblesEnTienda();
 
         $menuActual = null;
@@ -250,7 +253,7 @@ class TiendaController extends Controller
             return $this->redirigirACanonica($producto);
         }
 
-        $producto->load(['proveedor', 'etiquetas', 'especificaciones', 'moneda', 'imagenes']);
+        $producto->load(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda', 'imagenes']);
         $mostrarPrecios = Configuracion::mostrarPrecios();
 
         return view('tienda.show', compact('producto', 'mostrarPrecios'));

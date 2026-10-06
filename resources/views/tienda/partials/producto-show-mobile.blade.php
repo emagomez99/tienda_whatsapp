@@ -122,9 +122,9 @@
         @endif
 
         {{-- Etiquetas --}}
-        @if($producto->etiquetas->where('visible_usuarios', true)->count() > 0)
+        @if($producto->etiquetasPublicas->isNotEmpty())
             <div class="mb-3">
-                @foreach($producto->etiquetas->where('visible_usuarios', true) as $etiqueta)
+                @foreach($producto->etiquetasPublicas as $etiqueta)
                     <span class="badge bg-info me-1">{{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}</span>
                 @endforeach
             </div>

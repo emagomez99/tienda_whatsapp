@@ -40,9 +40,9 @@
                             </a>
                         </h6>
 
-                        @if($producto->etiquetas->where('visible_usuarios', true)->count() > 0)
+                        @if($producto->etiquetasPublicas->isNotEmpty())
                             <div class="d-flex flex-wrap gap-1 mb-2">
-                                @foreach($producto->etiquetas->where('visible_usuarios', true) as $etiqueta)
+                                @foreach($producto->etiquetasPublicas as $etiqueta)
                                     <span class="badge fw-normal"
                                           style="background:rgba(13,202,240,.12);color:#0a6a77;font-size:.7rem;">
                                         {{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}
