@@ -1,7 +1,10 @@
 @extends('layouts.app')
 
-@section('title', isset($menuActual) && $menuActual ? $menuActual->meta_title : '')
-@section('meta_description', isset($menuActual) && $menuActual ? $menuActual->meta_description : '')
+{{-- El (string) no es decorativo: con null, @section no lo toma como valor sino como
+     el comienzo de una sección que nunca se cierra, y deja un buffer de salida abierto
+     en cada página de un menú sin meta description. --}}
+@section('title', (string) (isset($menuActual) && $menuActual ? $menuActual->meta_title : ''))
+@section('meta_description', (string) (isset($menuActual) && $menuActual ? $menuActual->meta_description : ''))
 
 @php $menuEnSidebar = App\Models\Configuracion::menuEnSidebar(); @endphp
 
