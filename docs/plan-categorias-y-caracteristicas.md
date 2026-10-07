@@ -105,6 +105,10 @@ Reglas:
 - **Características de un producto** = la unión de las de todas sus categorías; es obligatoria si lo es en alguna.
 - Al elegir una subcategoría en el producto, el producto aparece también en las de arriba (Perros › Camas lista también en Perros) sin tener que marcarlas.
 - **Productos de una categoría** = los de ella y los de todas sus subcategorías (para menús y conteos).
+- **Visibilidad heredada** (como Tiendanube: "al ocultar esta categoría, las subcategorías asociadas también quedarán ocultas"): una categoría se ve en la tienda sólo si ella y todos sus ancestros están visibles. Se calcula, no se copia a las hijas: al volver a mostrar la madre, cada hija recupera su propio estado.
+  - En el panel, una hija oculta por herencia se ve atenuada con "oculta por «Ropa»", y su ojo indica que depende de la madre.
+  - Ocultar una categoría **no oculta los productos**: siguen apareciendo en la búsqueda y en sus otras categorías visibles. Lo que desaparece es la categoría del menú automático, del sitemap y su página (`/categoria/{slug}` responde 404).
+  - Un menú personalizado que apunta a una categoría oculta queda vacío: se avisa en Menús como hoy con "0 productos".
 - Los valores de las características siguen como hoy: `etiqueta_valores`, únicos, ocultables, con "¿Quisiste decir?".
 
 Lo que se reutiliza sin cambios: `EtiquetaValor`, `ProductoEtiqueta` (pivot que unifica valores), árbol de valores, sugerencias con cantidad, `Producto::scopeDelMenu` (se le suma el tipo categoría), árbol de menús con arrastrar y soltar.
@@ -209,7 +213,7 @@ Objetivo: cada producto tiene una categoría, y los menús pueden apuntar a cate
 - [ ] **Menú automático (D8):** ajuste "El menú de la tienda se arma con las categorías"; la tienda (escritorio y celular) lo dibuja desde el árbol de categorías visibles. Las tiendas actuales siguen con su menú personalizado (D9).
 - [ ] Página de categoría en la tienda: `/categoria/{slug}` con SEO (título, descripción, canónica) y en el sitemap.
 - [ ] Comando de migración de datos (ver sección 6): crea categorías desde la etiqueta "Categoria"/"Subcategoria", asigna productos y convierte los menús que filtraban por esas etiquetas. Con `--dry-run` que muestra qué haría.
-- [ ] Tests: árbol (ciclos, profundidad), productos de una categoría con subcategorías, menú por categoría, comando de migración.
+- [ ] Tests: árbol (ciclos, profundidad), productos de una categoría con subcategorías, menú por categoría, comando de migración, **visibilidad heredada** (ocultar la madre oculta las hijas en el menú automático, el sitemap y su página; al mostrarla, cada hija recupera su estado; los productos siguen en la búsqueda).
 - [ ] Correrlo en perfumes, arcor y oleomc; revisar con el usuario.
 
 ### Etapa 2: Características por categoría
