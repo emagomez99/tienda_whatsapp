@@ -204,6 +204,12 @@
                         <i class="bi bi-box-seam me-2"></i> Productos
                     </a>
                 @endif
+                @if($user->puede('categorias.ver'))
+                    <a href="{{ route('admin.categorias.index') }}"
+                       class="admin-drawer-item {{ request()->routeIs('admin.categorias.*') ? 'active' : '' }}">
+                        <i class="bi bi-diagram-3 me-2"></i> Categorías
+                    </a>
+                @endif
                 @if($user->puede('proveedores.ver'))
                     <a href="{{ route('admin.proveedores.index') }}"
                        class="admin-drawer-item {{ request()->routeIs('admin.proveedores.*') ? 'active' : '' }}">

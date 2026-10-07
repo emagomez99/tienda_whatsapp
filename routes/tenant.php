@@ -8,6 +8,7 @@ use App\Http\Controllers\SeoController;
 use App\Http\Controllers\TiendaController;
 use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\EtiquetaController;
 use App\Http\Controllers\Admin\EtiquetaValorController;
 use App\Http\Controllers\Admin\MenuController;
@@ -89,6 +90,10 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::post('/productos/{producto}/ajustar-stock', [ProductoController::class, 'ajustarStock'])->name('productos.ajustar-stock');
 
         Route::resource('productos', ProductoController::class);
+        Route::post('/categorias/reordenar', [CategoriaController::class, 'reordenar'])->name('categorias.reordenar');
+        Route::post('/categorias/{categoria}/mover', [CategoriaController::class, 'mover'])->name('categorias.mover');
+        Route::patch('/categorias/{categoria}/visibilidad', [CategoriaController::class, 'cambiarVisibilidad'])->name('categorias.visibilidad');
+        Route::resource('categorias', CategoriaController::class)->except(['show'])->parameters(['categorias' => 'categoria']);
         Route::resource('proveedores', ProveedorController::class)->parameters(['proveedores' => 'proveedor']);
         Route::resource('usuarios', UserController::class);
         Route::resource('perfiles', PerfilController::class)->parameters(['perfiles' => 'perfil']);

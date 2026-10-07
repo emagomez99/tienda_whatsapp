@@ -326,20 +326,7 @@ class MenuController extends Controller
     {
         $request->validate(['direccion' => 'required|in:arriba,abajo']);
 
-        $hermanos = Menu::where('parent_id', $menu->parent_id)->orderBy('orden')->orderBy('id')->get()->values();
-        $actual   = $hermanos->search(function (Menu $m) use ($menu) { return $m->id === $menu->id; });
-        $destino  = $request->input('direccion') === 'arriba' ? $actual - 1 : $actual + 1;
-
-        if ($destino >= 0 && $destino < $hermanos->count()) {
-            $orden = $hermanos->all();
-            [$orden[$actual], $orden[$destino]] = [$orden[$destino], $orden[$actual]];
-
-            foreach ($orden as $posicion => $hermano) {
-                if ((int) $hermano->orden !== $posicion) {
-                    $hermano->update(['orden' => $posicion]);
-                }
-            }
-        }
+        (new ArbolDeMenus())->moverEntreHermanos($menu, $request->input('direccion'));
 
         return redirect()->route('admin.menus.index')->with('menu_movido', $menu->id);
     }

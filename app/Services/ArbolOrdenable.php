@@ -66,6 +66,36 @@ abstract class ArbolOrdenable
     }
 
     /**
+     * Sube o baja un elemento un lugar entre sus hermanos (la alternativa a
+     * arrastrar, desde el menú ⋯). Se renumera a todos los hermanos (0, 1, 2…)
+     * porque puede haber posiciones repetidas, y con posiciones iguales "subir" no
+     * tendría con quién intercambiar.
+     */
+    public function moverEntreHermanos(Model $elemento, string $direccion): void
+    {
+        $modelo = $this->modelo();
+
+        $hermanos = $modelo::where('parent_id', $elemento->parent_id)->orderBy('orden')->orderBy('id')->get()->values();
+        $actual   = $hermanos->search(function ($h) use ($elemento) { return (int) $h->id === (int) $elemento->id; });
+        $destino  = $direccion === 'arriba' ? $actual - 1 : $actual + 1;
+
+        if ($actual === false || $destino < 0 || $destino >= $hermanos->count()) {
+            return;
+        }
+
+        $orden = $hermanos->all();
+        [$orden[$actual], $orden[$destino]] = [$orden[$destino], $orden[$actual]];
+
+        foreach ($orden as $posicion => $hermano) {
+            if ((int) $hermano->orden !== $posicion) {
+                $hermano->update(['orden' => $posicion]);
+            }
+        }
+
+        $this->despuesDeOrdenar();
+    }
+
+    /**
      * Profundidad de un elemento en el árbol dado.
      *
      * @throws ValidationException si el camino hacia arriba vuelve sobre sí mismo
