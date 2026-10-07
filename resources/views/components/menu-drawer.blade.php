@@ -1,6 +1,5 @@
 @php
-    use App\Models\Menu;
-    $drawerItems = Menu::getArbolMenu();
+    $drawerItems = App\Services\MenuDeLaTienda::opciones();
 @endphp
 
 {{-- Recursivo (ver menu-drawer-item): antes llegaba sólo hasta el segundo nivel, y

@@ -8,6 +8,7 @@ use App\Models\Etiqueta;
 use App\Models\Menu;
 use App\Models\Producto;
 use App\Services\ArbolDeMenus;
+use App\Services\MenuDeLaTienda;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -18,7 +19,7 @@ class MenuController extends Controller
     public function __construct()
     {
         $this->middleware('permiso:menus.ver')->only(['index', 'show', 'valoresEtiqueta', 'contarProductos']);
-        $this->middleware('permiso:menus.gestionar')->only(['create', 'store', 'edit', 'update', 'destroy', 'reordenar', 'mover']);
+        $this->middleware('permiso:menus.gestionar')->only(['create', 'store', 'edit', 'update', 'destroy', 'reordenar', 'mover', 'cambiarOrigen']);
     }
 
     public function index()
@@ -38,7 +39,34 @@ class MenuController extends Controller
             }
         });
 
-        return view('admin.menus.index', compact('menus', 'productosPorMenu'));
+        $automatico = MenuDeLaTienda::esAutomatico();
+        $categoriasEnMenu = $automatico ? $this->contarOpciones(MenuDeLaTienda::opciones()) : 0;
+
+        return view('admin.menus.index', compact('menus', 'productosPorMenu', 'automatico', 'categoriasEnMenu'));
+    }
+
+    /**
+     * Qué menú ve el cliente: el automático, con las categorías, o el armado acá.
+     * Los menús armados no se borran al pasar al automático: quedan para volver.
+     */
+    public function cambiarOrigen(Request $request)
+    {
+        $datos = $request->validate([
+            'origen' => ['required', Rule::in([MenuDeLaTienda::ORIGEN_CATEGORIAS, MenuDeLaTienda::ORIGEN_PROPIO])],
+        ]);
+
+        MenuDeLaTienda::elegirOrigen($datos['origen']);
+
+        return redirect()->route('admin.menus.index')->with('success', $datos['origen'] === MenuDeLaTienda::ORIGEN_CATEGORIAS
+            ? 'La tienda ahora muestra tus categorías como menú.'
+            : 'La tienda ahora muestra el menú armado acá.');
+    }
+
+    private function contarOpciones($opciones): int
+    {
+        return $opciones->reduce(function ($total, $opcion) {
+            return $total + 1 + $this->contarOpciones($opcion->hijos());
+        }, 0);
     }
 
     /**

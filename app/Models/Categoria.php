@@ -102,6 +102,34 @@ class Categoria extends Model
         }, array_reverse($this->linaje())));
     }
 
+    /** La página de la categoría en la tienda. */
+    public function url(): string
+    {
+        return route('tienda.categoria', $this->slug);
+    }
+
+    /**
+     * Título para Google: el cargado, o "Remeras | Tienda". Como en los menús, el
+     * nombre solo no dice de quién es ni qué se vende.
+     */
+    public function tituloParaBuscadores(): string
+    {
+        if ($this->meta_title) {
+            return $this->meta_title;
+        }
+
+        $tienda = trim((string) Configuracion::nombreTienda());
+
+        return $tienda === '' || mb_stripos($this->nombre, $tienda) !== false
+            ? $this->nombre
+            : $this->nombre . ' | ' . $tienda;
+    }
+
+    public function descripcionParaBuscadores(): string
+    {
+        return (string) ($this->meta_description ?: str_replace(' > ', ' › ', $this->camino()) . ' en ' . Configuracion::nombreTienda() . '.');
+    }
+
     public function admiteSubcategorias(): bool
     {
         return $this->nivel() <= self::NIVEL_MAXIMO_PADRE;

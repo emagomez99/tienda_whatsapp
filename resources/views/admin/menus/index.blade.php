@@ -10,7 +10,52 @@
     </a>
 </div>
 
-@if($menus->count() > 0)
+@php $puedeGestionar = auth()->user()->puede('menus.gestionar'); @endphp
+<div class="card mb-4" id="origen-menu">
+    <div class="card-body d-flex flex-wrap align-items-center gap-3">
+        <div class="flex-grow-1" style="min-width: 240px;">
+            <strong>Qué menú ve el cliente</strong>
+            <div class="small text-muted">
+                @if($automatico)
+                    Se arma solo con tus categorías visibles, en el orden de
+                    <a href="{{ route('admin.categorias.index') }}">Categorías</a>{{ $categoriasEnMenu ? ' (' . $categoriasEnMenu . ($categoriasEnMenu === 1 ? ' opción' : ' opciones') . ')' : '' }}.
+                    @if($categoriasEnMenu === 0)
+                        <span class="text-warning-emphasis">Todavía no hay categorías visibles: la tienda no muestra menú.</span>
+                    @endif
+                @else
+                    El que armás acá abajo. También podés usar uno automático con tus categorías: estos menús quedan guardados por si querés volver.
+                @endif
+            </div>
+        </div>
+        @if($puedeGestionar)
+            <form action="{{ route('admin.menus.origen') }}" method="POST" id="form-origen-menu">
+                @csrf
+                @method('PATCH')
+                <div class="btn-group" role="group" aria-label="Origen del menú">
+                    <input type="radio" class="btn-check" name="origen" id="origen-categorias" value="{{ App\Services\MenuDeLaTienda::ORIGEN_CATEGORIAS }}" {{ $automatico ? 'checked' : '' }}>
+                    <label class="btn btn-outline-primary btn-sm" for="origen-categorias"><i class="bi bi-diagram-3"></i> Con las categorías</label>
+                    <input type="radio" class="btn-check" name="origen" id="origen-propio" value="{{ App\Services\MenuDeLaTienda::ORIGEN_PROPIO }}" {{ $automatico ? '' : 'checked' }}>
+                    <label class="btn btn-outline-primary btn-sm" for="origen-propio"><i class="bi bi-list-nested"></i> Armado a mano</label>
+                </div>
+            </form>
+            @push('scripts')
+            <script>
+                document.querySelectorAll('#form-origen-menu input[name="origen"]').forEach(function (radio) {
+                    radio.addEventListener('change', function () { radio.form.submit(); });
+                });
+            </script>
+            @endpush
+        @endif
+    </div>
+</div>
+
+@if($automatico && $menus->count() > 0)
+    <div class="alert alert-light border small">
+        <i class="bi bi-info-circle"></i> Los menús de abajo no se muestran en la tienda mientras uses el de categorías. Sus páginas siguen funcionando para quien llegue desde Google o un enlace viejo.
+    </div>
+@endif
+
+@if($menus->count() > 0 && !$automatico)
     @include('admin.menus.partials.vista-previa')
 @endif
 

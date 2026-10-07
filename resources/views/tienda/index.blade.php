@@ -3,8 +3,15 @@
 {{-- El (string) no es decorativo: con null, @section no lo toma como valor sino como
      el comienzo de una sección que nunca se cierra, y deja un buffer de salida abierto
      en cada página de un menú sin meta description. --}}
-@section('title', (string) (isset($menuActual) && $menuActual ? $menuActual->meta_title : ''))
-@section('meta_description', (string) (isset($menuActual) && $menuActual ? $menuActual->meta_description : ''))
+@php $categoriaActual = $categoriaActual ?? null; @endphp
+@if($categoriaActual)
+    @section('title', $categoriaActual->tituloParaBuscadores())
+    @section('meta_description', $categoriaActual->descripcionParaBuscadores())
+    @section('meta_canonical', $categoriaActual->url())
+@else
+    @section('title', (string) (isset($menuActual) && $menuActual ? $menuActual->meta_title : ''))
+    @section('meta_description', (string) (isset($menuActual) && $menuActual ? $menuActual->meta_description : ''))
+@endif
 
 @php $menuEnSidebar = App\Models\Configuracion::menuEnSidebar(); @endphp
 
@@ -17,10 +24,43 @@
 @endpush
 @endif
 
+@if($categoriaActual)
+@php
+    $migas = array_map(function ($c) { return ['name' => $c->nombre, 'url' => $c->url()]; }, array_reverse($categoriaActual->linaje()));
+@endphp
+@push('schema')
+<script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::breadcrumbSchema(
+    array_merge([['name' => 'Inicio', 'url' => route('tienda.index')]], $migas)
+)) !!}</script>
+@endpush
+@endif
+
 @section('content')
 @if(!$menuEnSidebar)
 <div class="container py-4">
 @endif
+    @if($categoriaActual)
+        <nav aria-label="Ruta" class="small mb-1">
+            <a href="{{ route('tienda.index') }}" class="text-muted text-decoration-none">Inicio</a>
+            @foreach($migas as $miga)
+                <span class="text-muted mx-1">›</span>
+                @if($loop->last)
+                    <span class="text-muted" aria-current="page">{{ $miga['name'] }}</span>
+                @else
+                    <a href="{{ $miga['url'] }}" class="text-muted text-decoration-none">{{ $miga['name'] }}</a>
+                @endif
+            @endforeach
+        </nav>
+        <h1 class="h3 mb-3">{{ $categoriaActual->nombre }}</h1>
+        @if($subcategorias->isNotEmpty())
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                @foreach($subcategorias as $sub)
+                    <a href="{{ $sub->url() }}" class="btn btn-sm btn-outline-secondary rounded-pill">{{ $sub->nombre }}</a>
+                @endforeach
+            </div>
+        @endif
+    @endif
+
     <div class="row mb-4">
         <div class="col-12">
             <div class="input-group search-bar shadow-sm">
@@ -135,6 +175,7 @@ document.addEventListener('submit', function (e) {
         // URLs con slug no existe ?menu=, así que al paginar o buscar no se mandaba
         // menu_id y el AJAX devolvía el catálogo entero en vez del rubro elegido.
         const MENU_ID = @json($menuActual->id ?? null);
+        const CATEGORIA_ID = @json($categoriaActual->id ?? null);
 
         function obtenerParametrosURL() {
             const url = new URL(window.location);
@@ -157,6 +198,7 @@ document.addEventListener('submit', function (e) {
 
             // Agregar parámetros existentes
             if (urlParams.menu) params.append('menu_id', urlParams.menu);
+            if (CATEGORIA_ID) params.append('categoria_id', CATEGORIA_ID);
             if (urlParams.proveedor) params.append('proveedor', urlParams.proveedor);
             if (urlParams.etiqueta) params.append('etiqueta', urlParams.etiqueta);
             if (urlParams.etiqueta_valor) params.append('etiqueta_valor', urlParams.etiqueta_valor);
@@ -253,6 +295,7 @@ document.addEventListener('submit', function (e) {
                 const busqueda = inputBuscar.value.trim();
 
                 if (urlParams.menu) params.append('menu_id', urlParams.menu);
+            if (CATEGORIA_ID) params.append('categoria_id', CATEGORIA_ID);
                 if (urlParams.proveedor) params.append('proveedor', urlParams.proveedor);
                 if (urlParams.etiqueta) params.append('etiqueta', urlParams.etiqueta);
                 if (urlParams.etiqueta_valor) params.append('etiqueta_valor', urlParams.etiqueta_valor);

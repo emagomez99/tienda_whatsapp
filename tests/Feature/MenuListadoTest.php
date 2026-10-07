@@ -194,7 +194,7 @@ class MenuListadoTest extends TestCase
 
         $html = $this->get($this->urlTenant('/'))->assertOk()->getContent();
 
-        $this->assertStringContainsString('data-bs-target="#drawer-sub-' . $this->ids['asus'] . '"', $html);
+        $this->assertStringContainsString('data-bs-target="#drawer-sub-m' . $this->ids['asus'] . '"', $html);
         $this->assertStringContainsString('catalogo/asus-gamer', $html);
     }
 

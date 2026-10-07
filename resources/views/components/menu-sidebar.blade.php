@@ -1,6 +1,5 @@
 @php
-    use App\Models\Menu;
-    $menuItems = Menu::getArbolMenu();
+    $menuItems = App\Services\MenuDeLaTienda::opciones();
 @endphp
 
 @if($menuItems->count() > 0)

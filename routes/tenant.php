@@ -29,6 +29,7 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
     // Rutas públicas de la tienda
     Route::get('/', [TiendaController::class, 'index'])->name('tienda.index');
     Route::get('/catalogo/{slug}', [TiendaController::class, 'catalogo'])->name('tienda.catalogo');
+    Route::get('/categoria/{slug}', [TiendaController::class, 'categoria'])->name('tienda.categoria');
     // El id va en su propio segmento (no pegado al slug con guión) para que no haya
     // ambigüedad cuando el slug termina en número -- ej. /producto/jcb-991-00131/17080.
     // Ver Producto::url() y TiendaController::show().
@@ -127,6 +128,7 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
 
         // Antes del resource: si no, menus/{menu} se queda con "contar-productos".
         Route::get('/menus/contar-productos', [MenuController::class, 'contarProductos'])->name('menus.contar-productos');
+        Route::patch('/menus/origen', [MenuController::class, 'cambiarOrigen'])->name('menus.origen');
         Route::resource('menus', MenuController::class);
         Route::post('/menus/reordenar', [MenuController::class, 'reordenar'])->name('menus.reordenar');
         Route::post('/menus/{menu}/mover', [MenuController::class, 'mover'])->name('menus.mover');

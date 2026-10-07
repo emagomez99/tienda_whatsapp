@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use App\Models\Configuracion;
 use App\Models\Etiqueta;
 use App\Models\Menu;
@@ -110,6 +111,42 @@ class TiendaController extends Controller
     }
 
     /**
+     * La página de una categoría: sus productos y los de sus subcategorías. Una
+     * categoría oculta (o dentro de una oculta) no existe para el cliente: 404.
+     */
+    public function categoria(string $slug, Request $request)
+    {
+        $categoriaActual = Categoria::where('slug', $slug)->firstOrFail();
+        if (!$categoriaActual->esVisibleEnTienda()) {
+            abort(404);
+        }
+
+        $query = Producto::with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
+            ->visiblesEnTienda()
+            ->enCategoria($categoriaActual);
+
+        if ($request->filled('buscar')) {
+            $this->aplicarFiltroBusqueda($query, $request->buscar);
+        }
+
+        $productos = $this->paginar($request, $query, false);
+
+        // La madre ya es visible, así que de las hijas alcanza con su propia marca.
+        $subcategorias = $categoriaActual->children->filter(function (Categoria $c) { return $c->marcadaVisible(); })->values();
+
+        $menuActual = null;
+        $filtrosAplicados = [];
+        $filtrosIncompletos = false;
+        $etiquetas = Etiqueta::where('visible_usuarios', true)->orderBy('nombre')->get();
+        $mostrarPrecios = Configuracion::mostrarPrecios();
+
+        return view('tienda.index', compact(
+            'productos', 'etiquetas', 'mostrarPrecios', 'menuActual', 'filtrosAplicados', 'filtrosIncompletos',
+            'categoriaActual', 'subcategorias'
+        ));
+    }
+
+    /**
      * Obtener valores disponibles para un filtro en cascada (AJAX)
      */
     public function filtrosValores(Request $request)
@@ -168,6 +205,14 @@ class TiendaController extends Controller
             if ($menuActual) {
                 $query->delMenu($menuActual);
             }
+        }
+
+        if ($request->filled('categoria_id')) {
+            $categoria = Categoria::find((int) $request->categoria_id);
+            if (!$categoria || !$categoria->esVisibleEnTienda()) {
+                abort(404);
+            }
+            $query->enCategoria($categoria);
         }
 
         if ($request->filled('proveedor')) {

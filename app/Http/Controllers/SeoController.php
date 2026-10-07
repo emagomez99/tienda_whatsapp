@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Configuracion;
+use App\Models\Categoria;
 use App\Models\Menu;
 use App\Models\Producto;
 use Illuminate\Support\Facades\Cache;
@@ -118,6 +119,17 @@ class SeoController extends Controller
                 $urls[] = [
                     'loc' => route('tienda.catalogo', $menu->slug),
                     'lastmod' => $menu->updated_at ? $menu->updated_at->toAtomString() : now()->toAtomString(),
+                    'priority' => '0.8',
+                ];
+            });
+
+        // Las ocultas no: su página da 404.
+        Categoria::enOrdenDeArbol()
+            ->filter(function (Categoria $categoria) { return $categoria->esVisibleEnTienda(); })
+            ->each(function (Categoria $categoria) use (&$urls) {
+                $urls[] = [
+                    'loc' => $categoria->url(),
+                    'lastmod' => $categoria->updated_at ? $categoria->updated_at->toAtomString() : now()->toAtomString(),
                     'priority' => '0.8',
                 ];
             });
