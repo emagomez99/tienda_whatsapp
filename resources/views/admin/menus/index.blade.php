@@ -115,19 +115,44 @@
     var NIVEL_MAXIMO = {{ App\Services\ArbolDeMenus::NIVEL_MAXIMO }};
     var token = document.querySelector('meta[name="csrf-token"]').content;
     var plegados = {};   // id → true, para mantenerlos plegados al refrescar
-    var antes = null;    // el árbol al empezar a arrastrar
+    var antes = null;         // el árbol al empezar a arrastrar
+    var cuentasAntes = {};    // y cuántos productos mostraba cada menú
 
-    function aviso(texto, tipo) {
+    /**
+     * Aviso abajo a la derecha. Con accion ({texto, alHacer}) suma un botón (ej.
+     * Deshacer) y no se cierra solo: hay que leerlo y decidir.
+     */
+    function aviso(texto, tipo, accion) {
+        tipo = tipo || 'success';
         var contenedor = document.getElementById('toast-container');
         var toast = document.createElement('div');
-        toast.className = 'toast align-items-center border-0 text-bg-' + (tipo || 'success');
+        toast.className = 'toast align-items-center border-0 text-bg-' + tipo;
         toast.setAttribute('role', 'status');
-        toast.innerHTML = '<div class="d-flex"><div class="toast-body"></div>'
-            + '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
-        toast.querySelector('.toast-body').textContent = texto;
+        toast.innerHTML = '<div class="d-flex align-items-start"><div class="toast-body"></div>'
+            + '<button type="button" class="btn-close me-2 mt-2 ' + (tipo === 'warning' ? '' : 'btn-close-white') + '" data-bs-dismiss="toast"></button></div>';
+        var cuerpo = toast.querySelector('.toast-body');
+        cuerpo.textContent = texto;
+        if (accion) {
+            var boton = document.createElement('button');
+            boton.type = 'button';
+            boton.className = 'btn btn-sm btn-dark d-block mt-2';
+            boton.textContent = accion.texto;
+            boton.addEventListener('click', function () { bootstrap.Toast.getInstance(toast).hide(); accion.alHacer(); });
+            cuerpo.appendChild(boton);
+        }
         contenedor.appendChild(toast);
-        new bootstrap.Toast(toast, { delay: 3000 }).show();
+        new bootstrap.Toast(toast, accion ? { autohide: false } : { delay: 3000 }).show();
         toast.addEventListener('hidden.bs.toast', function () { toast.remove(); });
+    }
+
+    /** Cuántos productos muestra cada menú según la lista (null si sólo agrupa). */
+    function cuentas() {
+        var mapa = {};
+        document.querySelectorAll('#menu-tree .menu-nodo').forEach(function (nodo) {
+            var cuenta = nodo.querySelector(':scope > .menu-fila .menu-cuenta');
+            mapa[nodo.dataset.id] = cuenta ? parseInt(cuenta.textContent.replace(/\D/g, ''), 10) || 0 : null;
+        });
+        return mapa;
     }
 
     // ── Plegar ──────────────────────────────────────────────────────────────
@@ -194,13 +219,57 @@
             });
     }
 
-    function guardar(movido) {
-        fetch(URL_ORDENAR, {
+    function enviar(items) {
+        return fetch(URL_ORDENAR, {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
-            body: JSON.stringify({ items: arbol() })
-        })
+            body: JSON.stringify({ items: items })
+        });
+    }
+
+    /**
+     * Si al moverlo, el menú (o uno de sus submenús) pasó a mostrar 0 productos, se
+     * explica por qué: dentro de otro menú hereda sus filtros. Sin este aviso parece
+     * que el menú se rompió.
+     */
+    function avisarSiQuedoVacio(movidoId, arbolAnterior, antesDeMover) {
+        var movido = document.getElementById('menu-' + movidoId);
+        if (!movido) return false;
+
+        var nodos = [movido].concat(Array.prototype.slice.call(movido.querySelectorAll('.menu-nodo')));
+        var vacios = nodos.filter(function (nodo) {
+            var despues = cuentas()[nodo.dataset.id];
+            return antesDeMover[nodo.dataset.id] > 0 && despues === 0;
+        }).map(function (nodo) { return '«' + nodo.dataset.nombre + '»'; });
+
+        if (!vacios.length) return false;
+
+        // Los filtros que hereda: los de los menús de arriba que no sólo agrupan.
+        var filtros = [], padre = movido.parentElement.closest('.menu-nodo'), nombrePadre = padre ? padre.dataset.nombre : '';
+        while (padre) {
+            if (padre.querySelector(':scope > .menu-fila .menu-cuenta')) {
+                filtros.unshift(padre.querySelector(':scope > .menu-fila .menu-filtro').textContent.trim());
+            }
+            padre = padre.parentElement.closest('.menu-nodo');
+        }
+
+        aviso(
+            vacios.join(', ') + (vacios.length === 1 ? ' quedó' : ' quedaron') + ' sin productos: dentro de «' + nombrePadre
+                + '» también se filtra por ' + filtros.join(' y ') + '.',
+            'warning',
+            {
+                texto: 'Deshacer',
+                alHacer: function () {
+                    enviar(JSON.parse(arbolAnterior)).then(refrescar).then(function () { aviso('Se deshizo el cambio.'); });
+                }
+            }
+        );
+        return true;
+    }
+
+    function guardar(movido, arbolAnterior, antesDeMover) {
+        enviar(arbol())
             .then(function (r) {
                 return r.json().then(function (datos) { return { ok: r.ok, datos: datos }; });
             })
@@ -211,8 +280,11 @@
                     aviso(mensaje, 'danger');
                     return refrescar();
                 }
-                aviso('«' + movido + '» quedó en su nuevo lugar.');
-                return refrescar();
+                return refrescar().then(function () {
+                    if (!avisarSiQuedoVacio(movido.dataset.id, arbolAnterior, antesDeMover)) {
+                        aviso('«' + movido.dataset.nombre + '» quedó en su nuevo lugar.');
+                    }
+                });
             })
             .catch(function () {
                 aviso('No se pudo guardar el orden. Revisá la conexión.', 'danger');
@@ -240,6 +312,7 @@
                 onStart: function () {
                     document.body.classList.add('arrastrando-menu');
                     antes = JSON.stringify(arbol());
+                    cuentasAntes = cuentas();
                 },
                 // No dejar soltar donde quedaría más profundo de lo permitido.
                 onMove: function (evt, original) {
@@ -267,7 +340,7 @@
                 onEnd: function (evt) {
                     document.body.classList.remove('arrastrando-menu');
                     if (JSON.stringify(arbol()) === antes) return;
-                    guardar(evt.item.dataset.nombre);
+                    guardar(evt.item, antes, cuentasAntes);
                 }
             });
         });
