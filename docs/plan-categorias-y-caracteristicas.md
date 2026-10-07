@@ -5,7 +5,7 @@
 
 ## Estado actual
 
-- **Etapa en curso:** Etapa 0. Decisiones D1–D11 cerradas el 2026-10-07; falta revisar la maqueta (sección 5, Etapa 0).
+- **Etapa en curso:** Etapa 1 (maqueta aprobada el 2026-10-07).
 - **Orden de trabajo:** 0 → 1 → 2 (con migración real de las 2 tiendas en cada una) → 5 (Excel) → 3 → 4.
 - **Último commit antes del plan:** `9516afe` (árbol de menús con arrastrar y soltar).
 
@@ -119,7 +119,7 @@ Cada etapa queda usable sola, con tests, commiteada y migrada en las 3 tiendas l
 
 ### Etapa 0: decisiones y diseño (sin código)
 - [x] Cerrar las decisiones D1–D11 (tabla de arriba).
-- [ ] Maqueta de las pantallas (abajo): revisarla con el usuario.
+- [x] Maqueta de las pantallas (abajo): aprobada.
 
 #### Maqueta
 
@@ -193,12 +193,12 @@ Características  (según Ropa › Remeras y Ofertas)
 Menú de la tienda   (•) Se arma con las categorías visibles (recomendado)
                     ( ) Personalizado → Admin › Menús
 ```
-- [ ] Revisar con el usuario la migración propuesta para cada tienda (sección 6).
+- [x] Revisar con el usuario la migración propuesta para cada tienda (sección 6).
 
 ### Etapa 1: Categorías
 Objetivo: cada producto tiene una categoría, y los menús pueden apuntar a categorías.
 
-- [ ] **Servicio de guardado de producto** (antes que nada): sacar de `ProductoController` las reglas que hoy viven ahí (`validarEtiquetasObligatorias`, `sincronizarEtiquetas`, especificaciones, `sincronizarGaleria`) a un servicio (ej. `App\Services\GuardadoDeProducto`) que reciba datos ya validados y devuelva errores por campo. El controlador sólo orquesta. Lo va a usar la importación desde Excel (Etapa 5). Tests de las reglas en el servicio, sin HTTP.
+- [x] **Servicio de guardado de producto** (antes que nada): sacar de `ProductoController` las reglas que hoy viven ahí (`validarEtiquetasObligatorias`, `sincronizarEtiquetas`, especificaciones, `sincronizarGaleria`) a un servicio (ej. `App\Services\GuardadoDeProducto`) que reciba datos ya validados y devuelva errores por campo. El controlador sólo orquesta. Lo va a usar la importación desde Excel (Etapa 5). Tests de las reglas en el servicio, sin HTTP.
 - [ ] Migración `create_categorias_table` + `categoria_producto`.
 - [ ] `Categoria::resolverCamino('Ropa > Remeras', crear: bool)`: busca por camino (sin distinguir mayúsculas, con el mismo normalizado que los valores) y opcionalmente crea lo que falta. Lo usa el formulario ("Crear categoría" en el panel) y la importación.
 - [ ] Modelo `Categoria`: `parent`, `children`, `productos`, `linaje()`, `idsConDescendientes()`, `nivel()`; límite de niveles (D4).
@@ -301,3 +301,4 @@ Datos útiles:
 | 2026-10-07 | Ayuda de Tiendanube sobre ordenar: confirma el árbol (derecha/izquierda, 3 niveles); se suma línea de destino (Etapa 1) y orden de productos por categoría (Etapa 4) | — |
 | 2026-10-07 | Decisiones D1–D11 cerradas (todas las recomendadas; D6 = Kits hidráulicos; D11 = oleomc y perfumes) | — |
 | 2026-10-07 | Se migra ahora (2 tiendas reales, sin convivencia). Se planifica la importación desde Excel (Etapa 5) y se adelanta a la Etapa 1 el servicio de guardado de producto que va a compartir. Nuevas decisiones D10 (clave por código) y D11 (qué tiendas) | — |
+| 2026-10-08 | Etapa 1: servicio `GuardadoDeProducto` + `DatosDeProducto` (null = no tocar, [] = vaciar); el formulario lo usa | (este commit) |

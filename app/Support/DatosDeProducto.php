@@ -1,0 +1,120 @@
+<?php
+
+namespace App\Support;
+
+use Illuminate\Http\UploadedFile;
+
+/**
+ * Lo que se quiere guardar de un producto, venga del formulario o de una planilla.
+ *
+ * Cada parte opcional distingue "no tocar" (null, el valor por defecto) de "dejar
+ * vacío" ([]): una planilla que no trae la columna de especificaciones no tiene que
+ * borrarlas, mientras que el formulario, que siempre las manda, sí las reemplaza.
+ *
+ * Inmutable: cada con...() devuelve una copia.
+ */
+final class DatosDeProducto
+{
+    /** @var array columnas de productos, ya validadas en su formato */
+    private $atributos;
+
+    /** @var int|null sólo en el alta; entra como movimiento de stock */
+    private $stockInicial = null;
+
+    /** @var array|null etiqueta_id => valor */
+    private $etiquetas = null;
+
+    /** @var array|null [['clave' => ..., 'valor' => ...], ...] */
+    private $especificaciones = null;
+
+    /** @var array|null fichas de GaleriaProducto, en orden */
+    private $galeria = null;
+
+    /** @var UploadedFile[] */
+    private $archivosGaleria = [];
+
+    public function __construct(array $atributos)
+    {
+        $this->atributos = $atributos;
+    }
+
+    public function conStockInicial(int $cantidad): self
+    {
+        $copia = clone $this;
+        $copia->stockInicial = $cantidad;
+        return $copia;
+    }
+
+    /** @param array $valores etiqueta_id => valor; los vacíos se descartan */
+    public function conEtiquetas(array $valores): self
+    {
+        $copia = clone $this;
+        $copia->etiquetas = [];
+        foreach ($valores as $etiquetaId => $valor) {
+            if ($etiquetaId && trim((string) $valor) !== '') {
+                $copia->etiquetas[(int) $etiquetaId] = (string) $valor;
+            }
+        }
+        return $copia;
+    }
+
+    /** @param array $pares [['clave' => ..., 'valor' => ...]]; las incompletas se descartan */
+    public function conEspecificaciones(array $pares): self
+    {
+        $copia = clone $this;
+        $copia->especificaciones = [];
+        foreach ($pares as $par) {
+            $clave = trim((string) ($par['clave'] ?? ''));
+            $valor = trim((string) ($par['valor'] ?? ''));
+            if ($clave !== '' && $valor !== '') {
+                $copia->especificaciones[] = ['clave' => $clave, 'valor' => $valor];
+            }
+        }
+        return $copia;
+    }
+
+    /** @param UploadedFile[] $archivos */
+    public function conGaleria(array $fichas, array $archivos = []): self
+    {
+        $copia = clone $this;
+        $copia->galeria = array_values($fichas);
+        $copia->archivosGaleria = $archivos;
+        return $copia;
+    }
+
+    public function atributos(): array
+    {
+        return $this->atributos;
+    }
+
+    public function atributo(string $nombre, $porDefecto = null)
+    {
+        return array_key_exists($nombre, $this->atributos) ? $this->atributos[$nombre] : $porDefecto;
+    }
+
+    public function stockInicial(): ?int
+    {
+        return $this->stockInicial;
+    }
+
+    public function etiquetas(): ?array
+    {
+        return $this->etiquetas;
+    }
+
+    public function especificaciones(): ?array
+    {
+        return $this->especificaciones;
+    }
+
+    public function galeria(): ?array
+    {
+        return $this->galeria;
+    }
+
+    /** @return UploadedFile[] */
+    public function archivosGaleria(): array
+    {
+        return $this->archivosGaleria;
+    }
+}

@@ -10,6 +10,8 @@ use App\Models\ProductoEspecificacion;
 use App\Models\StockMovimiento;
 use App\Models\Proveedor;
 use App\Services\GaleriaProducto;
+use App\Services\GuardadoDeProducto;
+use App\Support\DatosDeProducto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -25,8 +27,13 @@ class ProductoController extends Controller
      */
     const MAX_SUGERENCIAS = 50;
 
-    public function __construct()
+    /** @var GuardadoDeProducto */
+    private $guardado;
+
+    public function __construct(GuardadoDeProducto $guardado)
     {
+        $this->guardado = $guardado;
+
         $this->middleware('permiso:productos.ver')->only(['index', 'show', 'buscarParaPedido', 'buscarEspecificacionClaves', 'buscarEspecificacionValores', 'historial']);
         $this->middleware('permiso:productos.crear')->only(['create', 'store']);
         $this->middleware('permiso:productos.editar')->only(['edit', 'update', 'ajustarStock']);
@@ -119,54 +126,10 @@ class ProductoController extends Controller
             unset($validated['slug']);
         }
 
-        $validated['disponible'] = $request->boolean('disponible');
-        $validated['por_encargue'] = $request->boolean('por_encargue');
+        $datos = $this->datosDelFormulario($request, $validated)
+            ->conStockInicial((int) $validated['stock']);
 
-        if (!empty($validated['detalle'])) {
-            $validated['detalle'] = strip_tags($validated['detalle'], '<p><br><b><strong><i><em><u><ul><ol><li><a><h1><h2><h3><h4><blockquote><pre><code><img><table><thead><tbody><tr><th><td>');
-        }
-
-        unset($validated['galeria'], $validated['galeria_archivos']);
-
-        $this->validarEtiquetasObligatorias($request, $validated['proveedor_id']);
-
-        // El stock se gestiona mediante movimientos; creamos el producto con stock=0
-        $stockInicial = (int) $validated['stock'];
-        $validated['stock'] = 0;
-
-        $producto = new Producto($this->sinPrecioDerivado($validated));
-        $producto->ajustarPrecioSegunModo();
-        $producto->save();
-
-        if ($stockInicial > 0) {
-            $producto->registrarMovimiento(
-                $stockInicial,
-                StockMovimiento::TIPO_AJUSTE_INICIAL,
-                'Stock inicial al crear el producto',
-                null,
-                auth()->id()
-            );
-        }
-
-        // Asignar etiquetas con valores
-        if ($request->filled('etiquetas')) {
-            $this->sincronizarEtiquetas($producto, $request->etiquetas);
-        }
-
-        // Crear especificaciones
-        if ($request->filled('especificaciones')) {
-            foreach ($request->especificaciones as $espec) {
-                if (!empty($espec['clave']) && !empty($espec['valor'])) {
-                    ProductoEspecificacion::create([
-                        'producto_id' => $producto->id,
-                        'clave' => $espec['clave'],
-                        'valor' => $espec['valor'],
-                    ]);
-                }
-            }
-        }
-
-        $this->sincronizarGaleria($request, $producto);
+        $this->guardado->crear($datos, auth()->id());
 
         return redirect()->route('admin.productos.index')
             ->with('success', 'Producto creado correctamente');
@@ -223,40 +186,7 @@ class ProductoController extends Controller
             $validated['slug'] = $producto->slug ?: Producto::generarSlug($validated['descripcion']);
         }
 
-        $validated['disponible']   = $request->boolean('disponible');
-        $validated['por_encargue'] = $request->boolean('por_encargue');
-        unset($validated['stock']);
-
-        if (!empty($validated['detalle'])) {
-            $validated['detalle'] = strip_tags($validated['detalle'], '<p><br><b><strong><i><em><u><ul><ol><li><a><h1><h2><h3><h4><blockquote><pre><code><img><table><thead><tbody><tr><th><td>');
-        }
-
-        unset($validated['galeria'], $validated['galeria_archivos']);
-
-        $this->validarEtiquetasObligatorias($request, $validated['proveedor_id']);
-
-        $producto->fill($this->sinPrecioDerivado($validated));
-        $producto->ajustarPrecioSegunModo();
-        $producto->save();
-
-        $this->sincronizarGaleria($request, $producto);
-
-        // Sincronizar etiquetas con valores
-        $this->sincronizarEtiquetas($producto, $request->input('etiquetas', []));
-
-        // Actualizar especificaciones
-        $producto->especificaciones()->delete();
-        if ($request->filled('especificaciones')) {
-            foreach ($request->especificaciones as $espec) {
-                if (!empty($espec['clave']) && !empty($espec['valor'])) {
-                    ProductoEspecificacion::create([
-                        'producto_id' => $producto->id,
-                        'clave' => $espec['clave'],
-                        'valor' => $espec['valor'],
-                    ]);
-                }
-            }
-        }
+        $this->guardado->actualizar($producto, $this->datosDelFormulario($request, $validated));
 
         $backParams = $request->input('_back', '');
         $backUrl = route('admin.productos.index') . ($backParams ? '?' . $backParams : '');
@@ -264,21 +194,37 @@ class ProductoController extends Controller
     }
 
     /**
-     * Las imágenes llegan como la galería entera, en orden (ver GaleriaProducto).
-     * Sin el campo galeria_enviada no se tocan: un pedido que no viene del formulario
-     * no tiene por qué borrar las imágenes.
+     * El formulario traducido a DatosDeProducto. El formulario manda siempre las
+     * etiquetas y las especificaciones (aunque vengan vacías, porque se quitaron
+     * todas), así que las reemplaza. La galería sólo si vino el campo
+     * galeria_enviada: un pedido que no viene del formulario no tiene por qué
+     * borrar las imágenes.
      */
-    private function sincronizarGaleria(Request $request, Producto $producto)
+    private function datosDelFormulario(Request $request, array $validated): DatosDeProducto
     {
-        if (!$request->boolean('galeria_enviada')) {
-            return;
+        $validated['disponible']   = $request->boolean('disponible');
+        $validated['por_encargue'] = $request->boolean('por_encargue');
+
+        $atributos = array_diff_key($validated, array_flip([
+            'stock', 'etiquetas', 'especificaciones', 'galeria', 'galeria_archivos',
+        ]));
+
+        $etiquetas = [];
+        foreach ($request->input('etiquetas', []) as $fila) {
+            if (!empty($fila['etiqueta_id'])) {
+                $etiquetas[$fila['etiqueta_id']] = $fila['valor'] ?? '';
+            }
         }
 
-        (new GaleriaProducto())->sincronizar(
-            $producto,
-            $request->input('galeria', []),
-            $request->file('galeria_archivos', [])
-        );
+        $datos = (new DatosDeProducto($atributos))
+            ->conEtiquetas($etiquetas)
+            ->conEspecificaciones($request->input('especificaciones', []));
+
+        if ($request->boolean('galeria_enviada')) {
+            $datos = $datos->conGaleria($request->input('galeria', []), $request->file('galeria_archivos', []));
+        }
+
+        return $datos;
     }
 
     public function destroy(Producto $producto)
@@ -347,21 +293,6 @@ class ProductoController extends Controller
         ];
     }
 
-    /**
-     * En modo margen el precio de venta es un valor derivado: se saca de los datos
-     * validados para que lo escriba el servidor y no el navegador. La vista previa
-     * del formulario manda el campo igual (está oculto, no ausente), y confiar en él
-     * sería dejar que cualquiera fije el precio con una request armada a mano.
-     */
-    private function sinPrecioDerivado(array $validated)
-    {
-        if (($validated['modo_precio_venta'] ?? null) === Producto::MODO_PRECIO_MARGEN) {
-            unset($validated['precio']);
-        }
-
-        return $validated;
-    }
-
     private function eliminarImagenLocal(Producto $producto): void
     {
         if ($producto->url_imagen && strpos($producto->url_imagen, 'http') !== 0) {
@@ -391,42 +322,6 @@ class ProductoController extends Controller
             })->pluck('id')->values()->toArray();
         }
         return $map;
-    }
-
-    private function validarEtiquetasObligatorias(Request $request, $proveedorId)
-    {
-        $proveedor = Proveedor::with('etiquetasObligatorias')->find($proveedorId);
-        if (!$proveedor || $proveedor->etiquetasObligatorias->isEmpty()) return;
-
-        $enviadas = collect($request->input('etiquetas', []))
-            ->filter(function ($e) { return !empty($e['etiqueta_id']) && trim($e['valor'] ?? '') !== ''; })
-            ->pluck('valor', 'etiqueta_id');
-
-        $faltantes = [];
-        foreach ($proveedor->etiquetasObligatorias as $etiqueta) {
-            if (!$enviadas->has($etiqueta->id)) {
-                $faltantes[] = $etiqueta->nombre;
-            }
-        }
-
-        if (!empty($faltantes)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'etiquetas' => 'Faltan etiquetas obligatorias para este proveedor: ' . implode(', ', $faltantes) . '.',
-            ]);
-        }
-    }
-
-    private function sincronizarEtiquetas(Producto $producto, array $etiquetas)
-    {
-        $syncData = [];
-
-        foreach ($etiquetas as $etiquetaData) {
-            if (!empty($etiquetaData['etiqueta_id']) && !empty($etiquetaData['valor'])) {
-                $syncData[$etiquetaData['etiqueta_id']] = ['valor' => $etiquetaData['valor']];
-            }
-        }
-
-        $producto->etiquetas()->sync($syncData);
     }
 
     public function historial(Producto $producto)
