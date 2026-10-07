@@ -5,7 +5,7 @@
 
 ## Estado actual
 
-- **Etapa en curso:** ninguna, plan aprobado el 2026-10-07. Arrancar por la **Etapa 0** (cerrar decisiones D1–D11).
+- **Etapa en curso:** Etapa 0. Decisiones D1–D11 cerradas el 2026-10-07; falta revisar la maqueta (sección 5, Etapa 0).
 - **Orden de trabajo:** 0 → 1 → 2 (con migración real de las 2 tiendas en cada una) → 5 (Excel) → 3 → 4.
 - **Último commit antes del plan:** `9516afe` (árbol de menús con arrastrar y soltar).
 
@@ -66,17 +66,17 @@ Marcar la elegida. Las recomendadas van primero.
 
 | # | Decisión | Opciones | Elegida |
 |---|---|---|---|
-| D1 | Nombre visible de "Etiquetas" | **Características** (rec.) · Atributos · dejar Etiquetas | ☐ |
-| D2 | Categorías por producto | **Varias** (rec. desde 2026-10-07, como Tiendanube: una cucha en "Perros" y en "Ofertas"; pide las características de todas) · una | ☐ |
-| D3 | Producto sin categoría | **Permitido**, se ve como "Sin categoría" con aviso en el listado (rec.) · obligatorio | ☐ |
-| D4 | Profundidad del árbol de categorías | **3 niveles** (rec.: igual que el menú) · libre | ☐ |
-| D5 | Nombres en la base | **Mantener** `etiquetas` / `etiqueta_valores` y renombrar sólo la interfaz (rec.: sin migración riesgosa) · renombrar tablas | ☐ |
-| D6 | oleomc: nombre de la categoría de los productos de Hercules | "Kits hidráulicos" · "Kits Hercules" · otro | ☐ |
-| D7 | Reglas por proveedor (`proveedor_etiqueta`) | **Se migran y se borran** en la Etapa 2 (rec.) · conviven un tiempo | ☐ |
-| D8 | Menú de la tienda | **Automático desde las categorías**, con Menús personalizado como opción en Ajustes (rec.) · siempre manual como hoy | ☐ |
-| D9 | Tiendas que ya tienen menú armado (perfumes, oleomc) | **Siguen con su menú personalizado** hasta que lo cambien (rec.) · pasar a automático | ☐ |
-| D10 | Clave del producto para actualizar desde una planilla | **Código** (`id_proveedor`) **único por tienda** cuando está cargado (rec.: en oleomc los 30.908 ya son únicos) · id interno · otra columna nueva (SKU) | ☐ |
-| D11 | ¿Cuáles son las 2 tiendas reales a migrar? | oleomc + ? (en local también están perfumes y arcor) | ☐ |
+| D1 | Nombre visible de "Etiquetas" | **Características** (rec.) · Atributos · dejar Etiquetas | ✅ Características |
+| D2 | Categorías por producto | **Varias** (rec. desde 2026-10-07, como Tiendanube: una cucha en "Perros" y en "Ofertas"; pide las características de todas) · una | ✅ Varias |
+| D3 | Producto sin categoría | **Permitido**, se ve como "Sin categoría" con aviso en el listado (rec.) · obligatorio | ✅ Permitido, con aviso |
+| D4 | Profundidad del árbol de categorías | **3 niveles** (rec.: igual que el menú) · libre | ✅ 3 niveles |
+| D5 | Nombres en la base | **Mantener** `etiquetas` / `etiqueta_valores` y renombrar sólo la interfaz (rec.: sin migración riesgosa) · renombrar tablas | ✅ Mantener nombres en la base |
+| D6 | oleomc: nombre de la categoría de los productos de Hercules | "Kits hidráulicos" · "Kits Hercules" · otro | ✅ Kits hidráulicos |
+| D7 | Reglas por proveedor (`proveedor_etiqueta`) | **Se migran y se borran** en la Etapa 2 (rec.) · conviven un tiempo | ✅ Se migran y se borran |
+| D8 | Menú de la tienda | **Automático desde las categorías**, con Menús personalizado como opción en Ajustes (rec.) · siempre manual como hoy | ✅ Automático desde categorías |
+| D9 | Tiendas que ya tienen menú armado (perfumes, oleomc) | **Siguen con su menú personalizado** hasta que lo cambien (rec.) · pasar a automático | ✅ Conservan su menú |
+| D10 | Clave del producto para actualizar desde una planilla | **Código** (`id_proveedor`) **único por tienda** cuando está cargado (rec.: en oleomc los 30.908 ya son únicos) · id interno · otra columna nueva (SKU) | ✅ Código único por tienda |
+| D11 | ¿Cuáles son las 2 tiendas reales a migrar? | oleomc + ? (en local también están perfumes y arcor) | ✅ oleomc y perfumes (arcor es de prueba) |
 
 ## 4. Modelo de datos
 
@@ -114,8 +114,81 @@ Lo que se reutiliza sin cambios: `EtiquetaValor`, `ProductoEtiqueta` (pivot que 
 Cada etapa queda usable sola, con tests, commiteada y migrada en las 3 tiendas locales antes de seguir.
 
 ### Etapa 0: decisiones y diseño (sin código)
-- [ ] Cerrar las decisiones D1–D7 (tabla de arriba).
-- [ ] Maqueta de las 3 pantallas: Categorías, carga de producto y "Apunta a categoría" en el menú.
+- [x] Cerrar las decisiones D1–D11 (tabla de arriba).
+- [ ] Maqueta de las pantallas (abajo): revisarla con el usuario.
+
+#### Maqueta
+
+**A. Admin › Categorías** (reemplaza la necesidad de entender "Menús" para la mayoría)
+```
+Categorías                                                     [+ Crear categoría]
+Organizá tus productos. Las categorías visibles arman el menú de la tienda.   (?) Cómo funciona
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ⋮⋮ ⌄ Ropa                       Talle*, Color          24 productos    ＋ ⋯   │
+│ ┊ ⋮⋮   Remeras                  + Tela                 15 productos    ＋ ⋯   │
+│ ┊ ⋮⋮   Pantalones                                       9 productos    ＋ ⋯   │
+│ ⋮⋮   Celulares                  Marca*, Almacenamiento*  6 productos    ＋ ⋯   │
+│ ⋮⋮   Ofertas  (oculta)                                   3 productos    ＋ ⋯   │
+└──────────────────────────────────────────────────────────────────────────────┘
+⋯ = Editar · Crear subcategoría · Ver en la tienda · Ocultar · Eliminar
+```
+- Mismo árbol que Menús hoy: arrastrar (derecha = adentro), plegar, `＋` y `⋯` al pasar el mouse.
+- Cada fila muestra qué características pide (las heredadas no se repiten: "+ Tela").
+- Sin categorías todavía: pantalla "Categorizá tus productos" con plantillas de ejemplo (Etapa 3).
+
+**B. Editar categoría** (panel o página)
+```
+Nombre        [Remeras                 ]     Dentro de  [Ropa ▾]     ☑ Visible en la tienda
+
+Características que pide
+  De Ropa (heredadas)     Talle  obligatoria · Color  opcional            (gris, no se editan acá)
+  Propias                 ⋮⋮ Tela       ( ) opcional (•) obligatoria   ✕
+                          [+ Agregar característica ▾]   (elegir una existente o crear "Cuello")
+
+▸ SEO (dirección /categoria/remeras, título y descripción para Google)
+```
+
+**C. Producto › sección Categorías** (arriba de Características)
+```
+Categorías   [Ropa › Remeras ✕] [Ofertas ✕]   ✎ Elegir categorías
+                                              ┌ panel lateral ───────────────────┐
+                                              │ [Buscar categoría        ]       │
+                                              │ ⊕ Crear categoría                │
+                                              │ Ropa                        ☐    │
+                                              │ Ropa/Remeras                ☑    │
+                                              │ Ropa/Pantalones             ☐    │
+                                              │ Ofertas                     ☑    │
+                                              └──────────────────────────────────┘
+Características  (según Ropa › Remeras y Ofertas)
+  Talle *  [M          ]   ✓ Valor existente
+  Color    [Negro      ]
+  Tela     [Algodón    ]
+  Marca    [Nik        ]   ⚠ ¿Quisiste decir «Nike» (12 productos)?      ← global
+```
+- Igual que el componente actual de etiquetas, pero los campos salen de las categorías elegidas (no del proveedor).
+- Sin categoría: aviso suave "Elegí una categoría para que te pidamos los datos que importan".
+
+**D. Productos › listado con asignación masiva**
+```
+[☑] 3 seleccionados   [Asignar categorías ▾] [Quitar categorías ▾]   o  ☐ Seleccionar los 30.902 del filtro
+☑  Kit sellos CAT 320    Kits hidráulicos      ...
+☑  Kit sellos CAT 330    Kits hidráulicos      ...
+⚠ 4 productos sin categoría  [Ver]
+```
+
+**E. Menú (formulario), opción nueva en "Qué productos muestra"**
+```
+○ Ninguno (sólo agrupa)
+● Los de una categoría     [Ropa › Remeras ▾]     (incluye sus subcategorías)
+○ Los que tienen una característica   [Marca ▾] [Nike]
+○ Los de un proveedor
+```
+
+**F. Ajustes › Tienda**
+```
+Menú de la tienda   (•) Se arma con las categorías visibles (recomendado)
+                    ( ) Personalizado → Admin › Menús
+```
 - [ ] Revisar con el usuario la migración propuesta para cada tienda (sección 6).
 
 ### Etapa 1: Categorías
@@ -188,13 +261,13 @@ Objetivo: carga y actualización masiva por planilla, con las mismas reglas que 
 - Reglas actuales (Mas Tecnologia: Marca, Condicion, Categoria, Genero obligatorias…; PC One: Marca, Genero obligatorias) → en cada categoría nueva: las características que usan sus productos, **obligatoria si lo era para todos los proveedores de esos productos**. Revisar a mano después (son pocas).
 - "Genero" y "Rango de Precio" siguen como características (no son "qué es").
 
-### arcor (4 productos)
+### arcor (4 productos) — tienda de prueba (D11): se migra igual, sin revisión
 - No usa "Categoria": todos quedan "Sin categoría".
 - Reglas por proveedor (Georgalos: Calorias y Tamaño obligatorias) **no tienen a qué categoría pasar**: se pierden como obligatorias y quedan opcionales. Avisar al usuario; si quiere, crear una categoría (ej. "Golosinas") y marcarlas ahí.
 
 ### oleomc (30.917 productos)
 - "Categoria" + "Subcategoria" (14 productos) → árbol `Accesorios › Hidráulica`, `Accesorios › Neumática`, `Industrial`.
-- Productos de **Hercules** (30.902, sin "Categoria") → categoría nueva (nombre D6) con **Fabricante\*, Aplicación\*, Modelo\*** (las reglas actuales de Hercules).
+- Productos de **Hercules** (30.902, sin "Categoria") → categoría nueva **"Kits hidráulicos"** (D6) con **Fabricante\*, Aplicación\*, Modelo\*** (las reglas actuales de Hercules).
 - Proveedor MC exigía Categoria y Subcategoria: deja de hacer falta (ahora es la categoría del producto).
 - Menús: `Todos` (Categoria=Accesorios) → categoría Accesorios; `Hidráulica`/`Neumática` (Subcategoria=…) → esas categorías. `Kits por Modelo` y `En stock` (por proveedor) pueden quedar igual o pasar a la categoría de Hercules: decidir en la Etapa 1.
 - Al final, las etiquetas "Categoria" y "Subcategoria" quedan sin uso: ocultarlas y borrarlas en la limpieza, después de que el usuario lo verifique.
@@ -222,4 +295,5 @@ Datos útiles:
 | 2026-10-07 | Revisado con capturas de Tiendanube: varias categorías por producto (D2), menú automático desde categorías (D8, D9), características globales | — |
 | 2026-10-07 | Revisado con la ayuda de Tiendanube: confirma 3 niveles y la madre automática; se suma asignación masiva desde el listado (Etapa 1) y planilla (Etapa 4) | — |
 | 2026-10-07 | Ayuda de Tiendanube sobre ordenar: confirma el árbol (derecha/izquierda, 3 niveles); se suma línea de destino (Etapa 1) y orden de productos por categoría (Etapa 4) | — |
+| 2026-10-07 | Decisiones D1–D11 cerradas (todas las recomendadas; D6 = Kits hidráulicos; D11 = oleomc y perfumes) | — |
 | 2026-10-07 | Se migra ahora (2 tiendas reales, sin convivencia). Se planifica la importación desde Excel (Etapa 5) y se adelanta a la Etapa 1 el servicio de guardado de producto que va a compartir. Nuevas decisiones D10 (clave por código) y D11 (qué tiendas) | — |
