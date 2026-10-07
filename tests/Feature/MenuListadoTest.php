@@ -242,4 +242,58 @@ class MenuListadoTest extends TestCase
             ->assertOk()
             ->assertSee('— — Asus Gamer');
     }
+
+    private function ordenar(array $items)
+    {
+        return $this->comoAdmin()->postJson($this->urlTenant('admin/menus/reordenar'), ['items' => $items]);
+    }
+
+    /**
+     * Arrastrar "Samsung" fuera de Notebook y dejarlo primero en el primer nivel.
+     *
+     * @test
+     */
+    public function arrastrar_guarda_padre_y_orden()
+    {
+        $this->ordenar([
+            ['id' => $this->ids['samsung'],  'parent_id' => null,                  'orden' => 0],
+            ['id' => $this->ids['notebook'], 'parent_id' => null,                  'orden' => 1],
+            ['id' => $this->ids['agrupa'],   'parent_id' => null,                  'orden' => 2],
+            ['id' => $this->ids['asus'],     'parent_id' => $this->ids['notebook'], 'orden' => 0],
+        ])->assertOk();
+
+        $this->enTenant(function () {
+            $this->assertNull(Menu::find($this->ids['samsung'])->parent_id);
+            $this->assertSame(['Samsung', 'Notebook', 'Marcas'], Menu::raiz()->orderBy('orden')->pluck('nombre')->all());
+        });
+    }
+
+    /** @test */
+    public function no_deja_meter_un_menu_dentro_de_su_propio_submenu()
+    {
+        $this->ordenar([
+            ['id' => $this->ids['notebook'], 'parent_id' => $this->ids['asus'],     'orden' => 0],
+            ['id' => $this->ids['asus'],     'parent_id' => $this->ids['notebook'], 'orden' => 0],
+        ])->assertStatus(422)->assertJsonValidationErrors('items');
+
+        $this->enTenant(function () {
+            $this->assertNull(Menu::find($this->ids['notebook'])->parent_id);
+        });
+    }
+
+    /** @test */
+    public function no_deja_pasar_de_cuatro_niveles()
+    {
+        $ids = $this->enTenant(function () {
+            $n3 = Menu::create(['nombre' => 'N3', 'slug' => 'n3', 'tipo_enlace' => 'ninguno', 'parent_id' => $this->ids['asus'], 'activo' => true]);
+            $n4 = Menu::create(['nombre' => 'N4', 'slug' => 'n4', 'tipo_enlace' => 'ninguno', 'parent_id' => $n3->id, 'activo' => true]);
+
+            return [$n3->id, $n4->id];
+        });
+
+        // Meter "Marcas" dentro de N4 lo dejaría en el quinto nivel.
+        $this->ordenar([['id' => $this->ids['agrupa'], 'parent_id' => $ids[1], 'orden' => 0]])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('items');
+    }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Etiqueta;
 use App\Models\Menu;
 use App\Models\Producto;
+use App\Services\ArbolDeMenus;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -282,25 +283,19 @@ class MenuController extends Controller
     }
 
     /**
-     * Reordenar menús via AJAX
+     * Guarda el árbol después de arrastrar en la lista: orden y anidamiento de cada
+     * menú. Rechaza ciclos y niveles de más (ver ArbolDeMenus).
      */
     public function reordenar(Request $request)
     {
         $request->validate([
-            'items' => 'required|array',
-            'items.*.id' => 'required|exists:menus,id',
-            'items.*.orden' => 'required|integer',
-            'items.*.parent_id' => 'nullable|exists:menus,id',
+            'items'             => 'required|array',
+            'items.*.id'        => 'required|integer|exists:menus,id',
+            'items.*.orden'     => 'required|integer|min:0',
+            'items.*.parent_id' => 'nullable|integer|exists:menus,id',
         ]);
 
-        foreach ($request->items as $item) {
-            Menu::where('id', $item['id'])->update([
-                'orden' => $item['orden'],
-                'parent_id' => $item['parent_id'],
-            ]);
-        }
-
-        Menu::limpiarCache();
+        (new ArbolDeMenus())->ordenar($request->input('items'));
 
         return response()->json(['success' => true]);
     }

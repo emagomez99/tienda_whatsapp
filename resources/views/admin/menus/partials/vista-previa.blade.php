@@ -125,7 +125,5 @@
     .vp-celular .vp-sub .vp-sub .vp-drawer-item, .vp-celular .vp-sub .vp-sub summary { padding-left: 2.75rem; }
     .vp-celular .vp-cuenta { color: inherit; opacity: .7; }
 
-    /* Al tocar una opción de la vista previa, su fila de la lista se resalta. */
-    .menu-item:target { animation: recien-movido 1.6s ease-out; }
 </style>
 @endpush
