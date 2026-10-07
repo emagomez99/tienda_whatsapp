@@ -40,6 +40,13 @@ class Menu extends Model
     const TIPO_PROVEEDOR = 'proveedor';
     const TIPO_ETIQUETA = 'etiqueta';
     const TIPO_ESPECIFICACION = 'especificacion';
+    const TIPO_CATEGORIA = 'categoria';
+
+    /** Todos los tipos, en el orden en que los guarda la base (ver el CHECK de menus.tipo_enlace). */
+    const TIPOS = [self::TIPO_NINGUNO, self::TIPO_PROVEEDOR, self::TIPO_ETIQUETA, self::TIPO_ESPECIFICACION, self::TIPO_CATEGORIA];
+
+    /** Los tipos que filtran por un registro (enlace_id): sin elegirlo, el menú no está completo. */
+    const TIPOS_CON_REGISTRO = [self::TIPO_PROVEEDOR, self::TIPO_ETIQUETA, self::TIPO_CATEGORIA];
 
     /**
      * Relación: Menú padre
@@ -86,6 +93,12 @@ class Menu extends Model
         return $this->belongsTo(Etiqueta::class, 'enlace_id');
     }
 
+    /** Categoría asociada (menús "Los de una categoría"). */
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class, 'enlace_id');
+    }
+
     /**
      * Obtener el elemento relacionado según el tipo
      */
@@ -95,6 +108,8 @@ class Menu extends Model
             return $this->proveedor;
         } elseif ($this->tipo_enlace === self::TIPO_ETIQUETA) {
             return $this->etiqueta;
+        } elseif ($this->tipo_enlace === self::TIPO_CATEGORIA) {
+            return $this->categoria;
         }
         return null;
     }
@@ -128,6 +143,7 @@ class Menu extends Model
             $params['especificacion'] = $this->enlace_valor;
             return route('tienda.index', $params);
         }
+        // Una categoría no tiene filtro equivalente en la tienda: sin slug no hay dirección.
         return '#';
     }
 
@@ -370,6 +386,8 @@ class Menu extends Model
             return 'Etiqueta';
         } elseif ($this->tipo_enlace === self::TIPO_ESPECIFICACION) {
             return 'Especificación';
+        } elseif ($this->tipo_enlace === self::TIPO_CATEGORIA) {
+            return 'Categoría';
         }
         return 'Contenedor';
     }
@@ -386,6 +404,8 @@ class Menu extends Model
             return $nombre . ($this->enlace_valor ? ": {$this->enlace_valor}" : '');
         } elseif ($this->tipo_enlace === self::TIPO_ESPECIFICACION) {
             return $this->enlace_valor;
+        } elseif ($this->tipo_enlace === self::TIPO_CATEGORIA) {
+            return $this->categoria ? str_replace(' > ', ' › ', $this->categoria->camino()) : null;
         }
         return null;
     }

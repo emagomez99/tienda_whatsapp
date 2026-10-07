@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Categoria;
 use App\Models\Etiqueta;
 use App\Models\Menu;
 use App\Models\Producto;
 use App\Services\ArbolDeMenus;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
 class MenuController extends Controller
@@ -58,7 +60,7 @@ class MenuController extends Controller
     /** Un menú armado con los campos del formulario, sin guardar, para contar o sugerir. */
     private function menuSinGuardar(Request $request): Menu
     {
-        $tipo = in_array($request->input('tipo_enlace'), [Menu::TIPO_PROVEEDOR, Menu::TIPO_ETIQUETA, Menu::TIPO_ESPECIFICACION], true)
+        $tipo = in_array($request->input('tipo_enlace'), Menu::TIPOS, true)
             ? $request->input('tipo_enlace')
             : Menu::TIPO_NINGUNO;
 
@@ -75,7 +77,7 @@ class MenuController extends Controller
 
     private function faltaElegirEnlace(Menu $menu): bool
     {
-        return in_array($menu->tipo_enlace, [Menu::TIPO_PROVEEDOR, Menu::TIPO_ETIQUETA], true) && !$menu->enlace_id;
+        return in_array($menu->tipo_enlace, Menu::TIPOS_CON_REGISTRO, true) && !$menu->enlace_id;
     }
 
     /** Aplica $accion a cada menú del árbol, de arriba hacia abajo. */
@@ -132,6 +134,7 @@ class MenuController extends Controller
             'proveedores'           => $proveedores,
             'etiquetas'             => Etiqueta::orderBy('nombre')->get(),
             'etiquetasPorProveedor' => $this->mapEtiquetasAplicables($proveedores),
+            'categorias'            => Categoria::enOrdenDeArbol(),
             'filtrosHeredados'      => $filtrosHeredados,
         ];
     }
@@ -149,8 +152,9 @@ class MenuController extends Controller
             'meta_title'       => 'nullable|string|max:60',
             'meta_description' => 'nullable|string|max:160',
             'parent_id'        => 'nullable|exists:menus,id',
-            'tipo_enlace'      => 'required|in:ninguno,proveedor,etiqueta,especificacion',
-            'enlace_id'        => 'nullable|integer',
+            'tipo_enlace'      => ['required', Rule::in(Menu::TIPOS)],
+            'enlace_id'        => ['nullable', 'integer', Rule::requiredIf($request->input('tipo_enlace') === Menu::TIPO_CATEGORIA),
+                                   Rule::when($request->input('tipo_enlace') === Menu::TIPO_CATEGORIA, 'exists:categorias,id')],
             'enlace_valor'     => 'nullable|string|max:255',
             'orden'            => 'integer|min:0',
             'activo'           => 'boolean',
@@ -161,6 +165,8 @@ class MenuController extends Controller
         ], [
             'slug.unique' => 'Este slug ya está en uso, elegí otro.',
             'slug.regex'  => 'El slug solo puede contener letras minúsculas, números y guiones.',
+            'enlace_id.required' => 'Elegí la categoría.',
+            'enlace_id.exists'   => 'Esa categoría ya no existe.',
         ]);
 
         // Si no vino slug, el boot del modelo lo genera desde nombre
@@ -221,8 +227,9 @@ class MenuController extends Controller
             'meta_title'       => 'nullable|string|max:60',
             'meta_description' => 'nullable|string|max:160',
             'parent_id'        => 'nullable|exists:menus,id',
-            'tipo_enlace'      => 'required|in:ninguno,proveedor,etiqueta,especificacion',
-            'enlace_id'        => 'nullable|integer',
+            'tipo_enlace'      => ['required', Rule::in(Menu::TIPOS)],
+            'enlace_id'        => ['nullable', 'integer', Rule::requiredIf($request->input('tipo_enlace') === Menu::TIPO_CATEGORIA),
+                                   Rule::when($request->input('tipo_enlace') === Menu::TIPO_CATEGORIA, 'exists:categorias,id')],
             'enlace_valor'     => 'nullable|string|max:255',
             'orden'            => 'integer|min:0',
             'activo'           => 'boolean',
@@ -233,6 +240,8 @@ class MenuController extends Controller
         ], [
             'slug.unique' => 'Este slug ya está en uso, elegí otro.',
             'slug.regex'  => 'El slug solo puede contener letras minúsculas, números y guiones.',
+            'enlace_id.required' => 'Elegí la categoría.',
+            'enlace_id.exists'   => 'Esa categoría ya no existe.',
         ]);
 
         // Si vino vacío, mantener el slug actual

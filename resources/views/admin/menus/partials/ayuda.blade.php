@@ -13,6 +13,10 @@
                     <div><strong>Agrupa</strong><br>No muestra productos: al tocarlo se despliegan sus submenús.</div>
                 </div>
                 <div class="ayuda-item">
+                    <span class="ayuda-icono"><i class="bi bi-diagram-3"></i></span>
+                    <div><strong>Categoría</strong><br>Los productos de esa categoría y de sus subcategorías. Ej: Ropa incluye Ropa › Remeras.</div>
+                </div>
+                <div class="ayuda-item">
                     <span class="ayuda-icono"><i class="bi bi-tag"></i></span>
                     <div><strong>Etiqueta</strong><br>Los productos con esa etiqueta, y con ese valor si se eligió uno. Ej: Marca = Asus.</div>
                 </div>

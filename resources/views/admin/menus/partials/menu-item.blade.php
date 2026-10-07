@@ -41,6 +41,8 @@
                     <i class="bi bi-folder2"></i> Agrupa{{ $hijos->count() ? ' · ' . $hijos->count() . ($hijos->count() === 1 ? ' submenú' : ' submenús') : '' }}
                 @elseif($menu->tipo_enlace === 'proveedor')
                     <i class="bi bi-truck"></i> {{ $menu->nombre_enlace }}
+                @elseif($menu->tipo_enlace === 'categoria')
+                    <i class="bi bi-diagram-3"></i> {{ $menu->nombre_enlace ?? 'Categoría eliminada' }}
                 @elseif($menu->tipo_enlace === 'especificacion')
                     <i class="bi bi-list-ul"></i> {{ $menu->enlace_valor }}
                 @else

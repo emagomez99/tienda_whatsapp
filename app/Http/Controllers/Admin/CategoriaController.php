@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Categoria;
 use App\Models\EtiquetaValor;
+use App\Models\Menu;
 use App\Models\Producto;
 use App\Services\ArbolDeCategorias;
 use Illuminate\Http\Request;
@@ -110,12 +111,19 @@ class CategoriaController extends Controller
     /**
      * Eliminar: los productos no se borran, sólo dejan de estar en esta categoría.
      * Con subcategorías no se puede: primero hay que moverlas o eliminarlas, así
-     * nadie borra un árbol entero sin darse cuenta.
+     * nadie borra un árbol entero sin darse cuenta. Tampoco si un menú la usa: el
+     * menú quedaría sin productos sin que nadie lo note.
      */
     public function destroy(Categoria $categoria)
     {
         if ($categoria->children()->exists()) {
             return back()->with('error', "«{$categoria->nombre}» tiene subcategorías: primero movelas o eliminalas.");
+        }
+
+        $menus = Menu::where('tipo_enlace', Menu::TIPO_CATEGORIA)->where('enlace_id', $categoria->id)->orderBy('nombre')->pluck('nombre');
+        if ($menus->isNotEmpty()) {
+            $uno = $menus->count() === 1;
+            return back()->with('error', "«{$categoria->nombre}» la usa " . ($uno ? 'el menú' : 'los menús') . ' «' . $menus->implode('», «') . '»: primero ' . ($uno ? 'cambialo o eliminalo.' : 'cambialos o eliminalos.'));
         }
 
         $nombre = $categoria->camino();

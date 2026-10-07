@@ -7,7 +7,7 @@
       3. Qué filtros ve el cliente
       SEO va plegado: casi nunca se toca y tiene valores por defecto razonables.
 
-    Recibe: $menu (nuevo o existente), $menusParent, $proveedores, $etiquetas,
+    Recibe: $menu (nuevo o existente), $menusParent, $proveedores, $etiquetas, $categorias,
     $etiquetasPorProveedor, $filtrosHeredados. En alta, además, $siguienteOrdenRaiz y
     $siguienteOrdenPorPadre para sugerir el orden según el padre.
 --}}
@@ -81,6 +81,33 @@
                             <small class="d-block text-muted">Sólo agrupa submenús. Al hacer clic se despliegan sus opciones.</small>
                         </span>
                     </label>
+
+                    <label class="tipo-opcion">
+                        <input class="form-check-input" type="radio" name="tipo_enlace" value="categoria" {{ $tipoActual === 'categoria' ? 'checked' : '' }}>
+                        <span>
+                            <strong>Los de una categoría</strong>
+                            <small class="d-block text-muted">Ej: Ropa, o Ropa › Remeras. Incluye los de sus subcategorías.</small>
+                        </span>
+                    </label>
+                    <div class="tipo-campos" data-tipo="categoria">
+                        @if($categorias->isEmpty())
+                            <div class="small text-muted">
+                                Todavía no hay categorías.
+                                @if(auth()->user()->puede('categorias.gestionar'))
+                                    <a href="{{ route('admin.categorias.create') }}">Crear la primera</a>
+                                @endif
+                            </div>
+                        @endif
+                        <select class="form-select @error('enlace_id') is-invalid @enderror {{ $categorias->isEmpty() ? 'd-none' : '' }}" id="categoria_select" aria-label="Categoría">
+                            <option value="">Elegí la categoría...</option>
+                            @foreach($categorias as $categoria)
+                                <option value="{{ $categoria->id }}" {{ (string) old('enlace_id', $menu->tipo_enlace === 'categoria' ? $menu->enlace_id : '') === (string) $categoria->id ? 'selected' : '' }}>
+                                    {!! str_repeat('&nbsp;&nbsp;&nbsp;', $categoria->nivel()) !!}{{ $categoria->nombre }}{{ $categoria->esVisibleEnTienda() ? '' : ' (oculta en la tienda)' }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('enlace_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
 
                     <label class="tipo-opcion">
                         <input class="form-check-input" type="radio" name="tipo_enlace" value="etiqueta" {{ $tipoActual === 'etiqueta' ? 'checked' : '' }}>
@@ -314,6 +341,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var enlaceValor = el('enlace_valor');
     var proveedor   = el('proveedor_select');
     var etiqueta    = el('etiqueta_select');
+    var categoria   = el('categoria_select');
     var valor       = el('etiqueta_valor_input');
     var especif     = el('especificacion_valor_input');
     var padre       = el('parent_id');
@@ -333,6 +361,8 @@ document.addEventListener('DOMContentLoaded', function () {
         enlaceValor.value = '';
         if (tipo() === 'proveedor') {
             enlaceId.value = proveedor.value;
+        } else if (tipo() === 'categoria') {
+            enlaceId.value = categoria.value;
         } else if (tipo() === 'etiqueta') {
             enlaceId.value = etiqueta.value;
             enlaceValor.value = valor.value.trim();
@@ -394,7 +424,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         caja.classList.add('d-none');
                     } else if (n === null) {
                         caja.classList.add('alert-light');
-                        caja.innerHTML = '<i class="bi bi-hourglass"></i> Elegí ' + (tipo() === 'proveedor' ? 'el proveedor' : 'la etiqueta') + ' para ver cuántos productos va a mostrar.';
+                        var falta = { proveedor: 'el proveedor', categoria: 'la categoría', etiqueta: 'la etiqueta' }[tipo()] || 'qué filtrar';
+                        caja.innerHTML = '<i class="bi bi-hourglass"></i> Elegí ' + falta + ' para ver cuántos productos va a mostrar.';
                     } else if (n === 0) {
                         caja.classList.add('alert-warning');
                         caja.innerHTML = '<i class="bi bi-exclamation-triangle"></i> <strong>No va a mostrar ningún producto.</strong> Revisá el filtro, la disponibilidad o el menú de arriba.';
@@ -412,6 +443,7 @@ document.addEventListener('DOMContentLoaded', function () {
         radio.addEventListener('change', contar);
     });
     proveedor.addEventListener('change', function () { volcarEnlace(); reconstruirDisponibles(); contar(); });
+    categoria.addEventListener('change', function () { volcarEnlace(); contar(); });
     etiqueta.addEventListener('change', function () { valor.value = ''; volcarEnlace(); contar(); });
     valor.addEventListener('input', function () { volcarEnlace(); contar(); });
     valor.addEventListener('change', function () { volcarEnlace(); contar(); });

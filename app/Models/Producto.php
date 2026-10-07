@@ -491,6 +491,9 @@ class Producto extends Model
                 $query->whereHas('especificaciones', function ($q) use ($valor) {
                     $q->where('valor', 'ilike', '%' . $valor . '%');
                 });
+            } elseif ($nivel->tipo_enlace === Menu::TIPO_CATEGORIA) {
+                // Si la categoría ya no existe, el menú no muestra nada (no "todo").
+                $nivel->categoria ? $query->enCategoria($nivel->categoria) : $query->whereRaw('false');
             }
         }
 
