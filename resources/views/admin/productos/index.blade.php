@@ -10,7 +10,10 @@
     </a>
 </div>
 
-@php $filtrosActivos = request()->hasAny(['buscar','proveedor','disponible','stock']); @endphp
+@php
+    $filtrosActivos = $filtro->hayActivos();
+    $puedeEditar = auth()->user()->puede('productos.editar');
+@endphp
 <div class="card mb-4">
     <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
          style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#filtros-productos"
@@ -21,11 +24,11 @@
     <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-productos">
     <div class="card-body">
         <form action="{{ route('admin.productos.index') }}" method="GET" class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-6 col-lg-3">
                 <label class="form-label text-muted mb-1" style="font-size:.75rem;">Buscar</label>
                 <input type="text" name="buscar" class="form-control" placeholder="Buscar..." value="{{ request('buscar') }}">
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-3 col-lg-2">
                 <label class="form-label text-muted mb-1" style="font-size:.75rem;">Proveedor</label>
                 <select name="proveedor" class="form-select">
                     <option value="">Todos</option>
@@ -36,7 +39,19 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label text-muted mb-1" style="font-size:.75rem;">Categoría</label>
+                <select name="categoria" class="form-select">
+                    <option value="">Todas</option>
+                    <option value="{{ App\Support\FiltroDeProductos::SIN_CATEGORIA }}" {{ request('categoria') === App\Support\FiltroDeProductos::SIN_CATEGORIA ? 'selected' : '' }}>Sin categoría</option>
+                    @foreach($categorias as $categoria)
+                        <option value="{{ $categoria->id }}" {{ (string) request('categoria') === (string) $categoria->id ? 'selected' : '' }}>
+                            {!! str_repeat('&nbsp;&nbsp;&nbsp;', $categoria->nivel()) !!}{{ $categoria->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
                 <label class="form-label text-muted mb-1" style="font-size:.75rem;">Estado</label>
                 <select name="disponible" class="form-select">
                     <option value="">Todos</option>
@@ -44,7 +59,7 @@
                     <option value="0" {{ request('disponible') === '0' ? 'selected' : '' }}>No disponibles</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-3 col-lg-2">
                 <label class="form-label text-muted mb-1" style="font-size:.75rem;">Stock</label>
                 <select name="stock" class="form-select">
                     <option value="">Todos</option>
@@ -52,16 +67,24 @@
                     <option value="sin" {{ request('stock') === 'sin' ? 'selected' : '' }}>Sin stock</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label mb-1" style="font-size:.75rem; visibility:hidden;">.</label>
-                <button type="submit" class="btn btn-outline-primary w-100">
-                    <i class="bi bi-search"></i> Filtrar
+            <div class="col-md-12 col-lg-1">
+                <label class="form-label mb-1 d-none d-lg-block" style="font-size:.75rem; visibility:hidden;">.</label>
+                <button type="submit" class="btn btn-outline-primary w-100" title="Filtrar">
+                    <i class="bi bi-search"></i><span class="d-lg-none"> Filtrar</span>
                 </button>
             </div>
         </form>
     </div>
     </div>
 </div>
+
+@if($sinCategoria > 0 && request('categoria') !== App\Support\FiltroDeProductos::SIN_CATEGORIA)
+    <div class="alert alert-warning d-flex align-items-center flex-wrap gap-2 py-2">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span>{{ number_format($sinCategoria, 0, ',', '.') }} {{ $sinCategoria === 1 ? 'producto no tiene' : 'productos no tienen' }} categoría: no {{ $sinCategoria === 1 ? 'aparece' : 'aparecen' }} al navegar la tienda por categorías.</span>
+        <a href="{{ route('admin.productos.index', ['categoria' => App\Support\FiltroDeProductos::SIN_CATEGORIA]) }}" class="alert-link ms-auto">Ver cuáles</a>
+    </div>
+@endif
 
 <div class="card">
     <div class="card-body">
@@ -74,6 +97,11 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
+                            @if($puedeEditar)
+                                <th style="width:1%;">
+                                    <input type="checkbox" class="form-check-input" id="masa-todos" title="Marcar los de esta página" aria-label="Marcar los de esta página">
+                                </th>
+                            @endif
                             <th>Imagen</th>
                             <th>Descripción</th>
                             <th>Cod. Proveedor</th>
@@ -87,6 +115,11 @@
                     <tbody>
                         @foreach($productos as $producto)
                             <tr>
+                                @if($puedeEditar)
+                                    <td>
+                                        <input type="checkbox" class="form-check-input masa-producto" value="{{ $producto->id }}" aria-label="Marcar {{ $producto->descripcion }}">
+                                    </td>
+                                @endif
                                 <td style="width: 60px;">
                                     <div class="rounded overflow-hidden bg-light" style="width: 50px; height: 50px; flex-shrink: 0;">
                                         <img src="{{ $producto->imagen_url ?? '/img/no-image.svg' }}"
@@ -97,6 +130,15 @@
                                 </td>
                                 <td>
                                     <strong>{{ $producto->descripcion }}</strong>
+                                    @if($categorias->isNotEmpty())
+                                        <div class="small mt-1">
+                                            @forelse($producto->categorias as $suya)
+                                                <span class="text-muted text-nowrap">{{ str_replace(' > ', ' › ', $caminos[$suya->id] ?? '') }}</span>@if(!$loop->last)<span class="text-muted"> · </span>@endif
+                                            @empty
+                                                <span class="text-warning-emphasis"><i class="bi bi-exclamation-circle"></i> Sin categoría</span>
+                                            @endforelse
+                                        </div>
+                                    @endif
                                 </td>
                                 <td>{{ $producto->id_proveedor ?? '-' }}</td>
                                 <td>{{ $producto->proveedor->nombre ?? '-' }}</td>
@@ -147,4 +189,8 @@
         @endif
     </div>
 </div>
+
+@if($puedeEditar && $productos->isNotEmpty())
+    @include('admin.productos.partials.categorias-en-masa')
+@endif
 @endsection

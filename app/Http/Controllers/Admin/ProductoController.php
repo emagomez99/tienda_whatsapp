@@ -10,9 +10,11 @@ use App\Models\Producto;
 use App\Models\ProductoEspecificacion;
 use App\Models\StockMovimiento;
 use App\Models\Proveedor;
+use App\Services\AsignacionDeCategorias;
 use App\Services\GaleriaProducto;
 use App\Services\GuardadoDeProducto;
 use App\Support\DatosDeProducto;
+use App\Support\FiltroDeProductos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -37,44 +39,78 @@ class ProductoController extends Controller
 
         $this->middleware('permiso:productos.ver')->only(['index', 'show', 'buscarParaPedido', 'buscarEspecificacionClaves', 'buscarEspecificacionValores', 'historial']);
         $this->middleware('permiso:productos.crear')->only(['create', 'store']);
-        $this->middleware('permiso:productos.editar')->only(['edit', 'update', 'ajustarStock']);
+        $this->middleware('permiso:productos.editar')->only(['edit', 'update', 'ajustarStock', 'categoriasEnMasa']);
         $this->middleware('permiso:productos.eliminar')->only(['destroy']);
     }
 
     public function index(Request $request)
     {
-        $query = Producto::with(['proveedor', 'moneda']);
-
-        if ($request->filled('buscar')) {
-            $buscar = $request->buscar;
-            $query->where(function ($q) use ($buscar) {
-                $q->where('descripcion', 'ilike', "%{$buscar}%")
-                  ->orWhere('id_proveedor', 'ilike', "%{$buscar}%");
-            });
-        }
-
-        if ($request->filled('proveedor')) {
-            $query->where('proveedor_id', $request->proveedor);
-        }
-
-        if ($request->filled('disponible')) {
-            $query->where('disponible', $request->disponible);
-        }
-
-        if ($request->filled('stock')) {
-            if ($request->stock === 'con') {
-                $query->where('stock', '>', 0);
-            } elseif ($request->stock === 'sin') {
-                $query->where(function ($q) {
-                    $q->where('stock', 0)->orWhereNull('stock');
-                });
-            }
-        }
-
-        $productos = $query->orderBy('descripcion')->paginate(15);
+        $filtro = new FiltroDeProductos($request->query());
+        $productos = $filtro->consulta()
+            ->with(['proveedor', 'moneda', 'categorias:categorias.id'])
+            ->orderBy('descripcion')
+            ->paginate(15);
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
 
-        return view('admin.productos.index', compact('productos', 'proveedores'));
+        // Los caminos se arman una vez con el árbol en memoria: con el de cada
+        // producto serían varias consultas por fila.
+        $categorias = Categoria::enOrdenDeArbol();
+        $caminos = $categorias->mapWithKeys(function (Categoria $c) { return [$c->id => $c->camino()]; })->all();
+        $sinCategoria = $categorias->isNotEmpty() ? Producto::sinCategoria()->count() : 0;
+
+        return view('admin.productos.index', compact('productos', 'proveedores', 'filtro', 'categorias', 'caminos', 'sinCategoria'));
+    }
+
+    /**
+     * Agregar o quitar categorías a varios productos: los marcados en la página, o
+     * todos los que da el filtro (para catálogos de miles, sin recorrerlos a mano).
+     */
+    public function categoriasEnMasa(Request $request, AsignacionDeCategorias $asignacion)
+    {
+        $datos = $request->validate([
+            'accion'       => 'required|in:asignar,quitar',
+            'alcance'      => 'required|in:seleccion,filtro',
+            'categorias'   => 'required|array|min:1',
+            'categorias.*' => 'integer|exists:categorias,id',
+            'productos'    => 'required_if:alcance,seleccion|array',
+            'productos.*'  => 'integer',
+            'filtro'       => 'nullable|array',
+        ], [
+            'categorias.required' => 'Elegí al menos una categoría.',
+            'productos.required_if' => 'Marcá al menos un producto.',
+        ]);
+
+        $filtro = new FiltroDeProductos($datos['filtro'] ?? []);
+        $productos = $datos['alcance'] === 'filtro'
+            ? $filtro->consulta()
+            : Producto::whereIn('productos.id', $datos['productos']);
+
+        $nombres = Categoria::whereIn('id', $datos['categorias'])->orderBy('nombre')->get()
+            ->map(function (Categoria $c) { return '«' . str_replace(' > ', ' › ', $c->camino()) . '»'; })->implode(', ');
+
+        if ($datos['accion'] === 'asignar') {
+            $total = (clone $productos)->count();
+            $creadas = $asignacion->asignar($productos, $datos['categorias']);
+            $mensaje = $creadas === 0
+                ? "Esos productos ya estaban en {$nombres}."
+                : "Se agregó {$nombres} a " . $this->cantidadDeProductos($total) . '.';
+        } else {
+            $afectados = (clone $productos)->whereIn('productos.id', function ($sub) use ($datos) {
+                $sub->select('producto_id')->from('categoria_producto')->whereIn('categoria_id', $datos['categorias']);
+            })->count();
+            $asignacion->quitar($productos, $datos['categorias']);
+            $mensaje = $afectados === 0
+                ? "Ninguno de esos productos estaba en {$nombres}."
+                : "Se quitó {$nombres} de " . $this->cantidadDeProductos($afectados) . '.';
+        }
+
+        return redirect()->route('admin.productos.index', $filtro->valores() + $request->only('page'))
+            ->with('success', $mensaje);
+    }
+
+    private function cantidadDeProductos(int $n): string
+    {
+        return number_format($n, 0, ',', '.') . ($n === 1 ? ' producto' : ' productos');
     }
 
     public function create()

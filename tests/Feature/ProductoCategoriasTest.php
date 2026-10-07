@@ -100,7 +100,7 @@ class ProductoCategoriasTest extends TestCase
         $this->como()->get($this->urlTenant('admin/productos/' . $id . '/edit'))
             ->assertOk()
             ->assertSee('id="panel-categorias"', false)
-            ->assertSee('var elegidas    = [' . $this->ids['remeras'] . ']', false);
+            ->assertSee('var elegidas = [' . $this->ids['remeras'] . ']', false);
 
         // El formulario sin ninguna categoría: se quitaron todas.
         $this->como()->put($this->urlTenant('admin/productos/' . $id), $this->formulario())->assertSessionHasNoErrors();
@@ -145,6 +145,6 @@ class ProductoCategoriasTest extends TestCase
         $this->como('Operador')->get($this->urlTenant('admin/productos/create'))
             ->assertOk()
             ->assertSee('id="panel-categorias"', false)
-            ->assertDontSee('id="categorias-crear-abrir"', false);
+            ->assertDontSee('Crear y elegir');
     }
 }

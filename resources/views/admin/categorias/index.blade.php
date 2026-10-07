@@ -19,6 +19,9 @@
     <div class="alert alert-warning d-flex align-items-center gap-2 py-2">
         <i class="bi bi-exclamation-triangle"></i>
         <span>{{ number_format($sinCategoria, 0, ',', '.') }} {{ $sinCategoria === 1 ? 'producto no tiene' : 'productos no tienen' }} categoría todavía.</span>
+        @if(auth()->user()->puede('productos.ver'))
+            <a href="{{ route('admin.productos.index', ['categoria' => App\Support\FiltroDeProductos::SIN_CATEGORIA]) }}" class="alert-link ms-auto">Ver cuáles y asignarles una</a>
+        @endif
     </div>
 @endif
 

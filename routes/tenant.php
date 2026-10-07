@@ -89,6 +89,7 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::get('/productos/{producto}/historial', [ProductoController::class, 'historial'])->name('productos.historial');
         Route::post('/productos/{producto}/ajustar-stock', [ProductoController::class, 'ajustarStock'])->name('productos.ajustar-stock');
 
+        Route::post('/productos/categorias', [ProductoController::class, 'categoriasEnMasa'])->name('productos.categorias-en-masa');
         Route::resource('productos', ProductoController::class);
         Route::post('/categorias/reordenar', [CategoriaController::class, 'reordenar'])->name('categorias.reordenar');
         Route::post('/categorias/rapida', [CategoriaController::class, 'crearRapida'])->name('categorias.rapida');
