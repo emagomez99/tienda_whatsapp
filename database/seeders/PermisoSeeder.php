@@ -55,6 +55,7 @@ class PermisoSeeder extends Seeder
         $operadorSlugs = [
             'dashboard.ver',
             'productos.ver', 'productos.crear', 'productos.editar',
+            'categorias.ver',
             'proveedores.ver',
             'pedidos.ver', 'pedidos.gestionar',
             'etiquetas.ver',

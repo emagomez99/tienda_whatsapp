@@ -14,29 +14,29 @@
     $puedeEditar   = auth()->user()->puede('menus.gestionar');
     $admiteHijos   = $nivel <= App\Models\Menu::NIVEL_MAXIMO_PADRE;
 @endphp
-<li class="menu-nodo {{ $menu->activo ? '' : 'inactivo' }} {{ session('menu_movido') === $menu->id ? 'recien-movido' : '' }}"
+<li class="arbol-nodo {{ $menu->activo ? '' : 'inactivo' }} {{ session('menu_movido') === $menu->id ? 'recien-movido' : '' }}"
     id="menu-{{ $menu->id }}" data-id="{{ $menu->id }}" data-nombre="{{ $menu->nombre }}">
-    <div class="menu-fila">
+    <div class="arbol-fila">
         @if($puedeEditar)
-            <span class="menu-arrastrar" title="Arrastrá para ordenar o para meterlo dentro de otro menú" aria-hidden="true">
+            <span class="arbol-arrastrar" title="Arrastrá para ordenar o para meterlo dentro de otro menú" aria-hidden="true">
                 <i class="bi bi-grip-vertical"></i>
             </span>
         @endif
 
         @if($hijos->count() > 0)
-            <button type="button" class="menu-plegar" aria-expanded="true" title="Plegar o desplegar sus submenús">
+            <button type="button" class="arbol-plegar" aria-expanded="true" title="Plegar o desplegar sus submenús">
                 <i class="bi bi-chevron-down"></i>
             </button>
         @else
-            <span class="menu-plegar-vacio"></span>
+            <span class="arbol-plegar-vacio"></span>
         @endif
 
-        <div class="menu-texto">
-            <a href="{{ route('admin.menus.edit', $menu) }}" class="menu-nombre">{{ $menu->nombre }}</a>
+        <div class="arbol-texto">
+            <a href="{{ route('admin.menus.edit', $menu) }}" class="arbol-nombre">{{ $menu->nombre }}</a>
             @unless($menu->activo)
                 <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1">Inactivo</span>
             @endunless
-            <div class="menu-filtro">
+            <div class="arbol-detalle">
                 @if($menu->esContenedor())
                     <i class="bi bi-folder2"></i> Agrupa{{ $hijos->count() ? ' · ' . $hijos->count() . ($hijos->count() === 1 ? ' submenú' : ' submenús') : '' }}
                 @elseif($menu->tipo_enlace === 'proveedor')
@@ -51,17 +51,17 @@
 
         @if($cantidad !== null)
             @if($cantidad === 0)
-                <span class="menu-cuenta vacio" title="El cliente entra y no encuentra nada: revisá el filtro o el de los menús de arriba.">
+                <span class="arbol-cuenta vacio" title="El cliente entra y no encuentra nada: revisá el filtro o el de los menús de arriba.">
                     <i class="bi bi-exclamation-triangle"></i> 0 productos
                 </span>
             @else
-                <span class="menu-cuenta" title="Productos que ve el cliente al entrar">
+                <span class="arbol-cuenta" title="Productos que ve el cliente al entrar">
                     {{ number_format($cantidad, 0, ',', '.') }} {{ $cantidad === 1 ? 'producto' : 'productos' }}
                 </span>
             @endif
         @endif
 
-        <div class="menu-acciones">
+        <div class="arbol-acciones">
             @if($puedeEditar && $admiteHijos)
                 <a href="{{ route('admin.menus.create', ['parent_id' => $menu->id]) }}" class="btn btn-sm btn-light"
                    title="Agregar un submenú dentro de «{{ $menu->nombre }}»">
@@ -115,7 +115,7 @@
 
     {{-- Siempre está, aunque no tenga submenús: es donde se suelta para meter otro adentro. --}}
     @if($admiteHijos)
-        <ul class="menu-arbol" data-nivel="{{ $nivel + 1 }}">
+        <ul class="arbol-lista" data-nivel="{{ $nivel + 1 }}">
             @foreach($hijos as $hijo)
                 @include('admin.menus.partials.menu-item', [
                     'menu'      => $hijo,

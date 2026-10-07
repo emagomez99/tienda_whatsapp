@@ -15,6 +15,7 @@ class Permiso extends Model
         return [
             'Dashboard'       => ['dashboard.ver'],
             'Productos'       => ['productos.ver', 'productos.crear', 'productos.editar', 'productos.eliminar'],
+            'Categorías'      => ['categorias.ver', 'categorias.gestionar'],
             'Proveedores'     => ['proveedores.ver', 'proveedores.crear', 'proveedores.editar', 'proveedores.eliminar'],
             'Pedidos'         => ['pedidos.ver', 'pedidos.gestionar'],
             'Etiquetas'       => ['etiquetas.ver', 'etiquetas.crear', 'etiquetas.editar', 'etiquetas.eliminar'],
@@ -44,6 +45,8 @@ class Permiso extends Model
             'etiquetas.crear'         => 'Crear etiquetas',
             'etiquetas.editar'        => 'Editar etiquetas',
             'etiquetas.eliminar'      => 'Eliminar etiquetas',
+            'categorias.ver'          => 'Ver categorías',
+            'categorias.gestionar'    => 'Crear, editar, ordenar y eliminar categorías',
             'monedas.ver'             => 'Ver listado de monedas',
             'monedas.crear'           => 'Crear monedas',
             'monedas.editar'          => 'Editar monedas y su cotización',
