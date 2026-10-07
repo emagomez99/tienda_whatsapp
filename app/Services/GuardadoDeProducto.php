@@ -19,8 +19,8 @@ use Illuminate\Validation\ValidationException;
  *
  * Recibe datos con el formato ya validado (tipos, largos, que existan los ids):
  * eso es de quien arma DatosDeProducto. Acá van las reglas del negocio: datos
- * obligatorios, precio derivado, stock como movimiento, etiquetas, especificaciones
- * y galería. Todo o nada: si una regla falla, no se guarda ninguna parte.
+ * obligatorios, precio derivado, stock como movimiento, categorías, etiquetas,
+ * especificaciones y galería. Todo o nada: si una regla falla, no se guarda ninguna parte.
  */
 class GuardadoDeProducto
 {
@@ -92,6 +92,10 @@ class GuardadoDeProducto
 
         $producto->ajustarPrecioSegunModo();
         $producto->save();
+
+        if ($datos->categorias() !== null) {
+            $producto->categorias()->sync($datos->categorias());
+        }
 
         if ($datos->etiquetas() !== null) {
             $sync = [];

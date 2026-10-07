@@ -216,6 +216,34 @@ class Categoria extends Model
         return $padre;
     }
 
+    /**
+     * Todas las categorías en el orden del árbol (cada madre seguida de sus hijas),
+     * con su camino y su nivel: lo que necesita un selector con búsqueda.
+     *
+     * @return \Illuminate\Support\Collection de Categoria
+     */
+    public static function enOrdenDeArbol()
+    {
+        $todas = static::orderBy('orden')->orderBy('id')->get();
+        $porMadre = $todas->groupBy(function (Categoria $c) { return $c->parent_id ?: 0; });
+        $porId = $todas->keyBy('id');
+        $resultado = collect();
+
+        $agregar = function ($madreId) use (&$agregar, $porMadre, $porId, $resultado) {
+            foreach ($porMadre->get($madreId, collect()) as $categoria) {
+                // Las madres ya están cargadas: camino() y nivel() no hacen consultas.
+                if ($categoria->parent_id) {
+                    $categoria->setRelation('parent', $porId->get($categoria->parent_id));
+                }
+                $resultado->push($categoria);
+                $agregar($categoria->id);
+            }
+        };
+        $agregar(0);
+
+        return $resultado;
+    }
+
     public static function slugUnico(string $nombre, $exceptoId = null): string
     {
         $base = Str::slug($nombre) ?: 'categoria';

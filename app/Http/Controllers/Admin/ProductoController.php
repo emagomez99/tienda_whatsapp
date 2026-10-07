@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Categoria;
 use App\Models\Etiqueta;
 use App\Models\Moneda;
 use App\Models\Producto;
@@ -84,9 +85,10 @@ class ProductoController extends Controller
         $etiquetasObligatorias = $this->mapEtiquetasObligatorias($proveedores);
         $etiquetasAplicables = $this->mapEtiquetasAplicables($proveedores);
         $monedaDefaultId = Moneda::idPorDefecto();
+        $categorias = Categoria::enOrdenDeArbol();
 
         return view('admin.productos.create', compact(
-            'proveedores', 'etiquetas', 'monedas',
+            'proveedores', 'etiquetas', 'monedas', 'categorias',
             'etiquetasObligatorias', 'etiquetasAplicables', 'monedaDefaultId'
         ));
     }
@@ -109,6 +111,8 @@ class ProductoController extends Controller
             'disponible' => 'boolean',
             'stock' => 'required|integer|min:0',
             'por_encargue' => 'boolean',
+            'categorias' => 'nullable|array',
+            'categorias.*' => 'integer|exists:categorias,id',
             'etiquetas' => 'nullable|array',
             'etiquetas.*.etiqueta_id' => 'nullable|exists:etiquetas,id',
             'etiquetas.*.valor' => 'nullable|string|max:255',
@@ -137,16 +141,17 @@ class ProductoController extends Controller
 
     public function edit(Producto $producto)
     {
-        $producto->load(['etiquetas', 'especificaciones', 'imagenes']);
+        $producto->load(['categorias', 'etiquetas', 'especificaciones', 'imagenes']);
         $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
         $etiquetas = Etiqueta::orderBy('nombre')->get();
         $monedas = Moneda::where('activa', true)->orderBy('nombre')->get();
         $etiquetasObligatorias = $this->mapEtiquetasObligatorias($proveedores);
         $etiquetasAplicables = $this->mapEtiquetasAplicables($proveedores);
         $monedaDefaultId = Moneda::idPorDefecto();
+        $categorias = Categoria::enOrdenDeArbol();
 
         return view('admin.productos.edit', compact(
-            'producto', 'proveedores', 'etiquetas', 'monedas', 'monedaDefaultId',
+            'producto', 'proveedores', 'etiquetas', 'monedas', 'monedaDefaultId', 'categorias',
             'etiquetasObligatorias', 'etiquetasAplicables'
         ));
     }
@@ -168,6 +173,8 @@ class ProductoController extends Controller
             'meta_description'     => 'nullable|string|max:160',
             'disponible'           => 'boolean',
             'por_encargue'         => 'boolean',
+            'categorias'           => 'nullable|array',
+            'categorias.*'         => 'integer|exists:categorias,id',
             'etiquetas'            => 'nullable|array',
             'etiquetas.*.etiqueta_id' => 'nullable|exists:etiquetas,id',
             'etiquetas.*.valor'    => 'nullable|string|max:255',
@@ -206,7 +213,7 @@ class ProductoController extends Controller
         $validated['por_encargue'] = $request->boolean('por_encargue');
 
         $atributos = array_diff_key($validated, array_flip([
-            'stock', 'etiquetas', 'especificaciones', 'galeria', 'galeria_archivos',
+            'stock', 'categorias', 'etiquetas', 'especificaciones', 'galeria', 'galeria_archivos',
         ]));
 
         $etiquetas = [];
@@ -216,7 +223,10 @@ class ProductoController extends Controller
             }
         }
 
+        // El formulario siempre tiene la sección de categorías: si no llega ninguna
+        // es porque se quitaron todas.
         $datos = (new DatosDeProducto($atributos))
+            ->conCategorias($request->input('categorias', []))
             ->conEtiquetas($etiquetas)
             ->conEspecificaciones($request->input('especificaciones', []));
 

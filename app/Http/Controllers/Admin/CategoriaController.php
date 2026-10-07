@@ -70,6 +70,26 @@ class CategoriaController extends Controller
             ->with('categoria_movida', $categoria->id);
     }
 
+    /**
+     * Crear una categoría sin salir del producto (panel "Elegir categorías"). Mismas
+     * reglas que el alta normal; responde lo que el panel necesita para mostrarla.
+     */
+    public function crearRapida(Request $request)
+    {
+        $datos = $this->validar($request->merge(['visible' => $request->input('visible', 1)]));
+        $datos['orden'] = (int) Categoria::where('parent_id', $datos['parent_id'])->max('orden') + 1;
+
+        $categoria = Categoria::create($datos);
+
+        return response()->json([
+            'id'     => $categoria->id,
+            'nombre' => $categoria->nombre,
+            'camino' => $categoria->camino(),
+            'nivel'  => $categoria->nivel(),
+            'padre'  => $categoria->parent_id,
+        ], 201);
+    }
+
     public function edit(Categoria $categoria)
     {
         return view('admin.categorias.edit', [

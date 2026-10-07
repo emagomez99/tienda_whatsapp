@@ -21,6 +21,9 @@ final class DatosDeProducto
     /** @var int|null sólo en el alta; entra como movimiento de stock */
     private $stockInicial = null;
 
+    /** @var int[]|null ids de categorías */
+    private $categorias = null;
+
     /** @var array|null etiqueta_id => valor */
     private $etiquetas = null;
 
@@ -42,6 +45,14 @@ final class DatosDeProducto
     {
         $copia = clone $this;
         $copia->stockInicial = $cantidad;
+        return $copia;
+    }
+
+    /** @param int[] $ids categorías asignadas a mano (las de arriba se calculan) */
+    public function conCategorias(array $ids): self
+    {
+        $copia = clone $this;
+        $copia->categorias = array_values(array_unique(array_filter(array_map('intval', $ids))));
         return $copia;
     }
 
@@ -95,6 +106,11 @@ final class DatosDeProducto
     public function stockInicial(): ?int
     {
         return $this->stockInicial;
+    }
+
+    public function categorias(): ?array
+    {
+        return $this->categorias;
     }
 
     public function etiquetas(): ?array

@@ -6,6 +6,7 @@
     comercial.
       Producto         nombre, dirección web, descripción
       Inventario       proveedor, código, stock, disponible, por encargue
+      Categorías       qué es el producto (Ropa › Remeras)
       Etiquetas        dependen del proveedor: van justo debajo de él
       Especificaciones
       Precio
@@ -18,6 +19,10 @@
     $etiquetasIniciales = (session()->hasOldInput() || !$editando)
         ? old('etiquetas', [])
         : $producto->etiquetas->map(function ($e) { return ['etiqueta_id' => $e->id, 'valor' => $e->pivot->valor]; })->all();
+
+    $categoriasIniciales = (session()->hasOldInput() || !$editando)
+        ? old('categorias', [])
+        : $producto->categorias->pluck('id')->all();
 
     $especificacionesIniciales = (session()->hasOldInput() || !$editando)
         ? old('especificaciones', [])
@@ -129,6 +134,7 @@
             </div>
         </div>
 
+        @include('admin.productos.partials.categorias', ['seleccionadas' => $categoriasIniciales])
         @include('admin.productos.partials.etiquetas', ['valoresIniciales' => $etiquetasIniciales])
         @include('admin.productos.partials.especificaciones', ['especificacionesIniciales' => $especificacionesIniciales])
         @include('admin.productos.partials.card-precio')
