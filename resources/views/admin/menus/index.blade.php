@@ -93,6 +93,9 @@
        adentro de un menú que todavía no tiene submenús. */
     body.arrastrando-menu .menu-arbol .menu-arbol:empty { min-height: .75rem; border-left-style: solid; border-left-color: #adb5bd; }
     .menu-fantasma > .menu-fila { background: color-mix(in srgb, var(--admin-color) 30%, white); outline: 1px dashed #adb5bd; }
+    /* El menú dentro del que va a quedar lo que se arrastra. */
+    .menu-nodo.destino-anidar > .menu-fila { background: color-mix(in srgb, var(--admin-color) 18%, white); box-shadow: inset 3px 0 0 #6c757d; }
+    .menu-nodo.destino-anidar > .menu-fila .menu-nombre::after { content: " · soltá para meterlo adentro"; font-weight: 400; font-size: .75rem; color: #6c757d; }
     .menu-fantasma > .menu-arbol { display: none; }
 
     /* El que se acaba de mover o al que se llegó desde la vista previa. */
@@ -184,6 +187,25 @@
             max = Math.max(max, 1 + altura(hijo));
         });
         return max;
+    }
+
+    function posicionX(evento) {
+        if (evento.clientX !== undefined) return evento.clientX;
+        return evento.touches && evento.touches[0] ? evento.touches[0].clientX : 0;
+    }
+
+    /** Si el puntero está a la derecha del comienzo del nombre de ese menú. */
+    function aLaDerechaDe(nodo, x) {
+        var nombre = nodo.querySelector(':scope > .menu-fila .menu-nombre');
+        return !!nombre && x >= nombre.getBoundingClientRect().left + 24;
+    }
+
+    /** Resalta el menú dentro del que va a quedar lo que se arrastra. */
+    function marcarDestino(nodo) {
+        document.querySelectorAll('.menu-nodo.destino-anidar').forEach(function (n) {
+            if (n !== nodo) n.classList.remove('destino-anidar');
+        });
+        if (nodo) nodo.classList.add('destino-anidar');
     }
 
     /** El árbol tal como quedó en pantalla: padre y posición de cada menú. */
@@ -316,22 +338,37 @@
                 },
                 // No dejar soltar donde quedaría más profundo de lo permitido.
                 onMove: function (evt, original) {
+                    var x = posicionX(original);
+                    marcarDestino(null);
+
+                    // Sobre la fila de un menú y con el mouse a su derecha: meterlo
+                    // adentro, aunque todavía no tenga submenús. Sortable sólo sabe
+                    // soltar en listas, y la de un menú sin submenús es una franja de
+                    // pocos píxeles imposible de acertar: se resuelve acá moviéndolo a
+                    // esa lista a mano.
+                    var fila = evt.related;
+                    if (fila && fila !== evt.dragged && fila.classList.contains('menu-nodo') && aLaDerechaDe(fila, x)) {
+                        var lista = fila.querySelector(':scope > .menu-arbol');
+                        if (lista && parseInt(lista.dataset.nivel, 10) + altura(evt.dragged) <= NIVEL_MAXIMO) {
+                            marcarDestino(fila);
+                            if (evt.dragged.parentElement !== lista) lista.insertBefore(evt.dragged, lista.firstChild);
+                            return false;
+                        }
+                    }
+
                     var nivelDestino = parseInt(evt.to.dataset.nivel, 10);
                     if (nivelDestino + altura(evt.dragged) > NIVEL_MAXIMO) return false;
 
-                    // Entrar en un menú que no tiene submenús sólo llevando el mouse a
-                    // la derecha, hasta la altura de su nombre. Si no, al arrastrar en
-                    // línea recta para reordenar, se metía sin querer en el de arriba.
+                    // Al revés: entrar en la lista vacía de un menú arrastrando en línea
+                    // recta (para reordenar) no vale; si no, se metía sin querer en el
+                    // de arriba.
                     var vacia = !Array.prototype.some.call(evt.to.children, function (hijo) {
                         return hijo !== evt.dragged && hijo.classList.contains('menu-nodo');
                     });
                     var destino = evt.to.closest('.menu-nodo');
-                    if (vacia && destino) {
-                        var x = original.clientX !== undefined ? original.clientX
-                              : (original.touches && original.touches[0] ? original.touches[0].clientX : 0);
-                        var nombre = destino.querySelector(':scope > .menu-fila .menu-nombre').getBoundingClientRect();
-                        if (x < nombre.left + 24) return false;
-                    }
+                    if (vacia && destino && !aLaDerechaDe(destino, x)) return false;
+
+                    if (vacia && destino) marcarDestino(destino);
                     return true;
                 },
                 // Se compara el árbol entero y no los índices del evento: al pasar a
@@ -339,6 +376,7 @@
                 // el menú haya cambiado de padre.
                 onEnd: function (evt) {
                     document.body.classList.remove('arrastrando-menu');
+                    marcarDestino(null);
                     if (JSON.stringify(arbol()) === antes) return;
                     guardar(evt.item, antes, cuentasAntes);
                 }

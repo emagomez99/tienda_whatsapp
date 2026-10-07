@@ -29,7 +29,7 @@
                 </div>
                 <div class="ayuda-item">
                     <span class="ayuda-icono"><i class="bi bi-arrow-return-right"></i></span>
-                    <div><strong>Meter uno dentro de otro</strong><br>Mientras lo arrastrás, llevalo hacia la derecha, debajo del nombre del otro menú. También con <i class="bi bi-plus-lg"></i> en la fila.</div>
+                    <div><strong>Meter uno dentro de otro</strong><br>Arrastralo sobre el otro menú y corré el mouse hacia la derecha, hasta su nombre: la fila se resalta y al soltar queda adentro. Para crear uno nuevo adentro, <i class="bi bi-plus-lg"></i> en la fila.</div>
                 </div>
                 <div class="ayuda-item">
                     <span class="ayuda-icono"><i class="bi bi-diagram-2"></i></span>
