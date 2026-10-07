@@ -208,7 +208,7 @@ Objetivo: cada producto tiene una categoría, y los menús pueden apuntar a cate
 - [ ] Formulario de producto: **Categorías** con chips y un panel lateral con búsqueda y casillas, mostrando el camino ("Perros/Camas y cuchas") y "Crear categoría" ahí mismo (como Tiendanube).
 - [ ] Listado de productos: columna y filtro por categoría; aviso "N productos sin categoría".
 - [ ] **Asignar categorías en masa** desde el listado (como Tiendanube): casillas por producto + "seleccionar todos los del filtro" (para catálogos grandes como oleomc), acción "Asignar categorías" / "Quitar categorías", y "Crear categoría" en el mismo panel.
-- [ ] `Producto::scopeEnCategoria(Categoria)` (incluye subcategorías).
+- [x] `Producto::scopeEnCategoria(Categoria)` (incluye subcategorías) y `scopeSinCategoria`.
 - [ ] Menús: nuevo tipo **"Los de una categoría"** (`tipo_enlace = categoria`), en `scopeDelMenu`, en el formulario por bloques, en el contador en vivo y en la vista previa.
 - [ ] **Menú automático (D8):** ajuste "El menú de la tienda se arma con las categorías"; la tienda (escritorio y celular) lo dibuja desde el árbol de categorías visibles. Las tiendas actuales siguen con su menú personalizado (D9).
 - [ ] Página de categoría en la tienda: `/categoria/{slug}` con SEO (título, descripción, canónica) y en el sitemap.
