@@ -17,10 +17,12 @@
 <div class="card">
     <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span>Estructura del menú</span>
-        @if($menus->count() > 0)
-            <small class="text-muted"><i class="bi bi-grip-vertical"></i> Arrastrá para ordenar · llevalo a la derecha para meterlo dentro de otro</small>
-        @endif
+        <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" id="boton-ayuda-menus"
+                data-bs-toggle="collapse" data-bs-target="#ayuda-menus" aria-expanded="false" aria-controls="ayuda-menus">
+            <i class="bi bi-question-circle"></i> Cómo funciona
+        </button>
     </div>
+    @include('admin.menus.partials.ayuda')
     <div class="card-body p-0">
         @if($menus->count() > 0)
             <ul class="menu-arbol" id="menu-tree" data-nivel="0">
@@ -42,13 +44,6 @@
                 </a>
             </div>
         @endif
-    </div>
-    <div class="card-footer bg-white small text-muted">
-        <i class="bi bi-folder2"></i> <strong>Agrupa:</strong> no muestra productos, sólo despliega sus submenús.
-        <span class="mx-1">·</span>
-        <i class="bi bi-tag"></i> <strong>Etiqueta</strong> / <i class="bi bi-truck"></i> <strong>Proveedor:</strong> muestra esos productos.
-        <span class="mx-1">·</span>
-        <i class="bi bi-diagram-2"></i> Un submenú suma lo que filtra el de arriba: «Notebook › Asus» son las notebooks Asus.
     </div>
 </div>
 @endsection
