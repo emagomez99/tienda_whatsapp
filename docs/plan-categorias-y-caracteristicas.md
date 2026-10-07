@@ -5,7 +5,8 @@
 
 ## Estado actual
 
-- **Etapa en curso:** ninguna, plan aprobado el 2026-10-07. Arrancar por la **Etapa 0**.
+- **Etapa en curso:** ninguna, plan aprobado el 2026-10-07. Arrancar por la **Etapa 0** (cerrar decisiones D1–D11).
+- **Orden de trabajo:** 0 → 1 → 2 (con migración real de las 2 tiendas en cada una) → 5 (Excel) → 3 → 4.
 - **Último commit antes del plan:** `9516afe` (árbol de menús con arrastrar y soltar).
 
 ---
@@ -50,6 +51,15 @@ Celulares ................... Marca*, Almacenamiento*, Color
 Deportes › Pádel › Paletas .. Marca*, Género, Peso
 ```
 
+## 2b. Estrategia de migración y lo que viene después
+
+- **Se migra ahora, mientras hay 2 tiendas reales.** Sin período de convivencia: cada etapa migra los datos reales y borra la estructura vieja en el mismo paso. **Objetivo: Etapas 1 y 2 terminadas antes de sumar tiendas nuevas.**
+- **Pensado para importar desde Excel (Etapa 5).** Todo lo que se haga en las etapas 1 y 2 tiene que poder usarse desde una carga masiva:
+  - Las reglas de guardado de un producto (categorías, características obligatorias, valores, galería) viven en **un servicio**, no en el controlador: el formulario y la importación usan el mismo.
+  - Las categorías se pueden resolver por **camino de texto** (`Ropa > Remeras`) y crear si no existen.
+  - Las características se resuelven **por nombre** (columna "Marca"), y sus valores pasan por `EtiquetaValor::resolver` (ya unifica mayúsculas y espacios).
+  - El producto tiene una **clave para actualizar** desde una planilla (D10).
+
 ## 3. Decisiones
 
 Marcar la elegida. Las recomendadas van primero.
@@ -65,6 +75,8 @@ Marcar la elegida. Las recomendadas van primero.
 | D7 | Reglas por proveedor (`proveedor_etiqueta`) | **Se migran y se borran** en la Etapa 2 (rec.) · conviven un tiempo | ☐ |
 | D8 | Menú de la tienda | **Automático desde las categorías**, con Menús personalizado como opción en Ajustes (rec.) · siempre manual como hoy | ☐ |
 | D9 | Tiendas que ya tienen menú armado (perfumes, oleomc) | **Siguen con su menú personalizado** hasta que lo cambien (rec.) · pasar a automático | ☐ |
+| D10 | Clave del producto para actualizar desde una planilla | **Código** (`id_proveedor`) **único por tienda** cuando está cargado (rec.: en oleomc los 30.908 ya son únicos) · id interno · otra columna nueva (SKU) | ☐ |
+| D11 | ¿Cuáles son las 2 tiendas reales a migrar? | oleomc + ? (en local también están perfumes y arcor) | ☐ |
 
 ## 4. Modelo de datos
 
@@ -109,7 +121,9 @@ Cada etapa queda usable sola, con tests, commiteada y migrada en las 3 tiendas l
 ### Etapa 1: Categorías
 Objetivo: cada producto tiene una categoría, y los menús pueden apuntar a categorías.
 
-- [ ] Migración `create_categorias_table` + `productos.categoria_id`.
+- [ ] **Servicio de guardado de producto** (antes que nada): sacar de `ProductoController` las reglas que hoy viven ahí (`validarEtiquetasObligatorias`, `sincronizarEtiquetas`, especificaciones, `sincronizarGaleria`) a un servicio (ej. `App\Services\GuardadoDeProducto`) que reciba datos ya validados y devuelva errores por campo. El controlador sólo orquesta. Lo va a usar la importación desde Excel (Etapa 5). Tests de las reglas en el servicio, sin HTTP.
+- [ ] Migración `create_categorias_table` + `categoria_producto`.
+- [ ] `Categoria::resolverCamino('Ropa > Remeras', crear: bool)`: busca por camino (sin distinguir mayúsculas, con el mismo normalizado que los valores) y opcionalmente crea lo que falta. Lo usa el formulario ("Crear categoría" en el panel) y la importación.
 - [ ] Modelo `Categoria`: `parent`, `children`, `productos`, `linaje()`, `idsConDescendientes()`, `nivel()`; límite de niveles (D4).
 - [ ] Pantalla **Admin › Categorías**: árbol con arrastrar y soltar (reutilizar el de menús: `ArbolDeMenus` → generalizar o un `ArbolDeCategorias`), ojo de visible, cantidad de productos, `+` para subcategoría, `⋯` con editar y eliminar. Mismas reglas que Tiendanube y que el árbol de menús actual: derecha = meter adentro, izquierda = sacar, máximo 3 niveles.
 - [ ] Mejora del árbol (sirve también para Menús): **línea de destino** donde va a caer lo arrastrado, como la línea azul de Tiendanube. Se mantiene el guardado automático al soltar, con aviso y Deshacer (Tiendanube usa un botón "Guardar cambios"; acá se prefiere no perder lo hecho si se sale de la página).
@@ -147,10 +161,22 @@ Objetivo: lo que hoy decide el proveedor pasa a decidirlo la categoría.
 - [ ] `tenant:create --seed`: ofrecer una plantilla inicial.
 - [ ] Revisar textos de todo el panel con la palabra nueva.
 
+### Etapa 5: Importar productos desde Excel (próxima, después de 1 y 2)
+Objetivo: carga y actualización masiva por planilla, con las mismas reglas que el formulario.
+
+- [ ] D10: código único por tienda (índice único parcial `WHERE id_proveedor IS NOT NULL`) y aviso en el formulario si se repite.
+- [ ] Librería: `maatwebsite/excel` 3.1 (compatible con Laravel 8 y PHP 7.4; verificar al instalar).
+- [ ] **Plantilla descargable por categoría**: columnas fijas (Código, Nombre, Descripción, Precio, Moneda, Stock, Disponible, Por encargue, Categorías, Imagen 1…N) + **una columna por característica de esa categoría**, marcando las obligatorias. Así el cliente no adivina qué cargar.
+- [ ] Formato: Categorías como Tiendanube (`Ropa > Remeras, Ofertas`); imágenes por URL (la primera es la principal, vía `GaleriaProducto`); valores de características uno por celda (varios valores: separador a definir junto con la Etapa 4).
+- [ ] **Vista previa antes de aplicar**: cuántos se crean, cuántos se actualizan (por código), errores por fila ("Fila 12: falta Talle, obligatoria en Remeras"), categorías y valores nuevos que se van a crear, y valores parecidos a existentes ("Asuz" ≈ "Asus") para corregir antes.
+- [ ] Aplicar en lotes (oleomc tiene 30.917 productos), con el servicio de guardado de la Etapa 1. El stock inicial entra como movimiento de stock, como en el alta.
+- [ ] Exportar a Excel con el mismo formato (sirve de respaldo y para editar en masa).
+- [ ] Permiso propio (`productos.importar`) y registro de quién importó qué.
+- [ ] Tests: plantilla por categoría, vista previa con errores, creación y actualización por código, categorías por camino, valores unificados.
+
 ### Etapa 4 (opcional, se decide después)
 - [ ] Marca como característica global por defecto en tiendas nuevas.
 - [ ] **Orden de los productos dentro de una categoría** (hoy siempre por nombre): elegir por categoría entre manual, más nuevos, precio o nombre. Tiendanube lo tiene como función aparte.
-- [ ] Importación/exportación por planilla con columna "Categorías" (formato de Tiendanube: `Ropa > Remeras, Ofertas`), cuando exista importación por planilla.
 - [ ] Varios valores por característica (ej. "Talles: S, M, L"; Modelo en oleomc). Ver análisis del 2026-10-06.
 - [ ] Variantes con stock propio (talle/color que el cliente elige al comprar). Proyecto aparte.
 
@@ -196,3 +222,4 @@ Datos útiles:
 | 2026-10-07 | Revisado con capturas de Tiendanube: varias categorías por producto (D2), menú automático desde categorías (D8, D9), características globales | — |
 | 2026-10-07 | Revisado con la ayuda de Tiendanube: confirma 3 niveles y la madre automática; se suma asignación masiva desde el listado (Etapa 1) y planilla (Etapa 4) | — |
 | 2026-10-07 | Ayuda de Tiendanube sobre ordenar: confirma el árbol (derecha/izquierda, 3 niveles); se suma línea de destino (Etapa 1) y orden de productos por categoría (Etapa 4) | — |
+| 2026-10-07 | Se migra ahora (2 tiendas reales, sin convivencia). Se planifica la importación desde Excel (Etapa 5) y se adelanta a la Etapa 1 el servicio de guardado de producto que va a compartir. Nuevas decisiones D10 (clave por código) y D11 (qué tiendas) | — |
