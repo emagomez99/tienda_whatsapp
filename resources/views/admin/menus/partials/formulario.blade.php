@@ -44,7 +44,7 @@
                             <option value="">Menú principal (primer nivel)</option>
                             @foreach($menusParent as $menuParent)
                                 <option value="{{ $menuParent->id }}" {{ old('parent_id', $menu->parent_id) == $menuParent->id ? 'selected' : '' }}>
-                                    {{ str_repeat('— ', $menuParent->parent_id ? 1 : 0) }}{{ $menuParent->nombre }}
+                                    {{ str_repeat('— ', $menuParent->nivel()) }}{{ $menuParent->nombre }}
                                 </option>
                             @endforeach
                         </select>

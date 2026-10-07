@@ -235,6 +235,20 @@ class Menu extends Model
         return $filtros;
     }
 
+    /** Hasta qué nivel un menú puede tener submenús (0 = primer nivel). */
+    const NIVEL_MAXIMO_PADRE = 2;
+
+    /** 0 para los de primer nivel, 1 para sus submenús, etc. */
+    public function nivel(): int
+    {
+        return count($this->linaje()) - 1;
+    }
+
+    public function admiteSubmenus(): bool
+    {
+        return $this->nivel() <= self::NIVEL_MAXIMO_PADRE;
+    }
+
     /** Submenús, sub-submenús, etc.: los que se borran en cascada con este. */
     public function cantidadDescendientes(): int
     {

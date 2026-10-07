@@ -197,4 +197,49 @@ class MenuListadoTest extends TestCase
         $this->assertStringContainsString('data-bs-target="#drawer-sub-' . $this->ids['asus'] . '"', $html);
         $this->assertStringContainsString('catalogo/asus-gamer', $html);
     }
+
+    /** @test */
+    public function cada_fila_ofrece_agregar_un_submenu_adentro()
+    {
+        $this->comoAdmin()->get($this->urlTenant('admin/menus'))
+            ->assertOk()
+            ->assertSee('admin/menus/create?parent_id=' . $this->ids['asus'], false);
+    }
+
+    /**
+     * El alta llega con "Dentro de" elegido y queda última entre sus hermanos.
+     *
+     * @test
+     */
+    public function el_alta_con_padre_lo_deja_elegido_y_al_final()
+    {
+        $respuesta = $this->comoAdmin()
+            ->get($this->urlTenant('admin/menus/create?parent_id=' . $this->ids['notebook']))
+            ->assertOk();
+
+        $menu = $respuesta->viewData('menu');
+        $this->assertSame($this->ids['notebook'], $menu->parent_id);
+        // Asus y Samsung tienen posición 0: el nuevo va en la 1.
+        $this->assertSame(1, $menu->orden);
+        $respuesta->assertSee('<option value="' . $this->ids['notebook'] . '" selected>', false);
+    }
+
+    /**
+     * "Dentro de" ofrece hasta el tercer nivel, con la sangría de cada uno, para que
+     * el + de una fila de tercer nivel tenga a quién preseleccionar.
+     *
+     * @test
+     */
+    public function dentro_de_ofrece_tres_niveles()
+    {
+        $nieto = $this->enTenant(function () {
+            return Menu::create(['nombre' => 'Asus Gamer', 'slug' => 'asus-gamer', 'tipo_enlace' => 'ninguno',
+                'parent_id' => $this->ids['asus'], 'activo' => true])->id;
+        });
+
+        $this->comoAdmin()
+            ->get($this->urlTenant('admin/menus/create?parent_id=' . $nieto))
+            ->assertOk()
+            ->assertSee('— — Asus Gamer');
+    }
 }

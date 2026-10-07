@@ -86,7 +86,7 @@ class MenuController extends Controller
         }
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $siguienteOrdenRaiz = (Menu::whereNull('parent_id')->max('orden') ?? -1) + 1;
         $siguienteOrdenPorPadre = Menu::whereNotNull('parent_id')
@@ -95,10 +95,17 @@ class MenuController extends Controller
             ->pluck('max_orden', 'parent_id')
             ->map(function ($max) { return $max + 1; });
 
+        // Con el + de una fila de la lista, el padre viene en la dirección.
+        $padre = $request->filled('parent_id') ? Menu::find((int) $request->input('parent_id')) : null;
+        if ($padre && $padre->nivel() > Menu::NIVEL_MAXIMO_PADRE) {
+            $padre = null;
+        }
+
         $menu = new Menu([
             'tipo_enlace'  => Menu::TIPO_NINGUNO,
             'activo'       => true,
-            'orden'        => $siguienteOrdenRaiz,
+            'parent_id'    => $padre ? $padre->id : null,
+            'orden'        => $padre ? ($siguienteOrdenPorPadre[$padre->id] ?? 0) : $siguienteOrdenRaiz,
             'filtro_stock' => 'todos',
         ]);
 
@@ -342,28 +349,30 @@ class MenuController extends Controller
         return redirect()->route('admin.menus.index')->with('menu_movido', $menu->id);
     }
 
+    /**
+     * Los menús que pueden ser "Dentro de", en el orden del árbol: hasta el nivel
+     * Menu::NIVEL_MAXIMO_PADRE, así un submenú nuevo queda a lo sumo en el cuarto
+     * nivel. Si un menú se excluye (en edición: él mismo y los suyos), se excluye con
+     * todo lo que tiene adentro.
+     */
     private function buildMenusOrdenados($excluirIds = [])
     {
-        $raices = Menu::raiz()
-            ->when(!empty($excluirIds), function ($q) use ($excluirIds) {
-                $q->whereNotIn('id', $excluirIds);
-            })
-            ->orderBy('orden')
-            ->orderBy('nombre')
-            ->with(['children' => function ($q) {
-                $q->orderBy('orden')->orderBy('nombre');
-            }])
-            ->get();
-
         $resultado = collect();
-        foreach ($raices as $padre) {
-            $resultado->push($padre);
-            foreach ($padre->children as $hijo) {
-                if (empty($excluirIds) || !in_array($hijo->id, $excluirIds)) {
-                    $resultado->push($hijo);
+
+        $agregar = function ($menus, int $nivel) use (&$agregar, $resultado, $excluirIds) {
+            foreach ($menus as $menu) {
+                if (in_array($menu->id, $excluirIds)) {
+                    continue;
+                }
+                $resultado->push($menu);
+                if ($nivel < Menu::NIVEL_MAXIMO_PADRE) {
+                    $agregar($menu->children, $nivel + 1);
                 }
             }
-        }
+        };
+
+        $agregar(Menu::raiz()->orderBy('orden')->orderBy('id')->with('children.children')->get(), 0);
+
         return $resultado;
     }
 

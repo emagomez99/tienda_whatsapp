@@ -82,6 +82,13 @@
             @endif
 
             <div class="btn-group">
+                {{-- Submenú nuevo acá adentro: el alta llega con "Dentro de" ya elegido. --}}
+                @if($nivel <= App\Models\Menu::NIVEL_MAXIMO_PADRE && auth()->user()->puede('menus.gestionar'))
+                    <a href="{{ route('admin.menus.create', ['parent_id' => $menu->id]) }}" class="btn btn-sm btn-outline-success"
+                       title="Agregar un submenú dentro de «{{ $menu->nombre }}»">
+                        <i class="bi bi-plus-lg"></i>
+                    </a>
+                @endif
                 @unless($menu->esContenedor())
                     <a href="{{ $menu->url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary" title="Ver en la tienda">
                         <i class="bi bi-eye"></i>
