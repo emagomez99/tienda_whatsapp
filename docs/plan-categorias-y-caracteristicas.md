@@ -25,6 +25,8 @@ Lo que decide si un producto lleva "Talle" o "Capacidad" es **qué tipo de produ
 Referencias de otras plataformas (capturas del 2026-10-07):
 - **TiendaNegocio:** todo es un árbol de categorías (hasta Marca › Afnan). Simple, pero no permite datos obligatorios ni filtrar por talle o capacidad.
 - **Tiendanube:** árbol de categorías que **es el menú de la tienda**; un producto en **varias** categorías (panel con casillas y búsqueda); **Variantes** aparte (color + tamaño con stock); Marca y Tags como campos. No tiene características por categoría: eso, que oleomc necesita (Fabricante → Aplicación → Modelo), es una ventaja propia.
+  - Su ayuda ([cómo asociar productos a una categoría](https://ayuda.tiendanube.com/es_AR/122709-categorias/como-asociar-mis-productos-a-una-categoria)) confirma: hasta **3 niveles**; al asignar una subcategoría el producto **aparece también en la madre**; tres formas de asignar: **en masa desde el listado**, desde el producto, y por planilla (columna "Categorías", varias separadas por coma, niveles con " > ").
+  - Diferencia de implementación elegida: Tiendanube guarda el vínculo con la madre; acá se **calcula** (productos de una categoría = los suyos + los de sus subcategorías). Mismo resultado, sin datos repetidos que puedan desincronizarse.
 
 ## 2. Solución elegida (opción B)
 
@@ -112,6 +114,7 @@ Objetivo: cada producto tiene una categoría, y los menús pueden apuntar a cate
 - [ ] Alta/edición de categoría (nombre, dentro de, visible). Eliminar: sólo sin productos; si tiene, ofrecer moverlos a otra.
 - [ ] Formulario de producto: **Categorías** con chips y un panel lateral con búsqueda y casillas, mostrando el camino ("Perros/Camas y cuchas") y "Crear categoría" ahí mismo (como Tiendanube).
 - [ ] Listado de productos: columna y filtro por categoría; aviso "N productos sin categoría".
+- [ ] **Asignar categorías en masa** desde el listado (como Tiendanube): casillas por producto + "seleccionar todos los del filtro" (para catálogos grandes como oleomc), acción "Asignar categorías" / "Quitar categorías", y "Crear categoría" en el mismo panel.
 - [ ] `Producto::scopeEnCategoria(Categoria)` (incluye subcategorías).
 - [ ] Menús: nuevo tipo **"Los de una categoría"** (`tipo_enlace = categoria`), en `scopeDelMenu`, en el formulario por bloques, en el contador en vivo y en la vista previa.
 - [ ] **Menú automático (D8):** ajuste "El menú de la tienda se arma con las categorías"; la tienda (escritorio y celular) lo dibuja desde el árbol de categorías visibles. Las tiendas actuales siguen con su menú personalizado (D9).
@@ -144,6 +147,7 @@ Objetivo: lo que hoy decide el proveedor pasa a decidirlo la categoría.
 
 ### Etapa 4 (opcional, se decide después)
 - [ ] Marca como característica global por defecto en tiendas nuevas.
+- [ ] Importación/exportación por planilla con columna "Categorías" (formato de Tiendanube: `Ropa > Remeras, Ofertas`), cuando exista importación por planilla.
 - [ ] Varios valores por característica (ej. "Talles: S, M, L"; Modelo en oleomc). Ver análisis del 2026-10-06.
 - [ ] Variantes con stock propio (talle/color que el cliente elige al comprar). Proyecto aparte.
 
@@ -187,3 +191,4 @@ Datos útiles:
 |---|---|---|
 | 2026-10-07 | Plan aprobado (opción B, en etapas) | — |
 | 2026-10-07 | Revisado con capturas de Tiendanube: varias categorías por producto (D2), menú automático desde categorías (D8, D9), características globales | — |
+| 2026-10-07 | Revisado con la ayuda de Tiendanube: confirma 3 niveles y la madre automática; se suma asignación masiva desde el listado (Etapa 1) y planilla (Etapa 4) | — |
