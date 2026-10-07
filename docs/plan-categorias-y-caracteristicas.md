@@ -199,9 +199,9 @@ Menú de la tienda   (•) Se arma con las categorías visibles (recomendado)
 Objetivo: cada producto tiene una categoría, y los menús pueden apuntar a categorías.
 
 - [x] **Servicio de guardado de producto** (antes que nada): sacar de `ProductoController` las reglas que hoy viven ahí (`validarEtiquetasObligatorias`, `sincronizarEtiquetas`, especificaciones, `sincronizarGaleria`) a un servicio (ej. `App\Services\GuardadoDeProducto`) que reciba datos ya validados y devuelva errores por campo. El controlador sólo orquesta. Lo va a usar la importación desde Excel (Etapa 5). Tests de las reglas en el servicio, sin HTTP.
-- [ ] Migración `create_categorias_table` + `categoria_producto`.
-- [ ] `Categoria::resolverCamino('Ropa > Remeras', crear: bool)`: busca por camino (sin distinguir mayúsculas, con el mismo normalizado que los valores) y opcionalmente crea lo que falta. Lo usa el formulario ("Crear categoría" en el panel) y la importación.
-- [ ] Modelo `Categoria`: `parent`, `children`, `productos`, `linaje()`, `idsConDescendientes()`, `nivel()`; límite de niveles (D4).
+- [x] Migración `create_categorias_table` + `categoria_producto`.
+- [x] `Categoria::resolverCamino('Ropa > Remeras', crear: bool)`: busca por camino (sin distinguir mayúsculas, con el mismo normalizado que los valores) y opcionalmente crea lo que falta. Lo usa el formulario ("Crear categoría" en el panel) y la importación.
+- [x] Modelo `Categoria`: `parent`, `children`, `productos`, `linaje()`, `idsConDescendientes()`, `nivel()`; límite de niveles (D4).
 - [ ] Pantalla **Admin › Categorías**: árbol con arrastrar y soltar (reutilizar el de menús: `ArbolDeMenus` → generalizar o un `ArbolDeCategorias`), ojo de visible, cantidad de productos, `+` para subcategoría, `⋯` con editar y eliminar. Mismas reglas que Tiendanube y que el árbol de menús actual: derecha = meter adentro, izquierda = sacar, máximo 3 niveles.
 - [ ] Mejora del árbol (sirve también para Menús): **línea de destino** donde va a caer lo arrastrado, como la línea azul de Tiendanube. Se mantiene el guardado automático al soltar, con aviso y Deshacer (Tiendanube usa un botón "Guardar cambios"; acá se prefiere no perder lo hecho si se sale de la página).
 - [ ] Alta/edición de categoría (nombre, dentro de, visible). Eliminar: sólo sin productos; si tiene, ofrecer moverlos a otra.
@@ -302,3 +302,4 @@ Datos útiles:
 | 2026-10-07 | Decisiones D1–D11 cerradas (todas las recomendadas; D6 = Kits hidráulicos; D11 = oleomc y perfumes) | — |
 | 2026-10-07 | Se migra ahora (2 tiendas reales, sin convivencia). Se planifica la importación desde Excel (Etapa 5) y se adelanta a la Etapa 1 el servicio de guardado de producto que va a compartir. Nuevas decisiones D10 (clave por código) y D11 (qué tiendas) | — |
 | 2026-10-08 | Etapa 1: servicio `GuardadoDeProducto` + `DatosDeProducto` (null = no tocar, [] = vaciar); el formulario lo usa | (este commit) |
+| 2026-10-08 | Etapa 1: tablas `categorias` y `categoria_producto`, modelo `Categoria` (camino, niveles, visibilidad heredada, descendientes por CTE recursiva), `Producto::enCategoria` / `sinCategoria`. Ojo: dentro de un modelo `$this->visible` es la propiedad de Eloquent, no la columna (`marcadaVisible()`) | (este commit) |

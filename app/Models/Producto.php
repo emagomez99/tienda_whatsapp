@@ -257,6 +257,15 @@ class Producto extends Model
             });
     }
 
+    /**
+     * Las categorías asignadas a mano. El producto aparece también en las de arriba
+     * de cada una (ver scopeEnCategoria), sin que haga falta asignarlas.
+     */
+    public function categorias()
+    {
+        return $this->belongsToMany(Categoria::class, 'categoria_producto')->withTimestamps();
+    }
+
     public function especificaciones()
     {
         return $this->hasMany(ProductoEspecificacion::class);
@@ -486,6 +495,27 @@ class Producto extends Model
         }
 
         return $query->segunDisponibilidadDelMenu($menu);
+    }
+
+    /**
+     * Los productos de una categoría: los asignados a ella y a cualquiera de sus
+     * subcategorías ("Ropa" incluye lo de "Ropa › Remeras").
+     */
+    public function scopeEnCategoria($query, Categoria $categoria)
+    {
+        $ids = Categoria::idsConDescendientes([$categoria->id]);
+
+        return $query->whereIn('productos.id', function ($sub) use ($ids) {
+            $sub->select('producto_id')->from('categoria_producto')->whereIn('categoria_id', $ids);
+        });
+    }
+
+    /** Los que todavía no tienen ninguna categoría (para el aviso del listado). */
+    public function scopeSinCategoria($query)
+    {
+        return $query->whereNotIn('productos.id', function ($sub) {
+            $sub->select('producto_id')->from('categoria_producto');
+        });
     }
 
     /** La disponibilidad que pide el menú: todos, sólo con stock, o con stock o por encargue. */

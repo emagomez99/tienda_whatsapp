@@ -1,0 +1,233 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
+
+/**
+ * Qué es un producto: Ropa › Remeras, Celulares, Deportes › Pádel › Paletas.
+ *
+ * Árbol de hasta tres niveles. Un producto puede estar en varias categorías, y
+ * aparece también en las de arriba sin marcarlas: los productos de "Ropa" son los
+ * suyos más los de "Remeras" (se calcula, no se guarda dos veces).
+ *
+ * Ver docs/plan-categorias-y-caracteristicas.md.
+ */
+class Categoria extends Model
+{
+    protected $table = 'categorias';
+
+    /** Último nivel en el que una categoría puede tener subcategorías (0 = primer nivel). */
+    const NIVEL_MAXIMO_PADRE = 1;
+
+    /** Último nivel posible: 3 niveles en total (Deportes › Pádel › Paletas). */
+    const NIVEL_MAXIMO = 2;
+
+    /** Separador de niveles al escribir un camino ("Ropa > Remeras"), como Tiendanube. */
+    const SEPARADOR = '>';
+
+    protected $fillable = [
+        'parent_id',
+        'nombre',
+        'slug',
+        'orden',
+        'visible',
+        'meta_title',
+        'meta_description',
+    ];
+
+    protected $casts = [
+        'visible' => 'boolean',
+        'orden'   => 'integer',
+    ];
+
+    protected static function booted()
+    {
+        static::saving(function (Categoria $categoria) {
+            $categoria->nombre = EtiquetaValor::limpiar($categoria->nombre);
+            $categoria->normalizado = EtiquetaValor::normalizar($categoria->nombre);
+
+            if (!$categoria->slug) {
+                $categoria->slug = static::slugUnico($categoria->nombre, $categoria->id);
+            }
+        });
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Categoria::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Categoria::class, 'parent_id')->orderBy('orden')->orderBy('id');
+    }
+
+    /** Los productos asignados a esta categoría puntual (sin sus subcategorías). */
+    public function productos()
+    {
+        return $this->belongsToMany(Producto::class, 'categoria_producto')->withTimestamps();
+    }
+
+    /** La categoría y las de arriba, desde ella hasta la raíz. Corta los ciclos. */
+    public function linaje(): array
+    {
+        $cadena = [];
+        $vistos = [];
+        $actual = $this;
+
+        while ($actual && !isset($vistos[$actual->id ?: spl_object_id($actual)])) {
+            $vistos[$actual->id ?: spl_object_id($actual)] = true;
+            $cadena[] = $actual;
+            $actual = $actual->parent;
+        }
+
+        return $cadena;
+    }
+
+    /** 0 para las de primer nivel, 1 para sus subcategorías, 2 para las de abajo. */
+    public function nivel(): int
+    {
+        return count($this->linaje()) - 1;
+    }
+
+    /** "Ropa > Remeras": como se muestra en el producto y se escribe en una planilla. */
+    public function camino(): string
+    {
+        return implode(' ' . self::SEPARADOR . ' ', array_map(function (Categoria $c) {
+            return $c->nombre;
+        }, array_reverse($this->linaje())));
+    }
+
+    public function admiteSubcategorias(): bool
+    {
+        return $this->nivel() <= self::NIVEL_MAXIMO_PADRE;
+    }
+
+    /**
+     * Si se ve en la tienda: ella y todas las de arriba visibles. Al ocultar "Ropa"
+     * se ocultan sus subcategorías; al volver a mostrarla, cada una recupera su
+     * propio estado, porque no se copió nada.
+     */
+    public function esVisibleEnTienda(): bool
+    {
+        return $this->ocultaPor() === null;
+    }
+
+    /**
+     * La columna visible de esta categoría puntual.
+     *
+     * Ojo: dentro de un modelo, $this->visible no es la columna sino la propiedad
+     * protegida de Eloquent con los campos a serializar (siempre un array). Desde
+     * afuera sí se lee la columna; acá adentro hay que pedirla así.
+     */
+    public function marcadaVisible(): bool
+    {
+        return (bool) $this->getAttribute('visible');
+    }
+
+    /** La categoría más cercana hacia arriba que está oculta, si la hay (para "oculta por «Ropa»"). */
+    public function ocultaPor(): ?Categoria
+    {
+        foreach ($this->linaje() as $nivel) {
+            if (!$nivel->marcadaVisible()) {
+                return $nivel;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Los ids de estas categorías y de todas sus subcategorías, a cualquier
+     * profundidad. Una sola consulta recursiva.
+     *
+     * @param int[] $ids
+     * @return int[]
+     */
+    public static function idsConDescendientes(array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if (empty($ids)) {
+            return [];
+        }
+
+        $marcas = implode(',', array_fill(0, count($ids), '?'));
+
+        $filas = DB::select("
+            WITH RECURSIVE arbol AS (
+                SELECT id FROM categorias WHERE id IN ({$marcas})
+                UNION
+                SELECT c.id FROM categorias c JOIN arbol a ON c.parent_id = a.id
+            )
+            SELECT id FROM arbol
+        ", $ids);
+
+        return array_map(function ($fila) { return (int) $fila->id; }, $filas);
+    }
+
+    /**
+     * Busca una categoría por su camino ("Ropa > Remeras"), sin distinguir
+     * mayúsculas ni espacios de más. Con $crear, crea lo que falte del camino.
+     *
+     * Es lo que usa la importación desde planilla y el "Crear categoría" del
+     * producto.
+     *
+     * @throws InvalidArgumentException si el camino está vacío o pasa de 3 niveles
+     */
+    public static function resolverCamino(string $camino, bool $crear = false): ?Categoria
+    {
+        $partes = array_values(array_filter(array_map(function ($parte) {
+            return EtiquetaValor::limpiar($parte);
+        }, explode(self::SEPARADOR, $camino)), function ($parte) {
+            return $parte !== '';
+        }));
+
+        if (empty($partes)) {
+            throw new InvalidArgumentException('El camino de la categoría está vacío.');
+        }
+        if (count($partes) > self::NIVEL_MAXIMO + 1) {
+            throw new InvalidArgumentException('«' . $camino . '» tiene más de ' . (self::NIVEL_MAXIMO + 1) . ' niveles.');
+        }
+
+        $padre = null;
+        foreach ($partes as $nombre) {
+            $categoria = static::where('parent_id', $padre ? $padre->id : null)
+                ->where('normalizado', EtiquetaValor::normalizar($nombre))
+                ->first();
+
+            if (!$categoria) {
+                if (!$crear) {
+                    return null;
+                }
+                $categoria = static::create([
+                    'nombre'    => $nombre,
+                    'parent_id' => $padre ? $padre->id : null,
+                    'orden'     => (int) static::where('parent_id', $padre ? $padre->id : null)->max('orden') + 1,
+                ]);
+            }
+
+            $padre = $categoria;
+        }
+
+        return $padre;
+    }
+
+    public static function slugUnico(string $nombre, $exceptoId = null): string
+    {
+        $base = Str::slug($nombre) ?: 'categoria';
+        $slug = $base;
+        $i = 2;
+
+        while (static::where('slug', $slug)->when($exceptoId, function ($q) use ($exceptoId) {
+            $q->where('id', '!=', $exceptoId);
+        })->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+
+        return $slug;
+    }
+}
