@@ -278,7 +278,7 @@
                                     <div class="text-muted">Código: {{ $ejemploConStock && $ejemploConStock->id_proveedor ? $ejemploConStock->id_proveedor : 'ABC-123' }}</div>
                                     <div class="text-muted" data-preview-proveedor>Proveedor: {{ $proveedorEjemplo }}</div>
                                     <div class="fw-bold preview-card-precio mt-1" data-preview-precio>
-                                        {{ $ejemploConStock ? $ejemploConStock->precio_con_moneda : (optional(App\Models\Moneda::base())->simbolo ?: '$') . number_format(15000, 2) }}
+                                        {{ $ejemploConStock ? $ejemploConStock->precio_con_moneda : (optional(App\Models\Moneda::base())->simbolo ?: '$') . number_format(15000, 2, ',', '.') }}
                                     </div>
                                 </div>
                             </div>

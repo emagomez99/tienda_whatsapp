@@ -7,6 +7,7 @@ use App\Models\Configuracion;
 use App\Models\Etiqueta;
 use App\Models\Menu;
 use App\Models\Producto;
+use App\Support\BusquedaDeTexto;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -304,17 +305,24 @@ class TiendaController extends Controller
 
     // ─── Helpers privados ────────────────────────────────────────────────────
 
+    /**
+     * Cada palabra tiene que estar en el nombre, el código o un dato visible del
+     * producto, sin importar tildes ni orden (ver BusquedaDeTexto).
+     */
     private function aplicarFiltroBusqueda($query, string $buscar)
     {
-        $query->where(function ($q) use ($buscar) {
-            $q->where('descripcion', 'ilike', "%{$buscar}%")
-              ->orWhere('id_proveedor', 'ilike', "%{$buscar}%")
-              // Sólo lo que el cliente ve: buscar por un dato interno (un valor o una
-              // etiqueta ocultos) no tiene que traer productos que no lo muestran.
-              ->orWhereHas('etiquetasPublicas', function ($q2) use ($buscar) {
-                  $q2->where('producto_etiqueta.valor', 'ilike', "%{$buscar}%");
-              });
-        });
+        foreach (BusquedaDeTexto::palabras($buscar) as $palabra) {
+            $patron = BusquedaDeTexto::patron($palabra);
+            $query->where(function ($q) use ($patron) {
+                BusquedaDeTexto::contiene($q, 'descripcion', $patron);
+                BusquedaDeTexto::contiene($q, 'id_proveedor', $patron);
+                // Sólo lo que el cliente ve: buscar por un dato interno (un valor o una
+                // característica ocultos) no tiene que traer productos que no lo muestran.
+                $q->orWhereHas('etiquetasPublicas', function ($q2) use ($patron) {
+                    BusquedaDeTexto::contiene($q2, 'producto_etiqueta.valor', $patron, 'and');
+                });
+            });
+        }
     }
 
     private function aplicarFiltrosCascada(Request $request, $query, ?Menu $menuActual): array

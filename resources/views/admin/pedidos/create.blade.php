@@ -528,7 +528,7 @@
                             var sim       = p.simbolo || '$';
                             btn.innerHTML =
                                 '<span class="fw-semibold">' + esc(p.descripcion) + '</span>' + codTxt +
-                                '<br><small class="text-muted">' + sim + parseFloat(p.precio).toFixed(2) + stockTxt + '</small>';
+                                '<br><small class="text-muted">' + sim + fmtNum(parseFloat(p.precio)) + stockTxt + '</small>';
                             btn.addEventListener('click', function () {
                                 inpB.value = p.descripcion;
                                 inpId.value = p.id; inpP.value = p.precio; inpD.value = p.descripcion;

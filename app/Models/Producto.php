@@ -328,11 +328,15 @@ class Producto extends Model
         });
     }
 
-    // Accessor para obtener el precio formateado con símbolo de moneda
+    /**
+     * El precio para mostrar, con símbolo y en formato argentino: $4.500,00 (el
+     * mismo que el carrito y los pedidos). Antes salía $4,500.00, que en Argentina
+     * se lee como cuatro pesos con quinientos.
+     */
     public function getPrecioConMonedaAttribute()
     {
         $simbolo = $this->moneda ? $this->moneda->simbolo : '$';
-        return $simbolo . number_format($this->precio, 2);
+        return $simbolo . number_format((float) $this->precio, 2, ',', '.');
     }
 
     public function estaDisponible()

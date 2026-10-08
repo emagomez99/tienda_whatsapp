@@ -11,7 +11,7 @@
     $simboloEjemplo = optional(App\Models\Moneda::base())->simbolo ?: '$';
     $nombre = $producto ? $producto->descripcion : $ejemplo;
     $imagen = ($producto ? $producto->imagen_url : null) ?: '/img/no-image.svg';
-    $precio = $producto ? $producto->precio_con_moneda : $simboloEjemplo . number_format($sinStock ? 8900 : 15000, 2);
+    $precio = $producto ? $producto->precio_con_moneda : $simboloEjemplo . number_format($sinStock ? 8900 : 15000, 2, ',', '.');
 @endphp
 <div class="card h-100 preview-card">
     <div class="position-relative" style="height: 110px;">

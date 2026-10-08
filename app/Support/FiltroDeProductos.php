@@ -53,11 +53,14 @@ class FiltroDeProductos
         $v = $this->valores;
 
         if (isset($v['buscar'])) {
-            $buscar = $v['buscar'];
-            $query->where(function ($q) use ($buscar) {
-                $q->where('descripcion', 'ilike', "%{$buscar}%")
-                  ->orWhere('id_proveedor', 'ilike', "%{$buscar}%");
-            });
+            // Como el buscador de la tienda: sin tildes y palabra por palabra.
+            foreach (BusquedaDeTexto::palabras((string) $v['buscar']) as $palabra) {
+                $patron = BusquedaDeTexto::patron($palabra);
+                $query->where(function ($q) use ($patron) {
+                    BusquedaDeTexto::contiene($q, 'descripcion', $patron);
+                    BusquedaDeTexto::contiene($q, 'id_proveedor', $patron);
+                });
+            }
         }
 
         if (isset($v['proveedor'])) {

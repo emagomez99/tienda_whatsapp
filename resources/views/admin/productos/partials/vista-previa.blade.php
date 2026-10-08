@@ -96,9 +96,9 @@
         return span.innerHTML;
     }
 
-    // Mismo formato que Producto::getPrecioConMonedaAttribute (number_format con 2 decimales).
+    // Mismo formato que Producto::getPrecioConMonedaAttribute: $4.500,00.
     function formatearPrecio(numero, simbolo) {
-        return simbolo + numero.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return simbolo + numero.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function precio() {

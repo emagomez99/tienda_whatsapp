@@ -338,7 +338,7 @@ function confirmarEliminarItem(url) {
                             var stockTxt  = p.stock !== null ? ' · stock: ' + p.stock : ' · por encargue';
                             var codigoTxt = p.codigo ? ' <small class="text-muted">(' + p.codigo + ')</small>' : '';
                             item.innerHTML = '<span class="fw-semibold">' + p.descripcion + '</span>' + codigoTxt +
-                                '<br><small class="text-muted">$' + parseFloat(p.precio).toFixed(2) + stockTxt + '</small>';
+                                '<br><small class="text-muted">$' + parseFloat(p.precio).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + stockTxt + '</small>';
                             item.addEventListener('click', function () {
                                 inputBuscar.value = p.descripcion;
                                 inputId.value     = p.id;

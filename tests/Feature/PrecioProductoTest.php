@@ -467,7 +467,7 @@ class PrecioProductoTest extends TestCase
         $this->assertNull($producto->moneda_compra_id);
 
         $this->enTenant(function () use ($producto) {
-            $this->assertSame('$1,500.00', $producto->precio_con_moneda);
+            $this->assertSame('$1.500,00', $producto->precio_con_moneda);   // formato argentino
 
             // Sin datos de compra, el recálculo masivo ni lo mira.
             $this->assertSame(0, Producto::recalcularPreciosEnMargen());
@@ -475,7 +475,7 @@ class PrecioProductoTest extends TestCase
 
         $this->get($this->urlTenant('producto/turron-con-mani/' . $producto->id))
             ->assertStatus(200)
-            ->assertSee('$1,500.00', false);
+            ->assertSee('$1.500,00', false);
 
         $this->enTenant(function () use ($producto) {
             $this->assertSame('1500.00', (string) $producto->fresh()->precio);
@@ -517,10 +517,11 @@ class PrecioProductoTest extends TestCase
 
         $this->assertStringNotContainsString('1234.56', $html);
         $this->assertStringNotContainsString('1,234.56', $html);
+        $this->assertStringNotContainsString('1.234,56', $html);
         $this->assertStringNotContainsString('precio_compra', $html);
         $this->assertStringNotContainsString('margen_ganancia', $html);
 
         // Y el precio de venta, que sí es público, está.
-        $this->assertStringContainsString('3,277,756.80', $html);
+        $this->assertStringContainsString('3.277.756,80', $html);
     }
 }

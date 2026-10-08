@@ -246,7 +246,7 @@ class CarritoController extends Controller
             }
             $lineaBase .= " x{$cantidad}";
             if ($mostrarPrecios) {
-                $lineaBase .= " - {$simbolo}" . number_format($subtotal, 2);
+                $lineaBase .= " - {$simbolo}" . number_format($subtotal, 2, ',', '.');
             }
 
             $productosTexto .= $lineaBase . "\n";
@@ -271,7 +271,7 @@ class CarritoController extends Controller
         if ($mostrarPrecios) {
             foreach ($totalesPorMoneda as $grupo) {
                 $simbolo = $grupo['moneda'] ? $grupo['moneda']->simbolo : '$';
-                $totalTexto .= "*Total {$simbolo}: " . number_format($grupo['total'], 2) . "*\n";
+                $totalTexto .= "*Total {$simbolo}: " . number_format($grupo['total'], 2, ',', '.') . "*\n";
             }
             $totalTexto = rtrim($totalTexto);
         }
