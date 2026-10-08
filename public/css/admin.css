@@ -1,0 +1,264 @@
+/*
+ * Estilos del panel de administración: un sistema de diseño chico, con tokens.
+ *
+ * Todo el aspecto del panel sale de las variables de :root de abajo (colores,
+ * tipografía, radios, sombras, medidas). Un tema nuevo (por ejemplo, uno tipo
+ * Material Design) es otro archivo que redefine esos tokens y se carga después de
+ * este: no hay que tocar las vistas. Ver docs/plan-diseno-panel.md.
+ *
+ * Bootstrap 5.3 sigue siendo la base: los tokens se vuelcan sobre sus variables
+ * (--bs-*) y sobre las de cada componente (--bs-btn-*, --bs-table-*), así los
+ * componentes de Bootstrap que ya usan las vistas toman el estilo sin cambios.
+ *
+ * El color de la tienda (--admin-color, lo define el layout) es identidad: marca la
+ * opción activa del menú. Las acciones usan el color propio del panel (--panel-acento),
+ * igual en todas las tiendas: un amarillo de marca en un botón "Guardar" no se lee.
+ */
+
+/* ── Tokens ─────────────────────────────────────────────────────────────── */
+:root {
+    --panel-fuente: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    --panel-fondo: #f5f6f8;          /* detrás de todo */
+    --panel-superficie: #ffffff;     /* tarjetas, menú, barra */
+    --panel-superficie-suave: #f9fafb;
+    --panel-borde: #e4e7ec;
+    --panel-borde-fuerte: #d0d5dd;
+
+    --panel-texto: #1d2939;
+    --panel-texto-suave: #667085;
+    --panel-texto-tenue: #98a2b3;
+
+    --panel-acento: #2563eb;
+    --panel-acento-rgb: 37, 99, 235;
+    --panel-acento-oscuro: #1d4ed8;
+    --panel-acento-suave: #eff4ff;
+
+    --panel-radio: 12px;             /* tarjetas, paneles */
+    --panel-radio-control: 8px;      /* botones, campos */
+
+    --panel-sombra: 0 1px 2px rgba(16, 24, 40, .05);
+    --panel-sombra-alta: 0 12px 32px rgba(16, 24, 40, .12);
+
+    --panel-menu-ancho: 252px;
+    --panel-barra-alto: 60px;
+}
+
+/* ── Bootstrap, con los tokens ──────────────────────────────────────────── */
+:root {
+    --bs-body-font-family: var(--panel-fuente);
+    --bs-body-color: var(--panel-texto);
+    /* Blanco: Bootstrap usa este fondo también para tarjetas, campos, menús y
+       modales. El gris de la página va en body (abajo). */
+    --bs-body-bg: var(--panel-superficie);
+    --bs-secondary-color: var(--panel-texto-suave);
+    --bs-border-color: var(--panel-borde);
+    --bs-border-radius: var(--panel-radio-control);
+    --bs-border-radius-lg: var(--panel-radio);
+    --bs-primary: var(--panel-acento);
+    --bs-primary-rgb: var(--panel-acento-rgb);
+    --bs-link-color: var(--panel-acento);
+    --bs-link-color-rgb: var(--panel-acento-rgb);
+    --bs-link-hover-color: var(--panel-acento-oscuro);
+    --bs-focus-ring-color: rgba(var(--panel-acento-rgb), .2);
+}
+
+body {
+    font-family: var(--panel-fuente);
+    background: var(--panel-fondo);
+    color: var(--panel-texto);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'cv11', 'ss01';   /* Inter: cifras y letras más claras */
+}
+
+/* ── Tipografía ─────────────────────────────────────────────────────────── */
+.contenido-panel h3 { font-size: 1.6rem; font-weight: 650; letter-spacing: -.01em; }
+.contenido-panel h3 > .bi:first-child { color: var(--panel-texto-suave); font-size: .85em; }
+.contenido-panel h5 { font-weight: 600; }
+.text-muted { color: var(--panel-texto-suave) !important; }
+
+/* ── Botones ────────────────────────────────────────────────────────────── */
+.btn { --bs-btn-border-radius: var(--panel-radio-control); --bs-btn-font-weight: 500; }
+.btn-primary {
+    --bs-btn-bg: var(--panel-acento);
+    --bs-btn-border-color: var(--panel-acento);
+    --bs-btn-hover-bg: var(--panel-acento-oscuro);
+    --bs-btn-hover-border-color: var(--panel-acento-oscuro);
+    --bs-btn-active-bg: var(--panel-acento-oscuro);
+    --bs-btn-active-border-color: var(--panel-acento-oscuro);
+    --bs-btn-disabled-bg: var(--panel-acento);
+    --bs-btn-disabled-border-color: var(--panel-acento);
+    --bs-btn-focus-shadow-rgb: var(--panel-acento-rgb);
+    box-shadow: var(--panel-sombra);
+}
+.btn-outline-primary {
+    --bs-btn-color: var(--panel-acento);
+    --bs-btn-border-color: rgba(var(--panel-acento-rgb), .45);
+    --bs-btn-hover-bg: var(--panel-acento-suave);
+    --bs-btn-hover-color: var(--panel-acento-oscuro);
+    --bs-btn-hover-border-color: var(--panel-acento);
+    --bs-btn-active-bg: var(--panel-acento-suave);
+    --bs-btn-active-color: var(--panel-acento-oscuro);
+    --bs-btn-active-border-color: var(--panel-acento);
+    --bs-btn-focus-shadow-rgb: var(--panel-acento-rgb);
+}
+.btn-outline-secondary {
+    --bs-btn-color: var(--panel-texto);
+    --bs-btn-border-color: var(--panel-borde-fuerte);
+    --bs-btn-bg: var(--panel-superficie);
+    --bs-btn-hover-bg: var(--panel-superficie-suave);
+    --bs-btn-hover-color: var(--panel-texto);
+    --bs-btn-hover-border-color: var(--panel-borde-fuerte);
+    --bs-btn-active-bg: #f2f4f7;
+    --bs-btn-active-color: var(--panel-texto);
+    --bs-btn-active-border-color: var(--panel-borde-fuerte);
+}
+.btn-light { --bs-btn-bg: var(--panel-superficie-suave); --bs-btn-border-color: var(--panel-borde); }
+.btn-check:checked + .btn-outline-primary,
+.btn-check:checked + .btn-outline-secondary { box-shadow: none; }
+
+/* ── Campos ─────────────────────────────────────────────────────────────── */
+.form-control, .form-select {
+    border-color: var(--panel-borde-fuerte);
+    border-radius: var(--panel-radio-control);
+}
+.form-control:focus, .form-select:focus {
+    border-color: rgba(var(--panel-acento-rgb), .6);
+    box-shadow: 0 0 0 .2rem rgba(var(--panel-acento-rgb), .15);
+}
+.form-check-input:checked { background-color: var(--panel-acento); border-color: var(--panel-acento); }
+.form-check-input:focus { border-color: rgba(var(--panel-acento-rgb), .6); box-shadow: 0 0 0 .2rem rgba(var(--panel-acento-rgb), .15); }
+.form-label { font-weight: 500; color: var(--panel-texto); }
+.input-group-text { background: var(--panel-superficie-suave); border-color: var(--panel-borde-fuerte); color: var(--panel-texto-suave); }
+
+/* ── Tarjetas ───────────────────────────────────────────────────────────── */
+.card {
+    --bs-card-border-color: var(--panel-borde);
+    --bs-card-border-radius: var(--panel-radio);
+    --bs-card-inner-border-radius: calc(var(--panel-radio) - 1px);
+    --bs-card-cap-bg: var(--panel-superficie);
+    --bs-card-cap-padding-y: .85rem;
+    box-shadow: var(--panel-sombra);
+}
+.card-header { font-weight: 600; }
+.card-header.bg-light { background: var(--panel-superficie) !important; }
+.card-header h5 { font-size: 1rem; }
+
+/* ── Tablas ─────────────────────────────────────────────────────────────── */
+.table { --bs-table-border-color: var(--panel-borde); margin-bottom: 0; }
+.table > thead.table-light, .table .table-light {
+    --bs-table-bg: var(--panel-superficie-suave);
+    --bs-table-color: var(--panel-texto-suave);
+}
+.table > thead th {
+    font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em;
+    border-bottom-width: 1px; white-space: nowrap;
+}
+.table-hover > tbody > tr:hover > * { --bs-table-hover-bg: var(--panel-superficie-suave); }
+
+/* ── Avisos, badges, paginación ─────────────────────────────────────────── */
+.alert { border-radius: var(--panel-radio); }
+.badge { font-weight: 500; }
+.pagination { --bs-pagination-active-bg: var(--panel-acento); --bs-pagination-active-border-color: var(--panel-acento); }
+.dropdown-menu { border-color: var(--panel-borde); border-radius: var(--panel-radio-control); box-shadow: var(--panel-sombra-alta); }
+.offcanvas { --bs-offcanvas-border-color: var(--panel-borde); }
+.modal-content { border-radius: var(--panel-radio); border-color: var(--panel-borde); }
+
+/* ── Layout: menú lateral, barra y contenido ────────────────────────────── */
+
+/* Menú lateral. En escritorio queda fijo a la izquierda; en celular, offcanvas-lg
+   lo convierte en cajón que se abre con ☰ (mismo marcado). */
+.panel-menu {
+    --bs-offcanvas-width: 280px;
+    background: var(--panel-superficie);
+    border-right: 1px solid var(--panel-borde);
+    display: flex; flex-direction: column;
+}
+.panel-menu-marca {
+    display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    height: var(--panel-barra-alto); padding: 0 1rem 0 1.25rem; flex-shrink: 0;
+    border-bottom: 1px solid var(--panel-borde);
+}
+.panel-menu-marca img { max-height: 34px; max-width: 170px; object-fit: contain; }
+.panel-menu-inicial {
+    width: 2rem; height: 2rem; border-radius: 8px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--admin-color); color: var(--admin-texto); font-weight: 700;
+}
+.panel-menu-nombre { color: var(--panel-texto); font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel-menu-opciones { flex: 1 1 auto; overflow-y: auto; padding: .75rem .75rem 1rem; scrollbar-width: thin; }
+.panel-menu-grupo {
+    font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--panel-texto-tenue); padding: 1rem .75rem .35rem;
+}
+.panel-menu-item {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .55rem .75rem; margin-bottom: 2px; border-radius: var(--panel-radio-control);
+    color: var(--panel-texto); text-decoration: none; font-size: .925rem; font-weight: 500;
+    position: relative; cursor: pointer;
+}
+.panel-menu-item .bi { font-size: 1.05rem; color: var(--panel-texto-suave); width: 1.25rem; text-align: center; }
+.panel-menu-item:hover { background: var(--panel-superficie-suave); color: var(--panel-texto); }
+.panel-menu-item.active { background: var(--panel-acento-suave); color: var(--panel-acento-oscuro); }
+.panel-menu-item.active .bi { color: var(--panel-acento); }
+/* La marca de la tienda: una rayita con su color en la opción activa. */
+.panel-menu-item.active::before {
+    content: ''; position: absolute; left: -.75rem; top: .4rem; bottom: .4rem; width: 3px;
+    border-radius: 0 3px 3px 0; background: var(--admin-color);
+}
+.panel-menu-pie { padding: .75rem; border-top: 1px solid var(--panel-borde); flex-shrink: 0; }
+
+/* Barra superior: clara y baja. */
+.panel-barra {
+    position: sticky; top: 0; z-index: 1030;
+    display: flex; align-items: center; gap: .5rem;
+    height: var(--panel-barra-alto); padding: 0 1rem;
+    background: rgba(255, 255, 255, .92); backdrop-filter: saturate(180%) blur(8px);
+    border-bottom: 1px solid var(--panel-borde);
+}
+.panel-barra-boton {
+    display: inline-flex; align-items: center; color: var(--panel-texto); text-decoration: none;
+    font-size: .925rem; padding: .35rem .5rem; border-radius: var(--panel-radio-control);
+}
+.panel-barra-boton .bi-list { font-size: 1.5rem; line-height: 1; }
+.panel-barra-boton:hover { background: var(--panel-superficie-suave); color: var(--panel-texto); }
+.panel-barra-marca { color: var(--panel-texto); font-weight: 650; text-decoration: none; }
+.panel-barra-marca img { max-height: 32px; }
+.panel-avatar {
+    width: 2rem; height: 2rem; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--panel-acento-suave); color: var(--panel-acento-oscuro); font-weight: 600; font-size: .85rem;
+}
+
+.contenido-panel { padding: 1.25rem 1rem 2rem; max-width: 1400px; }
+
+@media (min-width: 992px) {
+    .panel-menu {
+        position: fixed; top: 0; bottom: 0; left: 0; z-index: 1035;
+        width: var(--panel-menu-ancho);
+    }
+    .panel-principal { margin-left: var(--panel-menu-ancho); }
+    .panel-barra { padding: 0 2rem; }
+    .contenido-panel { padding: 2rem 2rem 3rem; }
+}
+/* offcanvas-lg en escritorio: que se vea siempre, sin la animación del cajón. */
+@media (min-width: 992px) {
+    .panel-menu.offcanvas-lg { visibility: visible !important; transform: none !important; }
+}
+
+/* Pestañas en un solo renglón que se deslizan de costado cuando no entran
+   (celular), en vez de partirse en varios renglones. */
+.nav-desplazable { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.nav-desplazable::-webkit-scrollbar { display: none; }
+.nav-desplazable .nav-link { white-space: nowrap; }
+
+/* Íconos de las ayudas y de filas como "Todos los productos". */
+.ayuda-icono { background: var(--panel-acento-suave) !important; color: var(--panel-acento-oscuro) !important; }
+
+/* Enlaces dentro de tablas y tarjetas: sin subrayado hasta pasar el mouse. */
+.contenido-panel .table a:not(.btn), .contenido-panel .card a:not(.btn):not(.dropdown-item) { text-decoration: none; }
+.contenido-panel .table a:not(.btn):hover, .contenido-panel .card a:not(.btn):not(.dropdown-item):hover { text-decoration: underline; }
+/* El texto chico de un encabezado de tarjeta es una aclaración: peso normal. */
+.card-header small, .card-header .small, .card-header .text-muted { font-weight: 400; }
+/* Título de página al lado de sus botones: alineado al centro, sin margen abajo. */
+.contenido-panel .d-flex > h3 { margin-bottom: 0; }

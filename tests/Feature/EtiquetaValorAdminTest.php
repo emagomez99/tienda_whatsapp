@@ -148,8 +148,9 @@ class EtiquetaValorAdminTest extends TestCase
             ->assertStatus(200)
             ->getContent();
 
-        $this->assertMatchesRegularExpression('/class="admin-drawer-item active">\s*<i class="bi bi-ui-checks me-2"><\/i> Características/', $html);
-        $this->assertDoesNotMatchRegularExpression('/class="collapse show" id="drawer-config"/', $html);
+        // Opción propia del menú lateral, en el grupo Catálogo, marcada activa.
+        $this->assertMatchesRegularExpression('/class="panel-menu-item active"\s*aria-current="page"\s*>\s*<i class="bi bi-ui-checks"><\/i> Características/', $html);
+        $this->assertMatchesRegularExpression('/Catálogo<\/div>.*Categorías.*Características/s', $html);
     }
 
     /** @test */

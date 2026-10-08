@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard')
+@section('title', 'Inicio')
 
 @push('styles')
 <style>
@@ -61,7 +61,7 @@
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
-        <h3 class="mb-0"><i class="bi bi-speedometer2"></i> Dashboard</h3>
+        <h3 class="mb-0"><i class="bi bi-house"></i> Inicio</h3>
         <small class="text-muted">{{ now()->translatedFormat('l j \d\e F') }}</small>
     </div>
 

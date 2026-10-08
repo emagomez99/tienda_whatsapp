@@ -153,7 +153,9 @@ class ColorPrimarioTest extends TestCase
             ->assertOk()
             ->assertSee('--admin-color: #ffeb3b;', false)
             ->assertSee('--admin-texto: #212529;', false)
-            ->assertSee('navbar-light admin-navbar', false);
+            // El color de la tienda es identidad en el panel (la inicial del menú, con su
+            // texto legible); los botones y la barra usan el color propio del panel.
+            ->assertSee('class="panel-menu-inicial"', false);
     }
 
     public function test_color_oscuro_mantiene_texto_blanco_en_la_tienda()

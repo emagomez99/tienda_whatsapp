@@ -12,9 +12,9 @@
 |---|---|---|
 | 0 | Tanda 3 de claridad (agente) | hecho: 5f94530…93b7f61 (14 commits, 283 tests) |
 | 1 | "Todos los productos" en Categorías (unificación) | hecho |
-| 2 | Sistema de diseño (tokens + admin.css) | pendiente |
-| 3 | Layout: menú lateral fijo en escritorio, barra superior clara | pendiente |
-| 4 | Pasada visual por pantalla (productos, categorías, características, menús, pedidos, ajustes) | pendiente |
+| 2 | Sistema de diseño (tokens + admin.css) | hecho |
+| 3 | Layout: menú lateral fijo en escritorio, barra superior clara | hecho |
+| 4 | Pasada visual por pantalla (productos, categorías, características, menús, pedidos, ajustes) | en curso |
 | 5 | Verificación escritorio + celular, tests, bitácora | pendiente |
 
 ## 1. ¿Unificar Categorías y Características?
@@ -87,4 +87,5 @@ blancas de borde sutil, botones de radio 8px, una barra de búsqueda + "Filtrar"
 | Fecha | Qué | Commit |
 |---|---|---|
 | 2026-10-08 | Plan escrito; inspiración de Tiendanube revisada | — |
-| 2026-10-08 | Paso 1: fila "Todos los productos" arriba del árbol de Categorías y su pantalla (`categorias/todos`, mismo editor que una categoría, sin orden); `CategoriaController::caracteristicasDelFormulario` compartido. Formulario de producto: cada dato dice quién lo pide ("Lo pide Medicamentos", "Se pide en todos los productos") | (este commit) |
+| 2026-10-08 | Paso 1: fila "Todos los productos" arriba del árbol de Categorías y su pantalla (`categorias/todos`, mismo editor que una categoría, sin orden); `CategoriaController::caracteristicasDelFormulario` compartido. Formulario de producto: cada dato dice quién lo pide ("Lo pide Medicamentos", "Se pide en todos los productos") | f696f34 |
+| 2026-10-08 | Pasos 2 y 3: `public/css/admin.css` (tokens `--panel-*` volcados en las variables de Bootstrap; Inter; color de acción propio del panel; tarjetas, tablas, campos, botones). Layout nuevo: menú lateral blanco fijo en escritorio y cajón en celular con el mismo marcado (`offcanvas-lg`), agrupado (Inicio · Ventas · Catálogo · Tienda · Equipo) desde `App\Support\MenuDelPanel`; barra superior clara. "Dashboard" → "Inicio", "Configuraciones" → "Ajustes". Verificado en farmacia: escritorio (inicio, productos, categorías, ajustes, pedidos) y celular 390px (listado, formulario, menú abierto) | (este commit) |

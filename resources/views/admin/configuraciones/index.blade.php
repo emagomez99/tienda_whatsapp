@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'Configuraciones')
+@section('title', 'Ajustes')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-sliders"></i> Configuraciones</h3>
+    <h3><i class="bi bi-sliders"></i> Ajustes</h3>
 </div>
 
 <form action="{{ route('admin.configuraciones.update') }}" method="POST" enctype="multipart/form-data">
