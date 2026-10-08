@@ -59,7 +59,7 @@
         </div>
 
         <span class="arbol-cuenta {{ $cantidad === 0 ? 'vacio' : '' }}" title="Productos en esta categoría y sus subcategorías">
-            {{ number_format($cantidad, 0, ',', '.') }} {{ $cantidad === 1 ? 'producto' : 'productos' }}
+            {{ number_format($cantidad, 0, ',', '.') }} <span class="arbol-cuenta-palabra">{{ $cantidad === 1 ? 'producto' : 'productos' }}</span>
         </span>
 
         @if($puedeEditar)

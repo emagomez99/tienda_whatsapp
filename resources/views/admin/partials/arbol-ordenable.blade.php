@@ -47,9 +47,10 @@
     }
     .arbol-cuenta.vacio { background: #fff3cd; color: #997404; }
 
-    /* Las acciones no compiten con el contenido: aparecen al pasar el mouse por la
-       fila (o con el teclado). En pantallas táctiles, siempre. */
-    .arbol-acciones { display: flex; gap: .25rem; flex-shrink: 0; opacity: 0; transition: opacity .12s; }
+    /* Las acciones se ven siempre (escondidas hasta pasar el mouse, un principiante
+       no sabía que existían), pero tenues para no competir con el contenido: se
+       resaltan al pasar el mouse por la fila o con el teclado. */
+    .arbol-acciones { display: flex; gap: .25rem; flex-shrink: 0; opacity: .6; transition: opacity .12s; }
     .arbol-fila:hover .arbol-acciones,
     .arbol-fila:focus-within .arbol-acciones,
     .arbol-acciones:has(.show) { opacity: 1; }
@@ -76,6 +77,13 @@
     @media (max-width: 575.98px) {
         .arbol-lista .arbol-lista { margin-left: 1rem; }
         .arbol-fila { padding: .5rem; gap: .35rem; }
+        /* Con las acciones siempre a la vista no entra todo: en el celular la
+           cuenta queda en el número solo (el título de la burbuja la explica). */
+        .arbol-cuenta-palabra { display: none; }
+        .arbol-cuenta { padding: .15rem .45rem; }
+        /* Los avisos largos ("Vacía: todavía no se ve…") bajan de renglón en vez
+           de pisar la cuenta. */
+        .arbol-texto .badge { white-space: normal; text-align: left; }
     }
 </style>
 @endpush

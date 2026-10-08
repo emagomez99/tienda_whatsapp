@@ -100,7 +100,7 @@ class MenuListadoTest extends TestCase
         // Los que sólo agrupan no llevan número.
         $this->assertArrayNotHasKey($this->ids['agrupa'], $conteo);
 
-        $respuesta->assertSee('0 productos')->assertSee('2 productos');
+        $respuesta->assertSeeText('0 productos')->assertSeeText('2 productos');
     }
 
     /** @test */

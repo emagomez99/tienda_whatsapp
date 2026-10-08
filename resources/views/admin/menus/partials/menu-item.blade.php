@@ -54,11 +54,11 @@
         @if($cantidad !== null)
             @if($cantidad === 0)
                 <span class="arbol-cuenta vacio" title="El cliente entra y no encuentra nada: revisá el filtro o el de los menús de arriba.">
-                    <i class="bi bi-exclamation-triangle"></i> 0 productos
+                    <i class="bi bi-exclamation-triangle"></i> 0 <span class="arbol-cuenta-palabra">productos</span>
                 </span>
             @else
                 <span class="arbol-cuenta" title="Productos que ve el cliente al entrar">
-                    {{ number_format($cantidad, 0, ',', '.') }} {{ $cantidad === 1 ? 'producto' : 'productos' }}
+                    {{ number_format($cantidad, 0, ',', '.') }} <span class="arbol-cuenta-palabra">{{ $cantidad === 1 ? 'producto' : 'productos' }}</span>
                 </span>
             @endif
         @endif
