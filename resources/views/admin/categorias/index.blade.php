@@ -30,6 +30,29 @@
     </div>
 @endif
 
+{{-- Lo que se pide en todos los productos, sea cual sea su estante: se configura acá,
+     junto con lo que pide cada categoría (ver CategoriaController::editarTodos). --}}
+<div class="card mb-3" id="todos-los-productos">
+    <div class="card-body d-flex flex-wrap align-items-center gap-3 py-3">
+        <span class="ayuda-icono flex-shrink-0"><i class="bi bi-globe"></i></span>
+        <div class="flex-grow-1" style="min-width: 220px;">
+            <strong>Todos los productos</strong>
+            <div class="small text-muted">
+                @if($globales->isEmpty())
+                    No se pide nada a todos los productos. Por ejemplo, podés pedir la marca.
+                @else
+                    Pide: {{ $globales->map(function ($e) { return $e->nombre . ($e->obligatoria_global ? ' (obligatoria)' : ''); })->implode(', ') }}
+                @endif
+            </div>
+        </div>
+        @if($puedeEditar)
+            <a href="{{ route('admin.categorias.todos') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+        @endif
+    </div>
+</div>
+
 @if($categorias->count() > 0)
     <div class="card">
         <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">

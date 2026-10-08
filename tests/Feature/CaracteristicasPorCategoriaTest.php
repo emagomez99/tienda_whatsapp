@@ -138,4 +138,42 @@ class CaracteristicasPorCategoriaTest extends TestCase
             $this->assertSame(0, Categoria::find($this->ids['celulares'])->caracteristicas()->count());
         });
     }
+
+    /** @test */
+    public function todos_los_productos_se_configura_desde_categorias()
+    {
+        $admin = $this->enTenant(function () {
+            return User::create(['name' => 'Admin', 'email' => 'todos@' . self::TENANT_DOMAIN, 'password' => bcrypt('x'), 'is_admin' => true, 'activo' => true]);
+        });
+
+        // La fila de arriba del árbol dice qué se pide a todos (Marca es global en este test).
+        $this->actingAs($admin)->get($this->urlTenant('admin/categorias'))
+            ->assertOk()
+            ->assertSee('Todos los productos')
+            ->assertSee('Pide: Marca');
+        $this->actingAs($admin)->get($this->urlTenant('admin/categorias/todos'))
+            ->assertOk()
+            ->assertSee('Datos que se piden al cargar un producto');
+
+        // Marca pasa a obligatoria, se suma una nueva (Origen) y Talle (no global) queda como estaba.
+        $this->actingAs($admin)->put($this->urlTenant('admin/categorias/todos'), ['caracteristicas' => [
+            ['etiqueta_id' => $this->ids['marca'], 'obligatoria' => 1],
+            ['nueva' => 'Origen', 'obligatoria' => 0],
+        ]])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->enTenant(function () {
+            $this->assertTrue(Etiqueta::find($this->ids['marca'])->obligatoria_global);
+            $origen = Etiqueta::where('nombre', 'Origen')->firstOrFail();
+            $this->assertTrue($origen->global);
+            $this->assertFalse($origen->obligatoria_global);
+            $this->assertFalse(Etiqueta::find($this->ids['talle'])->global);
+        });
+
+        // Sin filas: ya no se pide nada a todos.
+        $this->actingAs($admin)->put($this->urlTenant('admin/categorias/todos'), [])->assertSessionHasNoErrors();
+        $this->enTenant(function () {
+            $this->assertSame(0, Etiqueta::where('global', true)->count());
+            $this->assertFalse(Etiqueta::find($this->ids['marca'])->obligatoria_global);
+        });
+    }
 }

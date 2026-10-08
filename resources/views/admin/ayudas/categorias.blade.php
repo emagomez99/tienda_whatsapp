@@ -35,6 +35,11 @@
     <div><strong>Poné cada producto en su estante.</strong><br>Al cargar un producto, tocá <em>Elegir categorías</em>. Si son muchos, andá a Productos, marcalos y tocá <em>Agregar categorías</em>.</div>
 </div>
 
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-globe"></i></span>
+    <div><strong>¿Un dato que tienen todos?</strong><br>La marca la tiene una gaseosa, unos fideos y un detergente. En vez de pedirla en cada estante, pedila una vez en <em>Todos los productos</em>, arriba de todo.</div>
+</div>
+
 <h6 class="ayuda-titulo">Ordenar</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-grip-vertical"></i></span>

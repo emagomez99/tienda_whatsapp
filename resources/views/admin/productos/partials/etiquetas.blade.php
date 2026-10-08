@@ -96,7 +96,15 @@
      * Una fila: nombre de la etiqueta, campo de valor con sugerencias y el aviso de
      * abajo. Las que ya no pide ninguna de sus categorías se pueden quitar.
      */
-    function fila(etiqueta, tipo) {
+    /** "Lo pide Gaseosas", "Lo piden Gaseosas y Ofertas" o "Todos los productos". */
+    function quienLoPide(origenes) {
+        if (origenes.indexOf(null) !== -1) return 'Se pide en todos los productos';
+        var nombres = origenes.filter(Boolean);
+        if (!nombres.length) return '';
+        return (nombres.length === 1 ? 'Lo pide ' : 'Lo piden ') + nombres.join(' y ');
+    }
+
+    function fila(etiqueta, tipo, origen) {
         var id = String(etiqueta.id);
         var i  = indice++;
 
@@ -113,6 +121,10 @@
             var ojo = el('i', 'bi bi-eye-slash text-muted ms-1');
             ojo.title = 'No se muestra en la tienda';
             label.appendChild(ojo);
+        }
+        // Debajo del nombre, quién lo pide: así nadie se pregunta por qué aparece.
+        if (origen) {
+            label.appendChild(el('small', 'd-block text-muted fw-normal etiqueta-origen-dato', origen));
         }
         row.appendChild(label);
 
@@ -177,8 +189,14 @@
         var resultado = [], porEtiqueta = {};
         function sumar(c) {
             var id = String(c.id);
-            if (porEtiqueta[id]) { porEtiqueta[id].obligatoria = porEtiqueta[id].obligatoria || c.obligatoria; return; }
-            porEtiqueta[id] = { id: id, obligatoria: !!c.obligatoria };
+            // Quién lo pide: el nombre de la categoría, o null = todos los productos.
+            var origen = c.origen || null;
+            if (porEtiqueta[id]) {
+                porEtiqueta[id].obligatoria = porEtiqueta[id].obligatoria || c.obligatoria;
+                if (porEtiqueta[id].origenes.indexOf(origen) === -1) porEtiqueta[id].origenes.push(origen);
+                return;
+            }
+            porEtiqueta[id] = { id: id, obligatoria: !!c.obligatoria, origenes: [origen] };
             resultado.push(porEtiqueta[id]);
         }
         MAPA.globales.forEach(sumar);
@@ -197,7 +215,7 @@
         var ids = lista.map(function (c) { return c.id; });
 
         lista.forEach(function (c) {
-            if (porId[c.id]) contenedor.appendChild(fila(porId[c.id], c.obligatoria ? 'obligatoria' : 'opcional'));
+            if (porId[c.id]) contenedor.appendChild(fila(porId[c.id], c.obligatoria ? 'obligatoria' : 'opcional', quienLoPide(c.origenes)));
         });
 
         // Valores de características que sus categorías no piden: se muestran para

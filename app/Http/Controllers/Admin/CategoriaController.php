@@ -46,7 +46,10 @@ class CategoriaController extends Controller
         // Las vacías no aparecen en el menú de la tienda: se avisa en su fila.
         $conProductos = Categoria::idsConProductos();
 
-        return view('admin.categorias.index', compact('categorias', 'productosPorCategoria', 'sinCategoria', 'conProductos'));
+        // Lo que se pide a todos los productos, en la fila de arriba del árbol.
+        $globales = Etiqueta::where('global', true)->orderBy('nombre')->get();
+
+        return view('admin.categorias.index', compact('categorias', 'productosPorCategoria', 'sinCategoria', 'conProductos', 'globales'));
     }
 
     public function create(Request $request)
@@ -121,6 +124,43 @@ class CategoriaController extends Controller
         return redirect()->route('admin.categorias.index')
             ->with('success', "Se guardó «{$categoria->camino()}».")
             ->with('categoria_movida', $categoria->id);
+    }
+
+    /**
+     * "Todos los productos": lo que se pide al cargar cualquier producto, tenga la
+     * categoría que tenga (las características globales). Se edita con el mismo
+     * editor que una categoría, para que todo lo que se pide se configure en
+     * Categorías. Ver docs/plan-diseno-panel.md, punto 1.
+     */
+    public function editarTodos()
+    {
+        $globales = Etiqueta::where('global', true)->orderBy('nombre')->get();
+
+        return view('admin.categorias.todos', [
+            'todasLasCaracteristicas' => Etiqueta::orderBy('nombre')->get(['id', 'nombre']),
+            'caracteristicasPropias'  => $globales->map(function (Etiqueta $e) {
+                return ['etiqueta_id' => $e->id, 'nombre' => $e->nombre, 'obligatoria' => (bool) $e->obligatoria_global];
+            })->values()->all(),
+            'heredablesPorMadre'      => [],
+            'caracteristicasGlobales' => [],
+        ]);
+    }
+
+    public function actualizarTodos(Request $request)
+    {
+        DB::transaction(function () use ($request) {
+            $lista = $this->caracteristicasDelFormulario($request);
+
+            // Las que dejaron de pedirse a todos vuelven a ser de las categorías que las elijan.
+            Etiqueta::where('global', true)->whereNotIn('id', array_keys($lista) ?: [0])
+                ->update(['global' => false, 'obligatoria_global' => false]);
+
+            foreach ($lista as $id => $obligatoria) {
+                Etiqueta::where('id', $id)->update(['global' => true, 'obligatoria_global' => $obligatoria]);
+            }
+        });
+
+        return redirect()->route('admin.categorias.index')->with('success', 'Se guardó lo que se pide en todos los productos.');
     }
 
     /**
@@ -255,6 +295,24 @@ class CategoriaController extends Controller
      */
     private function guardarCaracteristicas(Categoria $categoria, Request $request): void
     {
+        $sync = [];
+        foreach ($this->caracteristicasDelFormulario($request) as $id => $obligatoria) {
+            $sync[$id] = ['obligatoria' => $obligatoria, 'orden' => count($sync)];
+        }
+
+        $categoria->caracteristicas()->sync($sync);
+    }
+
+    /**
+     * La lista de "Datos que se piden" tal como vino del formulario, en su orden:
+     * etiqueta_id => obligatoria. El formulario manda siempre la lista completa (sin
+     * filas = no se pide nada). Una escrita que no existe se crea; si ya hay una con
+     * ese nombre ("talle" y "Talle"), se usa esa en vez de duplicarla.
+     *
+     * @return array<int, bool>
+     */
+    private function caracteristicasDelFormulario(Request $request): array
+    {
         $request->validate([
             'caracteristicas'               => 'nullable|array',
             'caracteristicas.*.etiqueta_id' => 'nullable|integer|exists:etiquetas,id',
@@ -262,19 +320,18 @@ class CategoriaController extends Controller
             'caracteristicas.*.obligatoria' => 'nullable|boolean',
         ]);
 
-        $sync = [];
-        // El formulario manda siempre la lista completa: sin filas, la categoría no pide nada propio.
+        $lista = [];
         foreach (array_values((array) $request->input('caracteristicas')) as $fila) {
             $id = $fila['etiqueta_id'] ?? null;
             if (!$id && trim((string) ($fila['nueva'] ?? '')) !== '') {
                 $id = $this->etiquetaPorNombre($fila['nueva'])->id;
             }
-            if ($id && !isset($sync[$id])) {
-                $sync[(int) $id] = ['obligatoria' => !empty($fila['obligatoria']), 'orden' => count($sync)];
+            if ($id && !isset($lista[(int) $id])) {
+                $lista[(int) $id] = !empty($fila['obligatoria']);
             }
         }
 
-        $categoria->caracteristicas()->sync($sync);
+        return $lista;
     }
 
     private function etiquetaPorNombre(string $nombre): Etiqueta

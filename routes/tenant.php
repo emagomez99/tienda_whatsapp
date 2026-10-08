@@ -92,6 +92,9 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
 
         Route::post('/productos/categorias', [ProductoController::class, 'categoriasEnMasa'])->name('productos.categorias-en-masa');
         Route::resource('productos', ProductoController::class);
+        // Antes del resource: si no, categorias/{categoria} se queda con "todos".
+        Route::get('/categorias/todos', [CategoriaController::class, 'editarTodos'])->name('categorias.todos');
+        Route::put('/categorias/todos', [CategoriaController::class, 'actualizarTodos'])->name('categorias.todos.update');
         Route::post('/categorias/reordenar', [CategoriaController::class, 'reordenar'])->name('categorias.reordenar');
         Route::post('/categorias/rapida', [CategoriaController::class, 'crearRapida'])->name('categorias.rapida');
         Route::post('/categorias/{categoria}/mover', [CategoriaController::class, 'mover'])->name('categorias.mover');

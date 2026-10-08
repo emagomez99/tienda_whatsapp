@@ -7,6 +7,9 @@
     cambian; las de esta categoría se marcan opcional u obligatoria, se ordenan y
     se quitan. Se agregan eligiendo una existente o escribiendo una nueva.
 
+    Opcionales: $explicacionCaracteristicas (el texto de arriba) y $ordenable (false
+    oculta las flechas, para "Todos los productos", que no guarda orden).
+
     Recibe $todasLasCaracteristicas, $caracteristicasPropias, $heredablesPorMadre
     (madre → [{id, nombre, obligatoria, origen}]) y $caracteristicasGlobales.
     Envía caracteristicas[i][etiqueta_id | nueva] y caracteristicas[i][obligatoria].
@@ -24,7 +27,7 @@
 <div class="card mb-3" id="card-caracteristicas">
     <div class="card-header">
         <i class="bi bi-ui-checks"></i> Datos que se piden al cargar un producto
-        <small class="text-muted d-block">Cuando cargues un producto en esta categoría, el formulario te va a pedir estos datos. Las obligatorias hay que completarlas para poder guardar.</small>
+        <small class="text-muted d-block">{{ $explicacionCaracteristicas ?? 'Cuando cargues un producto en esta categoría, el formulario te va a pedir estos datos. Las obligatorias hay que completarlas para poder guardar.' }}</small>
     </div>
     <div class="card-body">
         <ul class="list-group mb-2" id="caracteristicas-propias"></ul>
@@ -63,6 +66,7 @@
     var POR_MADRE = @json((object) $heredablesPorMadre);
     var GLOBALES  = @json($caracteristicasGlobales);
     var propias   = @json(array_values($propiasIniciales));
+    var ORDENABLE = @json($ordenable ?? true);   // "Todos los productos" no guarda orden
 
     var madre     = document.getElementById('parent_id');
     var lista     = document.getElementById('caracteristicas-propias');
@@ -178,7 +182,7 @@
             });
             item.appendChild(grupo);
 
-            [['arriba', 'bi-arrow-up', i > 0], ['abajo', 'bi-arrow-down', i < propias.length - 1]].forEach(function (b) {
+            (ORDENABLE ? [['arriba', 'bi-arrow-up', i > 0], ['abajo', 'bi-arrow-down', i < propias.length - 1]] : []).forEach(function (b) {
                 var boton = document.createElement('button');
                 boton.type = 'button';
                 boton.className = 'btn btn-sm btn-light';
