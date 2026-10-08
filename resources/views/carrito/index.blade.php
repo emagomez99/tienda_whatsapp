@@ -62,7 +62,7 @@
                                     <div class="ci-name">
                                         <div class="fw-semibold lh-sm">{{ $prod->descripcion }}</div>
                                         @if($item['variante'])
-                                            <span class="badge text-bg-light border fw-normal">{{ $item['variante']->nombre() }}</span>
+                                            <span class="badge text-bg-light border fw-normal">{{ $item['variante']->nombreDetallado() }}</span>
                                         @endif
                                         @if($item['linea']->codigo())
                                             <small class="text-muted">{{ $item['linea']->codigo() }}</small>

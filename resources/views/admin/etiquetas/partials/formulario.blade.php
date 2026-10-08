@@ -10,6 +10,10 @@
 --}}
 <div class="row">
     <div class="col-lg-8">
+        {{-- Arriba, a la vista: el interruptor queda en el medio de la tarjeta. --}}
+        @error('varios_valores')
+            <div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> {{ $message }}</div>
+        @enderror
         <div class="card mb-4">
             <div class="card-body">
                 <div class="mb-3">
@@ -32,10 +36,10 @@
                 <input type="hidden" name="varios_valores" value="0">
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input @error('varios_valores') is-invalid @enderror" type="checkbox" role="switch" id="varios_valores" name="varios_valores" value="1"
-                           {{ old('varios_valores', $etiqueta->varios_valores) ? 'checked' : '' }}>
+                           {{-- Si no se pudo apagar, sigue prendido: es como quedó guardado. --}}
+                           {{ ($errors->has('varios_valores') ? $etiqueta->varios_valores : old('varios_valores', $etiqueta->varios_valores)) ? 'checked' : '' }}>
                     <label class="form-check-label" for="varios_valores">Un producto puede tener varios</label>
                     <div class="form-text">Por ejemplo Talle: una remera viene en S, M y L. Si cada talle tiene su propio stock, lo vas a poder cargar en el producto. La Marca, en cambio, es una sola.</div>
-                    @error('varios_valores')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
 
                 <input type="hidden" name="global" value="0">

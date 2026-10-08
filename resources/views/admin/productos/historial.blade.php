@@ -17,9 +17,12 @@
         </p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-ajuste-stock">
-            <i class="bi bi-arrow-left-right"></i><span class="d-none d-sm-inline"> Ajustar stock</span>
-        </button>
+        {{-- Con variantes, el stock se cambia en cada una (en la edición del producto). --}}
+        @unless($producto->tieneVariantes())
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-ajuste-stock">
+                <i class="bi bi-arrow-left-right"></i><span class="d-none d-sm-inline"> Ajustar stock</span>
+            </button>
+        @endunless
         <a href="{{ route('admin.productos.edit', $producto) }}" class="btn btn-outline-secondary" title="Editar">
             <i class="bi bi-pencil"></i><span class="d-none d-sm-inline"> Editar</span>
         </a>
@@ -101,8 +104,8 @@
                                         <span class="d-none d-sm-inline">{{ $mov->tipoLabel() }}</span>
                                     </span>
                                     {{-- De qué variante (Talle M): el stock de la columna es el de ella. --}}
-                                    @if($mov->variante)
-                                        <span class="badge text-bg-light border d-block mt-1 fw-normal">{{ $mov->variante->nombre() }}</span>
+                                    @if($mov->nombreDeVariante())
+                                        <span class="badge text-bg-light border d-block mt-1 fw-normal">{{ $mov->nombreDeVariante() }}</span>
                                     @endif
                                 </td>
                                 <td class="text-muted small d-none d-md-table-cell">
@@ -138,6 +141,10 @@
                                 </td>
                                 <td class="text-end pe-3 fw-semibold">
                                     {{ $mov->stock_resultante }}
+                                    {{-- En un movimiento de una variante, es lo que quedó de esa variante. --}}
+                                    @if($mov->nombreDeVariante())
+                                        <small class="d-block text-muted fw-normal">de {{ $mov->nombreDeVariante() }}</small>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

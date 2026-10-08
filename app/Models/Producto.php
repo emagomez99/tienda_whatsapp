@@ -392,6 +392,34 @@ class Producto extends Model
      * Con variantes, el stock del producto es la suma del de las activas (una apagada
      * no se vende). Lo llama cada movimiento de una variante.
      */
+    /**
+     * Con variantes de precios distintos, el más barato y el más caro de las que se
+     * venden ([min, max]); null si no tiene variantes o cuestan todas lo mismo.
+     */
+    public function rangoDePrecios(): ?array
+    {
+        $precios = $this->variantes()->where('activa', true)->pluck('precio')->map(function ($precio) {
+            return (float) ($precio !== null ? $precio : $this->precio);
+        });
+        if ($precios->isEmpty() || $precios->min() === $precios->max()) {
+            return null;
+        }
+
+        return [$precios->min(), $precios->max()];
+    }
+
+    /** "$19.000,00" o, con variantes de precios distintos, "Desde $19.000,00". */
+    public function precioParaMostrar(): string
+    {
+        $rango = $this->rangoDePrecios();
+        if ($rango === null) {
+            return $this->precio_con_moneda;
+        }
+        $simbolo = $this->moneda ? $this->moneda->simbolo : '$';
+
+        return 'Desde ' . $simbolo . number_format($rango[0], 2, ',', '.');
+    }
+
     public function recalcularStockDeVariantes(): void
     {
         $total = (int) Variante::where('producto_id', $this->id)->where('activa', true)->sum('stock');

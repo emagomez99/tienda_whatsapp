@@ -58,7 +58,7 @@
 
                         @if($mostrarPrecios)
                             <div class="mt-auto pt-1">
-                                <span class="producto-precio text-primary">{{ $producto->precio_con_moneda }}</span>
+                                <span class="producto-precio text-primary">{{ ($producto->variantes_activas ?? 0) > 0 ? $producto->precioParaMostrar() : $producto->precio_con_moneda }}</span>
                             </div>
                         @endif
                     </div>

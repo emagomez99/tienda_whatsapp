@@ -162,15 +162,34 @@ class VariantesTest extends TestCase
             $this->assertSame(-10, StockMovimiento::where('producto_id', $producto->id)->whereNull('variante_id')->latest('id')->value('variacion'));
         });
 
-        // Apagar "El cliente elige": se borran las variantes y su stock sale con movimientos.
+        // Apagar "El cliente elige": se borran las variantes y su stock vuelve al producto.
         $this->put($this->urlTenant('admin/productos/' . $producto->id), $this->formulario([]))->assertSessionHasNoErrors();
 
         $this->enTenant(function () use ($producto) {
             $this->assertSame(0, Variante::where('producto_id', $producto->id)->count());
-            $this->assertSame(0, (int) Producto::find($producto->id)->stock);
+            $this->assertSame(10, (int) Producto::find($producto->id)->stock);
+            $this->assertSame(10, StockMovimiento::where('producto_id', $producto->id)->latest('id')->value('variacion'));
             // Y vuelve a moverse como un producto común.
             Producto::find($producto->id)->registrarMovimiento(3, StockMovimiento::TIPO_AJUSTE_MANUAL);
         });
+
+        // El historial sigue diciendo de qué talle fue cada movimiento, aunque ya no existan.
+        $this->get($this->urlTenant('admin/productos/' . $producto->id . '/historial'))->assertOk()
+            ->assertSee('Talle: S')->assertSee('Talle: M')
+            ->assertSee('data-bs-target="#modal-ajuste-stock"', false);   // sin variantes, se ajusta de nuevo
+    }
+
+    /** @test */
+    public function con_precios_distintos_la_tienda_dice_desde_y_el_historial_no_ofrece_ajustar_el_total()
+    {
+        $producto = $this->crearRemera();   // S al precio del producto (1.000), M a 1.200
+
+        $this->get($this->urlTenant('categoria/remeras'))->assertSee('Desde $1.000,00');
+        $this->get($this->urlTenant('producto/' . $producto->slugUrl() . '/' . $producto->id))->assertSee('Desde $1.000,00');
+
+        $this->admin()->get($this->urlTenant('admin/productos/' . $producto->id . '/historial'))->assertOk()
+            ->assertSee('Talle: M')
+            ->assertDontSee('data-bs-target="#modal-ajuste-stock"', false);
     }
 
     /** @test */

@@ -11,7 +11,11 @@
     Recibe $usaVariantes y $variantesIniciales ([{id, valores: {etiqueta_id: valor},
     codigo, precio, stock, activa}]).
 --}}
-@php $teniaVariantes = isset($producto) && $producto->variantes->isNotEmpty(); @endphp
+@php
+    $teniaVariantes = isset($producto) && $producto->variantes->isNotEmpty();
+    // Un producto que ya tiene stock y pasa a tener variantes: ese stock se reemplaza.
+    $stockSinVariantes = (isset($producto) && !$teniaVariantes) ? (int) $producto->stock : 0;
+@endphp
 
 <div class="card mb-4" id="card-variantes">
     <div class="card-header">
@@ -29,7 +33,7 @@
 
         @if($teniaVariantes)
             <div class="alert alert-warning small mt-2 mb-0 d-none" id="variantes-se-borran">
-                <i class="bi bi-exclamation-triangle"></i> Si lo apagás, al guardar se borran las variantes y su stock (queda anotado en el historial).
+                <i class="bi bi-exclamation-triangle"></i> Si lo apagás, al guardar se borran las variantes y su stock se suma al producto ({{ $producto->stock }} en total). Queda anotado en el historial.
             </div>
         @endif
 
@@ -38,6 +42,12 @@
         @enderror
 
         <div id="variantes-cuerpo" class="mt-3 {{ $usaVariantes ? '' : 'd-none' }}">
+            @if($stockSinVariantes > 0)
+                <div class="alert alert-info small py-2" id="variantes-stock-anterior">
+                    <i class="bi bi-info-circle"></i> Hoy tiene <strong>{{ $stockSinVariantes }}</strong> en stock. Con variantes, el stock es el de cada opción:
+                    repartilo abajo (por ejemplo, cuántos hay de cada talle). Al guardar, los {{ $stockSinVariantes }} se reemplazan por esa suma y queda anotado en el historial.
+                </div>
+            @endif
             <div id="variantes-sin-caracteristicas" class="text-muted small d-none">
                 <i class="bi bi-info-circle"></i>
                 Primero cargá, en <strong>Características</strong>, una que tenga varios valores: por ejemplo Talle con S, M y L.
@@ -236,12 +246,12 @@
 
             var tdCodigo = document.createElement('td');
             tdCodigo.appendChild(campo('text', 'variantes[' + i + '][codigo]', dato.codigo, 'form-control form-control-sm variante-codigo',
-                { maxlength: 100, placeholder: 'Opcional', 'aria-label': 'Código de ' + nombre.textContent }));
+                { maxlength: 100, placeholder: 'Opcional', title: 'Vacío: el código del producto', 'aria-label': 'Código de ' + nombre.textContent }));
             tr.appendChild(tdCodigo);
 
             var tdPrecio = document.createElement('td');
             tdPrecio.appendChild(campo('number', 'variantes[' + i + '][precio]', dato.precio, 'form-control form-control-sm variante-precio',
-                { min: 0, step: '0.01', placeholder: 'El del producto', 'aria-label': 'Precio de ' + nombre.textContent }));
+                { min: 0, step: '0.01', placeholder: 'Igual', title: 'Vacío: el precio del producto', 'aria-label': 'Precio de ' + nombre.textContent }));
             tr.appendChild(tdPrecio);
 
             var tdActiva = document.createElement('td');
@@ -261,6 +271,26 @@
     }
 
     interruptor.addEventListener('change', pintar);
+
+    // Apagarlas borra las variantes: se pide confirmación antes de guardar.
+    var teniaVariantes = @json($teniaVariantes);
+    var confirmado = false;
+    var formulario = interruptor.form;
+    if (formulario && teniaVariantes) {
+        formulario.addEventListener('submit', function (e) {
+            if (confirmado || interruptor.checked) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            window.confirmarAccion({
+                texto:   '¿Dejar de usar variantes?',
+                detalle: 'Se borran las opciones (talles, colores…) y su stock se suma al producto. Queda anotado en el historial.',
+                boton:   'Sí, quitar variantes'
+            }, function () {
+                confirmado = true;
+                if (formulario.requestSubmit) { formulario.requestSubmit(); } else { formulario.submit(); }
+            });
+        }, true);
+    }
     // Las fichitas de Características avisan con "input" al agregar o quitar un valor.
     var espera = null;
     ['input', 'change'].forEach(function (evento) {

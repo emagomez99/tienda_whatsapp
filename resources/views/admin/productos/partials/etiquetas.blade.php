@@ -162,10 +162,19 @@
         }
 
         function agregarLoEscrito() {
-            if (agregar(input.value)) {
-                input.value = '';
-                input.dispatchEvent(new Event('input', { bubbles: true }));
+            if (input.value.trim() === '') return;
+            if (!agregar(input.value)) {
+                // Ya estaba: se marca la que existe en vez de dejar el texto colgado.
+                var buscado = input.value.trim().toLowerCase();
+                caja.querySelectorAll('.etiqueta-valor-chip').forEach(function (c) {
+                    if (c.value.trim().toLowerCase() !== buscado) return;
+                    var ficha = c.parentElement;
+                    ficha.classList.add('border-primary');
+                    setTimeout(function () { ficha.classList.remove('border-primary'); }, 1200);
+                });
             }
+            input.value = '';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         lista.forEach(agregar);

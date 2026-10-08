@@ -37,9 +37,21 @@ class Etiqueta extends Model
     /** Cuántos productos tienen más de un valor cargado en esta característica. */
     public function productosConVariosValores(): int
     {
+        return $this->consultaConVariosValores()->get()->count();
+    }
+
+    /** Los nombres de algunos de esos productos, para decir cuáles son. */
+    public function nombresConVariosValores(int $cuantos = 3): array
+    {
+        $ids = $this->consultaConVariosValores()->limit($cuantos)->pluck('producto_id');
+
+        return Producto::whereIn('id', $ids)->orderBy('descripcion')->pluck('descripcion')->all();
+    }
+
+    private function consultaConVariosValores()
+    {
         return DB::table('producto_etiqueta')->where('etiqueta_id', $this->id)
-            ->select('producto_id')->groupBy('producto_id')->havingRaw('count(*) > 1')
-            ->get()->count();
+            ->select('producto_id')->groupBy('producto_id')->havingRaw('count(*) > 1');
     }
 
     public function valores()

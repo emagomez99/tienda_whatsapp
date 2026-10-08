@@ -9,7 +9,8 @@
 - **Limpieza: hecha** (2026-10-10). La migración `2026_10_10_000001_migrar_etiquetas_viejas_y_limpiar` pasa "Categoria"/"Subcategoria" a categorías, pasa las reglas por proveedor a las categorías y recién después borra esas etiquetas y la tabla `proveedor_etiqueta`. Los comandos `categorias:desde-etiquetas` y `caracteristicas:desde-proveedores` se quitaron: los reemplaza la migración.
 - **Producción (o una copia nueva de la base de un cliente):** alcanza con `php artisan tenants:migrate`; se puede repetir sobre copias nuevas cuantas veces se quiera y da lo mismo. Después, a mano: Acoples Rapidos (MC-923370) también en Accesorios › Hidráulica. En perfumes, las categorías se crean sueltas (Notebooks, Drones, Paletas): para tenerlas dentro de "Producto" como en local, crear "Producto › …" antes de migrar, o moverlas después arrastrando.
 - **Etapa 5 (Excel): hecha** (2026-10-10). Productos › Excel: plantilla por categoría, exportar con los filtros, subir, vista previa y aplicar por partes con barra de avance. Ver la Bitácora.
-- **Próxima:** a decidir (variantes de talle/color, plantillas por rubro).
+- **Etapa 4: hecha** (2026-10-11): Marca en tiendas nuevas, orden de productos por categoría, varios valores por característica y variantes con stock propio. Probada en el navegador por un agente en farmacia.
+- **Próxima:** Etapa 3 (estado vacío de Categorías y plantillas por rubro).
 - **Orden de trabajo:** 0 → 1 → 2 (con migración real de las 2 tiendas en cada una) → 5 (Excel) → 3 → 4.
 - **Último commit antes del plan:** `9516afe` (árbol de menús con arrastrar y soltar).
 
@@ -338,3 +339,4 @@ Datos útiles:
 | 2026-10-11 | Etapa 4: Marca en tiendas nuevas; orden de los productos por categoría (nombre, nuevos, precio, destacados a mano) | (este) |
 | 2026-10-11 | Etapa 4: varios valores por característica (fichitas en el producto, "S; M; L" en Excel, unir valores sin chocar) | (este) |
 | 2026-10-11 | Etapa 4: variantes con stock propio (panel, tienda, carrito, pedidos, historial) | (este) |
+| 2026-10-11 | Etapa 4: correcciones de la prueba en el navegador (apagar variantes devuelve el stock y pide confirmación, historial con el nombre de la variante, "Desde $" con precios distintos, flechas en destacados, textos) | (este) |

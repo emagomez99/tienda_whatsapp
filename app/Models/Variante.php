@@ -57,6 +57,14 @@ class Variante extends Model
         return $this->valores->pluck('valor')->implode(' · ');
     }
 
+    /** "Talle: M · Color: Rojo": con el nombre de cada característica, para que se entienda solo. */
+    public function nombreDetallado(): string
+    {
+        return $this->valores->map(function (EtiquetaValor $valor) {
+            return ($valor->etiqueta ? $valor->etiqueta->nombre . ': ' : '') . $valor->valor;
+        })->implode(' · ');
+    }
+
     /** "Remera lisa (M · Rojo)": para el carrito, el pedido y el historial de stock. */
     public function descripcionCompleta(): string
     {
@@ -160,6 +168,8 @@ class Variante extends Model
             return StockMovimiento::create([
                 'producto_id'      => $this->producto_id,
                 'variante_id'      => $this->id,
+                // El nombre también: si la variante se borra, el historial lo sigue diciendo.
+                'variante_nombre'  => $this->nombreDetallado(),
                 'tipo'             => $tipo,
                 'variacion'        => $variacion,
                 'stock_resultante' => $resultante,

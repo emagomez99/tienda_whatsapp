@@ -76,7 +76,7 @@
             @endif
 
             @if($mostrarPrecios)
-                <div class="ficha-precio text-primary my-3">{{ $producto->precio_con_moneda }}</div>
+                <div class="ficha-precio text-primary my-3">{{ $selector ? $producto->precioParaMostrar() : $producto->precio_con_moneda }}</div>
             @endif
 
             @if($producto->etiquetasPublicas->isNotEmpty())

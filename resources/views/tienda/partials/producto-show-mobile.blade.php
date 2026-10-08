@@ -68,7 +68,7 @@
 
         {{-- Precio --}}
         @if($mostrarPrecios)
-            <div class="ficha-precio-movil text-primary mb-3">{{ $producto->precio_con_moneda }}</div>
+            <div class="ficha-precio-movil text-primary mb-3">{{ $selector ? $producto->precioParaMostrar() : $producto->precio_con_moneda }}</div>
         @endif
 
         @if($selector)

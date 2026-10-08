@@ -109,6 +109,12 @@
                 document.querySelectorAll('.ficha-stock').forEach(function (el) { el.innerHTML = html; });
             }
             refrescos.forEach(function (f) { f(); });
+
+            var agotada = !!(elegida && !elegida.sePide);
+            document.querySelectorAll('.form-agregar button[type="submit"]').forEach(function (boton) {
+                boton.disabled = agotada;
+                boton.title = agotada ? 'No queda stock de ' + elegida.nombre : '';
+            });
         }
 
         document.querySelectorAll('.opcion-variante').forEach(function (boton) {

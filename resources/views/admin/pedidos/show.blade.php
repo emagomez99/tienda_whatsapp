@@ -208,7 +208,7 @@
                 <p class="text-muted mb-0"><i class="bi bi-info-circle"></i> Se descontará el stock de los productos que lo tengan disponible.</p>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
                 <form method="POST" action="{{ route('admin.pedidos.confirmar', $pedido) }}">
                     @csrf
                     <button type="submit" class="btn btn-success">

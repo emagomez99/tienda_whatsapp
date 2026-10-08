@@ -35,7 +35,7 @@
 
         <div class="input-group" style="max-width: 420px;">
             <input type="text" class="form-control" id="caracteristica-nueva" list="caracteristicas-existentes"
-                   placeholder="Agregar un dato: elegí uno o escribí uno nuevo" maxlength="255" autocomplete="off"
+                   placeholder="Agregar un dato…" title="Elegí uno de la lista o escribí uno nuevo" maxlength="255" autocomplete="off"
                    aria-label="Característica a agregar">
             <button type="button" class="btn btn-outline-primary" id="caracteristica-agregar"><i class="bi bi-plus-lg"></i> Agregar</button>
         </div>

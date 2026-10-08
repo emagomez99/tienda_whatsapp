@@ -345,7 +345,7 @@ class CarritoController extends Controller
         }
 
         $productos = Producto::with($con)->whereIn('id', array_unique($ids))->get()->keyBy('id');
-        $variantes = Variante::with('valores')->whereIn('id', array_unique($idsVariantes))->get()->keyBy('id');
+        $variantes = Variante::with('valores.etiqueta')->whereIn('id', array_unique($idsVariantes))->get()->keyBy('id');
 
         $lineas = [];
         foreach ($carrito as $clave => $cantidad) {

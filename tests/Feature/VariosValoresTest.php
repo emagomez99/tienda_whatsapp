@@ -140,7 +140,7 @@ class VariosValoresTest extends TestCase
 
         $url = $this->urlTenant('admin/etiquetas/' . $this->ids['talle']);
         $this->admin()->put($url, ['nombre' => 'Talle', 'visible_usuarios' => 1, 'varios_valores' => 0])
-            ->assertSessionHasErrors('varios_valores');
+            ->assertSessionHasErrors(['varios_valores' => 'No se cambió: «Remera lisa» tiene más de un valor. Dejale uno solo y volvé a intentar.']);
         $this->assertTrue($this->enTenant(function () { return Etiqueta::find($this->ids['talle'])->varios_valores; }));
 
         // Con un valor por producto, sí.

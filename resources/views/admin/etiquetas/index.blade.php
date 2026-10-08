@@ -77,7 +77,7 @@
                         </div>
 
                         <div class="btn-group">
-                            <a href="{{ route('admin.etiquetas.edit', $etiqueta) }}" class="btn btn-sm btn-outline-primary" title="Editar etiqueta">
+                            <a href="{{ route('admin.etiquetas.edit', $etiqueta) }}" class="btn btn-sm btn-outline-primary" title="Editar característica">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <form action="{{ route('admin.etiquetas.destroy', $etiqueta) }}" method="POST"

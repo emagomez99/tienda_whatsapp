@@ -136,9 +136,10 @@ class EtiquetaController extends Controller
         if ($etiqueta->varios_valores && !$datos['varios_valores']) {
             $conVarios = $etiqueta->productosConVariosValores();
             if ($conVarios > 0) {
+                $cuales = '«' . implode('», «', $etiqueta->nombresConVariosValores()) . '»' . ($conVarios > 3 ? ' y otros' : '');
                 throw ValidationException::withMessages(['varios_valores' => $conVarios === 1
-                    ? 'Hay 1 producto con más de un valor: dejale uno solo antes de cambiar esto.'
-                    : "Hay {$conVarios} productos con más de un valor: dejales uno solo antes de cambiar esto."]);
+                    ? "No se cambió: {$cuales} tiene más de un valor. Dejale uno solo y volvé a intentar."
+                    : "No se cambió: {$conVarios} productos tienen más de un valor ({$cuales}). Dejales uno solo y volvé a intentar."]);
             }
         }
 

@@ -15,7 +15,7 @@ class StockMovimiento extends Model
     protected $table = 'stock_movimientos';
 
     protected $fillable = [
-        'producto_id', 'variante_id', 'tipo', 'variacion', 'stock_resultante',
+        'producto_id', 'variante_id', 'variante_nombre', 'tipo', 'variacion', 'stock_resultante',
         'descripcion', 'pedido_id', 'user_id',
     ];
 
@@ -34,6 +34,16 @@ class StockMovimiento extends Model
     public function variante()
     {
         return $this->belongsTo(Variante::class);
+    }
+
+    /** "Talle: P", aunque la variante ya no exista; null si el movimiento es del producto. */
+    public function nombreDeVariante(): ?string
+    {
+        if ($this->variante) {
+            return $this->variante->nombreDetallado();
+        }
+
+        return $this->variante_nombre ?: null;
     }
 
     public function pedido()

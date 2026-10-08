@@ -24,13 +24,13 @@
             @if($categoria->exists)
                 <input type="hidden" name="destacados_enviados" value="1">
                 <p class="small text-muted mb-2">
-                    Buscá los productos que querés mostrar primero (por ejemplo, las ofertas) y ordenalos arrastrando
-                    <i class="bi bi-grip-vertical"></i>. El resto aparece después, por nombre.
+                    Buscá los productos que querés mostrar primero (por ejemplo, las ofertas) y ordenalos con las flechas
+                    <i class="bi bi-arrow-up"></i><i class="bi bi-arrow-down"></i> o arrastrando <i class="bi bi-grip-vertical"></i>. El resto aparece después, por nombre.
                 </p>
 
                 <div class="position-relative mb-2" style="max-width: 480px;">
                     <input type="search" class="form-control" id="buscar-destacado" placeholder="Buscar un producto de esta categoría…" autocomplete="off" aria-label="Buscar un producto para destacar">
-                    <div class="list-group position-absolute w-100 shadow-sm d-none" id="resultados-destacado" style="z-index: 20; max-height: 280px; overflow-y: auto;"></div>
+                    <div class="list-group position-absolute w-100 shadow-sm d-none" id="resultados-destacado" style="z-index: 1040; max-height: 280px; overflow-y: auto;"></div>
                 </div>
 
                 <ol class="list-group list-group-numbered" id="lista-destacados" style="max-width: 480px;">
@@ -39,6 +39,7 @@
                             <i class="bi bi-grip-vertical text-muted destacado-agarre" style="cursor: grab;" title="Arrastrar"></i>
                             <span class="flex-grow-1">{{ $producto->descripcion }} @if($producto->id_proveedor)<small class="text-muted">({{ $producto->id_proveedor }})</small>@endif</span>
                             <input type="hidden" name="destacados[]" value="{{ $producto->id }}">
+                            <span class="btn-group btn-group-sm" role="group"><button type="button" class="btn btn-outline-secondary subir-destacado" title="Subir" aria-label="Subir"><i class="bi bi-arrow-up"></i></button><button type="button" class="btn btn-outline-secondary bajar-destacado" title="Bajar" aria-label="Bajar"><i class="bi bi-arrow-down"></i></button></span>
                             <button type="button" class="btn btn-sm btn-link text-danger p-0 quitar-destacado" title="Quitar de la lista" aria-label="Quitar de la lista"><i class="bi bi-x-lg"></i></button>
                         </li>
                     @endforeach
@@ -88,6 +89,7 @@
         li.innerHTML = '<i class="bi bi-grip-vertical text-muted destacado-agarre" style="cursor: grab;" title="Arrastrar"></i>'
             + '<span class="flex-grow-1"></span>'
             + '<input type="hidden" name="destacados[]">'
+            + '<span class="btn-group btn-group-sm" role="group"><button type="button" class="btn btn-outline-secondary subir-destacado" title="Subir" aria-label="Subir"><i class="bi bi-arrow-up"></i></button><button type="button" class="btn btn-outline-secondary bajar-destacado" title="Bajar" aria-label="Bajar"><i class="bi bi-arrow-down"></i></button></span>'
             + '<button type="button" class="btn btn-sm btn-link text-danger p-0 quitar-destacado" title="Quitar de la lista" aria-label="Quitar de la lista"><i class="bi bi-x-lg"></i></button>';
         li.querySelector('span').textContent = producto.descripcion + (producto.codigo ? ' (' + producto.codigo + ')' : '');
         li.querySelector('input').value = producto.id;
@@ -96,10 +98,16 @@
     }
 
     lista.addEventListener('click', function (e) {
-        var boton = e.target.closest('.quitar-destacado');
-        if (!boton) return;
-        boton.closest('li').remove();
-        actualizarVacio();
+        var item = e.target.closest('li');
+        if (!item) return;
+        if (e.target.closest('.quitar-destacado')) {
+            item.remove();
+            actualizarVacio();
+        } else if (e.target.closest('.subir-destacado') && item.previousElementSibling) {
+            lista.insertBefore(item, item.previousElementSibling);
+        } else if (e.target.closest('.bajar-destacado') && item.nextElementSibling) {
+            lista.insertBefore(item.nextElementSibling, item);
+        }
     });
 
     function cerrarResultados() {
@@ -110,7 +118,17 @@
     buscador.addEventListener('input', function () {
         clearTimeout(espera);
         var texto = buscador.value.trim();
-        if (texto.length < 2) { cerrarResultados(); return; }
+        if (texto.length < 2) {
+            cerrarResultados();
+            if (texto.length === 1) {
+                var aviso = document.createElement('div');
+                aviso.className = 'list-group-item small text-muted';
+                aviso.textContent = 'Seguí escribiendo: con 2 letras empieza a buscar.';
+                resultados.appendChild(aviso);
+                resultados.classList.remove('d-none');
+            }
+            return;
+        }
         espera = setTimeout(function () {
             fetch(url + '?q=' + encodeURIComponent(texto), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
                 .then(function (r) { return r.json(); })

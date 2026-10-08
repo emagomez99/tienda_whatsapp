@@ -29,7 +29,8 @@ use Illuminate\Validation\ValidationException;
  * - Al pasar a tener variantes, el stock que tenía el producto sale (con su
  *   movimiento): desde ahí es la suma de las variantes.
  * - Una variante que ya no viene se borra (su stock sale con un movimiento). Los
- *   pedidos viejos la siguen nombrando por su descripción.
+ *   pedidos viejos y el historial la siguen nombrando por su descripción.
+ * - Dejar de usar variantes (lista vacía): el stock de las activas vuelve al producto.
  */
 class VariantesDeProducto
 {
@@ -42,10 +43,25 @@ class VariantesDeProducto
         $existentes = $producto->variantes()->with('valores')->get()->keyBy('id');
 
         if (empty($lista)) {
+            if ($existentes->isEmpty()) {
+                return;
+            }
+            // Dejar de usar variantes no pierde stock: lo que había en las que se
+            // venden vuelve al producto, con su movimiento en el historial.
+            $total = (int) $existentes->where('activa', true)->sum('stock');
             foreach ($existentes as $variante) {
                 $this->borrar($variante, $usuarioId);
             }
             $producto->unsetRelation('variantes');
+            if ($total > 0) {
+                $producto->registrarMovimiento(
+                    $total,
+                    StockMovimiento::TIPO_AJUSTE_MANUAL,
+                    'El stock de las variantes vuelve al producto',
+                    null,
+                    $usuarioId
+                );
+            }
             return;
         }
 

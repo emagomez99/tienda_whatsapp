@@ -397,7 +397,7 @@ class ProductoController extends Controller
     public function historial(Producto $producto)
     {
         $movimientos = $producto->movimientos()
-            ->with(['pedido', 'user', 'variante.valores'])
+            ->with(['pedido', 'user', 'variante.valores.etiqueta'])
             ->orderBy('created_at', 'desc')
             ->paginate(25);
 
