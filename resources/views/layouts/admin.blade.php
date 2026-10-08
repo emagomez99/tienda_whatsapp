@@ -73,16 +73,12 @@
             @endforeach
         </nav>
 
+        {{-- Ayuda siempre a mano. "Ver tienda" y "Cerrar sesión" están arriba a la derecha. --}}
         <div class="panel-menu-pie">
-            <a href="{{ route('tienda.index') }}" target="_blank" class="panel-menu-item">
-                <i class="bi bi-box-arrow-up-right"></i> Ver mi tienda
+            <a href="{{ route('admin.ayuda.index') }}" class="panel-menu-item {{ request()->routeIs('admin.ayuda.*') ? 'active' : '' }}"
+               @if(request()->routeIs('admin.ayuda.*')) aria-current="page" @endif>
+                <i class="bi bi-question-circle"></i> Ayuda
             </a>
-            <form action="{{ route('logout') }}" method="POST" class="m-0">
-                @csrf
-                <button type="submit" class="panel-menu-item w-100 text-start border-0 bg-transparent">
-                    <i class="bi bi-box-arrow-right"></i> Cerrar sesión
-                </button>
-            </form>
         </div>
     </aside>
 

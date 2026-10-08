@@ -84,6 +84,10 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+        // Ayuda: todos pueden entrar; cada uno ve los temas de lo que puede usar.
+        Route::get('/ayuda', [\App\Http\Controllers\Admin\AyudaController::class, 'index'])->name('ayuda.index');
+        Route::get('/ayuda/{tema}', [\App\Http\Controllers\Admin\AyudaController::class, 'show'])->name('ayuda.show')->where('tema', '[a-z-]+');
+
         Route::get('/productos/buscar', [ProductoController::class, 'buscarParaPedido'])->name('productos.buscar');
         Route::get('/productos/preview-slug', [ProductoController::class, 'previewSlug'])->name('productos.preview-slug')->middleware('permiso:productos.ver');
         Route::get('/especificaciones/claves', [ProductoController::class, 'buscarEspecificacionClaves'])->name('especificaciones.claves')->middleware('permiso:productos.ver');

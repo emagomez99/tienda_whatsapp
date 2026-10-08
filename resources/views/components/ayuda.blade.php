@@ -32,27 +32,12 @@
     </div>
     <div class="offcanvas-body">
         {{ $slot }}
+        <a href="{{ route('admin.ayuda.index') }}" class="d-inline-block small mt-2"><i class="bi bi-question-circle"></i> Ver toda la ayuda</a>
     </div>
 </div>
 
 @once
-@push('styles')
-<style>
-    .panel-ayuda { --bs-offcanvas-width: 380px; }
-    .panel-ayuda .offcanvas-body { background: #fbfbfc; }
-    .ayuda-titulo { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; margin: 1.25rem 0 .75rem; }
-    .ayuda-titulo:first-child { margin-top: 0; }
-    .ayuda-item { display: flex; gap: .75rem; align-items: flex-start; margin-bottom: .9rem; font-size: .875rem; color: #495057; line-height: 1.45; }
-    .ayuda-item strong { color: #212529; font-weight: 600; }
-    .ayuda-icono {
-        flex-shrink: 0; width: 2rem; height: 2rem; border-radius: .5rem;
-        display: inline-flex; align-items: center; justify-content: center;
-        background: color-mix(in srgb, var(--admin-color, #0d6efd) 22%, white); color: #212529;
-    }
-    .ayuda-ejemplo { background: #fff; border: 1px solid #e9ecef; border-radius: .5rem; padding: .6rem .75rem; font-size: .85rem; margin-bottom: 1rem; }
-    .ayuda-ejemplo .text-muted { font-size: .8rem; }
-</style>
-@endpush
+{{-- Los estilos de la ayuda (.ayuda-*) están en public/css/admin.css: los usa también la página de Ayuda. --}}
 {{-- En el lugar y no con @push: en Laravel 8 el stack agrupa lo empujado por
      profundidad de vista, y un push más desde acá reordenaba los scripts de la
      página (el de categorías en masa quedaba antes de PanelDeCategorias). Sólo usa

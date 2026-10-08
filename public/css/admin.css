@@ -468,3 +468,25 @@ a.panel-dato:hover .card { border-color: var(--panel-borde-fuerte); }
     .ed-pasos { min-height: 0; }
     .ed-paso { position: static; opacity: 1; margin-bottom: .25rem; }
 }
+
+/* ── Ayuda: el panel "Cómo funciona" (components/ayuda) y la página de Ayuda ────── */
+.panel-ayuda { --bs-offcanvas-width: 380px; }
+.panel-ayuda .offcanvas-body { background: #fbfbfc; }
+.ayuda-titulo { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; margin: 1.25rem 0 .75rem; }
+.ayuda-titulo:first-child { margin-top: 0; }
+.ayuda-item { display: flex; gap: .75rem; align-items: flex-start; margin-bottom: .9rem; font-size: .875rem; color: #495057; line-height: 1.45; }
+.ayuda-item strong { color: #212529; font-weight: 600; }
+.ayuda-icono {
+    flex-shrink: 0; width: 2rem; height: 2rem; border-radius: .5rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--admin-color, #0d6efd) 22%, white); color: #212529;
+}
+.ayuda-ejemplo { background: #fff; border: 1px solid #e9ecef; border-radius: .5rem; padding: .6rem .75rem; font-size: .85rem; margin-bottom: 1rem; }
+.ayuda-ejemplo .text-muted { font-size: .8rem; }
+.ayuda-pagina .ayuda-item { font-size: .95rem; }
+.ayuda-pagina .estante-y-dato { max-width: 420px; }
+.ayuda-tarjeta { transition: border-color .15s, box-shadow .15s; }
+.ayuda-tarjeta:hover { border-color: var(--panel-acento); box-shadow: var(--panel-sombra-alta); }
+.ayuda-pregunta { background: var(--panel-superficie); border: 1px solid var(--panel-borde); border-radius: var(--panel-radio-control); padding: .65rem .9rem; font-size: .9rem; }
+.ayuda-pregunta summary { font-weight: 600; cursor: pointer; }
+.ayuda-pregunta[open] summary { color: var(--panel-acento-oscuro); }
