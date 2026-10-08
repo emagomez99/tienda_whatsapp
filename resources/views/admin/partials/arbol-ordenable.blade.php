@@ -63,7 +63,19 @@
     /* Mientras se arrastra, las listas vacías se abren un poco para poder soltar
        adentro de un menú que todavía no tiene submenús. */
     body.arrastrando-arbol .arbol-lista .arbol-lista:empty { min-height: .75rem; border-left-style: solid; border-left-color: #adb5bd; }
-    .arbol-fantasma > .arbol-fila { background: color-mix(in srgb, var(--admin-color) 30%, white); outline: 1px dashed #adb5bd; }
+    /* Dónde va a caer lo que se arrastra: una línea azul, como en Tiendanube, con
+       la sangría del nivel en el que va a quedar. La fila en sí se esconde: la que
+       se ve moviéndose con el mouse es la copia que arrastra Sortable. */
+    .arbol-fantasma { position: relative; }
+    .arbol-fantasma > .arbol-fila { visibility: hidden; height: 6px; min-height: 0; padding: 0; overflow: hidden; border: 0; }
+    .arbol-fantasma::before {
+        content: ''; position: absolute; left: .5rem; right: .5rem; top: 1px; height: 3px;
+        border-radius: 3px; background: var(--panel-acento, #2563eb);
+    }
+    .arbol-fantasma::after {
+        content: ''; position: absolute; left: .25rem; top: -2px; width: 9px; height: 9px;
+        border-radius: 50%; background: var(--panel-superficie, #fff); border: 2px solid var(--panel-acento, #2563eb);
+    }
     /* El menú dentro del que va a quedar lo que se arrastra. */
     .arbol-nodo.destino-anidar > .arbol-fila { background: color-mix(in srgb, var(--admin-color) 18%, white); box-shadow: inset 3px 0 0 #6c757d; }
     .arbol-nodo.destino-anidar > .arbol-fila .arbol-nombre::after { content: " · soltá para meterlo adentro"; font-weight: 400; font-size: .75rem; color: #6c757d; }
