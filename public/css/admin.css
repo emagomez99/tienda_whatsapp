@@ -161,6 +161,28 @@ body {
 .alert { border-radius: var(--panel-radio); }
 .badge { font-weight: 500; }
 .pagination { --bs-pagination-active-bg: var(--panel-acento); --bs-pagination-active-border-color: var(--panel-acento); }
+/* Paginación compartida con la tienda (vendor/pagination/tienda.blade.php): su
+   estilo vivía en un <style> dentro del partial; la tienda lo tiene en tienda.css
+   con sus tokens y el panel acá, con los suyos. */
+.pagination-wrapper { padding: 1rem 0; }
+.pagination-modern { gap: .25rem; }
+.pagination-modern .page-item .page-link {
+    border: 1px solid var(--panel-borde);
+    border-radius: var(--panel-radio-control);
+    padding: .5rem .85rem;
+    min-width: 40px;
+    text-align: center;
+    font-weight: 500;
+    color: var(--panel-texto);
+    background-color: var(--panel-superficie);
+    font-variant-numeric: tabular-nums;
+}
+.pagination-modern .page-item .page-link:hover { background-color: var(--panel-superficie-suave); border-color: var(--panel-borde-fuerte); }
+.pagination-modern .page-item.active .page-link { background: var(--panel-acento); border-color: var(--panel-acento); color: #fff; }
+.pagination-modern .page-item.disabled .page-link { color: var(--panel-texto-tenue); background-color: var(--panel-superficie); }
+.pagination-modern .page-link-nav, .pagination-modern .page-ellipsis { background-color: transparent !important; border-color: transparent !important; }
+.pagination-modern .page-link-nav { padding: .5rem .6rem; }
+.pagination-modern .page-ellipsis { cursor: default; padding: .5rem .3rem; }
 .dropdown-menu { border-color: var(--panel-borde); border-radius: var(--panel-radio-control); box-shadow: var(--panel-sombra-alta); }
 .offcanvas { --bs-offcanvas-border-color: var(--panel-borde); }
 .modal-content { border-radius: var(--panel-radio); border-color: var(--panel-borde); }

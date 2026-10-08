@@ -57,6 +57,10 @@
     --tienda-sombra-alta: 0 12px 32px rgba(16, 24, 40, .14), 0 0 0 1px rgba(16, 24, 40, .04);
 
     --tienda-espacio: 1rem;
+    /* Alto aproximado de la barra superior (fija): depende del logo de la tienda.
+       Lo usan los paneles pegajosos (menú lateral, resumen del carrito) para no
+       quedar tapados al bajar. */
+    --tienda-barra-alto: calc(max(min(var(--logo-alto, 40px), 44px), 40px) + 1.5rem);
     --tienda-control-alto: 38px;          /* botones y campos de la ficha */
     --tienda-imagen-alto: 220px;          /* imagen de la tarjeta de producto */
     --tienda-ficha-imagen-alto: 440px;    /* imagen de la ficha (escritorio) */
@@ -409,7 +413,10 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 .drawer-footer-link:hover { color: var(--tienda-marca-texto); }
 
 /* ── Menú lateral (Ajustes › posición del menú: lateral) ────────────────── */
-.sidebar-menu { position: sticky; top: 1rem; }
+.sidebar-menu { position: sticky; top: calc(var(--tienda-barra-alto) + 1rem); }
+@media (min-width: 992px) {
+    :root { --tienda-barra-alto: calc(max(var(--logo-alto, 40px), 40px) + 1.5rem); }
+}
 .sidebar-menu .card { overflow: hidden; }
 .sidebar-menu .card-header {
     background-color: var(--tienda-marca) !important;
@@ -421,16 +428,15 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 .sidebar-menu .list-group { --bs-list-group-border-color: var(--tienda-borde); }
 .sidebar-menu .list-group-item { border-left: 0; border-right: 0; }
 .sidebar-menu .list-group-item:first-child { border-top: 0; }
+/* Sangría por nivel: cada opción trae su --nivel (0, 1, 2…). */
 .menu-lateral-opcion {
     padding-left: calc(12px + var(--nivel, 0) * 15px) !important;
-    color: var(--tienda-texto);
     font-size: .95rem;
     transition: background-color .15s ease, color .15s ease;
 }
-a.menu-lateral-opcion:hover, .menu-lateral-item:hover > a,
-.menu-lateral-fila:hover {
-    color: var(--tienda-marca-tinta) !important;
-}
+.menu-lateral-opcion, .menu-lateral-opcion a { color: var(--tienda-texto); }
+.menu-lateral-fila:hover .menu-lateral-opcion,
+.menu-lateral-hoja:hover a { color: var(--tienda-marca-tinta); }
 .menu-lateral-fila:hover, .menu-lateral-hoja:hover { background: var(--tienda-superficie-suave); }
 .menu-lateral-fila .btn-link .bi { transition: transform .2s ease; display: inline-block; }
 .menu-lateral-fila .btn-link[aria-expanded="true"] .bi { transform: rotate(180deg); }
@@ -737,7 +743,7 @@ a.menu-lateral-opcion:hover, .menu-lateral-item:hover > a,
     .ci-del   { flex-shrink: 0; align-self: auto; }
 }
 .qty-feedback { min-height: 1rem; font-size: .75rem; }
-.carrito-resumen { position: sticky; top: 5.5rem; }
+.carrito-resumen { position: sticky; top: calc(var(--tienda-barra-alto) + 1rem); }
 .carrito-total { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
 
 /* ── Checkout ───────────────────────────────────────────────────────────── */

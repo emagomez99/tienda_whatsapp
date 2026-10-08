@@ -1,19 +1,19 @@
 @php
     $tieneHijos = $menu->tieneHijos();
     $collapseId = 'menu-collapse-' . $menu->clave();
-    $paddingLeft = ($nivel * 15) + 12;
+    // La sangría por nivel la calcula tienda.css (.menu-lateral-opcion) con --nivel.
 @endphp
 
 @if($tieneHijos)
     {{-- Menú con submenús --}}
     <li class="list-group-item p-0 border-0">
-        <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center menu-lateral-fila">
             @if(!$menu->esContenedor())
-                <a href="{{ $menu->url() }}" class="flex-grow-1 text-decoration-none text-dark py-2" style="padding-left: {{ $paddingLeft }}px;">
+                <a href="{{ $menu->url() }}" class="menu-lateral-opcion flex-grow-1 text-decoration-none py-2" style="--nivel: {{ $nivel }};">
                     {{ $menu->nombre() }}
                 </a>
             @else
-                <span class="flex-grow-1 py-2 text-dark" style="padding-left: {{ $paddingLeft }}px;">
+                <span class="menu-lateral-opcion flex-grow-1 py-2" style="--nivel: {{ $nivel }};">
                     {{ $menu->nombre() }}
                 </span>
             @endif
@@ -31,8 +31,8 @@
     </li>
 @else
     {{-- Menú sin submenús --}}
-    <li class="list-group-item border-0 py-2" style="padding-left: {{ $paddingLeft }}px;">
-        <a href="{{ $menu->url() }}" class="text-decoration-none text-dark">
+    <li class="list-group-item border-0 py-2 menu-lateral-opcion menu-lateral-hoja" style="--nivel: {{ $nivel }};">
+        <a href="{{ $menu->url() }}" class="text-decoration-none">
             {{ $menu->nombre() }}
         </a>
     </li>

@@ -114,62 +114,6 @@
     </ul>
 </nav>
 
-<style>
-.pagination-wrapper {
-    padding: 1rem 0;
-}
-
-.pagination-modern {
-    gap: 0.25rem;
-}
-
-.pagination-modern .page-item .page-link {
-    border: none;
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.85rem;
-    font-weight: 500;
-    color: #495057;
-    background-color: #f8f9fa;
-    transition: all 0.2s ease;
-    min-width: 40px;
-    text-align: center;
-}
-
-.pagination-modern .page-item .page-link:hover {
-    background-color: #e9ecef;
-    color: #212529;
-    transform: translateY(-1px);
-}
-
-.pagination-modern .page-item.active .page-link {
-    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
-}
-
-.pagination-modern .page-item.disabled .page-link {
-    background-color: #f8f9fa;
-    color: #adb5bd;
-    cursor: not-allowed;
-}
-
-.pagination-modern .page-link-nav {
-    background-color: transparent !important;
-    padding: 0.5rem 0.6rem;
-}
-
-.pagination-modern .page-link-nav:hover {
-    background-color: #e9ecef !important;
-}
-
-.pagination-modern .page-ellipsis {
-    background-color: transparent !important;
-    cursor: default;
-    padding: 0.5rem 0.3rem;
-}
-
-.pagination-modern .page-ellipsis:hover {
-    transform: none;
-}
-</style>
+{{-- El aspecto (.pagination-modern) está en public/css/tienda.css para la tienda y en
+     public/css/admin.css para el panel: cada uno con sus tokens. --}}
 @endif

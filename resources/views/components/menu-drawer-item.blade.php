@@ -1,16 +1,15 @@
 {{--
     Una opción del menú lateral (celular), con sus submenús a cualquier profundidad.
     El primer nivel usa .drawer-item; los de adentro, .drawer-subitem, con más
-    sangría en cada nivel.
+    sangría en cada nivel: la calcula tienda.css a partir de --nivel.
 --}}
 @php
-    $clase   = $nivel === 0 ? 'drawer-item' : 'drawer-subitem';
-    $sangria = $nivel > 1 ? 'padding-left: ' . (2.25 + ($nivel - 1) * .85) . 'rem;' : '';
+    $clase = $nivel === 0 ? 'drawer-item' : 'drawer-subitem';
 @endphp
 @if($menu->tieneHijos())
     <div>
         <button class="{{ $clase }} w-100 d-flex justify-content-between align-items-center border-0 text-start"
-                style="{{ $sangria }}"
+                style="--nivel: {{ $nivel }};"
                 type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#drawer-sub-{{ $menu->clave() }}"
@@ -20,7 +19,7 @@
         </button>
         <div class="collapse" id="drawer-sub-{{ $menu->clave() }}">
             @if(!$menu->esContenedor())
-                <a class="drawer-subitem" href="{{ $menu->url() }}" style="{{ $nivel > 0 ? 'padding-left: ' . (2.25 + $nivel * .85) . 'rem;' : '' }}">
+                <a class="drawer-subitem" href="{{ $menu->url() }}" style="--nivel: {{ $nivel + 1 }};">
                     <i class="bi bi-grid me-1 opacity-50"></i> Ver todos
                 </a>
             @endif
@@ -30,5 +29,5 @@
         </div>
     </div>
 @else
-    <a class="{{ $clase }}" href="{{ $menu->url() }}" style="{{ $sangria }}">{{ $menu->nombre() }}</a>
+    <a class="{{ $clase }}" href="{{ $menu->url() }}" style="--nivel: {{ $nivel }};">{{ $menu->nombre() }}</a>
 @endif
