@@ -14,11 +14,13 @@ class Etiqueta extends Model
         'nombre',
         'visible_usuarios',
         'global',
+        'obligatoria_global',
     ];
 
     protected $casts = [
         'visible_usuarios' => 'boolean',
         'global' => 'boolean',
+        'obligatoria_global' => 'boolean',
     ];
 
     public function productos()
@@ -138,12 +140,5 @@ class Etiqueta extends Model
         }
 
         return $mejorId ? $this->valores()->withCount('asignaciones')->find($mejorId) : null;
-    }
-
-    public function proveedores()
-    {
-        return $this->belongsToMany(Proveedor::class, 'proveedor_etiqueta')
-                    ->withPivot('obligatoria')
-                    ->withTimestamps();
     }
 }

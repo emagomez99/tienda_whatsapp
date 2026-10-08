@@ -188,6 +188,15 @@ class GuardadoDeProductoTest extends TestCase
             $this->servicio()->crear($this->datos());
             $this->assertSame(1, Producto::count());
 
+            // Global y obligatoria: se exige aunque no tenga categoría.
+            Etiqueta::find($this->ids['marca'])->update(['global' => true, 'obligatoria_global' => true]);
+            try {
+                $this->servicio()->crear($this->datos());
+                $this->fail('Tenía que pedir Marca.');
+            } catch (ValidationException $e) {
+                $this->assertSame('Falta una característica obligatoria: Marca.', $e->errors()['etiquetas'][0]);
+            }
+
             // En Ropa, Color pasa a obligatoria (manda la categoría, más cercana que la global).
             try {
                 $this->servicio()->crear($this->datos()->conCategorias([$this->ids['ropa']])->conEtiquetas([$this->ids['marca'] => 'Nike']));

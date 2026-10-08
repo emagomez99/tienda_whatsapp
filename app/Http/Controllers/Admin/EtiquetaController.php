@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Categoria;
 use App\Models\Etiqueta;
-use App\Models\Proveedor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class EtiquetaController extends Controller
 {
@@ -90,8 +91,7 @@ class EtiquetaController extends Controller
 
     public function create()
     {
-        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
-        return view('admin.etiquetas.create', compact('proveedores'));
+        return view('admin.etiquetas.create', ['etiqueta' => new Etiqueta()]);
     }
 
     public function store(Request $request)
@@ -99,13 +99,11 @@ class EtiquetaController extends Controller
         $validated = $request->validate([
             'nombre'           => 'required|string|max:255|unique:etiquetas,nombre',
             'visible_usuarios' => 'boolean',
+            'global'           => 'boolean',
+            'obligatoria_global' => 'boolean',
         ]);
 
-        $validated['visible_usuarios'] = $request->has('visible_usuarios');
-
-        $etiqueta = Etiqueta::create($validated);
-
-        $this->sincronizarProveedores($etiqueta, $request->input('proveedores_config', []));
+        Etiqueta::create($this->conInterruptores($validated, $request));
 
         return redirect()->route('admin.etiquetas.index')
             ->with('success', 'Etiqueta creada correctamente');
@@ -113,9 +111,13 @@ class EtiquetaController extends Controller
 
     public function edit(Etiqueta $etiqueta)
     {
-        $etiqueta->load('proveedores');
-        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
-        return view('admin.etiquetas.edit', compact('etiqueta', 'proveedores'));
+        // Las categorías que la piden, en el orden del árbol y con su camino.
+        $obligatoriaEn = DB::table('categoria_caracteristica')->where('etiqueta_id', $etiqueta->id)->pluck('obligatoria', 'categoria_id')->all();
+        $categoriasQueLaPiden = Categoria::enOrdenDeArbol()
+            ->filter(function (Categoria $c) use ($obligatoriaEn) { return array_key_exists($c->id, $obligatoriaEn); })
+            ->values();
+
+        return view('admin.etiquetas.edit', compact('etiqueta', 'categoriasQueLaPiden', 'obligatoriaEn'));
     }
 
     public function update(Request $request, Etiqueta $etiqueta)
@@ -123,16 +125,24 @@ class EtiquetaController extends Controller
         $validated = $request->validate([
             'nombre'           => 'required|string|max:255|unique:etiquetas,nombre,' . $etiqueta->id,
             'visible_usuarios' => 'boolean',
+            'global'           => 'boolean',
+            'obligatoria_global' => 'boolean',
         ]);
 
-        $validated['visible_usuarios'] = $request->has('visible_usuarios');
-
-        $etiqueta->update($validated);
-
-        $this->sincronizarProveedores($etiqueta, $request->input('proveedores_config', []));
+        $etiqueta->update($this->conInterruptores($validated, $request));
 
         return redirect()->route('admin.etiquetas.index')
             ->with('success', 'Etiqueta actualizada correctamente');
+    }
+
+    /** Los interruptores del formulario; obligatoria sólo tiene sentido si es global. */
+    private function conInterruptores(array $validated, Request $request): array
+    {
+        $validated['visible_usuarios'] = $request->boolean('visible_usuarios');
+        $validated['global'] = $request->boolean('global');
+        $validated['obligatoria_global'] = $validated['global'] && $request->boolean('obligatoria_global');
+
+        return $validated;
     }
 
     public function destroy(Etiqueta $etiqueta)
@@ -163,19 +173,5 @@ class EtiquetaController extends Controller
     public function estadoValor(Request $request, Etiqueta $etiqueta)
     {
         return response()->json($etiqueta->estadoDeValor((string) $request->get('valor', '')));
-    }
-
-    private function sincronizarProveedores(Etiqueta $etiqueta, array $proveedoresConfig)
-    {
-        $syncData = [];
-        foreach ($proveedoresConfig as $proveedorId => $config) {
-            if ($config === 'no') {
-                // Store null to distinguish "configured as no aplica" from "never configured"
-                $syncData[(int) $proveedorId] = ['obligatoria' => null];
-            } else {
-                $syncData[(int) $proveedorId] = ['obligatoria' => $config === 'obligatoria'];
-            }
-        }
-        $etiqueta->proveedores()->sync($syncData);
     }
 }

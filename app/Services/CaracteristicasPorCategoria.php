@@ -40,7 +40,7 @@ class CaracteristicasPorCategoria
         foreach (Etiqueta::orderBy('nombre')->get() as $etiqueta) {
             $this->etiquetas[$etiqueta->id] = $etiqueta;
             if ($etiqueta->global) {
-                $this->globales[] = $this->armar($etiqueta, false, null, null);
+                $this->globales[] = $this->armar($etiqueta, $etiqueta->obligatoria_global, null, null);
             }
         }
 

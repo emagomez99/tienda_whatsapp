@@ -8,6 +8,7 @@ use App\Models\Etiqueta;
 use App\Models\Menu;
 use App\Models\Producto;
 use App\Services\ArbolDeMenus;
+use App\Services\CaracteristicasPorCategoria;
 use App\Services\MenuDeLaTienda;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
@@ -149,7 +150,7 @@ class MenuController extends Controller
     /** Lo que necesita el formulario de menú, igual en alta y edición. */
     private function datosFormulario($menusParent): array
     {
-        $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
+        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
 
         // Por cada posible padre, qué filtros hereda un submenú suyo.
         $filtrosHeredados = [];
@@ -161,7 +162,8 @@ class MenuController extends Controller
             'menusParent'           => $menusParent,
             'proveedores'           => $proveedores,
             'etiquetas'             => Etiqueta::orderBy('nombre')->get(),
-            'etiquetasPorProveedor' => $this->mapEtiquetasAplicables($proveedores),
+            // Para sugerir como filtros las características de la categoría elegida.
+            'caracteristicasPorCategoria' => (new CaracteristicasPorCategoria())->mapaParaFormulario()['porCategoria'],
             'categorias'            => Categoria::enOrdenDeArbol(),
             'filtrosHeredados'      => $filtrosHeredados,
         ];
@@ -393,22 +395,6 @@ class MenuController extends Controller
         $agregar(Menu::raiz()->orderBy('orden')->orderBy('id')->with('children.children')->get(), 0);
 
         return $resultado;
-    }
-
-    private function mapEtiquetasAplicables($proveedores)
-    {
-        $map = [];
-        foreach ($proveedores as $prov) {
-            $todas = $prov->etiquetas;
-            $aplicables = $todas->filter(function ($e) {
-                return $e->pivot->obligatoria !== null;
-            })->pluck('id')->values()->toArray();
-            $map[$prov->id] = [
-                'configured' => $todas->isNotEmpty(),
-                'ids'        => $aplicables,
-            ];
-        }
-        return $map;
     }
 
     /**

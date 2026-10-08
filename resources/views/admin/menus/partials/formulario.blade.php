@@ -8,7 +8,7 @@
       SEO va plegado: casi nunca se toca y tiene valores por defecto razonables.
 
     Recibe: $menu (nuevo o existente), $menusParent, $proveedores, $etiquetas, $categorias,
-    $etiquetasPorProveedor, $filtrosHeredados. En alta, además, $siguienteOrdenRaiz y
+    $caracteristicasPorCategoria, $filtrosHeredados. En alta, además, $siguienteOrdenRaiz y
     $siguienteOrdenPorPadre para sugerir el orden según el padre.
 --}}
 @php
@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var el = function (id) { return document.getElementById(id); };
 
     var etiquetasData         = @json($etiquetas->map(function ($e) { return ['id' => $e->id, 'nombre' => $e->nombre, 'visible' => (bool) $e->visible_usuarios]; })->values());
-    var etiquetasPorProveedor = @json($etiquetasPorProveedor);
+    var caracteristicasPorCategoria = @json((object) $caracteristicasPorCategoria);
     var filtrosHeredados      = @json($filtrosHeredados);
 
     var enlaceId    = el('enlace_id');
@@ -442,8 +442,8 @@ document.addEventListener('DOMContentLoaded', function () {
         radio.addEventListener('change', mostrarSegunTipo);
         radio.addEventListener('change', contar);
     });
-    proveedor.addEventListener('change', function () { volcarEnlace(); reconstruirDisponibles(); contar(); });
-    categoria.addEventListener('change', function () { volcarEnlace(); contar(); });
+    proveedor.addEventListener('change', function () { volcarEnlace(); contar(); });
+    categoria.addEventListener('change', function () { volcarEnlace(); reconstruirDisponibles(); contar(); });
     etiqueta.addEventListener('change', function () { valor.value = ''; volcarEnlace(); contar(); });
     valor.addEventListener('input', function () { volcarEnlace(); contar(); });
     valor.addEventListener('change', function () { volcarEnlace(); contar(); });
@@ -454,12 +454,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Bloque 3: filtros para el cliente ───────────────────────────────────
 
-    // Si el proveedor tiene etiquetas configuradas, sólo esas tienen sentido como
-    // filtro: las demás no las tiene ningún producto suyo.
+    // Con una categoría elegida, se ofrecen las características que pide: son las
+    // que tienen sus productos. Si no pide ninguna todavía, todas.
     function etiquetasAplicables() {
-        if (tipo() !== 'proveedor' || !proveedor.value) return null;
-        var cfg = etiquetasPorProveedor[String(proveedor.value)];
-        return cfg && cfg.configured ? cfg.ids : null;
+        if (tipo() !== 'categoria' || !categoria.value) return null;
+        var lista = caracteristicasPorCategoria[String(categoria.value)] || [];
+        return lista.length ? lista.map(function (c) { return c.id; }) : null;
     }
 
     function renumerar() {
@@ -470,12 +470,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function reconstruirDisponibles() {
         var aplicables = etiquetasAplicables();
-
-        if (aplicables !== null) {
-            elegidos.querySelectorAll('li').forEach(function (li) {
-                if (aplicables.indexOf(parseInt(li.dataset.id, 10)) === -1) li.remove();
-            });
-        }
 
         var yaElegidos = Array.prototype.map.call(elegidos.querySelectorAll('li'), function (li) {
             return parseInt(li.dataset.id, 10);

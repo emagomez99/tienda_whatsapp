@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Categoria;
 use App\Models\Etiqueta;
 use App\Models\Moneda;
 use App\Models\Producto;
@@ -25,10 +26,15 @@ class ImportHercules extends Command
     protected $description = 'Importa productos desde herculesus.com';
 
     private const PROVEEDOR_NOMBRE = 'Hercules';
+    // La categoría de sus productos (decisión D6 del plan de Categorías).
+    private const CATEGORIA = 'Kits hidráulicos';
     private const FABRICANTES = ['Liugong', 'Case', 'Ford'];
 
     // IDs resueltos dinámicamente al inicio (tenant-aware)
     private $proveedorId;
+
+    /** @var int|null */
+    private $categoriaId;
     private $monedaId;
     private $etiquetaFabricanteId;
     private $etiquetaAplicacionId;
@@ -97,6 +103,19 @@ class ImportHercules extends Command
         $this->etiquetaFabricanteId = Etiqueta::firstOrCreate(['nombre' => 'Fabricante'])->id;
         $this->etiquetaAplicacionId = Etiqueta::firstOrCreate(['nombre' => 'Aplicacion'])->id;
         $this->etiquetaModeloId     = Etiqueta::firstOrCreate(['nombre' => 'Modelo'])->id;
+
+        // Si la categoría no existe (tienda nueva), se crea pidiendo lo que trae el
+        // importador. Si ya existe, se respeta lo que tenga configurado.
+        $categoria = Categoria::resolverCamino(self::CATEGORIA);
+        if (!$categoria && !$dryRun) {
+            $categoria = Categoria::resolverCamino(self::CATEGORIA, true);
+            $categoria->caracteristicas()->sync([
+                $this->etiquetaFabricanteId => ['obligatoria' => true, 'orden' => 0],
+                $this->etiquetaAplicacionId => ['obligatoria' => true, 'orden' => 1],
+                $this->etiquetaModeloId     => ['obligatoria' => true, 'orden' => 2],
+            ]);
+        }
+        $this->categoriaId = $categoria ? $categoria->id : null;
 
         $this->info('Iniciando importación de Hercules...');
         $this->info("Log: {$this->logFile}");
@@ -519,6 +538,8 @@ class ImportHercules extends Command
                     null,
                     null
                 );
+
+                $producto->categorias()->attach($this->categoriaId);
 
                 // Asignar etiquetas
                 $producto->etiquetas()->attach([

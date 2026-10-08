@@ -209,7 +209,13 @@
         });
 
         var hayFilas = contenedor.children.length > 0;
-        document.getElementById('etiquetas-sin-categoria').classList.toggle('d-none', categorias.length > 0 || hayFilas);
+        // Sin categoría se avisa siempre; con campos (los globales) en chico, arriba de ellos.
+        var sinCategoria = document.getElementById('etiquetas-sin-categoria');
+        sinCategoria.classList.toggle('d-none', categorias.length > 0);
+        sinCategoria.classList.toggle('py-4', !hayFilas);
+        sinCategoria.classList.toggle('text-center', !hayFilas);
+        sinCategoria.classList.toggle('small', hayFilas);
+        sinCategoria.classList.toggle('mb-3', hayFilas);
         document.getElementById('etiquetas-sin-configurar').classList.toggle('d-none', categorias.length === 0 || hayFilas);
         document.getElementById('etiquetas-leyenda').classList.toggle('d-none', !lista.some(function (c) { return c.obligatoria; }));
         document.getElementById('etiquetas-origen').textContent = categorias.length && hayFilas ? 'según sus categorías' : '';
