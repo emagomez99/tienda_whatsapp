@@ -2,64 +2,8 @@
 
 @section('title', 'Inicio')
 
-@push('styles')
-<style>
-    .accion-rapida {
-        display: flex;
-        align-items: center;
-        gap: .7rem;
-        padding: .65rem .9rem;
-        text-decoration: none;
-        color: inherit;
-        border-bottom: 1px solid rgba(0,0,0,.055);
-        transition: background-color .15s ease;
-    }
-    .accion-rapida:last-child { border-bottom: 0; }
-    .accion-rapida:hover  { background-color: rgba(0,0,0,.03); color: inherit; }
-    .accion-rapida:focus-visible {
-        outline: 2px solid var(--bs-primary);
-        outline-offset: -2px;
-    }
-    /* La destacada se marca con un filete lateral y no con un fondo fuerte: se
-       distingue igual y no compite con los badges de estado de la pantalla. */
-    .accion-rapida.destacada {
-        box-shadow: inset 3px 0 0 var(--bs-primary);
-        background-color: rgba(var(--bs-primary-rgb), .04);
-    }
-    .accion-rapida.destacada:hover { background-color: rgba(var(--bs-primary-rgb), .09); }
-
-    .accion-icono {
-        flex: 0 0 2.1rem;
-        height: 2.1rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: .5rem;
-        font-size: .95rem;
-    }
-    .accion-texto  { flex: 1 1 auto; min-width: 0; line-height: 1.25; }
-    .accion-titulo { display: block; font-size: .875rem; font-weight: 600; }
-    .accion-detalle {
-        display: block;
-        font-size: .72rem;
-        color: var(--bs-secondary-color, #6c757d);
-    }
-    .accion-flecha {
-        color: #adb5bd;
-        font-size: .8rem;
-        transition: transform .15s ease;
-    }
-    .accion-rapida:hover .accion-flecha { transform: translateX(3px); }
-
-    @media (prefers-reduced-motion: reduce) {
-        .accion-rapida, .accion-flecha { transition: none; }
-        .accion-rapida:hover .accion-flecha { transform: none; }
-    }
-</style>
-@endpush
-
 @section('content')
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
         <h3 class="mb-0"><i class="bi bi-house"></i> Inicio</h3>
         <small class="text-muted">{{ now()->translatedFormat('l j \d\e F') }}</small>
@@ -76,7 +20,7 @@
             <span class="btn btn-sm btn-outline-secondary disabled" aria-hidden="true"><i class="bi bi-chevron-left"></i></span>
         @endif
 
-        <select name="mes" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+        <select name="mes" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
             @foreach($meses as $opcion)
                 <option value="{{ $opcion->parametro() }}" {{ $opcion->equals($mes) ? 'selected' : '' }}>
                     {{ ucfirst($opcion->nombre()) }}
@@ -95,89 +39,72 @@
     </form>
 </div>
 
-{{-- Stats compactos --}}
-<div class="row g-2 mb-3">
-    <div class="col-6 col-md-2">
-        <a href="{{ route('admin.productos.index') }}" class="text-decoration-none">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body py-2 px-3">
-                    <div class="text-muted mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Productos</div>
-                    <div class="fs-4 fw-bold text-primary lh-1">{{ $stats['productos'] }}</div>
-                    <div class="text-success mt-1" style="font-size:.75rem;">
-                        <i class="bi bi-check-circle-fill"></i> {{ $stats['productos_disponibles'] }} disponibles
-                    </div>
-                </div>
-            </div>
+{{-- Números: tarjetas chicas (rótulo + cifra). Las que piden atención (sin stock,
+     pendientes) se tiñen de amarillo; el aspecto sale de .panel-dato en admin.css. --}}
+<div class="row g-2 mb-4">
+    <div class="col-6 col-md-4 col-xl-2">
+        <a href="{{ route('admin.productos.index') }}" class="panel-dato">
+            <div class="card"><div class="card-body">
+                <div class="panel-rotulo">Productos</div>
+                <div class="panel-dato-valor">{{ $stats['productos'] }}</div>
+                <div class="panel-dato-nota text-success"><i class="bi bi-check-circle-fill"></i> {{ $stats['productos_disponibles'] }} disponibles</div>
+            </div></div>
         </a>
     </div>
-    <div class="col-6 col-md-2">
-        <a href="{{ route('admin.productos.index', ['stock' => 'sin']) }}" class="text-decoration-none">
-        <div class="card border-0 shadow-sm h-100 {{ $stats['productos_sin_stock'] > 0 ? 'border-warning border' : '' }}">
-            <div class="card-body py-2 px-3">
-                <div class="text-muted mb-0" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Sin stock</div>
-                <div class="d-flex align-items-center gap-1">
-                    <span class="fs-4 fw-bold {{ $stats['productos_sin_stock'] > 0 ? 'text-warning' : 'text-secondary' }} lh-1">
-                        {{ $stats['productos_sin_stock'] }}
-                    </span>
+    <div class="col-6 col-md-4 col-xl-2">
+        <a href="{{ route('admin.productos.index', ['stock' => 'sin']) }}" class="panel-dato{{ $stats['productos_sin_stock'] > 0 ? ' panel-dato-alerta' : '' }}">
+            <div class="card"><div class="card-body">
+                <div class="panel-rotulo">Sin stock</div>
+                <div class="panel-dato-valor {{ $stats['productos_sin_stock'] > 0 ? 'text-warning-emphasis' : 'text-muted' }}">
+                    {{ $stats['productos_sin_stock'] }}
                     @if($stats['productos_sin_stock'] > 0)
-                        <i class="bi bi-exclamation-triangle-fill text-warning small"></i>
+                        <i class="bi bi-exclamation-triangle-fill fs-6"></i>
                     @endif
                 </div>
-            </div>
-        </div>
+            </div></div>
         </a>
     </div>
-    <div class="col-6 col-md-2">
-        <a href="{{ route('admin.proveedores.index') }}" class="text-decoration-none">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body py-2 px-3">
-                    <div class="text-muted mb-0" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Proveedores</div>
-                    <span class="fs-4 fw-bold text-info lh-1">{{ $stats['proveedores'] }}</span>
-                </div>
-            </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <a href="{{ route('admin.proveedores.index') }}" class="panel-dato">
+            <div class="card"><div class="card-body">
+                <div class="panel-rotulo">Proveedores</div>
+                <div class="panel-dato-valor">{{ $stats['proveedores'] }}</div>
+            </div></div>
         </a>
     </div>
-    <div class="col-6 col-md-2">
-        <a href="{{ route('admin.pedidos.index', ['estado' => 'pendiente']) }}" class="text-decoration-none">
-            <div class="card border-0 shadow-sm h-100 {{ $pedidosStats['pendientes'] > 0 ? 'border-warning border' : '' }}">
-                <div class="card-body py-2 px-3">
-                    <div class="text-muted mb-0" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Pendientes</div>
-                    <div class="d-flex align-items-center gap-1">
-                        <span class="fs-4 fw-bold {{ $pedidosStats['pendientes'] > 0 ? 'text-warning' : 'text-secondary' }} lh-1">
-                            {{ $pedidosStats['pendientes'] }}
-                        </span>
-                        @if($pedidosStats['pendientes'] > 0)
-                            <i class="bi bi-hourglass-split text-warning small"></i>
-                        @endif
-                    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <a href="{{ route('admin.pedidos.index', ['estado' => 'pendiente']) }}" class="panel-dato{{ $pedidosStats['pendientes'] > 0 ? ' panel-dato-alerta' : '' }}">
+            <div class="card"><div class="card-body">
+                <div class="panel-rotulo">Pendientes</div>
+                <div class="panel-dato-valor {{ $pedidosStats['pendientes'] > 0 ? 'text-warning-emphasis' : 'text-muted' }}">
+                    {{ $pedidosStats['pendientes'] }}
+                    @if($pedidosStats['pendientes'] > 0)
+                        <i class="bi bi-hourglass-split fs-6"></i>
+                    @endif
                 </div>
-            </div>
+            </div></div>
         </a>
     </div>
-    <div class="col-6 col-md-2">
-        <a href="{{ route('admin.pedidos.index', ['estado' => 'confirmado'] + $rangoDelMes) }}" class="text-decoration-none">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body py-2 px-3">
-                    <div class="text-muted mb-0" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Confirmados {{ $mes->nombreCorto() }}</div>
-                    <span class="fs-4 fw-bold text-success lh-1">{{ $pedidosStats['confirmados'] }}</span>
-                </div>
-            </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <a href="{{ route('admin.pedidos.index', ['estado' => 'confirmado'] + $rangoDelMes) }}" class="panel-dato">
+            <div class="card"><div class="card-body">
+                <div class="panel-rotulo">Confirmados {{ $mes->nombreCorto() }}</div>
+                <div class="panel-dato-valor">{{ $pedidosStats['confirmados'] }}</div>
+            </div></div>
         </a>
     </div>
-    <div class="col-6 col-md-2">
-        <div class="card border-0 shadow-sm h-100 bg-success text-white">
-            <div class="card-body py-2 px-3">
-                <div class="mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;opacity:.85">
-                    Facturado {{ $mes->nombreCorto() }}
-                </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="panel-dato">
+            <div class="card"><div class="card-body">
+                <div class="panel-rotulo">Facturado {{ $mes->nombreCorto() }}</div>
                 @forelse($pedidosStats['totales_mes'] as $tm)
-                    <div class="fw-bold lh-1 {{ $loop->first ? 'fs-5' : 'fs-6 mt-1' }}">
+                    <div class="{{ $loop->first ? 'panel-dato-valor' : 'fw-bold mt-1' }} text-success cifras">
                         {{ $tm->moneda_simbolo ?? '$' }}{{ number_format($tm->total, 0, ',', '.') }}
                     </div>
                 @empty
-                    <span class="fs-5 fw-bold lh-1">$0</span>
+                    <div class="panel-dato-valor text-muted">$0</div>
                 @endforelse
-            </div>
+            </div></div>
         </div>
     </div>
 </div>
@@ -185,14 +112,14 @@
 {{-- Contenido principal --}}
 <div class="row g-3">
     {{-- Pedidos recientes --}}
-    <div class="col-md-8">
+    <div class="col-lg-8">
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center py-2">
                 <span class="fw-semibold">
                     <i class="bi bi-bag-check"></i>
                     {{ $mes->esActual() ? 'Últimos pedidos' : 'Pedidos de ' . $mes->nombre() }}
                 </span>
-                <a href="{{ route('admin.pedidos.index') }}" class="btn btn-sm btn-outline-primary py-0">Ver todos</a>
+                <a href="{{ route('admin.pedidos.index') }}" class="btn btn-sm btn-outline-secondary py-0">Ver todos</a>
             </div>
             <div class="card-body p-0">
                 @if($pedidosRecientes->isEmpty())
@@ -213,7 +140,7 @@
                             <tbody>
                             @foreach($pedidosRecientes as $pedido)
                                 <tr>
-                                    <td class="ps-3"><code class="small">#{{ $pedido->id }}</code></td>
+                                    <td class="ps-3"><span class="small text-muted cifras">#{{ $pedido->id }}</span></td>
                                     <td class="small">{{ $pedido->nombre }} {{ $pedido->apellido }}</td>
                                     <td class="small d-none d-md-table-cell">
                                         @foreach($pedido->totales as $pt)
@@ -292,7 +219,7 @@
     </div>
 
     {{-- Panel lateral --}}
-    <div class="col-md-4">
+    <div class="col-lg-4">
         {{-- Acciones rápidas.
 
              Cada acción es una fila con ícono, qué hace y adónde lleva, en vez de
@@ -313,7 +240,7 @@
                 $acciones[] = [
                     'url'      => route('admin.pedidos.create'),
                     'icono'    => 'bi-bag-plus',
-                    'titulo'   => 'Nuevo Pedido',
+                    'titulo'   => 'Nuevo pedido',
                     'detalle'  => 'Cargar un nuevo pedido',
                     'destacar' => true,
                 ];
@@ -323,7 +250,7 @@
                 $acciones[] = [
                     'url'     => route('admin.productos.create'),
                     'icono'   => 'bi-box-seam',
-                    'titulo'  => 'Nuevo Producto',
+                    'titulo'  => 'Nuevo producto',
                     'detalle' => 'Sumar un artículo al catálogo',
                 ];
             }
@@ -332,7 +259,7 @@
                 $acciones[] = [
                     'url'     => route('admin.proveedores.create'),
                     'icono'   => 'bi-truck',
-                    'titulo'  => 'Nuevo Proveedor',
+                    'titulo'  => 'Nuevo proveedor',
                     'detalle' => 'Dar de alta un nuevo proveedor',
                 ];
             }
@@ -341,8 +268,8 @@
                 $acciones[] = [
                     'url'     => route('admin.configuraciones.index'),
                     'icono'   => 'bi-sliders',
-                    'titulo'  => 'Configuración',
-                    'detalle' => 'Ir a los ajustes de la tienda',
+                    'titulo'  => 'Ajustes',
+                    'detalle' => 'Logo, colores, WhatsApp y más',
                 ];
             }
         @endphp
@@ -350,13 +277,13 @@
         @if(count($acciones))
         <div class="card shadow-sm mb-3">
             <div class="card-header py-2">
-                <span class="fw-semibold"><i class="bi bi-lightning-charge-fill text-warning"></i> Acciones rápidas</span>
+                <span class="fw-semibold"><i class="bi bi-lightning-charge"></i> Acciones rápidas</span>
             </div>
             <div class="card-body p-0">
                 @foreach($acciones as $accion)
                     @php $destacar = !empty($accion['destacar']); @endphp
                     <a href="{{ $accion['url'] }}" class="accion-rapida{{ $destacar ? ' destacada' : '' }}">
-                        <span class="accion-icono {{ $destacar ? 'bg-primary text-white' : 'bg-primary bg-opacity-10 text-primary' }}">
+                        <span class="accion-icono">
                             <i class="bi {{ $accion['icono'] }}"></i>
                         </span>
                         <span class="accion-texto">

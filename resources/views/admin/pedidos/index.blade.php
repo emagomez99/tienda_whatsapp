@@ -3,13 +3,18 @@
 @section('title', 'Pedidos')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-bag-check"></i> Pedidos</h3>
-    @if(auth()->user()->puede('pedidos.gestionar'))
-        <a href="{{ route('admin.pedidos.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo
-        </a>
-    @endif
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-bag-check"></i> Pedidos</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-pedidos" titulo="Cómo funcionan los pedidos">
+            @include('admin.ayudas.pedidos')
+        </x-ayuda>
+        @if(auth()->user()->puede('pedidos.gestionar'))
+            <a href="{{ route('admin.pedidos.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nuevo
+            </a>
+        @endif
+    </div>
 </div>
 
 {{-- Filtros: búsqueda y rango de fechas. El estado va aparte, en pestañas con contadores. --}}
@@ -23,13 +28,13 @@
 @endphp
 <div class="card mb-3">
     <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
-         style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#filtros-pedidos"
+         data-bs-toggle="collapse" data-bs-target="#filtros-pedidos"
          aria-expanded="{{ $abrirFiltros ? 'true' : 'false' }}">
         <span class="small text-truncate">
             <i class="bi bi-funnel me-1 text-muted"></i><span class="fw-semibold text-muted">Filtros</span>
             <span class="text-muted ms-1" id="filtros-resumen"></span>
         </span>
-        <i class="bi bi-chevron-down filtros-chevron flex-shrink-0 ms-2" style="transition:transform .2s;{{ $abrirFiltros ? 'transform:rotate(180deg);' : '' }}"></i>
+        <i class="bi bi-chevron-down filtros-chevron flex-shrink-0 ms-2"></i>
     </div>
     <div class="collapse d-md-block{{ $abrirFiltros ? ' show' : '' }}" id="filtros-pedidos">
     <div class="card-body py-3">
@@ -102,7 +107,7 @@
                             <div style="min-width: 0;">
                                 <div class="fw-semibold text-truncate">{{ $pedido->nombre }} {{ $pedido->apellido }}</div>
                                 <div class="small text-muted">
-                                    <code>#{{ $pedido->id }}</code> · {{ $pedido->created_at->format('d/m/Y H:i') }}
+                                    <span class="cifras">#{{ $pedido->id }}</span> · {{ $pedido->created_at->format('d/m/Y H:i') }}
                                 </div>
                             </div>
                             <div class="text-end flex-shrink-0">
@@ -133,7 +138,7 @@
                     <tbody>
                     @foreach($pedidos as $pedido)
                         <tr>
-                            <td><code>#{{ $pedido->id }}</code></td>
+                            <td class="text-muted cifras">#{{ $pedido->id }}</td>
                             <td>
                                 {{ $pedido->nombre }} {{ $pedido->apellido }}<br>
                                 <small class="text-muted">{{ $pedido->celular }}</small>

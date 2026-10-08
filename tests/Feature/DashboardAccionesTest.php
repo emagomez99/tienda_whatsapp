@@ -76,10 +76,12 @@ class DashboardAccionesTest extends TestCase
         ])->get($this->urlTenant('admin'))->assertStatus(200)->getContent();
 
         $posiciones = [
-            'Nuevo Pedido'    => strpos($html, 'Nuevo Pedido'),
-            'Nuevo Producto'  => strpos($html, 'Nuevo Producto'),
-            'Nuevo Proveedor' => strpos($html, 'Nuevo Proveedor'),
-            'Configuración'   => strpos($html, 'Ir a los ajustes de la tienda'),
+            'Nuevo pedido'    => strpos($html, 'Nuevo pedido'),
+            'Nuevo producto'  => strpos($html, 'Nuevo producto'),
+            'Nuevo proveedor' => strpos($html, 'Nuevo proveedor'),
+            // Textos en minúscula y "Ajustes" (antes "Configuración"): la pasada visual
+            // del panel unificó los nombres con los del menú lateral.
+            'Ajustes'         => strpos($html, 'Logo, colores, WhatsApp y más'),
         ];
 
         foreach ($posiciones as $etiqueta => $posicion) {
@@ -87,7 +89,7 @@ class DashboardAccionesTest extends TestCase
         }
 
         $this->assertSame(
-            ['Nuevo Pedido', 'Nuevo Producto', 'Nuevo Proveedor', 'Configuración'],
+            ['Nuevo pedido', 'Nuevo producto', 'Nuevo proveedor', 'Ajustes'],
             array_keys($posiciones),
             'El orden esperado del arreglo cambió; revisá el test.'
         );
@@ -117,10 +119,10 @@ class DashboardAccionesTest extends TestCase
             ->assertStatus(200)
             ->getContent();
 
-        $this->assertStringContainsString('Nuevo Producto', $html);
-        $this->assertStringNotContainsString('Nuevo Pedido', $html);
-        $this->assertStringNotContainsString('Nuevo Proveedor', $html);
-        $this->assertStringNotContainsString('Ir a los ajustes de la tienda', $html);
+        $this->assertStringContainsString('Nuevo producto', $html);
+        $this->assertStringNotContainsString('Nuevo pedido', $html);
+        $this->assertStringNotContainsString('Nuevo proveedor', $html);
+        $this->assertStringNotContainsString('Logo, colores, WhatsApp y más', $html);
     }
 
     /**

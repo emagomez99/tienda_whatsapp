@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Nuevo Pedido')
+@section('title', 'Nuevo pedido')
 
 @push('styles')
 <style>
@@ -9,45 +9,40 @@
         from { opacity: 0; transform: translateY(8px); }
         to   { opacity: 1; transform: translateY(0); }
     }
+    @media (prefers-reduced-motion: reduce) { .form-section { animation: none; } }
+    /* Cada bloque de datos del cliente, con el aspecto de una tarjeta del panel. */
     .field-group {
-        background: #f8f9fa;
-        border-radius: 12px;
+        background: var(--panel-superficie);
+        border: 1px solid var(--panel-borde);
+        border-radius: var(--panel-radio);
+        box-shadow: var(--panel-sombra);
         padding: 1.25rem;
         margin-bottom: 1rem;
     }
-    .field-group .form-label {
-        font-size: .8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        color: #6c757d;
-        margin-bottom: .3rem;
-    }
-    .field-group .form-control { background: #fff; border-color: #dee2e6; border-radius: 8px; }
-    .field-group .form-control:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
-    }
-    #buscar-cliente { border-radius: 12px; font-size: 1rem; }
-    .drop-static-item { background: #f8f9fa; }
-    .drop-static-item:hover { background: #e9ecef; }
+    #buscar-cliente { border-radius: var(--panel-radio); font-size: 1rem; }
+    .drop-static-item { background: var(--panel-superficie-suave); }
+    .drop-static-item:hover { background: var(--panel-borde); }
 </style>
 @endpush
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h3><i class="bi bi-plus-circle"></i> Nuevo Pedido</h3>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-plus-circle"></i> Nuevo pedido</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-pedidos" titulo="Cómo funcionan los pedidos">
+            @include('admin.ayudas.pedidos')
+        </x-ayuda>
+        <a href="{{ route('admin.pedidos.index') }}" class="btn btn-outline-secondary" title="Volver">
+            <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline"> Volver</span>
+        </a>
     </div>
-    <a href="{{ route('admin.pedidos.index') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i> Volver
-    </a>
 </div>
 
 {{-- Buscador unificado de cliente --}}
 <div class="mb-4" style="max-width:480px;">
+    <label for="buscar-cliente" class="form-label">¿Para quién es el pedido?</label>
     <div class="position-relative">
-        <i class="bi bi-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#adb5bd;pointer-events:none;z-index:1;"></i>
+        <i class="bi bi-search position-absolute top-50 translate-middle-y text-muted" style="left:14px;pointer-events:none;z-index:1;"></i>
         <input type="text" id="buscar-cliente" class="form-control form-control-lg ps-5"
                placeholder="Buscar cliente, o elegir tipo..." autocomplete="off">
         <div id="drop-cliente" class="list-group shadow"
@@ -97,11 +92,10 @@
                 </div>
                 <div class="field-group">
                     <button type="button"
-                            class="btn btn-link p-0 text-muted fw-semibold d-flex align-items-center gap-1"
-                            style="font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;text-decoration:none;"
+                            class="btn btn-link p-0 fw-semibold text-body text-decoration-none d-flex align-items-center gap-2 w-100"
                             data-bs-toggle="collapse" data-bs-target="#sec-direccion" aria-expanded="false">
-                        <i class="bi bi-chevron-right" id="icon-dir" style="transition:transform .2s;font-size:.75rem;"></i>
-                        Dirección y envío
+                        <i class="bi bi-geo-alt text-muted"></i> Dirección y envío
+                        <i class="bi bi-chevron-down filtros-chevron text-muted ms-auto"></i>
                     </button>
                     <div class="collapse" id="sec-direccion">
                         @php $pedirDir = \App\Models\Configuracion::pedirDireccionEnvio(); @endphp
@@ -174,7 +168,7 @@
     </div>
 
     <div class="mt-4">
-        <button type="submit" class="btn btn-primary px-4" style="border-radius:10px;height:42px;">
+        <button type="submit" class="btn btn-primary btn-lg px-4">
             <i class="bi bi-check-lg me-1"></i> Crear pedido
         </button>
     </div>

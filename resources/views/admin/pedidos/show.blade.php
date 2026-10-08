@@ -3,11 +3,16 @@
 @section('title', 'Pedido #' . $pedido->id)
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-bag-check"></i> Pedido <code>#{{ $pedido->id }}</code></h3>
-    <a href="{{ route('admin.pedidos.index') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Volver
-    </a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-bag-check"></i> Pedido <span class="text-muted fw-normal">#{{ $pedido->id }}</span></h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-pedidos" titulo="Cómo funcionan los pedidos">
+            @include('admin.ayudas.pedidos')
+        </x-ayuda>
+        <a href="{{ route('admin.pedidos.index') }}" class="btn btn-outline-secondary" title="Volver">
+            <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline"> Volver</span>
+        </a>
+    </div>
 </div>
 
 @if(session('error_stock'))
@@ -32,17 +37,17 @@
                     {{-- Info cliente --}}
                     <div class="d-flex flex-wrap align-items-center gap-3">
                         <div>
-                            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Cliente</div>
+                            <div class="panel-rotulo">Cliente</div>
                             <div class="fw-semibold">{{ $pedido->nombre }} {{ $pedido->apellido }}</div>
                         </div>
                         @if($pedido->celular)
                             @php $waNumber = ltrim($pedido->celular, '+'); @endphp
                             <div>
-                                <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Celular</div>
+                                <div class="panel-rotulo">Celular</div>
                                 <div class="d-flex align-items-center gap-1">
                                     <span>{{ $pedido->celular }}</span>
                                     <a href="https://wa.me/{{ $waNumber }}" target="_blank"
-                                       class="btn btn-sm btn-success py-0 px-2" style="font-size:.75rem;">
+                                       class="btn btn-sm btn-success py-0 px-2" title="Escribir por WhatsApp">
                                         <i class="bi bi-whatsapp"></i>
                                     </a>
                                 </div>
@@ -50,13 +55,13 @@
                         @endif
                         @if($pedido->email)
                             <div>
-                                <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Email</div>
+                                <div class="panel-rotulo">Email</div>
                                 <div>{{ $pedido->email }}</div>
                             </div>
                         @endif
                         @if($pedido->localidad || $pedido->provincia)
                             <div>
-                                <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Ubicación</div>
+                                <div class="panel-rotulo">Ubicación</div>
                                 <div>{{ implode(', ', array_filter([$pedido->localidad, $pedido->provincia])) }}</div>
                             </div>
                         @endif
@@ -65,7 +70,7 @@
                     {{-- Estado + total + acciones --}}
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <div class="text-end">
-                            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Total</div>
+                            <div class="panel-rotulo">Total</div>
                             @foreach($pedido->totales as $pt)
                                 <div class="fw-bold fs-6">
                                     {{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}
@@ -74,7 +79,7 @@
                             @endforeach
                         </div>
                         <div class="text-end">
-                            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;">Estado</div>
+                            <div class="panel-rotulo">Estado</div>
                             @if($pedido->esPendiente())
                                 <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pendiente</span>
                             @elseif($pedido->esConfirmado())
@@ -82,10 +87,10 @@
                             @else
                                 <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Cancelado</span>
                             @endif
-                            <div class="text-muted" style="font-size:.72rem;">{{ $pedido->created_at->format('d/m/Y H:i') }}</div>
+                            <div class="text-muted small">{{ $pedido->created_at->format('d/m/Y H:i') }}</div>
                         </div>
                         @if($pedido->esPendiente())
-                            <div class="d-flex flex-column gap-1">
+                            <div class="d-flex flex-md-column gap-1">
                                 <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalConfirmar">
                                     <i class="bi bi-check-circle"></i> Confirmar
                                 </button>
