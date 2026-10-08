@@ -86,7 +86,7 @@
                         <input class="form-check-input" type="radio" name="tipo_enlace" value="categoria" {{ $tipoActual === 'categoria' ? 'checked' : '' }}>
                         <span>
                             <strong>Los de una categoría</strong>
-                            <small class="d-block text-muted">Ej: Ropa, o Ropa › Remeras. Incluye los de sus subcategorías.</small>
+                            <small class="d-block text-muted">Ej: Bebidas, o Bebidas › Gaseosas. Incluye los de las de adentro.</small>
                         </span>
                     </label>
                     <div class="tipo-campos" data-tipo="categoria">

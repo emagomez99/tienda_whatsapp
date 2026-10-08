@@ -6,7 +6,7 @@
     comercial.
       Producto         nombre, dirección web, descripción
       Inventario       proveedor, código, stock, disponible, por encargue
-      Categorías       qué es el producto (Ropa › Remeras)
+      Categorías       qué es el producto (Bebidas › Gaseosas)
       Etiquetas        dependen del proveedor: van justo debajo de él
       Especificaciones
       Precio

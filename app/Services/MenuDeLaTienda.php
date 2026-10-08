@@ -82,11 +82,16 @@ class MenuDeLaTienda
         return $convertir(Menu::getArbolMenu());
     }
 
-    /** Las categorías visibles en su orden; una oculta se lleva a sus subcategorías. */
+    /**
+     * Las categorías visibles y con productos, en su orden. Una oculta se lleva a sus
+     * subcategorías; una vacía no aparece hasta que tenga su primer producto.
+     */
     private static function desdeCategorias(): Collection
     {
-        $visibles = Categoria::enOrdenDeArbol()->filter(function (Categoria $c) {
-            return $c->esVisibleEnTienda();
+        $arbol = Categoria::enOrdenDeArbol();
+        $conProductos = Categoria::idsConProductos($arbol);
+        $visibles = $arbol->filter(function (Categoria $c) use ($conProductos) {
+            return $c->esVisibleEnTienda() && isset($conProductos[$c->id]);
         });
         $porMadre = $visibles->groupBy(function (Categoria $c) { return $c->parent_id ?: 0; });
 

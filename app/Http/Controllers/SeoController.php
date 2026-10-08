@@ -123,9 +123,13 @@ class SeoController extends Controller
                 ];
             });
 
-        // Las ocultas no: su página da 404.
-        Categoria::enOrdenDeArbol()
-            ->filter(function (Categoria $categoria) { return $categoria->esVisibleEnTienda(); })
+        // Las ocultas no (su página da 404), ni las vacías (no hay nada que indexar).
+        $arbol = Categoria::enOrdenDeArbol();
+        $conProductos = Categoria::idsConProductos($arbol);
+        $arbol
+            ->filter(function (Categoria $categoria) use ($conProductos) {
+                return $categoria->esVisibleEnTienda() && isset($conProductos[$categoria->id]);
+            })
             ->each(function (Categoria $categoria) use (&$urls) {
                 $urls[] = [
                     'loc' => $categoria->url(),

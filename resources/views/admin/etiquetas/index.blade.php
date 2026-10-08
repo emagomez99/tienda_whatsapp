@@ -17,7 +17,7 @@
     </div>
 </div>
 
-<p class="text-muted mb-4">Los datos que se cargan en cada producto: Marca, Talle, Color… Qué datos pide cada producto se elige en su <a href="{{ route('admin.categorias.index') }}">categoría</a>.</p>
+<p class="text-muted mb-4">Los datos que se cargan en cada producto: Marca, Sabor, Contenido… Qué datos pide cada producto se elige en su <a href="{{ route('admin.categorias.index') }}">categoría</a>.</p>
 
 @include('admin.etiquetas.partials.fusion-propuesta')
 

@@ -2,7 +2,8 @@
     Una categoría del árbol (un <li>) y, adentro, sus subcategorías. Mismo marcado
     que el árbol de menús (admin/partials/arbol-ordenable).
 
-    Recibe: $categoria, $nivel, $esPrimero/$esUltimo y $productosPorCategoria.
+    Recibe: $categoria, $nivel, $esPrimero/$esUltimo, $productosPorCategoria y
+    $conProductos (Categoria::idsConProductos: las que se ven en el menú de la tienda).
 --}}
 @php
     $cantidad    = $productosPorCategoria[$categoria->id] ?? 0;
@@ -38,6 +39,10 @@
                 <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1">
                     <i class="bi bi-eye-slash"></i>
                     {{ $ocultaPor->id === $categoria->id ? 'Oculta' : 'Oculta por «' . $ocultaPor->nombre . '»' }}
+                </span>
+            @elseif(!isset($conProductos[$categoria->id]))
+                <span class="badge bg-warning-subtle text-warning-emphasis ms-1" title="Los estantes vacíos no aparecen en el menú de la tienda. Aparece solo cuando le cargues el primer producto.">
+                    <i class="bi bi-inbox"></i> Vacía: todavía no se ve en la tienda
                 </span>
             @endif
             @php

@@ -16,9 +16,9 @@
                     <label for="nombre" class="form-label">Nombre *</label>
                     <input type="text" class="form-control @error('nombre') is-invalid @enderror"
                            id="nombre" name="nombre" value="{{ old('nombre', $etiqueta->nombre) }}"
-                           placeholder="Ej: Talle, Color, Marca" required maxlength="255">
+                           placeholder="Ej: Marca, Sabor, Contenido" required maxlength="255">
                     @error('nombre')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    <div class="form-text">El dato que se carga en cada producto. El valor (M, Rojo, Nike…) se escribe en el producto.</div>
+                    <div class="form-text">El dato que se carga en cada producto. El valor (Arcor, Frutilla, 500 g…) se escribe en el producto.</div>
                 </div>
 
                 <input type="hidden" name="visible_usuarios" value="0">

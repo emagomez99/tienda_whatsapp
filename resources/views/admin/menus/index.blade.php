@@ -22,10 +22,10 @@
             <strong>Qué menú ve el cliente</strong>
             <div class="small text-muted">
                 @if($automatico)
-                    Se arma solo con tus categorías visibles, en el orden de
+                    Se arma solo con tus categorías que tienen productos, en el orden de
                     <a href="{{ route('admin.categorias.index') }}">Categorías</a>{{ $categoriasEnMenu ? ' (' . $categoriasEnMenu . ($categoriasEnMenu === 1 ? ' opción' : ' opciones') . ')' : '' }}.
                     @if($categoriasEnMenu === 0)
-                        <span class="text-warning-emphasis">Todavía no hay categorías visibles: la tienda no muestra menú.</span>
+                        <span class="text-warning-emphasis">Todavía no hay categorías con productos: la tienda no muestra menú.</span>
                     @endif
                 @else
                     El que armás acá abajo. También podés usar uno automático con tus categorías: estos menús quedan guardados por si querés volver.
@@ -69,7 +69,7 @@
                 </div>
             @empty
                 <div class="text-muted">
-                    Todavía no hay categorías visibles, así que la tienda no muestra menú.
+                    Todavía no hay categorías con productos, así que la tienda no muestra menú.
                     <a href="{{ route('admin.categorias.index') }}">Crear categorías</a>
                 </div>
             @endforelse

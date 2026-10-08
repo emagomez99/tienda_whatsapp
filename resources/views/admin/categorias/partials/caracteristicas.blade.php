@@ -28,7 +28,7 @@
     </div>
     <div class="card-body">
         <ul class="list-group mb-2" id="caracteristicas-propias"></ul>
-        <div class="text-muted small mb-2" id="caracteristicas-vacio">Todavía no se pide ningún dato. Agregá uno abajo (ej: Talle, Color).</div>
+        <div class="text-muted small mb-2" id="caracteristicas-vacio">Todavía no se pide ningún dato. Agregá uno abajo (ej: Sabor, Contenido).</div>
 
         <div class="input-group" style="max-width: 420px;">
             <input type="text" class="form-control" id="caracteristica-nueva" list="caracteristicas-existentes"

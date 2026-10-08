@@ -12,7 +12,7 @@
                     <div class="col-md-6 mb-3">
                         <label for="nombre" class="form-label">Nombre *</label>
                         <input type="text" class="form-control @error('nombre') is-invalid @enderror" id="nombre" name="nombre"
-                               value="{{ old('nombre', $categoria->nombre) }}" required maxlength="255" placeholder="Ej: Remeras" autofocus>
+                               value="{{ old('nombre', $categoria->nombre) }}" required maxlength="255" placeholder="Ej: Gaseosas" autofocus>
                         @error('nombre')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6 mb-3">
@@ -26,7 +26,7 @@
                             @endforeach
                         </select>
                         @error('parent_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <small class="text-muted">Ej: "Remeras" dentro de "Ropa". Hasta {{ App\Models\Categoria::NIVEL_MAXIMO + 1 }} niveles.</small>
+                        <small class="text-muted">Ej: «Gaseosas» dentro de «Bebidas». Hasta {{ App\Models\Categoria::NIVEL_MAXIMO + 1 }} niveles.</small>
                     </div>
                 </div>
 

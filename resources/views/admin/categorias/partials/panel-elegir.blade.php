@@ -35,7 +35,7 @@
                     <i class="bi bi-plus-circle"></i> Crear categoría
                 </button>
                 <div class="d-none mt-2" data-rol="crear">
-                    <input type="text" class="form-control mb-2" data-rol="crear-nombre" placeholder="Nombre (ej: Remeras)" maxlength="255" aria-label="Nombre de la categoría nueva">
+                    <input type="text" class="form-control mb-2" data-rol="crear-nombre" placeholder="Nombre (ej: Gaseosas)" maxlength="255" aria-label="Nombre de la categoría nueva">
                     <select class="form-select mb-2" data-rol="crear-madre" aria-label="Dentro de"></select>
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-primary btn-sm" data-rol="crear-guardar">Crear y elegir</button>

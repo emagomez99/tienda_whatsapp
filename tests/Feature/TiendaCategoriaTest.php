@@ -113,7 +113,8 @@ class TiendaCategoriaTest extends TestCase
             ->assertOk()
             ->assertSee('/categoria/ropa', false)
             ->assertSee('/categoria/remeras', false)
-            ->assertDontSee('/categoria/liquidacion', false);
+            ->assertDontSee('/categoria/liquidacion', false)
+            ->assertDontSee('/categoria/deportes', false);   // vacía: nada que indexar
     }
 
     /** @test */
@@ -122,8 +123,16 @@ class TiendaCategoriaTest extends TestCase
         $this->get($this->urlTenant('/'))
             ->assertOk()
             ->assertSee('/categoria/ropa', false)
-            ->assertSee('/categoria/deportes', false)
-            ->assertDontSee('/categoria/liquidacion', false);
+            ->assertSee('/categoria/remeras', false)
+            // Oculta, y vacía: ninguna de las dos va al menú.
+            ->assertDontSee('/categoria/liquidacion', false)
+            ->assertDontSee('/categoria/deportes', false);
+
+        // Con su primer producto, Deportes aparece sola.
+        $this->enTenant(function () {
+            Producto::where('descripcion', 'Pelota suelta')->first()->categorias()->attach(Categoria::resolverCamino('Deportes')->id);
+        });
+        $this->get($this->urlTenant('/'))->assertSee('/categoria/deportes', false);
     }
 
     /** @test */
@@ -144,12 +153,16 @@ class TiendaCategoriaTest extends TestCase
             ->assertOk()
             ->assertSee('id="origen-propio" value="propio" checked', false);
 
+        // En Categorías, la vacía avisa que no se ve en la tienda.
+        $this->actingAs($admin)->get($this->urlTenant('admin/categorias'))
+            ->assertSee('Vacía: todavía no se ve en la tienda');
+
         $this->actingAs($admin)->patch($this->urlTenant('admin/menus/origen'), ['origen' => MenuDeLaTienda::ORIGEN_CATEGORIAS])
             ->assertRedirect()
             ->assertSessionHas('success');
 
         $this->get($this->urlTenant('/'))
-            ->assertSee('/categoria/deportes', false)
+            ->assertSee('/categoria/remeras', false)
             ->assertDontSee('Ofertas de hoy');
 
         // En el panel: cómo queda el automático, y lo armado a mano plegado.

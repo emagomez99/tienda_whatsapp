@@ -183,6 +183,40 @@ class Categoria extends Model
     }
 
     /**
+     * Las categorías que tienen algo para mostrar: un producto visible en la tienda
+     * en ellas o en alguna de las de adentro. Las demás no van al menú automático ni
+     * al sitemap: el cliente entraría a un estante vacío.
+     *
+     * Una consulta para todas (las categorías con productos propios) y el resto, la
+     * subida a las madres, en memoria con el árbol ya cargado.
+     *
+     * @param \Illuminate\Support\Collection|null $arbol Categoria::enOrdenDeArbol(), si ya se tiene
+     * @return array<int, true>
+     */
+    public static function idsConProductos($arbol = null): array
+    {
+        $arbol = $arbol ?: static::enOrdenDeArbol();
+        $porId = $arbol->keyBy('id');
+
+        $conProductos = [];
+        $directas = DB::table('categoria_producto')
+            ->whereIn('producto_id', Producto::visiblesEnTienda()->select('productos.id'))
+            ->distinct()
+            ->pluck('categoria_id');
+
+        foreach ($directas as $id) {
+            // Ella y todas las de arriba (Gaseosas con productos hace que Bebidas tenga).
+            $categoria = $porId->get($id);
+            while ($categoria && !isset($conProductos[$categoria->id])) {
+                $conProductos[$categoria->id] = true;
+                $categoria = $categoria->parent_id ? $porId->get($categoria->parent_id) : null;
+            }
+        }
+
+        return $conProductos;
+    }
+
+    /**
      * Los ids de estas categorías y de todas sus subcategorías, a cualquier
      * profundidad. Una sola consulta recursiva.
      *

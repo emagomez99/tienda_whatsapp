@@ -43,7 +43,10 @@ class CategoriaController extends Controller
 
         $sinCategoria = Producto::sinCategoria()->count();
 
-        return view('admin.categorias.index', compact('categorias', 'productosPorCategoria', 'sinCategoria'));
+        // Las vacías no aparecen en el menú de la tienda: se avisa en su fila.
+        $conProductos = Categoria::idsConProductos();
+
+        return view('admin.categorias.index', compact('categorias', 'productosPorCategoria', 'sinCategoria', 'conProductos'));
     }
 
     public function create(Request $request)
