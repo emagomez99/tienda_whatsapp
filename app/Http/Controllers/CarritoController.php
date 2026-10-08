@@ -256,7 +256,7 @@ class CarritoController extends Controller
                 $etiquetasTexto = $producto->etiquetas->map(function ($e) {
                     return "{$e->nombre}={$e->pivot->valor}";
                 })->implode(', ');
-                $productosTextoDetalle .= "  Etiquetas: {$etiquetasTexto}\n";
+                $productosTextoDetalle .= "  Características: {$etiquetasTexto}\n";
             }
 
             if ($producto->especificaciones->count() > 0) {

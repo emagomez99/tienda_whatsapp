@@ -18,7 +18,7 @@
                 </div>
                 <div class="ayuda-item">
                     <span class="ayuda-icono"><i class="bi bi-tag"></i></span>
-                    <div><strong>Etiqueta</strong><br>Los productos con esa etiqueta, y con ese valor si se eligió uno. Ej: Marca = Asus.</div>
+                    <div><strong>Característica</strong><br>Los productos que la tienen, y con ese valor si se eligió uno. Ej: Marca = Asus.</div>
                 </div>
                 <div class="ayuda-item">
                     <span class="ayuda-icono"><i class="bi bi-truck"></i></span>

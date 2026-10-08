@@ -19,7 +19,7 @@
 --}}
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-tags"></i> Etiquetas
+        <h5 class="mb-0"><i class="bi bi-ui-checks"></i> Características
             @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.etiquetas'), 'lugar' => 'right', 'grande' => true])
         </h5>
         <small class="text-muted" id="etiquetas-origen"></small>

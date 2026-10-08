@@ -106,7 +106,7 @@ class EtiquetaController extends Controller
         Etiqueta::create($this->conInterruptores($validated, $request));
 
         return redirect()->route('admin.etiquetas.index')
-            ->with('success', 'Etiqueta creada correctamente');
+            ->with('success', 'Característica creada correctamente');
     }
 
     public function edit(Etiqueta $etiqueta)
@@ -132,7 +132,7 @@ class EtiquetaController extends Controller
         $etiqueta->update($this->conInterruptores($validated, $request));
 
         return redirect()->route('admin.etiquetas.index')
-            ->with('success', 'Etiqueta actualizada correctamente');
+            ->with('success', 'Característica actualizada correctamente');
     }
 
     /** Los interruptores del formulario; obligatoria sólo tiene sentido si es global. */
@@ -150,7 +150,7 @@ class EtiquetaController extends Controller
         $etiqueta->delete();
 
         return redirect()->route('admin.etiquetas.index')
-            ->with('success', 'Etiqueta eliminada correctamente');
+            ->with('success', 'Característica eliminada correctamente');
     }
 
     /**

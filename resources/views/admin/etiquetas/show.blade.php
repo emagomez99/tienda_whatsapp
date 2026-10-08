@@ -10,7 +10,7 @@
     <div class="d-flex gap-2">
         @if($puedeEditar)
             <a href="{{ route('admin.etiquetas.edit', $etiqueta) }}" class="btn btn-outline-primary">
-                <i class="bi bi-pencil"></i> Editar etiqueta
+                <i class="bi bi-pencil"></i> Editar característica
             </a>
         @endif
         <a href="{{ route('admin.etiquetas.index') }}" class="btn btn-outline-secondary">

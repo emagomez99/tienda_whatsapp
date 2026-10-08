@@ -80,7 +80,7 @@
 
             @if($producto->etiquetasPublicas->isNotEmpty())
                 <div class="mb-3">
-                    <strong>Etiquetas:</strong><br>
+                    <strong>Características:</strong><br>
                     @foreach($producto->etiquetasPublicas as $etiqueta)
                         <span class="badge bg-info me-1">{{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}</span>
                     @endforeach

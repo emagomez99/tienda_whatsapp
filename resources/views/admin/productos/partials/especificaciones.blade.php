@@ -113,11 +113,11 @@
         if (!etiqueta) return;
 
         aviso.appendChild(document.createElement('i')).className = 'bi bi-exclamation-triangle me-1';
-        aviso.appendChild(document.createTextNode('«' + etiqueta.dataset.nombre + '» ya es una etiqueta de este producto: cargala ahí, así sirve para filtrar y no se repite en la ficha. '));
+        aviso.appendChild(document.createTextNode('«' + etiqueta.dataset.nombre + '» ya es una característica de este producto: cargala ahí, así sirve para filtrar y no se repite en la ficha. '));
         var ir = document.createElement('a');
         ir.setAttribute('role', 'button');
         ir.className = 'fw-semibold';
-        ir.textContent = 'Ir a la etiqueta';
+        ir.textContent = 'Ir a la característica';
         ir.addEventListener('click', function () {
             var campo = etiqueta.querySelector('.etiqueta-valor');
             campo.scrollIntoView({ block: 'center', behavior: 'smooth' });

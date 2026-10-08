@@ -233,7 +233,7 @@
                         @if($user->puede('etiquetas.ver'))
                             <a href="{{ route('admin.etiquetas.index') }}"
                                class="admin-drawer-sub {{ request()->routeIs('admin.etiquetas.*') ? 'active' : '' }}">
-                                <i class="bi bi-tags me-2"></i> Etiquetas
+                                <i class="bi bi-ui-checks me-2"></i> Características
                             </a>
                         @endif
                         @if($user->puede('monedas.ver'))

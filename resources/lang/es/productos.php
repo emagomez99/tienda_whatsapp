@@ -36,7 +36,7 @@ return [
 
         'disponible' => 'Si está desactivado, el producto no aparece en la tienda aunque tenga stock.',
 
-        'por_encargue' => "Permite que el cliente lo solicite aunque no haya stock. Aparece con la etiqueta 'Disponible por encargue' en la tienda.",
+        'por_encargue' => "Permite que el cliente lo solicite aunque no haya stock. Aparece con el aviso 'Disponible por encargue' en la tienda.",
 
         'seo' => 'Si dejás estos campos vacíos, se usa el nombre del producto como título y un resumen de la descripción detallada como meta description.',
         'galeria' => 'La primera imagen es la principal: la que se ve en el listado y en Google. Las demás aparecen en el carrusel de la ficha. Arrastrá para cambiar el orden, o usá ★ para pasar una al primer lugar. Se recomienda fondo blanco o transparente.',
@@ -44,7 +44,7 @@ return [
         'categorias' => 'Qué es el producto: Ropa › Remeras, Celulares, Pádel. Puede estar en varias. Si elegís una subcategoría, el producto aparece también en las de arriba sin marcarlas.',
         'etiquetas' => 'Los datos del producto que piden sus categorías (Talle, Color, Marca…) y que la tienda usa en los filtros. Cuáles se piden se define en cada categoría; las marcadas con * son obligatorias. Al escribir el valor se sugieren los que ya existen, con cuántos productos los usan: elegir uno de esos evita duplicados como "Asus" y "Asuz".',
 
-        'especificaciones' => 'Campos personalizados, exclusivos de este producto: el nombre lo escribís vos y no se comparte con los demás. Arman la tabla de características del detalle. Ej: Peso → 1.75 kg, Material → Acero inoxidable.',
+        'especificaciones' => 'Campos personalizados, exclusivos de este producto: el nombre lo escribís vos y no se comparte con los demás. Arman la tabla de detalles de la ficha. Ej: Peso → 1.75 kg, Material → Acero inoxidable.',
 
     ],
 

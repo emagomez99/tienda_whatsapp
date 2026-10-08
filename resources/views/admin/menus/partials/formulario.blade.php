@@ -112,14 +112,14 @@
                     <label class="tipo-opcion">
                         <input class="form-check-input" type="radio" name="tipo_enlace" value="etiqueta" {{ $tipoActual === 'etiqueta' ? 'checked' : '' }}>
                         <span>
-                            <strong>Los que tienen una etiqueta</strong>
+                            <strong>Los que tienen una característica</strong>
                             <small class="d-block text-muted">Ej: Marca = Asus, o todos los que tengan Categoría.</small>
                         </span>
                     </label>
                     <div class="tipo-campos row g-2" data-tipo="etiqueta">
                         <div class="col-md-6">
                             <select class="form-select" id="etiqueta_select" aria-label="Etiqueta">
-                                <option value="">Elegí la etiqueta...</option>
+                                <option value="">Elegí la característica...</option>
                                 @foreach($etiquetas as $etiqueta)
                                     <option value="{{ $etiqueta->id }}" {{ old('enlace_id', $menu->tipo_enlace === 'etiqueta' ? $menu->enlace_id : '') == $etiqueta->id ? 'selected' : '' }}>
                                         {{ $etiqueta->nombre }}
@@ -196,7 +196,7 @@
 
                 <div class="row g-3">
                     <div class="col-md-5">
-                        <label class="form-label small">Etiquetas disponibles</label>
+                        <label class="form-label small">Características disponibles</label>
                         <div class="border rounded p-2 bg-white" style="min-height: 120px;">
                             <ul class="list-group list-group-flush" id="etiquetas-disponibles"></ul>
                         </div>
@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         caja.classList.add('d-none');
                     } else if (n === null) {
                         caja.classList.add('alert-light');
-                        var falta = { proveedor: 'el proveedor', categoria: 'la categoría', etiqueta: 'la etiqueta' }[tipo()] || 'qué filtrar';
+                        var falta = { proveedor: 'el proveedor', categoria: 'la categoría', etiqueta: 'la característica' }[tipo()] || 'qué filtrar';
                         caja.innerHTML = '<i class="bi bi-hourglass"></i> Elegí ' + falta + ' para ver cuántos productos va a mostrar.';
                     } else if (n === 0) {
                         caja.classList.add('alert-warning');
@@ -489,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!e.visible) {
                 // Se puede elegir igual, pero el cliente no lo vería: que se note.
                 nombre.className = 'text-muted';
-                nombre.innerHTML += ' <i class="bi bi-eye-slash" title="Etiqueta oculta: el cliente no vería este filtro"></i>';
+                nombre.innerHTML += ' <i class="bi bi-eye-slash" title="Característica oculta: el cliente no vería este filtro"></i>';
             }
             li.appendChild(nombre);
             var boton = document.createElement('button');

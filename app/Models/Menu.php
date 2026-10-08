@@ -383,7 +383,7 @@ class Menu extends Model
         if ($this->tipo_enlace === self::TIPO_PROVEEDOR) {
             return 'Proveedor';
         } elseif ($this->tipo_enlace === self::TIPO_ETIQUETA) {
-            return 'Etiqueta';
+            return 'Característica';
         } elseif ($this->tipo_enlace === self::TIPO_ESPECIFICACION) {
             return 'Especificación';
         } elseif ($this->tipo_enlace === self::TIPO_CATEGORIA) {

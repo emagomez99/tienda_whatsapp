@@ -79,7 +79,7 @@ class EtiquetaValor extends Model
         $limpio = static::limpiar($valor);
 
         if ($limpio === '') {
-            throw new InvalidArgumentException('El valor de una etiqueta no puede estar vacío.');
+            throw new InvalidArgumentException('El valor de una característica no puede estar vacío.');
         }
 
         return static::firstOrCreate(
@@ -102,7 +102,7 @@ class EtiquetaValor extends Model
         $limpio = static::limpiar($nuevo);
 
         if ($limpio === '') {
-            throw new InvalidArgumentException('El valor de una etiqueta no puede estar vacío.');
+            throw new InvalidArgumentException('El valor de una característica no puede estar vacío.');
         }
 
         $existente = static::where('etiqueta_id', $this->etiqueta_id)

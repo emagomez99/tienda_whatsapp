@@ -8,7 +8,7 @@
         <span class="flex-grow-1 small fw-semibold text-truncate filtro-nombre">{{ optional($etiqueta)->nombre }}</span>
         {{-- Una etiqueta oculta no se muestra como filtro en la tienda (Menu::getEtiquetasFiltro). --}}
         <span class="badge bg-secondary-subtle text-secondary-emphasis flex-shrink-0 filtro-oculta {{ $etiqueta && !$etiqueta->visible_usuarios ? '' : 'd-none' }}"
-              title="La etiqueta está oculta: el cliente no ve este filtro. Se muestra desde Etiquetas, con el ojo.">
+              title="La característica está oculta: el cliente no ve este filtro. Se muestra desde Características, con el ojo.">
             <i class="bi bi-eye-slash"></i> oculta
         </span>
         <div class="form-check form-switch mb-0 flex-shrink-0" title="Si está prendido, el desplegable ofrece «Todos» además de cada valor.">

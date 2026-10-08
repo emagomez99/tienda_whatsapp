@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Etiquetas')
+@section('title', 'Características')
 
 @section('content')
 @php $puedeEditar = auth()->user()->puede('etiquetas.editar'); @endphp
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-tags"></i> Etiquetas</h3>
+    <h3><i class="bi bi-ui-checks"></i> Características</h3>
     <a href="{{ route('admin.etiquetas.create') }}" class="btn btn-primary">
         <i class="bi bi-plus-circle"></i> Nueva
     </a>
@@ -18,7 +18,7 @@
     <div class="card-body">
         <form action="{{ route('admin.etiquetas.index') }}" method="GET" class="row g-2">
             <div class="col">
-                <input type="text" name="buscar" class="form-control" placeholder="Buscar etiqueta o valor (ej: Marca, Asus)..." value="{{ $buscar }}">
+                <input type="text" name="buscar" class="form-control" placeholder="Buscar característica o valor (ej: Marca, Asus)..." value="{{ $buscar }}">
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i> Buscar</button>
@@ -32,7 +32,7 @@
 
 @if($etiquetas->isEmpty())
     <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> No se encontraron etiquetas.
+        <i class="bi bi-info-circle"></i> No se encontraron características.
     </div>
 @else
     <div class="card">
@@ -74,12 +74,12 @@
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <form action="{{ route('admin.etiquetas.destroy', $etiqueta) }}" method="POST"
-                                  data-confirmar="¿Eliminar la etiqueta «{{ $etiqueta->nombre }}»?"
+                                  data-confirmar="¿Eliminar la característica «{{ $etiqueta->nombre }}»?"
                                   data-confirmar-detalle="Se {{ $etiqueta->valores_count === 1 ? 'borra también su único valor' : 'borran también sus ' . $etiqueta->valores_count . ' valores' }} y se quita de {{ $etiqueta->productos_count }} {{ $etiqueta->productos_count === 1 ? 'producto' : 'productos' }}."
                                   data-confirmar-boton="Sí, eliminar">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar etiqueta">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar característica">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
@@ -91,7 +91,7 @@
                             @forelse($valores as $valor)
                                 @include('admin.etiquetas.partials.valor-fila', ['valor' => $valor, 'puedeEditar' => $puedeEditar])
                             @empty
-                                <div class="text-muted small py-1">Todavía no hay productos con esta etiqueta.</div>
+                                <div class="text-muted small py-1">Todavía no hay productos con esta característica.</div>
                             @endforelse
 
                             @if($etiqueta->valores_count > $valores->count())

@@ -71,7 +71,7 @@
                                                         data-bs-toggle="collapse"
                                                         data-bs-target="#detalle-{{ $prod->public_id }}">
                                                     <i class="bi bi-tags"></i>
-                                                    <small>Ver etiquetas</small>
+                                                    <small>Ver características</small>
                                                 </button>
                                                 <div class="collapse mt-1" id="detalle-{{ $prod->public_id }}">
                                                     <div class="d-flex flex-wrap gap-1">
