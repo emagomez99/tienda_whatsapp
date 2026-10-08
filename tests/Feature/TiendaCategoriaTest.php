@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Categoria;
+use App\Models\Etiqueta;
 use App\Models\Menu;
 use App\Models\Moneda;
 use App\Models\Producto;
@@ -176,6 +177,38 @@ class TiendaCategoriaTest extends TestCase
             $this->assertSame(1, Menu::count());
         });
         $this->get($this->urlTenant('catalogo/ofertas-de-hoy'))->assertOk()->assertSee('Remera lisa');
+    }
+
+    /**
+     * La pestaña del navegador dice el producto y la tienda. Los valores de las
+     * características se suman sólo si otro producto se llama igual (catálogos
+     * importados con códigos repetidos), para que Google no los vea duplicados.
+     *
+     * @test
+     */
+    public function el_titulo_de_la_ficha_es_el_producto_y_la_tienda()
+    {
+        $producto = $this->enTenant(function () {
+            return Producto::where('descripcion', 'Remera lisa')->first();
+        });
+        $this->get($this->urlTenant('producto/' . $producto->slugUrl() . '/' . $producto->id))
+            ->assertOk()
+            ->assertSee('<title>Remera lisa | Tienda MC</title>', false);
+
+        $repetidos = $this->enTenant(function () use ($producto) {
+            $marca = Etiqueta::create(['nombre' => 'Marca', 'visible_usuarios' => true]);
+            $otro = $producto->replicate(['slug', 'public_id']);
+            $otro->save();
+            $producto->etiquetas()->attach($marca->id, ['valor' => 'Acme']);
+            $otro->etiquetas()->attach($marca->id, ['valor' => 'Lisa']);   // ya lo dice el nombre
+
+            return [$producto->fresh(), $otro->fresh()];
+        });
+
+        $this->get($this->urlTenant('producto/' . $repetidos[0]->slugUrl() . '/' . $repetidos[0]->id))
+            ->assertSee('<title>Remera lisa · Acme | Tienda MC</title>', false);
+        $this->get($this->urlTenant('producto/' . $repetidos[1]->slugUrl() . '/' . $repetidos[1]->id))
+            ->assertSee('<title>Remera lisa | Tienda MC</title>', false);
     }
 
     /** @test */

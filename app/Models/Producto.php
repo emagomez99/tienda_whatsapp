@@ -400,8 +400,16 @@ class Producto extends Model
     }
 
     /**
-     * Meta title SEO. Si no se cargó uno específico, se arma con la descripción más
-     * los valores de las etiquetas visibles.
+     * Si hay otro producto con la misma descripción. null = todavía no se averiguó.
+     *
+     * @var bool|null
+     */
+    private $descripcionRepetida = null;
+
+    /**
+     * Meta title SEO. Si no se cargó uno específico, es la descripción; y sólo si
+     * otro producto tiene la misma descripción, se le suman los valores de las
+     * etiquetas visibles que la descripción no dice ya.
      *
      * Existe porque en catálogos importados la descripción suele ser sólo un código
      * de pieza que se repite: en oleomc hay 185 productos llamados "CTC-1140760".
@@ -409,6 +417,10 @@ class Producto extends Model
      * indexa una sola. Sumando fabricante, aplicación y modelo pasan a ser 45 títulos
      * distintos, y encima con los términos que la gente busca de verdad
      * ("Caterpillar 330C" se busca; el código de pieza no).
+     *
+     * Pero sumarlos siempre ensuciaba los nombres que ya eran únicos: "Protector
+     * solar FPS 50 200 ml · 200 ml · 50 · La Roche-Posay" en la pestaña del
+     * navegador. Con una descripción única, la descripción alcanza.
      *
      * Sin recorte a propósito: Google recorta la *visualización* alrededor de los 60
      * caracteres pero indexa el título completo, así que limitarlo sólo lograría dejar
@@ -420,17 +432,53 @@ class Producto extends Model
             return $value;
         }
 
-        $partes = [trim((string) $this->descripcion)];
+        $descripcion = trim((string) $this->descripcion);
+        if (!$this->tieneDescripcionRepetida()) {
+            return $descripcion;
+        }
+
+        $partes = [$descripcion];
+        $yaDicho = $this->paraComparar($descripcion);
 
         foreach ($this->etiquetasPublicas as $etiqueta) {
             $valor = trim((string) $etiqueta->pivot->valor);
+            $comparable = $this->paraComparar($valor);
 
-            if ($valor !== '') {
+            // "200 ml" no se repite si la descripción ya lo dice.
+            if ($valor !== '' && strpos($yaDicho, $comparable) === false) {
                 $partes[] = $valor;
+                $yaDicho .= ' ' . $comparable;
             }
         }
 
         return implode(' · ', $partes);
+    }
+
+    /**
+     * Para cuando el que arma el producto ya lo sabe (o en memoria, sin base). Si no
+     * se avisa, tieneDescripcionRepetida() lo consulta una vez.
+     */
+    public function marcarDescripcionRepetida(bool $repetida): self
+    {
+        $this->descripcionRepetida = $repetida;
+        return $this;
+    }
+
+    public function tieneDescripcionRepetida(): bool
+    {
+        if ($this->descripcionRepetida === null) {
+            $this->descripcionRepetida = static::query()
+                ->whereRaw('lower(trim(descripcion)) = ?', [mb_strtolower(trim((string) $this->descripcion))])
+                ->when($this->exists, function ($q) { $q->where('id', '<>', $this->id); })
+                ->exists();
+        }
+
+        return $this->descripcionRepetida;
+    }
+
+    private function paraComparar(string $texto): string
+    {
+        return ' ' . preg_replace('/\s+/', ' ', mb_strtolower(Str::ascii($texto))) . ' ';
     }
 
     /**

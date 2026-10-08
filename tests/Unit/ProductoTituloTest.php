@@ -19,11 +19,15 @@ use Tests\TestCase;
  */
 class ProductoTituloTest extends TestCase
 {
-    /** Producto en memoria con sus etiquetas ya "cargadas". */
-    private function producto($descripcion, array $etiquetas = [])
+    /**
+     * Producto en memoria con sus etiquetas ya "cargadas". $repetida dice si otro
+     * producto tiene la misma descripción (en la base lo averigua el modelo).
+     */
+    private function producto($descripcion, array $etiquetas = [], $repetida = true)
     {
         $producto = new Producto();
         $producto->descripcion = $descripcion;
+        $producto->marcarDescripcionRepetida($repetida);
 
         $relacion = new Collection();
 
@@ -67,6 +71,35 @@ class ProductoTituloTest extends TestCase
             'CTC-1140760 · Caterpillar · Caterpillar Forestry - Track Feller Bunchers · 551',
             $titulo
         );
+    }
+
+    /**
+     * Con una descripción que no se repite, la descripción alcanza: sumarle los
+     * valores ensuciaba la pestaña del navegador ("… 200 ml · 200 ml · 50 · …").
+     *
+     * @test
+     */
+    public function con_una_descripcion_unica_el_titulo_es_la_descripcion()
+    {
+        $producto = $this->producto('Protector solar FPS 50 200 ml', [
+            'Contenido' => '200 ml',
+            'FPS'       => '50',
+            'Marca'     => 'La Roche-Posay',
+        ], false);
+
+        $this->assertSame('Protector solar FPS 50 200 ml', $producto->meta_title);
+    }
+
+    /** @test */
+    public function con_una_descripcion_repetida_no_suma_lo_que_la_descripcion_ya_dice()
+    {
+        $producto = $this->producto('Protector solar FPS 50 200 ml', [
+            'Contenido' => '200 ML',
+            'FPS'       => '50',
+            'Marca'     => 'La Roche-Posay',
+        ]);
+
+        $this->assertSame('Protector solar FPS 50 200 ml · La Roche-Posay', $producto->meta_title);
     }
 
     /** @test */

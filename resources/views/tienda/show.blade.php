@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
-@section('title', $producto->meta_title)
+{{-- El nombre del producto y la tienda, como cualquier ficha de comercio. --}}
+@section('title', $producto->meta_title . ' | ' . App\Models\Configuracion::nombreTienda())
 @section('meta_description', $producto->meta_description)
 @section('meta_image', $producto->imagen_url ?: App\Services\SeoService::imagenPorDefecto())
 @section('meta_type', 'product')
