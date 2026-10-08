@@ -6,7 +6,7 @@
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-eye-slash"></i></span>
-    <div><strong>Tus clientes no lo ven.</strong><br>Es para que vos te organices: no aparece en la tienda.</div>
+    <div><strong>Tus clientes no lo ven.</strong><br>Es para que vos te organices. Si querés que aparezca en la ficha de cada producto, prendé <em>Mostrar el proveedor</em> en Ajustes.</div>
 </div>
 
 <h6 class="ayuda-titulo">Para qué sirve</h6>
