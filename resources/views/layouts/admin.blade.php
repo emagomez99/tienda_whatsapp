@@ -101,13 +101,11 @@
         $logoAdmin = App\Models\Configuracion::logo();
         $nombreAdmin = App\Models\Configuracion::nombreTienda();
         $configActive = request()->routeIs('admin.configuraciones.*')
-            || request()->routeIs('admin.etiquetas.*')
             || request()->routeIs('admin.monedas.*')
             || request()->routeIs('admin.menus.*')
             || request()->routeIs('admin.usuarios.*')
             || request()->routeIs('admin.perfiles.*');
         $verConfigGrupo = $user->puede('configuraciones.ver')
-            || $user->puede('etiquetas.ver')
             || $user->puede('monedas.ver')
             || $user->puede('menus.ver')
             || $user->puede('usuarios.ver')
@@ -210,6 +208,14 @@
                         <i class="bi bi-diagram-3 me-2"></i> Categorías
                     </a>
                 @endif
+                {{-- Va al lado de Categorías porque se usan juntas (cada estante dice qué
+                     datos pide); escondida en Configuración, nadie la encontraba. --}}
+                @if($user->puede('etiquetas.ver'))
+                    <a href="{{ route('admin.etiquetas.index') }}"
+                       class="admin-drawer-item {{ request()->routeIs('admin.etiquetas.*') ? 'active' : '' }}">
+                        <i class="bi bi-ui-checks me-2"></i> Características
+                    </a>
+                @endif
                 @if($user->puede('proveedores.ver'))
                     <a href="{{ route('admin.proveedores.index') }}"
                        class="admin-drawer-item {{ request()->routeIs('admin.proveedores.*') ? 'active' : '' }}">
@@ -228,12 +234,6 @@
                             <a href="{{ route('admin.configuraciones.index') }}"
                                class="admin-drawer-sub {{ request()->routeIs('admin.configuraciones.*') ? 'active' : '' }}">
                                 <i class="bi bi-sliders me-2"></i> Ajustes
-                            </a>
-                        @endif
-                        @if($user->puede('etiquetas.ver'))
-                            <a href="{{ route('admin.etiquetas.index') }}"
-                               class="admin-drawer-sub {{ request()->routeIs('admin.etiquetas.*') ? 'active' : '' }}">
-                                <i class="bi bi-ui-checks me-2"></i> Características
                             </a>
                         @endif
                         @if($user->puede('monedas.ver'))

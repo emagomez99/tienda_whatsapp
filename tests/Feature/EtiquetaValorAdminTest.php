@@ -135,6 +135,23 @@ class EtiquetaValorAdminTest extends TestCase
             ->assertDontSee('La piden todos los productos');
     }
 
+    /**
+     * Características está en el primer nivel del menú (al lado de Categorías), no
+     * escondida en Configuración, y es la que se marca activa.
+     *
+     * @test
+     */
+    public function caracteristicas_esta_en_el_primer_nivel_del_menu()
+    {
+        $html = $this->comoAdmin()
+            ->get($this->urlTenant('admin/etiquetas'))
+            ->assertStatus(200)
+            ->getContent();
+
+        $this->assertMatchesRegularExpression('/class="admin-drawer-item active">\s*<i class="bi bi-ui-checks me-2"><\/i> Características/', $html);
+        $this->assertDoesNotMatchRegularExpression('/class="collapse show" id="drawer-config"/', $html);
+    }
+
     /** @test */
     public function la_busqueda_muestra_solo_los_valores_que_coinciden()
     {
