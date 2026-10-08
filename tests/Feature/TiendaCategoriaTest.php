@@ -288,4 +288,17 @@ class TiendaCategoriaTest extends TestCase
         // La página 404 usa el diseño de la tienda, con su menú: sin tienda no hay menú que armar.
         $this->get('http://dominio-sin-tienda.test/')->assertNotFound();
     }
+
+    /** @test */
+    public function los_accesos_a_las_de_adentro_no_ofrecen_un_estante_vacio()
+    {
+        $this->enTenant(function () {
+            Categoria::resolverCamino('Ropa > Medias', true);   // visible pero sin productos
+        });
+
+        $this->get($this->urlTenant('categoria/ropa'))
+            ->assertOk()
+            ->assertSee('/categoria/remeras', false)
+            ->assertDontSee('/categoria/medias', false);
+    }
 }

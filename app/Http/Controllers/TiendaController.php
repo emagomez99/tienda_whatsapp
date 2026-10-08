@@ -132,8 +132,12 @@ class TiendaController extends Controller
 
         $productos = $this->paginar($request, $query, false);
 
-        // La madre ya es visible, así que de las hijas alcanza con su propia marca.
-        $subcategorias = $categoriaActual->children->filter(function (Categoria $c) { return $c->marcadaVisible(); })->values();
+        // Los accesos a las de adentro: visibles (la madre ya lo es, alcanza con su
+        // propia marca) y con productos, como en el menú: no se ofrece un estante vacío.
+        $conProductos = Categoria::idsConProductos();
+        $subcategorias = $categoriaActual->children->filter(function (Categoria $c) use ($conProductos) {
+            return $c->marcadaVisible() && isset($conProductos[$c->id]);
+        })->values();
 
         $menuActual = null;
         $filtrosAplicados = [];
