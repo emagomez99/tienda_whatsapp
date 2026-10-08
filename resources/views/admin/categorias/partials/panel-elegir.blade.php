@@ -35,8 +35,10 @@
                     <i class="bi bi-plus-circle"></i> Crear categoría
                 </button>
                 <div class="d-none mt-2" data-rol="crear">
-                    <input type="text" class="form-control mb-2" data-rol="crear-nombre" placeholder="Nombre (ej: Gaseosas)" maxlength="255" aria-label="Nombre de la categoría nueva">
-                    <select class="form-select mb-2" data-rol="crear-madre" aria-label="Dentro de"></select>
+                    <label for="{{ $panelId }}-crear-nombre" class="form-label small fw-semibold mb-1">Nombre de la categoría nueva</label>
+                    <input type="text" class="form-control mb-2" id="{{ $panelId }}-crear-nombre" data-rol="crear-nombre" placeholder="Ej: Gaseosas" maxlength="255">
+                    <label for="{{ $panelId }}-crear-madre" class="form-label small fw-semibold mb-1">Dentro de</label>
+                    <select class="form-select mb-2" id="{{ $panelId }}-crear-madre" data-rol="crear-madre"></select>
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-primary btn-sm" data-rol="crear-guardar">Crear y elegir</button>
                         <button type="button" class="btn btn-outline-secondary btn-sm" data-rol="crear-cancelar">Cancelar</button>
@@ -68,6 +70,8 @@
     .categoria-opcion:hover { background: #f8f9fa; }
     .categoria-opcion .camino-madre { color: #6c757d; }
     .categoria-opcion .incluida { font-size: .75rem; color: #6c757d; }
+    .categoria-opcion.recien-creada { animation: categoria-recien-creada 2s ease-out; }
+    @keyframes categoria-recien-creada { from { background-color: #fff3cd; } to { background-color: transparent; } }
 </style>
 @endpush
 
@@ -116,6 +120,7 @@ function PanelDeCategorias(panel, elegidas, alCambiar) {
 
             var fila = document.createElement('label');
             fila.className = 'categoria-opcion';
+            fila.setAttribute('data-id', c.id);
             var izquierda = document.createElement('span');
             var partes = c.camino.split(' > ');
             if (partes.length > 1) {
@@ -158,6 +163,15 @@ function PanelDeCategorias(panel, elegidas, alCambiar) {
 
     buscar.addEventListener('input', pintarLista);
 
+    /** Lleva la lista hasta la recién creada y la marca un momento: si no, en una
+     *  lista larga no se ve dónde quedó. */
+    function resaltar(id) {
+        var fila = lista.querySelector('.categoria-opcion[data-id="' + id + '"]');
+        if (!fila) return;
+        fila.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        fila.classList.add('recien-creada');
+    }
+
     // ── Crear sin salir de la pantalla ──────────────────────────────────────
 
     var abrir = rol('crear-abrir');
@@ -174,7 +188,7 @@ function PanelDeCategorias(panel, elegidas, alCambiar) {
                 if (c.nivel > NIVEL_MADRE) return;
                 var op = document.createElement('option');
                 op.value = c.id;
-                op.textContent = 'Dentro de ' + c.camino.replace(/ > /g, ' › ');
+                op.textContent = c.camino.replace(/ > /g, ' › ');
                 madre.appendChild(op);
             });
         };
@@ -216,6 +230,7 @@ function PanelDeCategorias(panel, elegidas, alCambiar) {
                     }
                     // Se ubica después de su madre (o al final) para que la lista siga el árbol.
                     var nueva = respuesta.datos, posicion = categorias.length;
+                    nueva.padre = nueva.padre ? Number(nueva.padre) : null;   // los ids de la lista son números
                     if (nueva.padre) {
                         for (var i = 0; i < categorias.length; i++) {
                             if (categorias[i].id === nueva.padre || categorias[i].camino.indexOf(porId(nueva.padre).camino + ' > ') === 0) posicion = i + 1;
@@ -225,6 +240,7 @@ function PanelDeCategorias(panel, elegidas, alCambiar) {
                     buscar.value = '';
                     mostrarCrear(false);
                     alternar(nueva.id, true);
+                    resaltar(nueva.id);
                 })
                 .catch(function () {
                     error.textContent = 'No se pudo crear la categoría. Revisá la conexión.';

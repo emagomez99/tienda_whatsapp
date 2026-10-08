@@ -97,7 +97,8 @@ class CategoriaController extends Controller
             'nombre' => $categoria->nombre,
             'camino' => $categoria->camino(),
             'nivel'  => $categoria->nivel(),
-            'padre'  => $categoria->parent_id,
+            // parent_id viene del pedido como texto: el panel compara ids como números.
+            'padre'  => $categoria->parent_id ? (int) $categoria->parent_id : null,
         ], 201);
     }
 

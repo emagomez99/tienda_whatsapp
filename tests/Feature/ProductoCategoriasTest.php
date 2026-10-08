@@ -134,6 +134,11 @@ class ProductoCategoriasTest extends TestCase
 
         $this->como()->postJson($this->urlTenant('admin/categorias/rapida'), ['nombre' => 'Pantalones', 'parent_id' => $ropa])->assertCreated()->assertJson(['nombre' => 'Pantalones', 'camino' => 'Ropa > Pantalones', 'nivel' => 1]);
 
+        // El panel manda la madre como texto (el valor de un <select>) y compara ids
+        // como números: la respuesta la devuelve como número.
+        $respuesta = $this->como()->postJson($this->urlTenant('admin/categorias/rapida'), ['nombre' => 'Camperas', 'parent_id' => (string) $ropa])->assertCreated();
+        $this->assertSame($ropa, $respuesta->json('padre'));
+
         $this->como()->postJson($this->urlTenant('admin/categorias/rapida'), ['nombre' => 'ofertas'])
             ->assertStatus(422)
             ->assertJsonValidationErrors('nombre');
