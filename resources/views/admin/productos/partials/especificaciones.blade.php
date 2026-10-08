@@ -4,6 +4,11 @@
     Recibe $especificacionesIniciales: [{clave, valor}]. Envía especificaciones[i][clave]
     y especificaciones[i][valor], igual que antes.
 
+    Arranca sin filas si el producto no tiene ninguno: una fila vacía que nadie pidió
+    parecía un dato obligatorio. Sin filas no viaja nada y el servidor lo toma como
+    lista vacía, que es justo lo que hay (DatosDeProducto::conEspecificaciones ya
+    descartaba las filas vacías, así que el resultado es el mismo que antes).
+
     Avisa cuando una clave repite una etiqueta del producto ("Marca" como especificación
     cuando Marca ya es etiqueta): el dato queda dos veces en la ficha y, como
     especificación, no sirve para filtrar. Sólo detecta nombres iguales o casi iguales;
@@ -13,25 +18,25 @@
     $especificacionesIniciales = array_values(array_filter($especificacionesIniciales, function ($e) {
         return is_array($e) && (trim($e['clave'] ?? '') !== '' || trim($e['valor'] ?? '') !== '');
     }));
-    if (empty($especificacionesIniciales)) {
-        $especificacionesIniciales = [['clave' => '', 'valor' => '']];
-    }
 @endphp
 <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header">
         <h5 class="mb-0"><i class="bi bi-list-ul"></i> Otros datos de este producto
             @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.especificaciones'), 'lugar' => 'right', 'grande' => true])
         </h5>
-        <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-especificacion">
-            <i class="bi bi-plus"></i> Agregar
-        </button>
     </div>
     <div class="card-body">
+        <p class="text-muted small mb-2 {{ empty($especificacionesIniciales) ? '' : 'd-none' }}" id="especificaciones-vacio">
+            No hace falta: sólo si querés anotar algo más, como el envase (Retornable) o una edición especial (Navidad).
+        </p>
         <div id="especificaciones-container">
             @foreach($especificacionesIniciales as $i => $espec)
                 @include('admin.productos.partials.especificacion-fila', ['i' => $i, 'clave' => $espec['clave'] ?? '', 'valor' => $espec['valor'] ?? ''])
             @endforeach
         </div>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-especificacion">
+            <i class="bi bi-plus-lg"></i> Agregar un dato
+        </button>
     </div>
 </div>
 
@@ -44,6 +49,11 @@
 (function () {
     var contenedor = document.getElementById('especificaciones-container');
     var siguiente  = {{ count($especificacionesIniciales) }};
+    var vacio      = document.getElementById('especificaciones-vacio');
+
+    function mostrarVacio() {
+        vacio.classList.toggle('d-none', contenedor.querySelector('.especificacion-row') !== null);
+    }
 
     function agregar() {
         var html = document.getElementById('plantilla-especificacion').innerHTML.replace(/__I__/g, siguiente++);
@@ -51,23 +61,19 @@
         envoltorio.innerHTML = html.trim();
         var fila = envoltorio.firstElementChild;
         contenedor.appendChild(fila);
+        mostrarVacio();
         fila.querySelector('.especificacion-clave').focus();
     }
 
     document.getElementById('agregar-especificacion').addEventListener('click', agregar);
 
-    // Quitar: si es la única fila se vacía en vez de desaparecer, así siempre queda
-    // dónde escribir.
+    // Quitar: la fila desaparece aunque sea la última (quedarse sin ninguna es
+    // válido; "Agregar un dato" sigue a mano).
     contenedor.addEventListener('click', function (e) {
         var boton = e.target.closest('.btn-eliminar-especificacion');
         if (!boton) return;
-        var fila = boton.closest('.especificacion-row');
-        if (contenedor.querySelectorAll('.especificacion-row').length > 1) {
-            fila.remove();
-        } else {
-            fila.querySelectorAll('input').forEach(function (campo) { campo.value = ''; });
-            fila.querySelector('.especificacion-aviso').innerHTML = '';
-        }
+        boton.closest('.especificacion-row').remove();
+        mostrarVacio();
         contenedor.dispatchEvent(new Event('input', { bubbles: true }));   // vista previa
     });
 

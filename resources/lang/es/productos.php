@@ -15,7 +15,7 @@ return [
 
     'ayuda' => [
 
-        'id_proveedor' => 'Código interno del proveedor. Aparece en el detalle del producto y se usa en búsquedas. El botón ↺ genera uno automático con el prefijo del proveedor.',
+        'id_proveedor' => 'El código del producto: el que usa tu proveedor o uno tuyo. Se muestra en la tienda y sirve para buscarlo. El botón ↻ inventa uno con las letras para los códigos que tenga el proveedor.',
 
         'proveedor' => 'Quién te provee este producto. Sirve para el código automático y para filtrar el listado.',
 
@@ -36,7 +36,7 @@ return [
 
         'disponible' => 'Si está desactivado, el producto no aparece en la tienda aunque tenga stock.',
 
-        'por_encargue' => "Permite que el cliente lo solicite aunque no haya stock. Aparece con el aviso 'Disponible por encargue' en la tienda.",
+        'por_encargue' => "Prendido, el cliente lo puede pedir aunque no te quede stock, y vos lo conseguís después (por encargue). En la tienda ve el aviso 'Sin stock ahora: lo encargamos para vos'.",
 
         'seo' => 'Si dejás estos campos vacíos, se usa el nombre del producto como título y un resumen de la descripción detallada como meta description.',
         'galeria' => 'La primera imagen es la principal: la que se ve en el listado y en Google. Las demás aparecen en el carrusel de la ficha. Arrastrá para cambiar el orden, o usá ★ para pasar una al primer lugar. Se recomienda fondo blanco o transparente.',

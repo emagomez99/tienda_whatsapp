@@ -18,7 +18,7 @@
                     <div class="col-md-6 mb-3">
                         <label for="parent_id" class="form-label">Dentro de</label>
                         <select class="form-select @error('parent_id') is-invalid @enderror" id="parent_id" name="parent_id">
-                            <option value="">Primer nivel</option>
+                            <option value="">En ninguna (va suelta)</option>
                             @foreach($madres as $madre)
                                 <option value="{{ $madre->id }}" {{ (string) old('parent_id', $categoria->parent_id) === (string) $madre->id ? 'selected' : '' }}>
                                     {{ str_repeat('— ', $madre->nivel()) }}{{ $madre->nombre }}

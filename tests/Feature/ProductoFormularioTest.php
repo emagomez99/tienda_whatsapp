@@ -157,6 +157,21 @@ class ProductoFormularioTest extends TestCase
             ->assertSee('name="especificaciones[0][valor]" value="1,5 kg"', false);
     }
 
+    /**
+     * Sin otros datos cargados, la sección arranca sin filas (una vacía parecía
+     * obligatoria) y con el botón para agregar uno. Los textos ya no dicen
+     * "Clave"/"Valor".
+     */
+    public function test_sin_especificaciones_la_seccion_arranca_sin_filas()
+    {
+        $this->comoAdmin()->get($this->urlTenant('admin/productos/' . $this->producto->id . '/edit'))
+            ->assertOk()
+            ->assertDontSee('name="especificaciones[0][clave]"', false)
+            ->assertSee('Agregar un dato')
+            ->assertSee('placeholder="Dato (ej: Envase)"', false)
+            ->assertDontSee('Clave (ej:');
+    }
+
     /** Las sugerencias de especificaciones dicen cuántos productos usan cada texto. */
     public function test_las_sugerencias_de_especificaciones_traen_la_cantidad_de_productos()
     {

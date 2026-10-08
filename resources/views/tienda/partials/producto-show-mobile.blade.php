@@ -66,13 +66,13 @@
 
         {{-- Stock --}}
         <div class="d-flex gap-2 flex-wrap mb-3">
+            {{-- Igual que en la ficha de escritorio: por encargue sólo cuando no hay stock. --}}
             @if($producto->stock > 0)
                 <span class="badge bg-success"><i class="bi bi-check-circle"></i> En stock ({{ $producto->stock }})</span>
+            @elseif($producto->por_encargue)
+                <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Sin stock ahora: lo encargamos para vos</span>
             @elseif($producto->stock !== null)
                 <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Sin stock</span>
-            @endif
-            @if($producto->por_encargue)
-                <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Por encargue</span>
             @endif
         </div>
 

@@ -178,7 +178,7 @@
                         <select name="filtro_stock" id="filtro_stock" class="form-select">
                             <option value="todos" {{ old('filtro_stock', $menu->filtro_stock) === 'todos' ? 'selected' : '' }}>Todos los productos</option>
                             <option value="con_stock" {{ old('filtro_stock', $menu->filtro_stock) === 'con_stock' ? 'selected' : '' }}>Sólo con stock</option>
-                            <option value="con_stock_y_encargue" {{ old('filtro_stock', $menu->filtro_stock) === 'con_stock_y_encargue' ? 'selected' : '' }}>Con stock o por encargue</option>
+                            <option value="con_stock_y_encargue" {{ old('filtro_stock', $menu->filtro_stock) === 'con_stock_y_encargue' ? 'selected' : '' }}>Con stock, o que se puedan pedir sin stock</option>
                         </select>
                     </div>
                 </div>

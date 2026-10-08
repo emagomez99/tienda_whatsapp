@@ -102,13 +102,14 @@
             @endif
 
             <div class="mb-3 d-flex gap-2 flex-wrap">
+                {{-- Por encargue sólo importa cuando no hay stock; "Sin stock" en rojo al
+                     lado de "Disponible por encargue" se leía como una contradicción. --}}
                 @if($producto->stock > 0)
                     <span class="badge bg-success"><i class="bi bi-check-circle"></i> En stock ({{ $producto->stock }} disponibles)</span>
+                @elseif($producto->por_encargue)
+                    <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Sin stock ahora: lo encargamos para vos</span>
                 @elseif($producto->stock !== null)
                     <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Sin stock</span>
-                @endif
-                @if($producto->por_encargue)
-                    <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Disponible por encargue</span>
                 @endif
             </div>
 

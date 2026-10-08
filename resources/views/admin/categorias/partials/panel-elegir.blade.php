@@ -169,7 +169,7 @@ function PanelDeCategorias(panel, elegidas, alCambiar) {
         var guardar = rol('crear-guardar');
 
         var opcionesDeMadre = function () {
-            madre.innerHTML = '<option value="">Primer nivel</option>';
+            madre.innerHTML = '<option value="">En ninguna (va suelta)</option>';
             categorias.forEach(function (c) {
                 if (c.nivel > NIVEL_MADRE) return;
                 var op = document.createElement('option');

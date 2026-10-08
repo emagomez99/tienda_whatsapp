@@ -119,8 +119,8 @@
 @endif
 
 <p class="text-muted small mt-3">
-    <i class="bi bi-eye"></i> indica qué se muestra en la tienda. Un valor oculto no aparece en las tarjetas, la ficha ni los filtros,
-    pero los menús lo siguen usando para elegir productos.
+    <i class="bi bi-eye"></i> indica qué ve el cliente en la tienda. Si ocultás un valor, el cliente no lo ve en ningún lado,
+    pero tus productos lo siguen teniendo: un menú armado con ese valor sigue mostrando esos productos.
 </p>
 @endsection
 

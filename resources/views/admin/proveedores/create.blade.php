@@ -25,12 +25,12 @@
                             @enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="prefijo" class="form-label">Prefijo de código</label>
-                            <input type="text" class="form-control @error('prefijo') is-invalid @enderror" id="prefijo" name="prefijo" value="{{ old('prefijo') }}" placeholder="Ej: BCK" maxlength="20" style="text-transform:uppercase">
+                            <label for="prefijo" class="form-label">Letras para los códigos</label>
+                            <input type="text" class="form-control @error('prefijo') is-invalid @enderror" id="prefijo" name="prefijo" value="{{ old('prefijo') }}" placeholder="Ej: COCA" maxlength="20" style="text-transform:uppercase">
                             @error('prefijo')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted">Se usará para sugerir códigos de producto</small>
+                            <small class="text-muted">Opcional. Al cargar un producto de este proveedor, el botón <i class="bi bi-arrow-clockwise"></i> le inventa un código que empieza con estas letras (ej: COCA-482913).</small>
                         </div>
                     </div>
                     <div class="row">

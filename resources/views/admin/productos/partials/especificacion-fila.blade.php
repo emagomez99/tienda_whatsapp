@@ -2,12 +2,12 @@
 <div class="row g-2 mb-2 especificacion-row">
     <div class="col position-relative">
         <input type="text" class="form-control especificacion-clave" name="especificaciones[{{ $i }}][clave]" value="{{ $clave }}"
-               placeholder="Clave (ej: Peso)" maxlength="255" autocomplete="off"
+               placeholder="Dato (ej: Envase)" aria-label="Dato" maxlength="255" autocomplete="off"
                data-combo="{{ route('admin.especificaciones.claves') }}">
     </div>
     <div class="col position-relative">
         <input type="text" class="form-control especificacion-valor" name="especificaciones[{{ $i }}][valor]" value="{{ $valor }}"
-               placeholder="Valor (ej: 1.75 kg)" maxlength="255" autocomplete="off"
+               placeholder="Cómo es (ej: Retornable)" aria-label="Cómo es" maxlength="255" autocomplete="off"
                data-combo="{{ route('admin.especificaciones.valores') }}" data-combo-fila=".especificacion-row"
                data-combo-param="clave" data-combo-desde=".especificacion-clave">
     </div>

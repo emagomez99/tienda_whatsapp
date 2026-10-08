@@ -27,7 +27,7 @@
            value="{{ ($automatica && !$abrirEdicion) ? '1' : '0' }}">
 
     {{-- Vista compacta: se ve como un campo de sólo lectura con su acción al lado,
-         igual que "Código Proveedor" en este mismo formulario. --}}
+         igual que "Código" en este mismo formulario. --}}
     <div id="slug-vista" class="{{ $abrirEdicion ? 'd-none' : '' }}">
         <div class="input-group input-group-sm">
             <span class="form-control bg-light text-truncate" style="cursor:default;">

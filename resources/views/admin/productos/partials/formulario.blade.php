@@ -85,11 +85,11 @@
                         @error('proveedor_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="id_proveedor" class="form-label">Código Proveedor @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.id_proveedor')])</label>
+                        <label for="id_proveedor" class="form-label">Código @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.id_proveedor')])</label>
                         <div class="input-group">
                             <input type="text" class="form-control @error('id_proveedor') is-invalid @enderror" id="id_proveedor" name="id_proveedor"
                                    value="{{ old('id_proveedor', $editando ? $producto->id_proveedor : '') }}">
-                            <button type="button" class="btn btn-outline-secondary" id="btn-generar-codigo" title="Generar código">
+                            <button type="button" class="btn btn-outline-secondary" id="btn-generar-codigo" title="Inventar un código con las letras del proveedor">
                                 <i class="bi bi-arrow-clockwise"></i>
                             </button>
                         </div>
@@ -124,10 +124,10 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label d-block">Por Encargue @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.por_encargue')])</label>
+                        <label class="form-label d-block">Sin stock @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.por_encargue')])</label>
                         <div class="form-check form-switch">
                             <input type="checkbox" class="form-check-input" id="por_encargue" name="por_encargue" value="1" {{ old('por_encargue', $editando ? $producto->por_encargue : App\Models\Configuracion::porEncarguePorDefecto()) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="por_encargue">Disponible sin stock</label>
+                            <label class="form-check-label" for="por_encargue">Se puede pedir igual</label>
                         </div>
                     </div>
                 </div>

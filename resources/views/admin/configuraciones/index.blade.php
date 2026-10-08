@@ -290,8 +290,8 @@
                         <div class="col-lg-7">
                             @include('admin.configuraciones.partials.interruptor', [
                                 'nombre' => 'por_encargue_por_defecto',
-                                'titulo' => 'Cargar los productos nuevos "Por encargue"',
-                                'ayuda'  => 'Al dar de alta un producto, "Por encargue" viene prendido: se puede pedir aunque no haya stock. Cada producto se puede cambiar.',
+                                'titulo' => 'Los productos nuevos se pueden pedir sin stock',
+                                'ayuda'  => 'Al cargar un producto, "Se puede pedir igual" (sin stock) viene prendido: el cliente lo pide y vos lo encargás. Después lo podés cambiar en cada producto.',
                                 'activo' => App\Models\Configuracion::porEncarguePorDefecto(),
                             ])
                         </div>

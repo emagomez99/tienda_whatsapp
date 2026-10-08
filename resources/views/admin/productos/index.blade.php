@@ -121,7 +121,7 @@
                             @endif
                             <th>Imagen</th>
                             <th>Descripción</th>
-                            <th>Cod. Proveedor</th>
+                            <th>Código</th>
                             <th>Proveedor</th>
                             <th>Precio</th>
                             <th>Stock</th>
@@ -170,7 +170,7 @@
                                     @endif
                                     @if($producto->por_encargue)
                                         <span class="badge rounded-pill text-bg-info" style="font-size:.68rem;font-weight:500;">
-                                            <i class="bi bi-clock"></i> Por encargue
+                                            <i class="bi bi-clock"></i> Se puede pedir sin stock
                                         </span>
                                     @endif
                                     </span>
