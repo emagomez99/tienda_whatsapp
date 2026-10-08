@@ -34,7 +34,7 @@
             <i class="bi bi-ui-checks fs-4 d-block mb-1"></i>
             Sus categorías todavía no piden ningún dato.
             @if(auth()->user()->puede('categorias.gestionar'))
-                <br><small>Se definen en <a href="{{ route('admin.categorias.index') }}" target="_blank">Categorías</a>, en "Características que pide".</small>
+                <br><small>Se definen en <a href="{{ route('admin.categorias.index') }}" target="_blank">Categorías</a>, en "Datos que se piden al cargar un producto".</small>
             @endif
         </div>
 

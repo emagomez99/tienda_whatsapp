@@ -2,7 +2,7 @@
     Formulario de característica (tabla etiquetas), compartido por alta y edición.
 
     Qué productos la piden ya no se define acá (antes era por proveedor): la piden
-    las categorías ("Características que pide") o, si es global, todos los productos.
+    las categorías ("Datos que se piden al cargar un producto") o, si es global, todos los productos.
     En edición se listan las categorías que la piden, para ir a cambiarlo.
 
     Recibe $etiqueta (nueva o existente) y, en edición, $categoriasQueLaPiden
@@ -52,7 +52,7 @@
                 <div class="card-header">Qué categorías la piden</div>
                 @if($categoriasQueLaPiden->isEmpty())
                     <div class="card-body text-muted small">
-                        Ninguna. Se agrega desde cada categoría, en "Características que pide".
+                        Ninguna. Se agrega al editar una categoría, en "Datos que se piden al cargar un producto".
                     </div>
                 @else
                     <ul class="list-group list-group-flush">

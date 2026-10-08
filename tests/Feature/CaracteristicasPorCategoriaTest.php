@@ -113,7 +113,7 @@ class CaracteristicasPorCategoriaTest extends TestCase
 
         $this->actingAs($admin)->get($this->urlTenant('admin/categorias/' . $this->ids['remeras'] . '/edit'))
             ->assertOk()
-            ->assertSee('Características que pide');
+            ->assertSee('Datos que se piden al cargar un producto');
 
         $this->actingAs($admin)->put($this->urlTenant('admin/categorias/' . $this->ids['celulares']), [
             'nombre' => 'Celulares', 'visible' => 1,

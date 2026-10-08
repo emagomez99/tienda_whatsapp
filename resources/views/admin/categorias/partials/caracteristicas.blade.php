@@ -1,10 +1,11 @@
 {{--
-    "Características que pide" en el formulario de categoría (maqueta B del plan).
+    "Datos que se piden al cargar un producto" en el formulario de categoría (maqueta B del plan).
 
-    Arriba, en gris, las que hereda (de las categorías de arriba y las que piden
-    todos los productos): no se editan acá. Abajo, las propias: obligatoria u
-    opcional, orden y quitar. Se agregan eligiendo una existente o escribiendo una
-    nueva, que se crea al guardar.
+    Una sola lista con todo lo que se va a pedir al cargar un producto en esta
+    categoría. Cada fila dice de dónde sale: las que vienen de una categoría de
+    arriba o de "todos los productos" se ven bloqueadas, con un enlace a donde se
+    cambian; las de esta categoría se marcan opcional u obligatoria, se ordenan y
+    se quitan. Se agregan eligiendo una existente o escribiendo una nueva.
 
     Recibe $todasLasCaracteristicas, $caracteristicasPropias, $heredablesPorMadre
     (madre → [{id, nombre, obligatoria, origen}]) y $caracteristicasGlobales.
@@ -22,18 +23,16 @@
 
 <div class="card mb-3" id="card-caracteristicas">
     <div class="card-header">
-        <i class="bi bi-ui-checks"></i> Características que pide
-        <small class="text-muted d-block">Los datos que se cargan en cada producto de esta categoría: Talle, Color, Marca… Las subcategorías también las piden.</small>
+        <i class="bi bi-ui-checks"></i> Datos que se piden al cargar un producto
+        <small class="text-muted d-block">Cuando cargues un producto en esta categoría, el formulario te va a pedir estos datos. Las obligatorias hay que completarlas para poder guardar.</small>
     </div>
     <div class="card-body">
-        <div id="caracteristicas-heredadas" class="mb-3"></div>
-
         <ul class="list-group mb-2" id="caracteristicas-propias"></ul>
-        <div class="text-muted small mb-2" id="caracteristicas-vacio">Esta categoría no pide nada propio.</div>
+        <div class="text-muted small mb-2" id="caracteristicas-vacio">Todavía no se pide ningún dato. Agregá uno abajo (ej: Talle, Color).</div>
 
         <div class="input-group" style="max-width: 420px;">
             <input type="text" class="form-control" id="caracteristica-nueva" list="caracteristicas-existentes"
-                   placeholder="Agregar: elegí una o escribí una nueva" maxlength="255" autocomplete="off"
+                   placeholder="Agregar un dato: elegí uno o escribí uno nuevo" maxlength="255" autocomplete="off"
                    aria-label="Característica a agregar">
             <button type="button" class="btn btn-outline-primary" id="caracteristica-agregar"><i class="bi bi-plus-lg"></i> Agregar</button>
         </div>
@@ -52,8 +51,8 @@
 <style>
     #caracteristicas-propias .list-group-item { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
     #caracteristicas-propias .nombre { flex: 1 1 8rem; font-weight: 500; }
-    .caracteristica-heredada { display: inline-flex; align-items: center; gap: .25rem; padding: .15rem .55rem; margin: 0 .25rem .25rem 0;
-                               border-radius: 1rem; background: #f1f3f5; color: #6c757d; font-size: .85rem; }
+    #caracteristicas-propias .heredada { background: #f8f9fa; }
+    #caracteristicas-propias .heredada .nombre { color: #495057; }
 </style>
 @endpush
 
@@ -67,7 +66,7 @@
 
     var madre     = document.getElementById('parent_id');
     var lista     = document.getElementById('caracteristicas-propias');
-    var heredadas = document.getElementById('caracteristicas-heredadas');
+    var URL_EDITAR = @json(route('admin.categorias.edit', ['categoria' => '__ID__']));
     var campos    = document.getElementById('caracteristicas-campos');
     var entrada   = document.getElementById('caracteristica-nueva');
     var aviso     = document.getElementById('caracteristica-aviso');
@@ -82,30 +81,44 @@
         lista.dispatchEvent(new Event('change', { bubbles: true }));   // aviso de cambios sin guardar
     }
 
-    function pintarHeredadas() {
-        var datos = deLaMadre();
-        heredadas.innerHTML = '';
-        if (!datos.length) return;
+    function etiquetaDeEstado(obligatoria) {
+        var badge = document.createElement('span');
+        badge.className = 'badge ' + (obligatoria ? 'text-bg-danger' : 'text-bg-secondary');
+        badge.textContent = obligatoria ? 'Obligatoria' : 'Opcional';
+        return badge;
+    }
 
-        // Agrupadas por origen: "De Ropa: Talle*, Color" · "De todos los productos: Marca".
-        var grupos = {};
-        datos.forEach(function (c) {
-            var origen = c.origen ? 'De ' + c.origen : 'De todos los productos';
-            (grupos[origen] = grupos[origen] || []).push(c);
-        });
-        Object.keys(grupos).forEach(function (origen) {
-            var linea = document.createElement('div');
-            linea.className = 'small text-muted mb-1';
-            linea.appendChild(document.createTextNode(origen + ' (heredadas): '));
-            grupos[origen].forEach(function (c) {
-                var chip = document.createElement('span');
-                chip.className = 'caracteristica-heredada';
-                chip.textContent = c.nombre + (c.obligatoria ? ' *' : '');
-                chip.title = c.obligatoria ? 'Obligatoria' : 'Opcional';
-                linea.appendChild(chip);
-            });
-            heredadas.appendChild(linea);
-        });
+    /** Una que viene de arriba: se ve, pero se cambia donde se definió. */
+    function filaHeredada(c) {
+        var item = document.createElement('li');
+        item.className = 'list-group-item heredada';
+
+        var nombre = document.createElement('span');
+        nombre.className = 'nombre';
+        nombre.appendChild(document.createTextNode(c.nombre));
+        var nota = document.createElement('small');
+        nota.className = 'd-block text-muted fw-normal';
+        nota.appendChild(el('i', 'bi bi-lock me-1'));
+        if (c.categoria_id) {
+            nota.appendChild(document.createTextNode('Viene de '));
+            var enlace = document.createElement('a');
+            enlace.href = URL_EDITAR.replace('__ID__', c.categoria_id);
+            enlace.textContent = c.origen;
+            enlace.title = 'Se cambia en «' + c.origen + '»';
+            nota.appendChild(enlace);
+        } else {
+            nota.appendChild(document.createTextNode('Se pide en todos los productos (se cambia en Características)'));
+        }
+        nombre.appendChild(nota);
+        item.appendChild(nombre);
+        item.appendChild(etiquetaDeEstado(c.obligatoria));
+        return item;
+    }
+
+    function el(tag, clase) {
+        var nodo = document.createElement(tag);
+        nodo.className = clase;
+        return nodo;
     }
 
     function pintar() {
@@ -113,6 +126,13 @@
         campos.innerHTML = '';
         var heredables = {};
         deLaMadre().forEach(function (c) { heredables[normalizar(c.nombre)] = c; });
+
+        // Primero lo que viene de arriba (salvo lo que esta categoría cambia), después lo suyo.
+        var propiasPorNombre = {};
+        propias.forEach(function (c) { propiasPorNombre[normalizar(c.nombre)] = true; });
+        deLaMadre().forEach(function (c) {
+            if (!propiasPorNombre[normalizar(c.nombre)]) lista.appendChild(filaHeredada(c));
+        });
 
         propias.forEach(function (c, i) {
             var item = document.createElement('li');
@@ -131,7 +151,7 @@
             if (pisa) {
                 var nota = document.createElement('small');
                 nota.className = 'd-block text-muted fw-normal';
-                nota.textContent = 'Reemplaza a la de «' + (pisa.origen || 'todos los productos') + '» (' + (pisa.obligatoria ? 'obligatoria' : 'opcional') + ')';
+                nota.textContent = (pisa.origen ? 'En «' + pisa.origen + '»' : 'Para todos los productos') + ' es ' + (pisa.obligatoria ? 'obligatoria' : 'opcional') + '; en esta categoría vale lo que elijas acá.';
                 nombre.appendChild(nota);
             }
             item.appendChild(nombre);
@@ -197,7 +217,7 @@
             campos.appendChild(campoOblig);
         });
 
-        document.getElementById('caracteristicas-vacio').classList.toggle('d-none', propias.length > 0);
+        document.getElementById('caracteristicas-vacio').classList.toggle('d-none', lista.children.length > 0);
     }
 
     function agregar() {
@@ -211,8 +231,11 @@
             return;
         }
         var existente = TODAS.filter(function (c) { return normalizar(c.nombre) === normalizar(escrito); })[0];
+        // Si ya viene de arriba, arranca igual que allá: agregarla no la afloja sin querer.
+        var deArriba = deLaMadre().filter(function (c) { return normalizar(c.nombre) === normalizar(escrito); })[0];
+        var obligatoria = deArriba ? !!deArriba.obligatoria : false;
         propias.push(existente
-            ? { etiqueta_id: existente.id, nombre: existente.nombre, obligatoria: false }
+            ? { etiqueta_id: existente.id, nombre: existente.nombre, obligatoria: obligatoria }
             : { etiqueta_id: null, nombre: escrito, obligatoria: false });
         entrada.value = '';
         pintar(); cambio();
@@ -223,9 +246,8 @@
     entrada.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') { e.preventDefault(); agregar(); }   // sin esto, Enter envía la categoría
     });
-    if (madre) madre.addEventListener('change', function () { pintarHeredadas(); pintar(); });
+    if (madre) madre.addEventListener('change', pintar);
 
-    pintarHeredadas();
     pintar();
 })();
 </script>
