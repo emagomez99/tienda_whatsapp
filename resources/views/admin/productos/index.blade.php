@@ -105,9 +105,22 @@
 
 <div class="card">
     <div class="card-body">
-        @if($productos->isEmpty())
-            <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle"></i> No se encontraron productos.
+        @if($productos->isEmpty() && $filtrosActivos)
+            {{-- Vacío por el filtro: que se note que hay productos, sólo que no éstos. --}}
+            <div class="text-center py-4">
+                <i class="bi bi-funnel text-muted" style="font-size:2rem;"></i>
+                <p class="fw-semibold mt-2 mb-1">Ningún producto coincide con el filtro</p>
+                <a href="{{ route('admin.productos.index') }}">Quitar los filtros y ver todos</a>
+            </div>
+        @elseif($productos->isEmpty())
+            {{-- La tienda todavía no tiene ningún producto: el primer paso, a mano. --}}
+            <div class="text-center py-5">
+                <i class="bi bi-box-seam text-muted" style="font-size:2.5rem;"></i>
+                <p class="fw-semibold mt-2 mb-1">Todavía no cargaste ningún producto</p>
+                <p class="text-muted small mb-3">Por ejemplo, una «Gaseosa Coca-Cola 1,5 L»: su nombre, su precio y en qué estante va.</p>
+                <a href="{{ route('admin.productos.create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Cargar el primer producto
+                </a>
             </div>
         @else
             <div class="table-responsive">

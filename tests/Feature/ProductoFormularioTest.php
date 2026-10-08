@@ -191,6 +191,26 @@ class ProductoFormularioTest extends TestCase
         }
     }
 
+    /**
+     * Listado vacío: si es por el filtro, lo dice y ofrece quitarlo; si la tienda
+     * no tiene ningún producto, invita a cargar el primero.
+     */
+    public function test_el_listado_vacio_explica_por_que()
+    {
+        $this->comoAdmin()->get($this->urlTenant('admin/productos?buscar=zzzz'))
+            ->assertOk()
+            ->assertSee('Ningún producto coincide con el filtro')
+            ->assertSee('Quitar los filtros y ver todos')
+            ->assertDontSee('Cargar el primer producto');
+
+        $this->enTenant(function () { Producto::query()->delete(); });
+
+        $this->comoAdmin()->get($this->urlTenant('admin/productos'))
+            ->assertOk()
+            ->assertSee('Cargar el primer producto')
+            ->assertDontSee('Ningún producto coincide');
+    }
+
     /** Las sugerencias de especificaciones dicen cuántos productos usan cada texto. */
     public function test_las_sugerencias_de_especificaciones_traen_la_cantidad_de_productos()
     {
