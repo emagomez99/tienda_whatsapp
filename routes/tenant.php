@@ -91,7 +91,9 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::post('/productos/{producto}/ajustar-stock', [ProductoController::class, 'ajustarStock'])->name('productos.ajustar-stock');
 
         Route::post('/productos/categorias', [ProductoController::class, 'categoriasEnMasa'])->name('productos.categorias-en-masa');
-        Route::resource('productos', ProductoController::class);
+        // Sin "show": ningún controlador del panel lo tiene y nadie enlaza a esas
+        // direcciones; escritas a mano daban error 500 en vez de "no encontrado".
+        Route::resource('productos', ProductoController::class)->except(['show']);
         // Antes del resource: si no, categorias/{categoria} se queda con "todos".
         Route::get('/categorias/todos', [CategoriaController::class, 'editarTodos'])->name('categorias.todos');
         Route::put('/categorias/todos', [CategoriaController::class, 'actualizarTodos'])->name('categorias.todos.update');
@@ -100,9 +102,9 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::post('/categorias/{categoria}/mover', [CategoriaController::class, 'mover'])->name('categorias.mover');
         Route::patch('/categorias/{categoria}/visibilidad', [CategoriaController::class, 'cambiarVisibilidad'])->name('categorias.visibilidad');
         Route::resource('categorias', CategoriaController::class)->except(['show'])->parameters(['categorias' => 'categoria']);
-        Route::resource('proveedores', ProveedorController::class)->parameters(['proveedores' => 'proveedor']);
-        Route::resource('usuarios', UserController::class);
-        Route::resource('perfiles', PerfilController::class)->parameters(['perfiles' => 'perfil']);
+        Route::resource('proveedores', ProveedorController::class)->except(['show'])->parameters(['proveedores' => 'proveedor']);
+        Route::resource('usuarios', UserController::class)->except(['show']);
+        Route::resource('perfiles', PerfilController::class)->except(['show'])->parameters(['perfiles' => 'perfil']);
         Route::resource('etiquetas', EtiquetaController::class);
         Route::get('/etiquetas/{etiqueta}/valores', [EtiquetaController::class, 'buscarValores'])->name('etiquetas.valores');
         Route::get('/etiquetas/{etiqueta}/valores/estado', [EtiquetaController::class, 'estadoValor'])->name('etiquetas.valores.estado');
@@ -132,7 +134,7 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         // Antes del resource: si no, menus/{menu} se queda con "contar-productos".
         Route::get('/menus/contar-productos', [MenuController::class, 'contarProductos'])->name('menus.contar-productos');
         Route::patch('/menus/origen', [MenuController::class, 'cambiarOrigen'])->name('menus.origen');
-        Route::resource('menus', MenuController::class);
+        Route::resource('menus', MenuController::class)->except(['show']);
         Route::post('/menus/reordenar', [MenuController::class, 'reordenar'])->name('menus.reordenar');
         Route::post('/menus/{menu}/mover', [MenuController::class, 'mover'])->name('menus.mover');
         Route::get('/menus/etiqueta/{etiqueta}/valores', [MenuController::class, 'valoresEtiqueta'])->name('menus.etiqueta.valores');
