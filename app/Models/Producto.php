@@ -602,6 +602,16 @@ class Producto extends Model
     }
 
     /** Los que todavía no tienen ninguna categoría (para el aviso del listado). */
+    /**
+     * El producto con este código (id_proveedor), sin mayúsculas ni espacios de más:
+     * es único por tienda (índice productos_codigo_unico) y es la clave con la que
+     * una planilla de Excel dice qué producto actualizar.
+     */
+    public function scopeConCodigo($query, string $codigo)
+    {
+        return $query->whereRaw('lower(trim(id_proveedor)) = ?', [mb_strtolower(trim($codigo), 'UTF-8')]);
+    }
+
     public function scopeSinCategoria($query)
     {
         return $query->whereNotIn('productos.id', function ($sub) {

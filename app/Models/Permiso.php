@@ -14,7 +14,7 @@ class Permiso extends Model
     {
         return [
             'Dashboard'       => ['dashboard.ver'],
-            'Productos'       => ['productos.ver', 'productos.crear', 'productos.editar', 'productos.eliminar'],
+            'Productos'       => ['productos.ver', 'productos.crear', 'productos.editar', 'productos.eliminar', 'productos.importar'],
             'Categorías'      => ['categorias.ver', 'categorias.gestionar'],
             'Proveedores'     => ['proveedores.ver', 'proveedores.crear', 'proveedores.editar', 'proveedores.eliminar'],
             'Pedidos'         => ['pedidos.ver', 'pedidos.gestionar'],
@@ -35,6 +35,7 @@ class Permiso extends Model
             'productos.crear'         => 'Crear productos',
             'productos.editar'        => 'Editar productos',
             'productos.eliminar'      => 'Eliminar productos',
+            'productos.importar'      => 'Importar y exportar productos con Excel',
             'proveedores.ver'         => 'Ver listado de proveedores',
             'proveedores.crear'       => 'Crear proveedores',
             'proveedores.editar'      => 'Editar proveedores',

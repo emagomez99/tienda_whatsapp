@@ -109,6 +109,25 @@ class ProductoController extends Controller
             ->with('success', $mensaje);
     }
 
+    /**
+     * El código no puede ser el de otro producto: es lo que usa el Excel para saber
+     * cuál actualizar. El mensaje dice cuál lo tiene, para ir a verlo.
+     */
+    private function codigoLibre(Producto $actual = null)
+    {
+        return function ($atributo, $valor, $fallar) use ($actual) {
+            if (trim((string) $valor) === '') {
+                return;
+            }
+            $otro = Producto::conCodigo((string) $valor)
+                ->when($actual, function ($q) use ($actual) { $q->where('id', '!=', $actual->id); })
+                ->first(['id', 'descripcion']);
+            if ($otro) {
+                $fallar("Ese código ya lo tiene «{$otro->descripcion}». Cada producto necesita un código distinto.");
+            }
+        };
+    }
+
     private function cantidadDeProductos(int $n): string
     {
         return number_format($n, 0, ',', '.') . ($n === 1 ? ' producto' : ' productos');
@@ -137,7 +156,7 @@ class ProductoController extends Controller
 
         $validated = $request->validate([
             'proveedor_id' => 'required|exists:proveedores,id',
-            'id_proveedor' => 'nullable|string|max:255',
+            'id_proveedor' => ['nullable', 'string', 'max:255', $this->codigoLibre()],
             'descripcion' => 'required|string|max:255',
             'slug' => 'nullable|string|max:100|regex:/^[a-z0-9-]+$/',
             'detalle' => 'nullable|string',
@@ -198,7 +217,7 @@ class ProductoController extends Controller
 
         $validated = $request->validate([
             'proveedor_id'         => 'required|exists:proveedores,id',
-            'id_proveedor'         => 'nullable|string|max:255',
+            'id_proveedor'         => ['nullable', 'string', 'max:255', $this->codigoLibre($producto)],
             'descripcion'          => 'required|string|max:255',
             'slug'                 => 'nullable|string|max:100|regex:/^[a-z0-9-]+$/',
             'detalle'              => 'nullable|string',
