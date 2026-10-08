@@ -140,7 +140,9 @@
                 lista.appendChild(aviso);
             }
 
-            if (!lista.children.length) { cerrar(); return; }
+            // La respuesta puede llegar cuando ya se pasó a otro campo: entonces no se
+            // abre, porque quedaría flotando encima de los campos de abajo.
+            if (!lista.children.length || document.activeElement !== input) { cerrar(); return; }
             lista.classList.remove('d-none');
         }
 
@@ -189,9 +191,22 @@
         });
 
         input.addEventListener('blur', function () {
+            // Lo que estaba por buscarse ya no hace falta.
+            clearTimeout(temporizador);
+            secuencia++;
             setTimeout(cerrar, 150);   // da tiempo al clic sobre la lista
         });
     }
+
+    // Tocar en cualquier otro lado cierra las listas abiertas (las opciones usan
+    // mousedown con preventDefault, así que tocar una no llega acá como "afuera").
+    document.addEventListener('mousedown', function (e) {
+        document.querySelectorAll('.combo-lista:not(.d-none)').forEach(function (lista) {
+            if (!lista.parentElement.contains(e.target)) {   // el contenedor del campo y su lista
+                lista.classList.add('d-none');
+            }
+        });
+    });
 
     function iniciarTodos(raiz) {
         (raiz || document).querySelectorAll('[data-combo]').forEach(iniciar);

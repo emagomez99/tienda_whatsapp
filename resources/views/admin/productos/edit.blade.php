@@ -41,7 +41,7 @@
     @else
         <input type="hidden" name="_back" value="{{ request('_back', '') }}">
     @endif
-    @include('admin.productos.partials.barra-guardar', ['textoGuardar' => 'Guardar cambios', 'cancelarUrl' => $backUrl])
+    @include('admin.partials.barra-guardar', ['textoGuardar' => 'Guardar cambios', 'cancelarUrl' => $backUrl])
 </form>
 
 <!-- Modal: ajuste de stock -->

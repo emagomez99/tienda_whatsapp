@@ -112,6 +112,14 @@ class Etiqueta extends Model
      * Recorre los valores en PHP: Modelo, el más grande (oleomc), tiene 2.400 y se
      * resuelve en pocos milisegundos; no hace falta pg_trgm.
      */
+    /** Los números de un texto, en orden ("400 ml x 2" → ["400", "2"]). */
+    private static function numerosDe(string $texto): array
+    {
+        preg_match_all('/\d+(?:[.,]\d+)?/', $texto, $coincidencias);
+
+        return str_replace(',', '.', $coincidencias[0]);
+    }
+
     public function valorParecido(string $escrito): ?EtiquetaValor
     {
         $buscado = EtiquetaValor::normalizar($escrito);
@@ -126,8 +134,16 @@ class Etiqueta extends Model
         $mejorId   = null;
         $mejorDist = $tolerancia + 1;
 
+        $numeros = static::numerosDe($buscado);
+
         foreach ($this->valores()->has('asignaciones')->get(['id', 'normalizado']) as $candidato) {
             if (strlen($candidato->normalizado) > 255) {
+                continue;
+            }
+
+            // Si cambian los números es otro valor, no un error de tipeo: «16 comprimidos»
+            // no es «20 comprimidos», ni FPS 30 es FPS 50.
+            if (static::numerosDe($candidato->normalizado) !== $numeros) {
                 continue;
             }
 

@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<form action="{{ route('admin.etiquetas.update', $etiqueta) }}" method="POST">
+<form action="{{ route('admin.etiquetas.update', $etiqueta) }}" method="POST" id="form-caracteristica">
     @csrf
     @method('PUT')
     @include('admin.etiquetas.partials.formulario')

@@ -83,11 +83,11 @@
         </script>
         @endpush
 
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-check-circle"></i> {{ $etiqueta->exists ? 'Guardar cambios' : 'Crear característica' }}
-            </button>
-            <a href="{{ route('admin.etiquetas.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-        </div>
     </div>
 </div>
+
+@include('admin.partials.barra-guardar', [
+    'formId'       => 'form-caracteristica',
+    'textoGuardar' => $etiqueta->exists ? 'Guardar cambios' : 'Crear característica',
+    'cancelarUrl'  => route('admin.etiquetas.index'),
+])

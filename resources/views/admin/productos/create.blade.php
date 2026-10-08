@@ -20,6 +20,6 @@
 
     @include('admin.productos.partials.formulario')
 
-    @include('admin.productos.partials.barra-guardar', ['textoGuardar' => 'Crear producto', 'cancelarUrl' => route('admin.productos.index')])
+    @include('admin.partials.barra-guardar', ['textoGuardar' => 'Crear producto', 'cancelarUrl' => route('admin.productos.index')])
 </form>
 @endsection

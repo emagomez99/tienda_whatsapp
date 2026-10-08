@@ -180,6 +180,26 @@ class EtiquetaValorTest extends TestCase
         });
     }
 
+    /**
+     * Si cambia un número es otro valor, no un error de tipeo (lo encontró la prueba
+     * con una farmacia: «16 comprimidos» sugería «20 comprimidos»).
+     *
+     * @test
+     */
+    public function no_propone_parecidos_que_cambian_un_numero()
+    {
+        $this->enTenant(function () {
+            $presentacion = Etiqueta::create(['nombre' => 'Presentación', 'visible_usuarios' => true]);
+            $this->crearProducto('Uno')->etiquetas()->attach($presentacion->id, ['valor' => '20 comprimidos']);
+            $this->crearProducto('Dos')->etiquetas()->attach($presentacion->id, ['valor' => 'FPS 50']);
+
+            $this->assertNull($presentacion->valorParecido('16 comprimidos'));
+            $this->assertNull($presentacion->valorParecido('FPS 30'));
+            // Un error de tipeo en las letras, con el mismo número, sí se propone.
+            $this->assertSame('20 comprimidos', $presentacion->valorParecido('20 comprimdos')->valor);
+        });
+    }
+
     /** @test */
     public function las_sugerencias_dicen_cuantos_productos_usan_cada_valor()
     {

@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<form action="{{ route('admin.categorias.update', $categoria) }}" method="POST">
+<form action="{{ route('admin.categorias.update', $categoria) }}" method="POST" id="form-categoria">
     @csrf
     @method('PUT')
     @include('admin.categorias.partials.formulario')

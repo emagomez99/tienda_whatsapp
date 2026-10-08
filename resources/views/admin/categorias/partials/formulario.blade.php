@@ -66,14 +66,11 @@
         </div>
     </div>
 
-    <div class="col-lg-4">
-        <div class="card position-sticky" style="top: 1rem;">
-            <div class="card-body">
-                <button type="submit" class="btn btn-primary w-100 mb-2">
-                    <i class="bi bi-check-circle"></i> {{ $categoria->exists ? 'Guardar cambios' : 'Crear categoría' }}
-                </button>
-                <a href="{{ route('admin.categorias.index') }}" class="btn btn-outline-secondary w-100">Cancelar</a>
-            </div>
-        </div>
-    </div>
 </div>
+
+{{-- Guardar siempre a mano, abajo (la tarjeta fija de arriba quedaba tapada por la barra del panel). --}}
+@include('admin.partials.barra-guardar', [
+    'formId'       => 'form-categoria',
+    'textoGuardar' => $categoria->exists ? 'Guardar cambios' : 'Crear categoría',
+    'cancelarUrl'  => route('admin.categorias.index'),
+])

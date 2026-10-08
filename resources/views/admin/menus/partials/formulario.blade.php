@@ -277,15 +277,6 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="card mb-3 position-sticky" style="top: 1rem;">
-            <div class="card-body">
-                <button type="submit" class="btn btn-primary w-100 mb-2">
-                    <i class="bi bi-check-circle"></i> {{ $menu->exists ? 'Guardar cambios' : 'Crear menú' }}
-                </button>
-                <a href="{{ route('admin.menus.index') }}" class="btn btn-outline-secondary w-100">Cancelar</a>
-            </div>
-        </div>
-
         @if($menu->exists && $menu->children->count() > 0)
             <div class="card">
                 <div class="card-header bg-light">
@@ -305,6 +296,12 @@
         @endif
     </div>
 </div>
+
+@include('admin.partials.barra-guardar', [
+    'formId'       => 'menu-form',
+    'textoGuardar' => $menu->exists ? 'Guardar cambios' : 'Crear menú',
+    'cancelarUrl'  => route('admin.menus.index'),
+])
 
 <template id="plantilla-filtro-elegido">
     @include('admin.menus.partials.filtro-elegido', ['etiqueta' => null, 'permitirTodos' => true])

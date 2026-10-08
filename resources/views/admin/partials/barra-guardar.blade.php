@@ -1,6 +1,7 @@
 {{--
-    Barra fija al pie del formulario de producto, con el mismo criterio que la de
-    Ajustes: los botones quedan siempre a mano, sin tener que subir a buscarlos.
+    Barra fija al pie de un formulario del panel (producto, categoría, menú,
+    característica), con el mismo criterio que la de Ajustes: los botones quedan
+    siempre a mano, sin tener que subir a buscarlos. Va adentro del <form>.
 
     Además avisa si hay cambios sin guardar y pide confirmación antes de perderlos al
     salir por un enlace (Cancelar, Volver, el menú) o al enviar otro formulario de la
@@ -9,6 +10,7 @@
     Parámetros:
       $textoGuardar — texto del botón principal
       $cancelarUrl  — adónde vuelve "Cancelar"
+      $formId       — id del <form> que vigila (por defecto form-producto)
 --}}
 <div class="position-sticky bottom-0 bg-white border-top py-2 mt-3" style="z-index: 5;">
     <div class="d-flex justify-content-end align-items-center gap-2">
@@ -27,7 +29,7 @@
 @push('scripts')
 <script>
 (function () {
-    var form   = document.getElementById('form-producto');
+    var form   = document.getElementById(@json($formId ?? 'form-producto'));
     var aviso  = document.getElementById('cambios-sin-guardar');
     if (!form || !aviso) return;
 

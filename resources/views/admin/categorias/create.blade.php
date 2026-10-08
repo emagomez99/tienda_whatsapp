@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<form action="{{ route('admin.categorias.store') }}" method="POST">
+<form action="{{ route('admin.categorias.store') }}" method="POST" id="form-categoria">
     @csrf
     @include('admin.categorias.partials.formulario')
 </form>
