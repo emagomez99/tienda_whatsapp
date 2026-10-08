@@ -37,6 +37,9 @@ final class DatosDeProducto
     /** @var UploadedFile[] */
     private $archivosGaleria = [];
 
+    /** @var array|null variantes (ver VariantesDeProducto); [] = sin variantes */
+    private $variantes = null;
+
     public function __construct(array $atributos)
     {
         $this->atributos = $atributos;
@@ -104,6 +107,19 @@ final class DatosDeProducto
         $copia->galeria = array_values($fichas);
         $copia->archivosGaleria = $archivos;
         return $copia;
+    }
+
+    /** @param array $variantes la lista completa, como la recibe VariantesDeProducto */
+    public function conVariantes(array $variantes): self
+    {
+        $copia = clone $this;
+        $copia->variantes = array_values($variantes);
+        return $copia;
+    }
+
+    public function variantes(): ?array
+    {
+        return $this->variantes;
     }
 
     public function atributos(): array

@@ -200,6 +200,7 @@
         var row = el('div', 'row g-2 mb-2 etiqueta-row');
         row.dataset.etiquetaId = id;
         row.dataset.nombre = etiqueta.nombre;
+        row.dataset.varios = etiqueta.varios ? '1' : '0';   // la sección Variantes elige entre éstas
 
         var label = el('label', 'col-md-3 col-form-label', etiqueta.nombre);
         label.htmlFor = 'etiqueta-valor-' + i;

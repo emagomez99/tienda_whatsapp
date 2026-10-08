@@ -295,6 +295,12 @@ function confirmarEliminarItem(url) {
     var csrfToken  = '{{ csrf_token() }}';
     var tbody      = document.getElementById('tbody-productos');
 
+    function escaparHtml(texto) {
+        var div = document.createElement('div');
+        div.textContent = texto == null ? '' : String(texto);
+        return div.innerHTML;
+    }
+
     function initFila(fila) {
         var inputBuscar = fila.querySelector('.fila-buscar');
         var inputId     = fila.querySelector('.fila-id');
@@ -322,6 +328,7 @@ function confirmarEliminarItem(url) {
         inputBuscar.addEventListener('input', function () {
             clearTimeout(timer);
             inputId.value = '';
+            inputId.dataset.variante = '';
             btnOk.disabled = true;
             var q = this.value.trim();
             if (q.length < 2) { dropdown.style.display = 'none'; return; }
@@ -341,12 +348,13 @@ function confirmarEliminarItem(url) {
                             item.type = 'button';
                             item.className = 'list-group-item list-group-item-action py-2';
                             var stockTxt  = p.stock !== null ? ' · stock: ' + p.stock : ' · por encargue';
-                            var codigoTxt = p.codigo ? ' <small class="text-muted">(' + p.codigo + ')</small>' : '';
-                            item.innerHTML = '<span class="fw-semibold">' + p.descripcion + '</span>' + codigoTxt +
+                            var codigoTxt = p.codigo ? ' <small class="text-muted">(' + escaparHtml(p.codigo) + ')</small>' : '';
+                            item.innerHTML = '<span class="fw-semibold">' + escaparHtml(p.descripcion) + '</span>' + codigoTxt +
                                 '<br><small class="text-muted">$' + parseFloat(p.precio).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + stockTxt + '</small>';
                             item.addEventListener('click', function () {
                                 inputBuscar.value = p.descripcion;
                                 inputId.value     = p.id;
+                                inputId.dataset.variante = p.variante_id ? String(p.variante_id) : '';   // Talle M…
                                 btnOk.disabled    = false;
                                 dropdown.style.display = 'none';
                                 inputCant.focus();
@@ -373,6 +381,7 @@ function confirmarEliminarItem(url) {
             form.innerHTML =
                 '<input type="hidden" name="_token" value="' + csrfToken + '">' +
                 '<input type="hidden" name="producto_id" value="' + inputId.value + '">' +
+                '<input type="hidden" name="variante_id" value="' + (inputId.dataset.variante || '') + '">' +
                 '<input type="hidden" name="cantidad" value="' + inputCant.value + '">';
             document.body.appendChild(form);
             form.submit();

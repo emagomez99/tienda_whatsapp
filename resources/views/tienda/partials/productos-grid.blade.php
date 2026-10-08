@@ -65,7 +65,12 @@
 
                     {{-- Footer --}}
                     <div class="card-footer border-0 bg-transparent">
-                        @if($producto->estaDisponible())
+                        @if($producto->estaDisponible() && ($producto->variantes_activas ?? 0) > 0)
+                            {{-- Con variantes hay que elegir (Talle M): se hace en la ficha. --}}
+                            <a href="{{ $producto->url() }}" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="bi bi-ui-radios-grid"></i> Elegir opciones
+                            </a>
+                        @elseif($producto->estaDisponible())
                             @php $maxGrid = $producto->stockMaximo(); @endphp
                             <form class="form-agregar" data-url="{{ route('carrito.agregar', $producto) }}">
                                 @csrf

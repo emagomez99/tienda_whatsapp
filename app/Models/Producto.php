@@ -373,6 +373,32 @@ class Producto extends Model
         return $this->hasMany(StockMovimiento::class);
     }
 
+    /** Lo que el cliente elige al comprar (Talle M, Color Rojo), cada una con su stock. */
+    public function variantes()
+    {
+        return $this->hasMany(Variante::class)->orderBy('orden')->orderBy('id');
+    }
+
+    public function tieneVariantes(): bool
+    {
+        if ($this->relationLoaded('variantes')) {
+            return $this->variantes->isNotEmpty();
+        }
+
+        return $this->exists && $this->variantes()->exists();
+    }
+
+    /**
+     * Con variantes, el stock del producto es la suma del de las activas (una apagada
+     * no se vende). Lo llama cada movimiento de una variante.
+     */
+    public function recalcularStockDeVariantes(): void
+    {
+        $total = (int) Variante::where('producto_id', $this->id)->where('activa', true)->sum('stock');
+        static::where('id', $this->id)->update(['stock' => $total]);
+        $this->stock = $total;
+    }
+
     /**
      * Registra un movimiento de stock y actualiza el campo `stock` atómicamente.
      * Usa lock pesimista para evitar condiciones de carrera concurrentes.
@@ -381,6 +407,12 @@ class Producto extends Model
      */
     public function registrarMovimiento($variacion, $tipo, $descripcion = null, $pedidoId = null, $userId = null)
     {
+        // Con variantes el stock es de cada una (Variante::registrarMovimiento): mover
+        // el del producto lo desarmaría de la suma.
+        if ($this->tieneVariantes()) {
+            throw new \LogicException("\"{$this->descripcion}\" tiene variantes: el stock se mueve en cada una.");
+        }
+
         return DB::transaction(function () use ($variacion, $tipo, $descripcion, $pedidoId, $userId) {
             $stockActual     = static::where('id', $this->id)->lockForUpdate()->value('stock');
             $stockResultante = $stockActual + $variacion;
@@ -690,6 +722,17 @@ class Producto extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * Lo que muestra cada tarjeta de la tienda, sin una consulta por producto. Cuenta
+     * las variantes activas: una tarjeta con variantes lleva a elegir (Talle M) en vez
+     * de agregar directo.
+     */
+    public function scopeParaLaGrilla($query)
+    {
+        return $query->with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
+            ->withCount(['variantes as variantes_activas' => function ($q) { $q->where('activa', true); }]);
     }
 
     public function scopeDisponibles($query)

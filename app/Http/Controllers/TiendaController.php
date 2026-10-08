@@ -9,6 +9,7 @@ use App\Models\Menu;
 use App\Models\Producto;
 use App\Support\BusquedaDeTexto;
 use App\Support\OrdenDeProductos;
+use App\Support\SelectorDeVariantes;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -44,7 +45,7 @@ class TiendaController extends Controller
             }
         }
 
-        $query = Producto::with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
+        $query = Producto::paraLaGrilla()
             ->visiblesEnTienda();
 
         // Filtro por búsqueda
@@ -93,7 +94,7 @@ class TiendaController extends Controller
     {
         $menuActual = Menu::where('slug', $slug)->where('activo', true)->firstOrFail();
 
-        $query = Producto::with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
+        $query = Producto::paraLaGrilla()
             ->visiblesEnTienda();
 
         $query->delMenu($menuActual);
@@ -123,7 +124,7 @@ class TiendaController extends Controller
             abort(404);
         }
 
-        $query = Producto::with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
+        $query = Producto::paraLaGrilla()
             ->visiblesEnTienda()
             ->enCategoria($categoriaActual);
 
@@ -202,7 +203,7 @@ class TiendaController extends Controller
      */
     public function productosAjax(Request $request)
     {
-        $query = Producto::with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
+        $query = Producto::paraLaGrilla()
             ->visiblesEnTienda();
 
         $menuActual = null;
@@ -318,7 +319,10 @@ class TiendaController extends Controller
         $estante = $producto->estanteParaMigas();
         $migas = $estante ? array_reverse($estante->linaje()) : [];
 
-        return view('tienda.show', compact('producto', 'mostrarPrecios', 'migas'));
+        // Con variantes, el cliente elige una (Talle M) antes de agregarlo.
+        $selector = SelectorDeVariantes::para($producto);
+
+        return view('tienda.show', compact('producto', 'mostrarPrecios', 'migas', 'selector'));
     }
 
     // ─── Helpers privados ────────────────────────────────────────────────────

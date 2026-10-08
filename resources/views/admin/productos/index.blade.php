@@ -184,7 +184,12 @@
                                 <td>{{ $producto->id_proveedor ?? '-' }}</td>
                                 <td>{{ $producto->proveedor->nombre ?? '-' }}</td>
                                 <td>{{ $producto->precio_con_moneda }}</td>
-                                <td>{{ $producto->stock }}</td>
+                                <td>
+                                    {{ $producto->stock }}
+                                    @if($producto->variantes_count)
+                                        <small class="d-block text-muted text-nowrap" title="El stock es la suma de sus variantes">{{ $producto->variantes_count }} {{ $producto->variantes_count === 1 ? 'variante' : 'variantes' }}</small>
+                                    @endif
+                                </td>
                                 <td>
                                     <span class="d-flex flex-column gap-1">
                                     @if($producto->disponible)

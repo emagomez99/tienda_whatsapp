@@ -10,6 +10,7 @@ use App\Models\Producto;
 use App\Models\ProductoEspecificacion;
 use App\Models\StockMovimiento;
 use App\Models\Proveedor;
+use App\Models\Variante;
 use App\Services\AsignacionDeCategorias;
 use App\Services\CaracteristicasPorCategoria;
 use App\Services\GaleriaProducto;
@@ -49,6 +50,7 @@ class ProductoController extends Controller
         $filtro = new FiltroDeProductos($request->query());
         $productos = $filtro->consulta()
             ->with(['proveedor', 'moneda', 'categorias:categorias.id'])
+            ->withCount('variantes')
             ->orderBy('descripcion')
             ->paginate(15);
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
@@ -113,6 +115,24 @@ class ProductoController extends Controller
      * El código no puede ser el de otro producto: es lo que usa el Excel para saber
      * cuál actualizar. El mensaje dice cuál lo tiene, para ir a verlo.
      */
+    /** El formato de las variantes del formulario; las reglas de negocio, en VariantesDeProducto. */
+    const REGLAS_VARIANTES = [
+        'variantes'            => 'nullable|array|max:300',
+        'variantes.*.id'       => 'nullable|integer',
+        'variantes.*.valores'  => 'required|array|min:1',
+        'variantes.*.valores.*' => 'nullable|string|max:255',
+        'variantes.*.codigo'   => 'nullable|string|max:100',
+        'variantes.*.precio'   => 'nullable|numeric|min:0|max:999999999999',
+        'variantes.*.stock'    => 'nullable|integer|min:0|max:1000000',
+        'variantes.*.activa'   => 'nullable|boolean',
+    ];
+
+    const MENSAJES_VARIANTES = [
+        'variantes.*.precio.numeric' => 'El precio de una variante tiene que ser un número.',
+        'variantes.*.stock.integer'  => 'El stock de una variante tiene que ser un número entero.',
+        'variantes.*.stock.min'      => 'El stock de una variante no puede ser negativo.',
+    ];
+
     private function codigoLibre(Producto $actual = null)
     {
         return function ($atributo, $valor, $fallar) use ($actual) {
@@ -124,6 +144,12 @@ class ProductoController extends Controller
                 ->first(['id', 'descripcion']);
             if ($otro) {
                 $fallar("Ese código ya lo tiene «{$otro->descripcion}». Cada producto necesita un código distinto.");
+                return;
+            }
+            $variante = Variante::whereRaw('lower(trim(codigo)) = ?', [mb_strtolower(trim((string) $valor), 'UTF-8')])
+                ->with('producto:id,descripcion')->first();
+            if ($variante) {
+                $fallar("Ese código ya lo tiene una variante de «{$variante->producto->descripcion}».");
             }
         };
     }
@@ -173,9 +199,9 @@ class ProductoController extends Controller
             'especificaciones' => 'nullable|array',
             'especificaciones.*.clave' => 'nullable|string|max:255',
             'especificaciones.*.valor' => 'nullable|string|max:255',
-        ] + $this->reglasDePrecio($request) + GaleriaProducto::reglas(), [
+        ] + $this->reglasDePrecio($request) + GaleriaProducto::reglas() + self::REGLAS_VARIANTES, [
             'slug.regex' => 'La dirección web solo puede tener letras minúsculas, números y guiones.',
-        ] + $this->mensajesDePrecio() + GaleriaProducto::mensajes());
+        ] + $this->mensajesDePrecio() + GaleriaProducto::mensajes() + self::MENSAJES_VARIANTES);
 
         // Switch "Generar automáticamente" prendido (o ausente, ej. una API externa):
         // ignoramos cualquier slug que haya llegado y dejamos que el boot() del modelo
@@ -233,9 +259,9 @@ class ProductoController extends Controller
             'especificaciones'     => 'nullable|array',
             'especificaciones.*.clave' => 'nullable|string|max:255',
             'especificaciones.*.valor' => 'nullable|string|max:255',
-        ] + $this->reglasDePrecio($request) + GaleriaProducto::reglas(), [
+        ] + $this->reglasDePrecio($request) + GaleriaProducto::reglas() + self::REGLAS_VARIANTES, [
             'slug.regex' => 'La dirección web solo puede tener letras minúsculas, números y guiones.',
-        ] + $this->mensajesDePrecio() + GaleriaProducto::mensajes());
+        ] + $this->mensajesDePrecio() + GaleriaProducto::mensajes() + self::MENSAJES_VARIANTES);
 
         // Cambiar el slug es seguro: la URL resuelve por id, así que las direcciones
         // ya publicadas siguen funcionando (redirigen 301 a la nueva).
@@ -245,7 +271,7 @@ class ProductoController extends Controller
             $validated['slug'] = $producto->slug ?: Producto::generarSlug($validated['descripcion']);
         }
 
-        $this->guardado->actualizar($producto, $this->datosDelFormulario($request, $validated));
+        $this->guardado->actualizar($producto, $this->datosDelFormulario($request, $validated), auth()->id());
 
         $backParams = $request->input('_back', '');
         $backUrl = route('admin.productos.index') . ($backParams ? '?' . $backParams : '');
@@ -265,7 +291,7 @@ class ProductoController extends Controller
         $validated['por_encargue'] = $request->boolean('por_encargue');
 
         $atributos = array_diff_key($validated, array_flip([
-            'stock', 'categorias', 'etiquetas', 'especificaciones', 'galeria', 'galeria_archivos',
+            'stock', 'categorias', 'etiquetas', 'especificaciones', 'galeria', 'galeria_archivos', 'variantes',
         ]));
 
         // Una fila por valor: una característica con varios (Talle: S, M, L) manda varias.
@@ -285,6 +311,11 @@ class ProductoController extends Controller
 
         if ($request->boolean('galeria_enviada')) {
             $datos = $datos->conGaleria($request->input('galeria', []), $request->file('galeria_archivos', []));
+        }
+
+        // Como la galería: sólo si vino la sección. Apagada ("no tiene variantes"), llega vacía.
+        if ($request->boolean('variantes_enviadas')) {
+            $datos = $datos->conVariantes($request->boolean('usa_variantes') ? $request->input('variantes', []) : []);
         }
 
         return $datos;
@@ -366,7 +397,7 @@ class ProductoController extends Controller
     public function historial(Producto $producto)
     {
         $movimientos = $producto->movimientos()
-            ->with(['pedido', 'user'])
+            ->with(['pedido', 'user', 'variante.valores'])
             ->orderBy('created_at', 'desc')
             ->paginate(25);
 
@@ -395,6 +426,10 @@ class ProductoController extends Controller
             'tipo.required'       => 'Elegí si es un ingreso o un egreso.',
             'descripcion.required' => 'Indicá el motivo del ajuste.',
         ]);
+
+        if ($producto->tieneVariantes()) {
+            return back()->with('error', 'Este producto tiene variantes: el stock se cambia en cada una, en la sección Variantes.');
+        }
 
         $variacion = $validated['tipo'] === 'egreso'
             ? -$validated['cantidad']
@@ -495,19 +530,24 @@ class ProductoController extends Controller
     {
         $q = $request->get('q', '');
 
-        $productos = Producto::with('moneda')
+        $productos = Producto::with(['moneda', 'variantes' => function ($v) { $v->where('activa', true)->with('valores'); }])
             ->where('disponible', true)
             ->where(function ($query) use ($q) {
                 $query->where('descripcion', 'ilike', "%{$q}%")
-                      ->orWhere('id_proveedor', 'ilike', "%{$q}%");
+                      ->orWhere('id_proveedor', 'ilike', "%{$q}%")
+                      ->orWhereHas('variantes', function ($v) use ($q) { $v->where('codigo', 'ilike', "%{$q}%"); });
             })
             ->orderBy('descripcion')
             ->limit(20)
             ->get();
 
-        return response()->json($productos->map(function ($p) {
-            return [
+        // Un producto con variantes aparece una vez por cada una (Remera (M), Remera (L)):
+        // el pedido es de un talle, con su stock y su precio.
+        $resultados = [];
+        foreach ($productos as $p) {
+            $base = [
                 'id'          => $p->id,
+                'variante_id' => null,
                 'descripcion' => $p->descripcion,
                 'codigo'      => $p->id_proveedor,
                 'precio'      => $p->precio,
@@ -515,6 +555,22 @@ class ProductoController extends Controller
                 'moneda_id'   => $p->moneda_id,
                 'simbolo'     => $p->moneda ? $p->moneda->simbolo : '$',
             ];
-        }));
+            if ($p->variantes->isEmpty()) {
+                $resultados[] = $base;
+                continue;
+            }
+            foreach ($p->variantes as $variante) {
+                $variante->setRelation('producto', $p);
+                $resultados[] = array_merge($base, [
+                    'variante_id' => $variante->id,
+                    'descripcion' => $variante->descripcionCompleta(),
+                    'codigo'      => $variante->codigo ?: $p->id_proveedor,
+                    'precio'      => $variante->precioFinal(),
+                    'stock'       => $variante->stockMaximo(),
+                ]);
+            }
+        }
+
+        return response()->json($resultados);
     }
 }

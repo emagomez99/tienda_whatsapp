@@ -147,6 +147,10 @@ class EtiquetaValor extends Model
                 })
                 ->delete();
 
+            // Las variantes que usaban este valor (Talle "Mediano") pasan al destino ("M").
+            DB::table('producto_variante_valores')->where('etiqueta_valor_id', $this->id)
+                ->update(['etiqueta_valor_id' => $destino->id]);
+
             $this->asignaciones()->update([
                 'etiqueta_valor_id' => $destino->id,
                 'valor'             => $destino->valor,

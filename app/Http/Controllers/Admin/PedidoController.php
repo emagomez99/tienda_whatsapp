@@ -7,9 +7,11 @@ use App\Models\Pedido;
 use App\Models\PedidoProducto;
 use App\Models\Producto;
 use App\Models\StockMovimiento;
+use App\Models\Variante;
 use App\Support\RangoFechas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PedidoController extends Controller
 {
@@ -86,6 +88,7 @@ class PedidoController extends Controller
             'cp'                   => 'nullable|string|max:20',
             'productos'            => 'nullable|array',
             'productos.*.id'       => 'required|integer|exists:productos,id',
+            'productos.*.variante_id' => 'nullable|integer',
             'productos.*.cantidad' => 'required|integer|min:1',
         ]);
 
@@ -104,12 +107,21 @@ class PedidoController extends Controller
 
             foreach ($data['productos'] ?? [] as $p) {
                 $producto = Producto::findOrFail($p['id']);
+                // Con variantes, el ítem es de una (Talle M): su nombre y su precio.
+                $variante = !empty($p['variante_id'])
+                    ? Variante::where('producto_id', $producto->id)->findOrFail((int) $p['variante_id'])
+                    : null;
+                if (!$variante && $producto->tieneVariantes()) {
+                    throw ValidationException::withMessages(['productos' => '"' . $producto->descripcion . '" tiene variantes: elegí cuál.']);
+                }
+                $precio = $variante ? $variante->precioFinal() : $producto->precio;
                 $pedido->items()->create([
                     'producto_id'     => $producto->id,
-                    'descripcion'     => $producto->descripcion,
-                    'precio_unitario' => $producto->precio,
+                    'variante_id'     => $variante ? $variante->id : null,
+                    'descripcion'     => $variante ? $variante->descripcionCompleta() : $producto->descripcion,
+                    'precio_unitario' => $precio,
                     'cantidad'        => (int) $p['cantidad'],
-                    'subtotal'        => $producto->precio * (int) $p['cantidad'],
+                    'subtotal'        => $precio * (int) $p['cantidad'],
                     'moneda_id'       => $producto->moneda_id,
                 ]);
             }
@@ -178,15 +190,21 @@ class PedidoController extends Controller
                 ->with('error', 'Solo se pueden confirmar pedidos pendientes.');
         }
 
-        $pedido->load('items.producto');
+        $pedido->load('items.producto', 'items.variante.valores');
 
-        // Validar stock antes de confirmar
+        // Validar stock antes de confirmar (el de la variante, si el ítem es de una)
         $errores = [];
         foreach ($pedido->items as $item) {
-            if ($item->producto && ! $item->producto->por_encargue) {
-                if ($item->producto->stock < $item->cantidad) {
-                    $errores[] = '"' . $item->descripcion . '": stock disponible ' . $item->producto->stock . ', requerido ' . $item->cantidad;
-                }
+            if (!$item->producto) {
+                continue;
+            }
+            if (!$item->variante_id && $item->producto->tieneVariantes()) {
+                $errores[] = '"' . $item->descripcion . '": ahora tiene variantes. Quitalo y volvé a agregarlo eligiendo cuál.';
+                continue;
+            }
+            $origen = $item->origenDeStock();
+            if (! $item->producto->por_encargue && $origen->stock < $item->cantidad) {
+                $errores[] = '"' . $item->descripcion . '": stock disponible ' . $origen->stock . ', requerido ' . $item->cantidad;
             }
         }
 
@@ -197,9 +215,10 @@ class PedidoController extends Controller
 
         // Descontar stock registrando movimiento por cada ítem con stock disponible
         foreach ($pedido->items as $item) {
-            if ($item->producto && $item->producto->stock > 0) {
-                $cantidad = min($item->cantidad, $item->producto->stock);
-                $item->producto->registrarMovimiento(
+            $origen = $item->producto ? $item->origenDeStock() : null;
+            if ($origen && $origen->stock > 0) {
+                $cantidad = min($item->cantidad, $origen->stock);
+                $origen->registrarMovimiento(
                     -$cantidad,
                     StockMovimiento::TIPO_SALIDA_PEDIDO,
                     'Pedido #' . $pedido->id . ' confirmado',
@@ -224,10 +243,10 @@ class PedidoController extends Controller
 
         // Si estaba confirmado, restaurar stock mediante devolución
         if ($pedido->esConfirmado()) {
-            $pedido->load('items.producto');
+            $pedido->load('items.producto', 'items.variante.valores');
             foreach ($pedido->items as $item) {
-                if ($item->producto && !$item->producto->por_encargue) {
-                    $item->producto->registrarMovimiento(
+                if ($this->puedeDevolver($item)) {
+                    $item->origenDeStock()->registrarMovimiento(
                         $item->cantidad,
                         StockMovimiento::TIPO_DEVOLUCION_PEDIDO,
                         'Pedido #' . $pedido->id . ' cancelado',
@@ -272,8 +291,8 @@ class PedidoController extends Controller
         }
 
         // Restaurar stock solo si el pedido ya estaba confirmado y el producto tiene stock físico
-        if ($pedido->esConfirmado() && $item->producto && !$item->producto->por_encargue) {
-            $item->producto->registrarMovimiento(
+        if ($pedido->esConfirmado() && $this->puedeDevolver($item)) {
+            $item->origenDeStock()->registrarMovimiento(
                 $item->cantidad,
                 StockMovimiento::TIPO_DEVOLUCION_PEDIDO,
                 'Ítem eliminado del pedido #' . $pedido->id,
@@ -299,13 +318,31 @@ class PedidoController extends Controller
 
         $request->validate([
             'producto_id' => 'required|exists:productos,id',
+            'variante_id' => 'nullable|integer',
             'cantidad'    => 'required|integer|min:1',
         ]);
 
         $producto  = Producto::findOrFail($request->producto_id);
-        $resultado = $pedido->agregarProducto($producto, (int) $request->cantidad);
+        $variante  = $request->filled('variante_id')
+            ? Variante::where('producto_id', $producto->id)->findOrFail((int) $request->variante_id)
+            : null;
+        $resultado = $pedido->agregarProducto($producto, (int) $request->cantidad, $variante);
 
         return redirect()->route('admin.pedidos.show', $pedido)
             ->with($resultado['ok'] ? 'success' : 'error', $resultado['ok'] ? 'Producto agregado al pedido.' : $resultado['error']);
+    }
+
+    /**
+     * Si el stock de este ítem se puede devolver: a su variante (Talle M) o al
+     * producto. No si se encarga (no se descontó), ni si el producto pasó a tener
+     * variantes después del pedido: no se sabe a cuál devolverlo.
+     */
+    private function puedeDevolver(PedidoProducto $item): bool
+    {
+        if (!$item->producto || $item->producto->por_encargue) {
+            return false;
+        }
+
+        return $item->variante_id ? (bool) $item->variante : !$item->producto->tieneVariantes();
     }
 }

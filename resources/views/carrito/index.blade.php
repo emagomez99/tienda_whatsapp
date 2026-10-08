@@ -39,13 +39,14 @@
             <div class="col-lg-8">
                 <div class="d-flex flex-column gap-3">
                     @foreach($productos as $item)
-                        @php $prod = $item['producto']; @endphp
-                        {{-- TODO(public_id): public_id se usa acá sólo como identificador
-                             único para los ids del DOM; sirve igual $prod->id. Al eliminar
-                             la columna hay que reemplazarlo en los 5 lugares de este archivo
-                             a la vez, o el JS deja de encontrar sus elementos (ids vacíos)
-                             y el carrito deja de recalcular sin tirar ningún error. --}}
-                        <div class="card" id="fila-{{ $prod->public_id }}">
+                        @php
+                            $prod = $item['producto'];
+                            // Identifica la línea en el DOM: el producto, o el producto y su
+                            // variante ("12-5"): la remera M y la L son dos filas.
+                            $fila = $item['clave'];
+                            $param = $item['linea']->parametros();
+                        @endphp
+                        <div class="card" id="fila-{{ $fila }}">
                             <div class="card-body p-3">
                                 <div class="ci-grid">
 
@@ -60,19 +61,22 @@
                                     {{-- Nombre y código --}}
                                     <div class="ci-name">
                                         <div class="fw-semibold lh-sm">{{ $prod->descripcion }}</div>
-                                        @if($prod->id_proveedor)
-                                            <small class="text-muted">{{ $prod->id_proveedor }}</small>
+                                        @if($item['variante'])
+                                            <span class="badge text-bg-light border fw-normal">{{ $item['variante']->nombre() }}</span>
+                                        @endif
+                                        @if($item['linea']->codigo())
+                                            <small class="text-muted">{{ $item['linea']->codigo() }}</small>
                                         @endif
                                         @if($prod->etiquetasPublicas->isNotEmpty())
                                             <div class="mt-1">
                                                 <button class="btn btn-link btn-sm p-0 text-muted text-decoration-none"
                                                         type="button"
                                                         data-bs-toggle="collapse"
-                                                        data-bs-target="#detalle-{{ $prod->public_id }}">
+                                                        data-bs-target="#detalle-{{ $fila }}">
                                                     <i class="bi bi-tags"></i>
                                                     <small>Ver características</small>
                                                 </button>
-                                                <div class="collapse mt-1" id="detalle-{{ $prod->public_id }}">
+                                                <div class="collapse mt-1" id="detalle-{{ $fila }}">
                                                     <div class="d-flex flex-wrap gap-1">
                                                         @foreach(App\Models\Producto::agruparCaracteristicas($prod->etiquetasPublicas) as $caracteristica)
                                                             <span class="tienda-chip">
@@ -89,19 +93,19 @@
                                     @if($mostrarPrecios)
                                         <div class="ci-price text-center">
                                             <div class="text-muted small">Precio</div>
-                                            <div class="small cifras">{{ $prod->moneda ? $prod->moneda->simbolo : '$' }}{{ number_format($prod->precio, 2, ',', '.') }}</div>
+                                            <div class="small cifras">{{ $prod->moneda ? $prod->moneda->simbolo : '$' }}{{ number_format($item['precio'], 2, ',', '.') }}</div>
                                         </div>
                                     @endif
 
                                     {{-- Cantidad --}}
                                     <div class="ci-qty qty-control selector-cantidad selector-cantidad-chico d-flex align-items-center"
-                                         data-producto-id="{{ $prod->public_id }}"
-                                         data-url="{{ route('carrito.actualizar', $prod) }}"
-                                         data-stock-url="{{ route('carrito.stock', $prod) }}"
+                                         data-producto-id="{{ $fila }}"
+                                         data-url="{{ route('carrito.actualizar', ['producto' => $prod] + $param) }}"
+                                         data-stock-url="{{ route('carrito.stock', ['producto' => $prod] + $param) }}"
                                          {{-- Con los precios ocultos no se manda el número: el JS sólo lo usa
                                               para reescribir el subtotal y el total, que en ese caso ni existen. --}}
-                                         data-precio="{{ $mostrarPrecios ? $prod->precio : 0 }}"
-                                         data-stock="{{ $prod->stock ?? '' }}"
+                                         data-precio="{{ $mostrarPrecios ? $item['precio'] : 0 }}"
+                                         data-stock="{{ $item['variante'] ? $item['variante']->stock : ($prod->stock ?? '') }}"
                                          data-moneda-id="{{ $prod->moneda_id ?? '' }}"
                                          data-moneda-simbolo="{{ $prod->moneda ? $prod->moneda->simbolo : '$' }}"
                                          data-moneda-nombre="{{ $prod->moneda ? $prod->moneda->nombre : '' }}">
@@ -122,13 +126,13 @@
 
                                     {{-- Subtotal --}}
                                     @if($mostrarPrecios)
-                                        <div class="ci-sub fw-semibold" id="subtotal-{{ $prod->public_id }}">
+                                        <div class="ci-sub fw-semibold" id="subtotal-{{ $fila }}">
                                             {{ $prod->moneda ? $prod->moneda->simbolo : '$' }}{{ number_format($item['subtotal'], 2, ',', '.') }}
                                         </div>
                                     @endif
 
                                     {{-- Eliminar --}}
-                                    <form class="ci-del" action="{{ route('carrito.eliminar', $prod) }}" method="POST">
+                                    <form class="ci-del" action="{{ route('carrito.eliminar', ['producto' => $prod] + $param) }}" method="POST">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"

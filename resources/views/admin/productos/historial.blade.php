@@ -100,6 +100,10 @@
                                         <i class="bi {{ $mov->tipoIcono() }}"></i>
                                         <span class="d-none d-sm-inline">{{ $mov->tipoLabel() }}</span>
                                     </span>
+                                    {{-- De qué variante (Talle M): el stock de la columna es el de ella. --}}
+                                    @if($mov->variante)
+                                        <span class="badge text-bg-light border d-block mt-1 fw-normal">{{ $mov->variante->nombre() }}</span>
+                                    @endif
                                 </td>
                                 <td class="text-muted small d-none d-md-table-cell">
                                     {{ $mov->descripcion ?? '—' }}

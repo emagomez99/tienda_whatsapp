@@ -501,7 +501,7 @@
 
         inpB.addEventListener('input', function () {
             clearTimeout(timer);
-            inpId.value = ''; inpP.value = ''; inpM.value = ''; inpS.value = ''; btnOk.disabled = true;
+            inpId.value = ''; inpId.dataset.variante = ''; inpP.value = ''; inpM.value = ''; inpS.value = ''; btnOk.disabled = true;
             var q = inpB.value.trim();
             if (q.length < 2) { dropP.style.display = 'none'; return; }
             timer = setTimeout(function () {
@@ -526,6 +526,7 @@
                             btn.addEventListener('click', function () {
                                 inpB.value = p.descripcion;
                                 inpId.value = p.id; inpP.value = p.precio; inpD.value = p.descripcion;
+                                inpId.dataset.variante = p.variante_id ? String(p.variante_id) : '';   // Talle M, Color Rojo…
                                 inpM.value = p.moneda_id || ''; inpS.value = sim;
                                 btnOk.disabled = false;
                                 dropP.style.display = 'none';
@@ -564,9 +565,10 @@
             var monedaId = inpM.value;
             var simbolo  = inpS.value || '$';
             var cant     = Math.max(1, parseInt(inpC.value) || 1);
+            var variante = inpId.dataset.variante || '';
             var ex       = null;
-            items.forEach(function (i) { if (i.id === id) ex = i; });
-            if (ex) { ex.cantidad += cant; } else { items.push({ id: id, descripcion: desc, precio: prec, cantidad: cant, moneda_id: monedaId, simbolo: simbolo }); }
+            items.forEach(function (i) { if (i.id === id && (i.variante_id || '') === variante) ex = i; });
+            if (ex) { ex.cantidad += cant; } else { items.push({ id: id, variante_id: variante, descripcion: desc, precio: prec, cantidad: cant, moneda_id: monedaId, simbolo: simbolo }); }
             fila.remove();
             renderItems();
         });
@@ -610,6 +612,11 @@
             var b = document.createElement('input');
             b.type = 'hidden'; b.name = 'productos[' + idx + '][cantidad]'; b.value = item.cantidad;
             formPedido.appendChild(b);
+            if (item.variante_id) {
+                var c = document.createElement('input');
+                c.type = 'hidden'; c.name = 'productos[' + idx + '][variante_id]'; c.value = item.variante_id;
+                formPedido.appendChild(c);
+            }
         });
     });
 

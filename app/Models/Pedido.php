@@ -76,15 +76,16 @@ class Pedido extends Model
     }
 
     /**
-     * Agrega unidades de un producto al pedido.
-     * Si el producto ya existe, acumula la cantidad en el ítem existente.
+     * Agrega unidades de un producto (o de una de sus variantes: Talle M) al pedido.
+     * Si ya está, acumula la cantidad en el ítem existente.
      */
-    public function agregarProducto(Producto $producto, $cantidad)
+    public function agregarProducto(Producto $producto, $cantidad, Variante $variante = null)
     {
-        $item         = $this->items()->where('producto_id', $producto->id)->first();
+        $item = $this->items()->where('producto_id', $producto->id)
+            ->where('variante_id', $variante ? $variante->id : null)->first();
         $cantAnterior = $item ? $item->cantidad : 0;
 
-        return $this->aplicarCantidad($producto, $cantAnterior + $cantidad, $item);
+        return $this->aplicarCantidad($producto, $cantAnterior + $cantidad, $item, $variante);
     }
 
     /**
@@ -92,24 +93,30 @@ class Pedido extends Model
      */
     public function actualizarItem(Producto $producto, $nuevaCantidad, PedidoProducto $item)
     {
-        return $this->aplicarCantidad($producto, $nuevaCantidad, $item);
+        return $this->aplicarCantidad($producto, $nuevaCantidad, $item, $item->variante_id ? $item->variante : null);
     }
 
     /**
      * Núcleo compartido: valida stock, ajusta si está confirmado, persiste el ítem.
+     * El stock es el de la variante si la hay (Talle M), o el del producto.
      */
-    private function aplicarCantidad(Producto $producto, $nuevaCantidad, $item = null)
+    private function aplicarCantidad(Producto $producto, $nuevaCantidad, $item = null, Variante $variante = null)
     {
         $cantAnterior = $item ? $item->cantidad : 0;
         $diferencia   = $nuevaCantidad - $cantAnterior;
+        $origen       = $variante ?: $producto;
+
+        if ($variante === null && $producto->tieneVariantes()) {
+            return ['ok' => false, 'error' => '"' . $producto->descripcion . '" tiene variantes: elegí cuál (por ejemplo, el talle).'];
+        }
 
         if ($this->esConfirmado() && $diferencia > 0) {
-            $result = $producto->evaluarCantidad($diferencia);
+            $result = $origen->evaluarCantidad($diferencia);
             if (! $result->esSuficiente()) {
                 return ['ok' => false, 'error' => $result->error];
             }
         } elseif ($this->esPendiente()) {
-            $result = $producto->evaluarCantidad($nuevaCantidad);
+            $result = $origen->evaluarCantidad($nuevaCantidad);
             if (! $result->esSuficiente()) {
                 return ['ok' => false, 'error' => $result->error];
             }
@@ -122,7 +129,7 @@ class Pedido extends Model
                 ? StockMovimiento::TIPO_SALIDA_PEDIDO
                 : StockMovimiento::TIPO_DEVOLUCION_PEDIDO;
 
-            $producto->registrarMovimiento(
+            $origen->registrarMovimiento(
                 $variacion,
                 $tipo,
                 'Pedido #' . $this->id . ': ajuste de ítem',
@@ -132,12 +139,14 @@ class Pedido extends Model
         }
 
         if ($item === null) {
+            $precio = $variante ? $variante->precioFinal() : $producto->precio;
             $this->items()->create([
                 'producto_id'     => $producto->id,
-                'descripcion'     => $producto->descripcion,
-                'precio_unitario' => $producto->precio,
+                'variante_id'     => $variante ? $variante->id : null,
+                'descripcion'     => $variante ? $variante->descripcionCompleta() : $producto->descripcion,
+                'precio_unitario' => $precio,
                 'cantidad'        => $nuevaCantidad,
-                'subtotal'        => $producto->precio * $nuevaCantidad,
+                'subtotal'        => $precio * $nuevaCantidad,
                 'moneda_id'       => $producto->moneda_id,
             ]);
         } else {

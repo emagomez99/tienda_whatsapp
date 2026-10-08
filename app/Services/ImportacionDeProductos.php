@@ -183,6 +183,10 @@ class ImportacionDeProductos
             // nombre de la planilla, para que se vea en el historial de dónde salió.
             $stockActual = (int) Producto::whereKey($producto->id)->value('stock');
             if (isset($v['stock']) && (int) $v['stock'] !== $stockActual) {
+                // Con variantes, la planilla trae el total: cuál talle cambió no se sabe.
+                if ($producto->tieneVariantes()) {
+                    throw ValidationException::withMessages(['stock' => 'Tiene variantes (talles, colores…): su stock se cambia en cada variante, desde el producto en el panel. El resto de la fila no se guardó.']);
+                }
                 $producto->registrarMovimiento(
                     (int) $v['stock'] - $stockActual,
                     StockMovimiento::TIPO_IMPORTACION,

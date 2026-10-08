@@ -71,8 +71,12 @@
             <div class="ficha-precio-movil text-primary mb-3">{{ $producto->precio_con_moneda }}</div>
         @endif
 
-        {{-- Stock --}}
-        <div class="d-flex gap-2 flex-wrap mb-3">
+        @if($selector)
+            @include('tienda.partials.selector-variantes')
+        @endif
+
+        {{-- Stock (con variantes, el de la opción elegida) --}}
+        <div class="d-flex gap-2 flex-wrap mb-3 ficha-stock">
             {{-- Igual que en la ficha de escritorio: por encargue sólo cuando no hay stock. --}}
             @if($producto->stock > 0)
                 <span class="badge bg-success-subtle text-success-emphasis"><i class="bi bi-check-circle"></i> En stock ({{ $producto->stock }})</span>
@@ -142,6 +146,7 @@
         <div class="position-fixed bottom-0 start-0 end-0 ficha-barra-compra">
             <form class="form-agregar">
                 @csrf
+                @if($selector)<input type="hidden" name="variante_id" class="input-variante" value="">@endif
                 <div class="selector-cantidad selector-cantidad-grande d-flex align-items-center gap-2">
                     <button type="button" class="btn btn-outline-secondary btn-decrement" disabled>
                         <i class="bi bi-dash"></i>

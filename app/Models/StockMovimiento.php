@@ -15,7 +15,7 @@ class StockMovimiento extends Model
     protected $table = 'stock_movimientos';
 
     protected $fillable = [
-        'producto_id', 'tipo', 'variacion', 'stock_resultante',
+        'producto_id', 'variante_id', 'tipo', 'variacion', 'stock_resultante',
         'descripcion', 'pedido_id', 'user_id',
     ];
 
@@ -29,6 +29,11 @@ class StockMovimiento extends Model
     public function producto()
     {
         return $this->belongsTo(Producto::class);
+    }
+
+    public function variante()
+    {
+        return $this->belongsTo(Variante::class);
     }
 
     public function pedido()

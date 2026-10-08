@@ -259,7 +259,7 @@ Objetivo: carga y actualización masiva por planilla, con las mismas reglas que 
 - [x] Marca como característica global por defecto en tiendas nuevas (`TenantDatabaseSeeder`: global, opcional, visible).
 - [x] **Orden de los productos dentro de una categoría**: por nombre, más nuevos, precio (pasado a la moneda base) o "Elijo cuáles van primero" (destacados en `categoria_destacados`, el resto por nombre). `App\Support\OrdenDeProductos`; vale en la página de la categoría, en sus filtros y en un menú que lleva a ella.
 - [x] Varios valores por característica (ej. "Talles: S, M, L"; Modelo en oleomc): se prende en la característica (`etiquetas.varios_valores`). `producto_etiqueta` pasa a una fila por valor (único producto+característica+valor). Formulario con fichitas; tienda "Talle: S, M"; Excel con punto y coma ("S; M; L"); no se apaga si hay productos con varios.
-- [ ] Variantes con stock propio (talle/color que el cliente elige al comprar). Proyecto aparte.
+- [x] Variantes con stock propio (talle/color que el cliente elige al comprar): `producto_variantes` + `producto_variante_valores`, armadas en el formulario a partir de las características con varios valores (`VariantesDeProducto`). Stock, código y precio propios; el stock del producto es la suma de las activas. Carrito por línea (`LineaDeCarrito`, "12-5"), ficha con botones (`SelectorDeVariantes`), pedidos y movimientos con `variante_id`. Excel: el stock de un producto con variantes no se cambia por planilla (avisa).
 
 ## 6. Migración por tienda (datos reales al 2026-10-07)
 
@@ -337,3 +337,4 @@ Datos útiles:
 | 2026-10-10 | Etapa 5, paso C: pantallas (Productos › Excel, Importar productos, vista previa con avance), ayuda; cambio a OpenSpout por rendimiento; una fila sin código con el nombre de un producto existente frena (no duplica). Probado con oleomc (30.917: exportar 25 s, analizar 23 s, tanda de 100 en 2 s) y en farmacia por el navegador (subir, revisar, aplicar) | (este commit) |
 | 2026-10-11 | Etapa 4: Marca en tiendas nuevas; orden de los productos por categoría (nombre, nuevos, precio, destacados a mano) | (este) |
 | 2026-10-11 | Etapa 4: varios valores por característica (fichitas en el producto, "S; M; L" en Excel, unir valores sin chocar) | (este) |
+| 2026-10-11 | Etapa 4: variantes con stock propio (panel, tienda, carrito, pedidos, historial) | (este) |

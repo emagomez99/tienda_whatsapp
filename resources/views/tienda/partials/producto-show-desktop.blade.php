@@ -104,7 +104,12 @@
                 </div>
             @endif
 
-            <div class="mb-3 d-flex gap-2 flex-wrap">
+            @if($selector)
+                @include('tienda.partials.selector-variantes')
+            @endif
+
+            {{-- Con variantes, el script la cambia por la de la opción elegida. --}}
+            <div class="mb-3 d-flex gap-2 flex-wrap ficha-stock">
                 {{-- Por encargue sólo importa cuando no hay stock; "Sin stock" en rojo al
                      lado de "Disponible por encargue" se leía como una contradicción. --}}
                 @if($producto->stock > 0)
@@ -119,6 +124,7 @@
             @if($producto->estaDisponible())
                 <form class="form-agregar mt-4">
                     @csrf
+                    @if($selector)<input type="hidden" name="variante_id" class="input-variante" value="">@endif
                     <div class="selector-cantidad selector-cantidad-grande d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-outline-secondary btn-decrement" disabled>
                             <i class="bi bi-dash"></i>

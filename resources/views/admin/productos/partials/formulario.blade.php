@@ -28,6 +28,25 @@
         ? old('especificaciones', [])
         : $producto->especificaciones->map(function ($e) { return ['clave' => $e->clave, 'valor' => $e->valor]; })->all();
 
+    // Variantes: lo guardado o, si volvió con errores, lo que se había mandado.
+    if (session()->hasOldInput()) {
+        $usaVariantes = (bool) old('usa_variantes');
+        $variantesIniciales = array_values(old('variantes', []));
+    } elseif ($editando) {
+        $producto->loadMissing('variantes.valores');
+        $usaVariantes = $producto->variantes->isNotEmpty();
+        $variantesIniciales = $producto->variantes->map(function ($v) {
+            $valores = [];
+            foreach ($v->valores as $valor) {
+                $valores[$valor->pivot->etiqueta_id] = $valor->valor;
+            }
+            return ['id' => $v->id, 'valores' => $valores, 'codigo' => $v->codigo, 'precio' => $v->precio, 'stock' => $v->stock, 'activa' => $v->activa];
+        })->all();
+    } else {
+        $usaVariantes = false;
+        $variantesIniciales = [];
+    }
+
     // En el alta, si hay un solo proveedor ya viene elegido.
     $proveedorElegido = old('proveedor_id', $editando
         ? $producto->proveedor_id
@@ -97,7 +116,8 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-4 mb-3 mb-md-0">
+                    {{-- Con variantes, el stock es el de cada una (sección Variantes). --}}
+                    <div class="col-md-4 mb-3 mb-md-0 {{ $usaVariantes ? 'd-none' : '' }}" id="stock-del-producto">
                         @if($editando)
                             <label class="form-label">Stock actual @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.stock_edicion')])</label>
                             <div class="input-group">
@@ -114,6 +134,16 @@
                             <label for="stock" class="form-label">Stock inicial * @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.stock_inicial')])</label>
                             <input type="number" min="0" class="form-control @error('stock') is-invalid @enderror" id="stock" name="stock" value="{{ old('stock', 0) }}" required>
                             @error('stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        @endif
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0 {{ $usaVariantes ? '' : 'd-none' }}" id="stock-en-variantes">
+                        <label class="form-label">Stock</label>
+                        <div class="form-control bg-light small text-muted">
+                            @if($editando && $usaVariantes)<span class="fw-semibold text-body">{{ $producto->stock }}</span> en total · @endif
+                            Se carga en cada variante, más abajo.
+                        </div>
+                        @if($editando)
+                            <a href="{{ route('admin.productos.historial', $producto) }}" class="small"><i class="bi bi-clock-history"></i> Ver historial</a>
                         @endif
                     </div>
                     <div class="col-md-4 mb-3 mb-md-0">
@@ -136,6 +166,7 @@
 
         @include('admin.productos.partials.categorias', ['seleccionadas' => $categoriasIniciales])
         @include('admin.productos.partials.etiquetas', ['valoresIniciales' => $etiquetasIniciales])
+        @include('admin.productos.partials.variantes')
         @include('admin.productos.partials.especificaciones', ['especificacionesIniciales' => $especificacionesIniciales])
         @include('admin.productos.partials.card-precio')
         @include('admin.productos.partials.galeria')

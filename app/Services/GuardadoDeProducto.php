@@ -31,9 +31,13 @@ class GuardadoDeProducto
     /** @var GaleriaProducto */
     private $galeria;
 
-    public function __construct(GaleriaProducto $galeria = null)
+    /** @var VariantesDeProducto */
+    private $variantes;
+
+    public function __construct(GaleriaProducto $galeria = null, VariantesDeProducto $variantes = null)
     {
         $this->galeria = $galeria ?: new GaleriaProducto();
+        $this->variantes = $variantes ?: new VariantesDeProducto();
     }
 
     /**
@@ -45,9 +49,10 @@ class GuardadoDeProducto
             // El stock no se escribe directo: entra como movimiento, que queda en
             // el historial con quién y por qué.
             $producto = new Producto(['stock' => 0]);
-            $this->guardar($producto, $datos);
+            $this->guardar($producto, $datos, $usuarioId);
 
-            if ($datos->stockInicial() > 0) {
+            // Con variantes, el stock es el de cada una.
+            if ($datos->stockInicial() > 0 && !$producto->tieneVariantes()) {
                 $producto->registrarMovimiento(
                     $datos->stockInicial(),
                     StockMovimiento::TIPO_AJUSTE_INICIAL,
@@ -64,16 +69,16 @@ class GuardadoDeProducto
     /**
      * @throws ValidationException si falta un dato obligatorio
      */
-    public function actualizar(Producto $producto, DatosDeProducto $datos): Producto
+    public function actualizar(Producto $producto, DatosDeProducto $datos, ?int $usuarioId = null): Producto
     {
-        return DB::transaction(function () use ($producto, $datos) {
-            $this->guardar($producto, $datos);
+        return DB::transaction(function () use ($producto, $datos, $usuarioId) {
+            $this->guardar($producto, $datos, $usuarioId);
 
             return $producto;
         });
     }
 
-    private function guardar(Producto $producto, DatosDeProducto $datos): void
+    private function guardar(Producto $producto, DatosDeProducto $datos, ?int $usuarioId = null): void
     {
         $atributos = $datos->atributos();
         unset($atributos['stock']);   // sólo por movimientos
@@ -99,7 +104,9 @@ class GuardadoDeProducto
         }
 
         if ($datos->etiquetas() !== null) {
-            $this->guardarCaracteristicas($producto, $datos->etiquetas());
+            // Sin lista de variantes (ej. una planilla), los valores que usan las
+            // variantes que ya tiene no se pueden sacar: quedarían sin producto.
+            $this->guardarCaracteristicas($producto, $datos->etiquetas(), $datos->variantes() === null);
         }
 
         if ($datos->especificaciones() !== null) {
@@ -112,6 +119,11 @@ class GuardadoDeProducto
         if ($datos->galeria() !== null) {
             $this->galeria->sincronizar($producto, $datos->galeria(), $datos->archivosGaleria());
         }
+
+        // Después de las características: las variantes se eligen entre sus valores.
+        if ($datos->variantes() !== null) {
+            $this->variantes->sincronizar($producto, $datos->variantes(), $usuarioId);
+        }
     }
 
     /**
@@ -122,7 +134,7 @@ class GuardadoDeProducto
      *
      * @param array<int, string[]> $valores
      */
-    private function guardarCaracteristicas(Producto $producto, array $valores): void
+    private function guardarCaracteristicas(Producto $producto, array $valores, bool $protegerVariantes = true): void
     {
         $admiteVarios = Etiqueta::whereIn('id', array_keys($valores))->pluck('varios_valores', 'id')->all();
 
@@ -145,6 +157,13 @@ class GuardadoDeProducto
                     (new ProductoEtiqueta(['producto_id' => $producto->id, 'etiqueta_id' => $etiquetaId, 'valor' => $valor]))->save();
                 }
             }
+        }
+
+        if ($protegerVariantes) {
+            $quedan = array_merge($quedan, DB::table('producto_variante_valores')
+                ->join('producto_variantes', 'producto_variantes.id', '=', 'producto_variante_valores.variante_id')
+                ->where('producto_variantes.producto_id', $producto->id)
+                ->pluck('producto_variante_valores.etiqueta_valor_id')->all());
         }
 
         DB::table('producto_etiqueta')->where('producto_id', $producto->id)

@@ -26,6 +26,16 @@
     <strong>Otros datos:</strong> algo especial de este producto. Envase: Retornable, Edición: Navidad.
 </div>
 
+<h6 class="ayuda-titulo">Un producto que viene en varios talles o colores</h6>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-grid-3x3-gap"></i></span>
+    <div><strong>Cargalo una sola vez, con sus opciones.</strong><br>Una remera en talles S, M y L es un solo producto. En <em>Características</em> escribí cada talle y apretá Enter (quedan como fichitas). Después, en <em>Variantes</em>, prendé <em>El cliente elige al comprar</em> y poné cuántas hay de cada talle.</div>
+</div>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-cart-check"></i></span>
+    <div><strong>El cliente elige el talle en la tienda.</strong><br>Al confirmar el pedido se descuenta el stock de ese talle. Si una opción se terminó, aparece tachada.</div>
+</div>
+
 <h6 class="ayuda-titulo">El listado</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-file-earmark-spreadsheet"></i></span>

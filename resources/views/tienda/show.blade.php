@@ -35,12 +35,95 @@
 @endpush
 @endif
 
+@php
+    $datosSelector = $selector
+        ? ['ejes' => $selector->ejes, 'variantes' => $selector->variantes, 'queElegir' => $selector->queElegir()]
+        : null;
+@endphp
+
 @push('scripts')
 <script>
 (function () {
     var maxStock = {{ $maxStock ?? 'null' }};
-    var urlAgregar = '{{ route('carrito.agregar', $producto) }}';
-    var descripcion = '{{ addslashes($producto->descripcion) }}';
+    var urlAgregar = @json(route('carrito.agregar', $producto));
+    var descripcion = @json($producto->descripcion);
+    var SELECTOR = @json($datosSelector);
+    var elegida = null;          // la variante elegida (Talle M), si el producto tiene
+    var refrescos = [];          // cada formulario se vuelve a dibujar al cambiar el máximo
+
+    // ── Variantes: botones de Talle, Color… (escritorio y celular, sincronizados) ──
+    if (SELECTOR) {
+        var elegido = {};   // eje => valor
+
+        function coincide(variante, ejeLibre, valorLibre) {
+            return SELECTOR.ejes.every(function (eje) {
+                var buscado = eje.id === ejeLibre ? valorLibre : elegido[eje.id];
+                return buscado === undefined || variante.valores[eje.id] === buscado;
+            });
+        }
+
+        function escapar(texto) {
+            var div = document.createElement('div');
+            div.textContent = texto;
+            return div.innerHTML;
+        }
+
+        function badge(clase, icono, texto) {
+            return '<span class="badge ' + clase + '"><i class="bi ' + icono + '"></i> ' + texto + '</span>';
+        }
+
+        function pintarSelector() {
+            document.querySelectorAll('.opcion-variante').forEach(function (boton) {
+                var eje = parseInt(boton.dataset.eje, 10), valor = parseInt(boton.dataset.valor, 10);
+                var activo = elegido[eje] === valor;
+                // Se puede elegir si con lo ya elegido en los demás hay alguna que se pida.
+                var posible = SELECTOR.variantes.some(function (v) { return v.sePide && coincide(v, eje, valor); });
+                boton.classList.toggle('btn-primary', activo);
+                boton.classList.toggle('btn-outline-secondary', !activo);
+                boton.classList.toggle('text-decoration-line-through', !posible);
+                boton.setAttribute('aria-pressed', activo ? 'true' : 'false');
+                boton.title = posible ? '' : 'Sin stock';
+            });
+
+            SELECTOR.ejes.forEach(function (eje) {
+                var opcion = eje.opciones.filter(function (o) { return o.id === elegido[eje.id]; })[0];
+                document.querySelectorAll('.variante-elegida[data-eje="' + eje.id + '"]').forEach(function (el) {
+                    el.textContent = opcion ? opcion.valor : 'elegí una opción';
+                });
+            });
+
+            var completa = SELECTOR.ejes.every(function (eje) { return elegido[eje.id] !== undefined; });
+            elegida = completa ? (SELECTOR.variantes.filter(function (v) { return coincide(v); })[0] || null) : null;
+
+            document.querySelectorAll('.input-variante').forEach(function (campo) { campo.value = elegida ? elegida.id : ''; });
+
+            if (elegida) {
+                maxStock = elegida.sePide ? elegida.stock : 0;
+                document.querySelectorAll('.ficha-precio, .ficha-precio-movil').forEach(function (el) { el.textContent = elegida.precio; });
+                var html = elegida.hayStock
+                    ? badge('bg-success-subtle text-success-emphasis', 'bi-check-circle', 'En stock (' + elegida.cantidad + ' disponibles)')
+                    : (elegida.sePide
+                        ? badge('bg-warning-subtle text-warning-emphasis', 'bi-clock', 'Sin stock ahora: lo encargamos para vos')
+                        : badge('bg-danger-subtle text-danger-emphasis', 'bi-x-circle', 'Sin stock en ' + escapar(elegida.nombre)));
+
+                document.querySelectorAll('.ficha-stock').forEach(function (el) { el.innerHTML = html; });
+            }
+            refrescos.forEach(function (f) { f(); });
+        }
+
+        document.querySelectorAll('.opcion-variante').forEach(function (boton) {
+            boton.addEventListener('click', function () {
+                elegido[parseInt(boton.dataset.eje, 10)] = parseInt(boton.dataset.valor, 10);
+                pintarSelector();
+            });
+        });
+
+        // Una sola opción en cada característica: ya viene elegida.
+        SELECTOR.ejes.forEach(function (eje) {
+            if (eje.opciones.length === 1) elegido[eje.id] = eje.opciones[0].id;
+        });
+        setTimeout(pintarSelector, 0);
+    }
 
     // Inicializar cada formulario de agregar (desktop y mobile)
     document.querySelectorAll('.form-agregar').forEach(function (form) {
@@ -52,6 +135,13 @@
             btnDec.disabled = val <= 1;
             btnInc.disabled = maxStock !== null && val >= maxStock;
         }
+
+        refrescos.push(function () {
+            var val = parseInt(input.value) || 1;
+            if (maxStock !== null && maxStock > 0 && val > maxStock) { val = maxStock; input.value = val; }
+            if (maxStock !== null) { input.max = Math.max(maxStock, 1); } else { input.removeAttribute('max'); }
+            actualizarBotones(val);
+        });
 
         btnDec.addEventListener('click', function () {
             var val = parseInt(input.value) || 1;
@@ -72,6 +162,14 @@
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
+            if (SELECTOR && !elegida) {
+                showToast('Elegí ' + SELECTOR.queElegir + ' antes de agregarlo.', 'warning');
+                return;
+            }
+            if (elegida && !elegida.sePide) {
+                showToast('No queda stock de ' + elegida.nombre + '.', 'warning');
+                return;
+            }
             var cantidad = parseInt(input.value) || 1;
             if (maxStock !== null && cantidad > maxStock) {
                 showToast('Stock máximo: ' + maxStock, 'warning');

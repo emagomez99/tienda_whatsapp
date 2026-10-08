@@ -118,10 +118,10 @@
                         @foreach($productos as $item)
                             <li class="list-group-item d-flex justify-content-between align-items-start">
                                 <div class="ms-2 me-auto">
-                                    <div class="fw-bold">{{ $item['producto']->descripcion }}</div>
+                                    <div class="fw-bold">{{ $item['linea']->descripcion() }}</div>
                                     <small class="text-muted">Cantidad: {{ $item['cantidad'] }}</small>
-                                    @if($item['producto']->id_proveedor)
-                                        <br><small class="text-muted">Cod: {{ $item['producto']->id_proveedor }}</small>
+                                    @if($item['linea']->codigo())
+                                        <br><small class="text-muted">Cod: {{ $item['linea']->codigo() }}</small>
                                     @endif
                                 </div>
                                 @if($mostrarPrecios)
