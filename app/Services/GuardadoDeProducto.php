@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Models\Producto;
 use App\Models\ProductoEspecificacion;
-use App\Models\Proveedor;
 use App\Models\StockMovimiento;
+use App\Support\Caracteristica;
 use App\Support\DatosDeProducto;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -19,7 +19,7 @@ use Illuminate\Validation\ValidationException;
  *
  * Recibe datos con el formato ya validado (tipos, largos, que existan los ids):
  * eso es de quien arma DatosDeProducto. Acá van las reglas del negocio: datos
- * obligatorios, precio derivado, stock como movimiento, categorías, etiquetas,
+ * obligatorios, precio derivado, stock como movimiento, categorías, características,
  * especificaciones y galería. Todo o nada: si una regla falla, no se guarda ninguna parte.
  */
 class GuardadoDeProducto
@@ -118,22 +118,29 @@ class GuardadoDeProducto
     }
 
     /**
-     * Las etiquetas que el producto tiene que tener cargadas.
+     * Las características que el producto tiene que tener cargadas: las obligatorias
+     * de sus categorías (con la herencia) y las globales obligatorias.
      *
-     * Hoy las decide el proveedor. En la Etapa 2 del plan de Categorías pasan a
-     * decidirlas las categorías del producto: el cambio es sólo acá.
+     * Si estos datos no traen categorías (ej. una planilla sin esa columna), valen las
+     * que el producto ya tiene; lo mismo con los valores de las características.
      *
      * @throws ValidationException
      */
     private function validarObligatorias(Producto $producto, DatosDeProducto $datos): void
     {
-        $proveedor = Proveedor::with('etiquetasObligatorias')->find($producto->proveedor_id);
-        if (!$proveedor || $proveedor->etiquetasObligatorias->isEmpty()) {
+        $categorias = $datos->categorias();
+        if ($categorias === null) {
+            $categorias = $producto->exists ? $producto->categorias()->pluck('categorias.id')->all() : [];
+        }
+
+        $obligatorias = array_filter(
+            (new CaracteristicasPorCategoria())->deCategorias($categorias),
+            function (Caracteristica $c) { return $c->obligatoria(); }
+        );
+        if (empty($obligatorias)) {
             return;
         }
 
-        // Si estos datos no traen etiquetas (ej. una planilla sin esas columnas), se
-        // controla contra las que el producto ya tiene.
         $cargadas = $datos->etiquetas();
         if ($cargadas === null) {
             $cargadas = $producto->exists
@@ -141,16 +148,17 @@ class GuardadoDeProducto
                 : [];
         }
 
-        $faltantes = $proveedor->etiquetasObligatorias
-            ->filter(function ($etiqueta) use ($cargadas) {
-                return trim((string) ($cargadas[$etiqueta->id] ?? '')) === '';
-            })
-            ->pluck('nombre')
-            ->all();
+        $faltantes = [];
+        foreach ($obligatorias as $caracteristica) {
+            if (trim((string) ($cargadas[$caracteristica->etiquetaId()] ?? '')) === '') {
+                $faltantes[] = $caracteristica->nombre();
+            }
+        }
 
         if (!empty($faltantes)) {
             throw ValidationException::withMessages([
-                'etiquetas' => 'Faltan etiquetas obligatorias para este proveedor: ' . implode(', ', $faltantes) . '.',
+                'etiquetas' => (count($faltantes) === 1 ? 'Falta una característica obligatoria: ' : 'Faltan características obligatorias: ')
+                    . implode(', ', $faltantes) . '.',
             ]);
         }
     }

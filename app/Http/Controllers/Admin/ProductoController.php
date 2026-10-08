@@ -11,6 +11,7 @@ use App\Models\ProductoEspecificacion;
 use App\Models\StockMovimiento;
 use App\Models\Proveedor;
 use App\Services\AsignacionDeCategorias;
+use App\Services\CaracteristicasPorCategoria;
 use App\Services\GaleriaProducto;
 use App\Services\GuardadoDeProducto;
 use App\Support\DatosDeProducto;
@@ -115,17 +116,15 @@ class ProductoController extends Controller
 
     public function create()
     {
-        $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
+        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
         $etiquetas = Etiqueta::orderBy('nombre')->get();
         $monedas = Moneda::where('activa', true)->orderBy('nombre')->get();
-        $etiquetasObligatorias = $this->mapEtiquetasObligatorias($proveedores);
-        $etiquetasAplicables = $this->mapEtiquetasAplicables($proveedores);
+        $caracteristicasPorCategoria = (new CaracteristicasPorCategoria())->mapaParaFormulario();
         $monedaDefaultId = Moneda::idPorDefecto();
         $categorias = Categoria::enOrdenDeArbol();
 
         return view('admin.productos.create', compact(
-            'proveedores', 'etiquetas', 'monedas', 'categorias',
-            'etiquetasObligatorias', 'etiquetasAplicables', 'monedaDefaultId'
+            'proveedores', 'etiquetas', 'monedas', 'categorias', 'caracteristicasPorCategoria', 'monedaDefaultId'
         ));
     }
 
@@ -178,17 +177,15 @@ class ProductoController extends Controller
     public function edit(Producto $producto)
     {
         $producto->load(['categorias', 'etiquetas', 'especificaciones', 'imagenes']);
-        $proveedores = Proveedor::where('activo', true)->with('etiquetas')->orderBy('nombre')->get();
+        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
         $etiquetas = Etiqueta::orderBy('nombre')->get();
         $monedas = Moneda::where('activa', true)->orderBy('nombre')->get();
-        $etiquetasObligatorias = $this->mapEtiquetasObligatorias($proveedores);
-        $etiquetasAplicables = $this->mapEtiquetasAplicables($proveedores);
+        $caracteristicasPorCategoria = (new CaracteristicasPorCategoria())->mapaParaFormulario();
         $monedaDefaultId = Moneda::idPorDefecto();
         $categorias = Categoria::enOrdenDeArbol();
 
         return view('admin.productos.edit', compact(
-            'producto', 'proveedores', 'etiquetas', 'monedas', 'monedaDefaultId', 'categorias',
-            'etiquetasObligatorias', 'etiquetasAplicables'
+            'producto', 'proveedores', 'etiquetas', 'monedas', 'monedaDefaultId', 'categorias', 'caracteristicasPorCategoria'
         ));
     }
 
@@ -344,30 +341,6 @@ class ProductoController extends Controller
         if ($producto->url_imagen && strpos($producto->url_imagen, 'http') !== 0) {
             Storage::disk('public')->delete($producto->url_imagen);
         }
-    }
-
-    private function mapEtiquetasObligatorias($proveedores)
-    {
-        $map = [];
-        foreach ($proveedores as $prov) {
-            $map[$prov->id] = $prov->etiquetas
-                ->filter(function ($e) { return $e->pivot->obligatoria; })
-                ->map(function ($e) { return ['id' => $e->id, 'nombre' => $e->nombre]; })
-                ->values()
-                ->toArray();
-        }
-        return $map;
-    }
-
-    private function mapEtiquetasAplicables($proveedores)
-    {
-        $map = [];
-        foreach ($proveedores as $prov) {
-            $map[$prov->id] = $prov->etiquetas->filter(function ($e) {
-                return $e->pivot->obligatoria !== null;
-            })->pluck('id')->values()->toArray();
-        }
-        return $map;
     }
 
     public function historial(Producto $producto)

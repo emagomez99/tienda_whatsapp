@@ -147,4 +147,32 @@ class ProductoCategoriasTest extends TestCase
             ->assertSee('id="panel-categorias"', false)
             ->assertDontSee('Crear y elegir');
     }
+
+    /** @test */
+    public function el_formulario_pide_lo_que_exigen_sus_categorias()
+    {
+        $talle = $this->enTenant(function () {
+            $talle = \App\Models\Etiqueta::create(['nombre' => 'Talle', 'visible_usuarios' => true]);
+            Categoria::resolverCamino('Ropa')->caracteristicas()->sync([$talle->id => ['obligatoria' => true, 'orden' => 0]]);
+            return $talle->id;
+        });
+
+        // El formulario recibe qué pide cada categoría (Remeras hereda Talle de Ropa).
+        $this->como()->get($this->urlTenant('admin/productos/create'))
+            ->assertOk()
+            ->assertSee('"porCategoria"', false)
+            ->assertSee('"origen":"Ropa"', false);
+
+        $this->como()->post($this->urlTenant('admin/productos'), $this->formulario(['categorias' => [$this->ids['remeras']]]))
+            ->assertSessionHasErrors(['etiquetas' => 'Falta una característica obligatoria: Talle.']);
+
+        // En Ofertas no se pide: se guarda.
+        $this->como()->post($this->urlTenant('admin/productos'), $this->formulario(['categorias' => [$this->ids['ofertas']]]))
+            ->assertSessionHasNoErrors();
+
+        $this->como()->post($this->urlTenant('admin/productos'), $this->formulario([
+            'descripcion' => 'Remera con talle', 'categorias' => [$this->ids['remeras']],
+            'etiquetas' => [['etiqueta_id' => $talle, 'valor' => 'M']],
+        ]))->assertSessionHasNoErrors();
+    }
 }

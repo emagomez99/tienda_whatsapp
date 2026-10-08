@@ -17,7 +17,7 @@ return [
 
         'id_proveedor' => 'Código interno del proveedor. Aparece en el detalle del producto y se usa en búsquedas. El botón ↺ genera uno automático con el prefijo del proveedor.',
 
-        'proveedor' => 'Quién te provee este producto. Determina qué etiquetas son obligatorias al cargarlo.',
+        'proveedor' => 'Quién te provee este producto. Sirve para el código automático y para filtrar el listado.',
 
         'moneda' => 'Moneda en la que se le cobra al cliente. Es la que se muestra en la tienda junto al precio.',
 
@@ -42,7 +42,7 @@ return [
         'galeria' => 'La primera imagen es la principal: la que se ve en el listado y en Google. Las demás aparecen en el carrusel de la ficha. Arrastrá para cambiar el orden, o usá ★ para pasar una al primer lugar. Se recomienda fondo blanco o transparente.',
 
         'categorias' => 'Qué es el producto: Ropa › Remeras, Celulares, Pádel. Puede estar en varias. Si elegís una subcategoría, el producto aparece también en las de arriba sin marcarlas.',
-        'etiquetas' => 'Categorizan el producto y habilitan los filtros de la tienda. Cuáles lleva lo define el proveedor; las marcadas con * son obligatorias. Al escribir el valor se sugieren los que ya existen, con cuántos productos los usan: elegir uno de esos evita duplicados como "Asus" y "Asuz".',
+        'etiquetas' => 'Los datos del producto que piden sus categorías (Talle, Color, Marca…) y que la tienda usa en los filtros. Cuáles se piden se define en cada categoría; las marcadas con * son obligatorias. Al escribir el valor se sugieren los que ya existen, con cuántos productos los usan: elegir uno de esos evita duplicados como "Asus" y "Asuz".',
 
         'especificaciones' => 'Campos personalizados, exclusivos de este producto: el nombre lo escribís vos y no se comparte con los demás. Arman la tabla de características del detalle. Ej: Peso → 1.75 kg, Material → Acero inoxidable.',
 

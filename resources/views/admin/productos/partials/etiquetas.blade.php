@@ -1,17 +1,19 @@
 {{--
     Etiquetas del producto, compartido por alta y edición.
 
-    Qué etiquetas lleva el producto lo define el proveedor (Etiquetas → Proveedores),
-    así que no se eligen de una lista: se muestran como campos con nombre, primero las
-    obligatorias (con *) y después las opcionales. Al cambiar de proveedor se rearman
-    sin perder lo ya escrito en las etiquetas que siguen aplicando.
+    Qué datos lleva el producto lo definen sus categorías (Categorías → Características
+    que pide, con lo heredado de las de arriba) más las que piden todos los productos.
+    No se eligen de una lista: se muestran como campos con nombre, primero las
+    obligatorias (con *) y después las opcionales. Al cambiar las categorías se rearman
+    sin perder lo ya escrito.
 
     Debajo de cada valor se avisa si ya existe (y cuántos productos lo usan) o si es
     nuevo, y en ese caso si se parece a uno existente: el error de tipeo ("Asuz") es
     la forma más común de duplicar valores.
 
-    Recibe: $etiquetas, $etiquetasObligatorias (proveedor → [{id, nombre}]),
-    $etiquetasAplicables (proveedor → [id]) y $valoresIniciales ([{etiqueta_id, valor}]).
+    Recibe: $etiquetas, $caracteristicasPorCategoria (CaracteristicasPorCategoria::
+    mapaParaFormulario) y $valoresIniciales ([{etiqueta_id, valor}]). Las categorías
+    elegidas las lee de los campos categorias[] del partial de categorías.
 
     Envía lo mismo que antes: etiquetas[i][etiqueta_id] y etiquetas[i][valor].
 --}}
@@ -23,23 +25,22 @@
         <small class="text-muted" id="etiquetas-origen"></small>
     </div>
     <div class="card-body">
-        <div id="etiquetas-sin-proveedor" class="text-center text-muted py-4">
+        <div id="etiquetas-sin-categoria" class="text-center text-muted py-4">
             <i class="bi bi-arrow-up-circle fs-4 d-block mb-1"></i>
-            Elegí primero un <strong>proveedor</strong>.<br>
-            <small>Las etiquetas que lleva el producto dependen de él.</small>
+            Elegí una <strong>categoría</strong> para que te pidamos los datos que importan.
         </div>
 
         <div id="etiquetas-sin-configurar" class="text-center text-muted py-4 d-none">
-            <i class="bi bi-tags fs-4 d-block mb-1"></i>
-            Este proveedor no tiene etiquetas configuradas.
-            @if(auth()->user()->puede('etiquetas.ver'))
-                <br><small>Se definen en <a href="{{ route('admin.etiquetas.index') }}" target="_blank">Etiquetas</a>, eligiendo para cada una qué proveedores la usan.</small>
+            <i class="bi bi-ui-checks fs-4 d-block mb-1"></i>
+            Sus categorías todavía no piden ningún dato.
+            @if(auth()->user()->puede('categorias.gestionar'))
+                <br><small>Se definen en <a href="{{ route('admin.categorias.index') }}" target="_blank">Categorías</a>, en "Características que pide".</small>
             @endif
         </div>
 
         <div id="etiquetas-container"></div>
 
-        <small class="text-muted d-none" id="etiquetas-leyenda"><span class="text-danger">*</span> obligatoria para este proveedor: sin completarla no se puede guardar.</small>
+        <small class="text-muted d-none" id="etiquetas-leyenda"><span class="text-danger">*</span> obligatoria en sus categorías: sin completarla no se puede guardar.</small>
 
         @error('etiquetas')
             <div class="text-danger small mt-2"><i class="bi bi-exclamation-circle"></i> {{ $message }}</div>
@@ -62,15 +63,14 @@
     var URL_ESTADO  = @json(route('admin.etiquetas.valores.estado', ['etiqueta' => '__ID__']));
 
     var ETIQUETAS    = @json($etiquetas->map(function ($e) { return ['id' => $e->id, 'nombre' => $e->nombre, 'visible' => (bool) $e->visible_usuarios]; })->values());
-    var OBLIGATORIAS = @json($etiquetasObligatorias);
-    var APLICABLES   = @json($etiquetasAplicables);
+    var MAPA         = @json($caracteristicasPorCategoria);
     var INICIALES    = @json(array_values($valoresIniciales));
 
-    var proveedor  = document.getElementById('proveedor_id');
+    var ocultasCategorias = document.getElementById('categorias-ocultas');
     var contenedor = document.getElementById('etiquetas-container');
     var indice     = 0;
 
-    // Lo escrito, por etiqueta: sobrevive a los cambios de proveedor.
+    // Lo escrito, por etiqueta: sobrevive a los cambios de categoría.
     var valores = {};
     INICIALES.forEach(function (fila) {
         if (fila && fila.etiqueta_id) valores[String(fila.etiqueta_id)] = fila.valor || '';
@@ -94,7 +94,7 @@
 
     /**
      * Una fila: nombre de la etiqueta, campo de valor con sugerencias y el aviso de
-     * abajo. Las que no aplican al proveedor (quedaron de otro) se pueden quitar.
+     * abajo. Las que ya no pide ninguna de sus categorías se pueden quitar.
      */
     function fila(etiqueta, tipo) {
         var id = String(etiqueta.id);
@@ -139,7 +139,7 @@
         var estado = el('div', 'etiqueta-estado small mt-1');
         if (tipo === 'no-aplica') {
             estado.classList.add('text-warning');
-            estado.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Este proveedor no usa esta etiqueta.';
+            estado.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Ninguna de sus categorías pide este dato: podés quitarlo o dejarlo.';
         }
         col.appendChild(estado);
         row.appendChild(col);
@@ -164,36 +164,55 @@
         return row;
     }
 
+    function categoriasElegidas() {
+        return Array.prototype.map.call(ocultasCategorias.querySelectorAll('input[name="categorias[]"]'), function (campo) { return String(campo.value); });
+    }
+
+    /**
+     * Las que piden las categorías elegidas, sin repetir: obligatoria si alguna la
+     * exige (como CaracteristicasPorCategoria::deCategorias). Una categoría recién
+     * creada desde el panel todavía no pide nada: quedan las globales.
+     */
+    function pedidas(categorias) {
+        var resultado = [], porEtiqueta = {};
+        function sumar(c) {
+            var id = String(c.id);
+            if (porEtiqueta[id]) { porEtiqueta[id].obligatoria = porEtiqueta[id].obligatoria || c.obligatoria; return; }
+            porEtiqueta[id] = { id: id, obligatoria: !!c.obligatoria };
+            resultado.push(porEtiqueta[id]);
+        }
+        MAPA.globales.forEach(sumar);
+        categorias.forEach(function (cat) { (MAPA.porCategoria[cat] || []).forEach(sumar); });
+        return resultado;
+    }
+
     function pintar() {
         guardarLoEscrito();
         contenedor.innerHTML = '';
 
-        var prov = proveedor.value;
-        var obligatorias = prov ? (OBLIGATORIAS[prov] || []).map(function (e) { return String(e.id); }) : [];
-        var aplicables   = prov ? (APLICABLES[prov] || []).map(String) : [];
+        var categorias = categoriasElegidas();
+        var lista = pedidas(categorias);
+        // Primero las obligatorias, después el resto, cada grupo en el orden de sus categorías.
+        lista = lista.filter(function (c) { return c.obligatoria; }).concat(lista.filter(function (c) { return !c.obligatoria; }));
+        var ids = lista.map(function (c) { return c.id; });
 
-        // Primero las obligatorias, en el orden del proveedor; después el resto.
-        var orden = obligatorias.concat(aplicables.filter(function (id) { return obligatorias.indexOf(id) === -1; }));
-
-        orden.forEach(function (id) {
-            if (porId[id]) contenedor.appendChild(fila(porId[id], obligatorias.indexOf(id) !== -1 ? 'obligatoria' : 'opcional'));
+        lista.forEach(function (c) {
+            if (porId[c.id]) contenedor.appendChild(fila(porId[c.id], c.obligatoria ? 'obligatoria' : 'opcional'));
         });
 
-        // Valores de etiquetas que este proveedor no usa: se muestran para decidir
-        // qué hacer con ellos en vez de perderlos en silencio.
+        // Valores de características que sus categorías no piden: se muestran para
+        // decidir qué hacer con ellos en vez de perderlos en silencio.
         Object.keys(valores).forEach(function (id) {
-            if (orden.indexOf(id) === -1 && porId[id] && (valores[id] || '').trim() !== '') {
+            if (ids.indexOf(id) === -1 && porId[id] && (valores[id] || '').trim() !== '') {
                 contenedor.appendChild(fila(porId[id], 'no-aplica'));
             }
         });
 
         var hayFilas = contenedor.children.length > 0;
-        document.getElementById('etiquetas-sin-proveedor').classList.toggle('d-none', !!prov);
-        document.getElementById('etiquetas-sin-configurar').classList.toggle('d-none', !prov || hayFilas);
-        document.getElementById('etiquetas-leyenda').classList.toggle('d-none', obligatorias.length === 0);
-        document.getElementById('etiquetas-origen').textContent = prov && hayFilas
-            ? 'según el proveedor ' + proveedor.options[proveedor.selectedIndex].text.trim()
-            : '';
+        document.getElementById('etiquetas-sin-categoria').classList.toggle('d-none', categorias.length > 0 || hayFilas);
+        document.getElementById('etiquetas-sin-configurar').classList.toggle('d-none', categorias.length === 0 || hayFilas);
+        document.getElementById('etiquetas-leyenda').classList.toggle('d-none', !lista.some(function (c) { return c.obligatoria; }));
+        document.getElementById('etiquetas-origen').textContent = categorias.length && hayFilas ? 'según sus categorías' : '';
 
         contenedor.dispatchEvent(new Event('input', { bubbles: true }));   // refresca la vista previa
     }
@@ -281,7 +300,8 @@
         if (input.value.trim() !== '') consultar();
     }
 
-    proveedor.addEventListener('change', pintar);
+    // El partial de categorías avisa con un "change" cada vez que se elige o se quita una.
+    document.getElementById('categorias-chips').addEventListener('change', pintar);
     pintar();
 })();
 </script>

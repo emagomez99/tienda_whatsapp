@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Categoria;
 use App\Models\Etiqueta;
 use App\Models\Moneda;
 use App\Models\Producto;
@@ -34,12 +35,14 @@ class GuardadoDeProductoTest extends TestCase
 
         $this->enTenant(function () {
             $moneda    = Moneda::create(['nombre' => 'Peso', 'codigo' => 'ARS', 'simbolo' => '$', 'es_base' => true]);
-            $proveedor = Proveedor::create(['nombre' => 'Proveedor con reglas']);
+            $proveedor = Proveedor::create(['nombre' => 'Proveedor']);
             $marca     = Etiqueta::create(['nombre' => 'Marca', 'visible_usuarios' => true]);
             $color     = Etiqueta::create(['nombre' => 'Color', 'visible_usuarios' => true]);
-            $proveedor->etiquetas()->attach([$marca->id => ['obligatoria' => true], $color->id => ['obligatoria' => false]]);
+            // Las reglas las pone la categoría (Etapa 2 del plan), no el proveedor.
+            $ropa = Categoria::resolverCamino('Ropa', true);
+            $ropa->caracteristicas()->sync([$marca->id => ['obligatoria' => true, 'orden' => 0], $color->id => ['obligatoria' => false, 'orden' => 1]]);
 
-            $this->ids = ['moneda' => $moneda->id, 'proveedor' => $proveedor->id, 'marca' => $marca->id, 'color' => $color->id];
+            $this->ids = ['moneda' => $moneda->id, 'proveedor' => $proveedor->id, 'marca' => $marca->id, 'color' => $color->id, 'ropa' => $ropa->id];
         });
     }
 
@@ -88,7 +91,7 @@ class GuardadoDeProductoTest extends TestCase
     {
         $this->enTenant(function () {
             try {
-                $this->servicio()->crear($this->datos()->conStockInicial(3)->conEtiquetas([$this->ids['color'] => 'Rojo']));
+                $this->servicio()->crear($this->datos()->conStockInicial(3)->conCategorias([$this->ids['ropa']])->conEtiquetas([$this->ids['color'] => 'Rojo']));
                 $this->fail('Tenía que rechazarlo: falta Marca.');
             } catch (ValidationException $e) {
                 $this->assertStringContainsString('Marca', $e->errors()['etiquetas'][0]);
@@ -108,10 +111,12 @@ class GuardadoDeProductoTest extends TestCase
     {
         $this->enTenant(function () {
             $producto = $this->servicio()->crear(
-                $this->datos()->conEtiquetas([$this->ids['marca'] => 'Nike', $this->ids['color'] => 'Rojo'])
+                $this->datos()->conCategorias([$this->ids['ropa']])
+                    ->conEtiquetas([$this->ids['marca'] => 'Nike', $this->ids['color'] => 'Rojo'])
                     ->conEspecificaciones([['clave' => 'Peso', 'valor' => '200 g']])
             );
 
+            // Sin categorías ni etiquetas en los datos: controla con las que ya tiene, y pasa.
             $this->servicio()->actualizar($producto, $this->datos(['descripcion' => 'Remera premium']));
 
             $producto->refresh();
@@ -155,6 +160,41 @@ class GuardadoDeProductoTest extends TestCase
 
             $this->assertStringNotContainsString('<script>', $producto->detalle);
             $this->assertEquals(150, $producto->fresh()->precio);
+        });
+    }
+
+    /** @test */
+    public function sin_categorias_en_los_datos_valen_las_que_ya_tiene()
+    {
+        $this->enTenant(function () {
+            $producto = $this->servicio()->crear(
+                $this->datos()->conCategorias([$this->ids['ropa']])->conEtiquetas([$this->ids['marca'] => 'Nike'])
+            );
+
+            $this->expectException(ValidationException::class);
+            // Sigue en Ropa: sacarle la Marca no se puede.
+            $this->servicio()->actualizar($producto, $this->datos()->conEtiquetas([]));
+        });
+    }
+
+    /** @test */
+    public function una_global_obligatoria_se_pide_aunque_no_tenga_categoria()
+    {
+        $this->enTenant(function () {
+            Etiqueta::find($this->ids['color'])->update(['global' => true]);
+            Categoria::find($this->ids['ropa'])->caracteristicas()->updateExistingPivot($this->ids['color'], ['obligatoria' => true]);
+
+            // Global y opcional: sin categoría no se exige.
+            $this->servicio()->crear($this->datos());
+            $this->assertSame(1, Producto::count());
+
+            // En Ropa, Color pasa a obligatoria (manda la categoría, más cercana que la global).
+            try {
+                $this->servicio()->crear($this->datos()->conCategorias([$this->ids['ropa']])->conEtiquetas([$this->ids['marca'] => 'Nike']));
+                $this->fail('Tenía que pedir Color.');
+            } catch (ValidationException $e) {
+                $this->assertSame('Falta una característica obligatoria: Color.', $e->errors()['etiquetas'][0]);
+            }
         });
     }
 }
