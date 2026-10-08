@@ -53,4 +53,19 @@
     .ayuda-ejemplo .text-muted { font-size: .8rem; }
 </style>
 @endpush
+@push('scripts')
+<script>
+    // Escape cierra la ayuda abierta. Bootstrap sólo lo escucha con el foco adentro
+    // del panel, y como este no bloquea la página (sin fondo, con scroll), el foco
+    // suele estar afuera, en lo que se está haciendo mientras se lee.
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape' || e.defaultPrevented) return;
+        // Un modal abierto (ej. una confirmación) se cierra primero, solo.
+        if (document.querySelector('.modal.show')) return;
+        document.querySelectorAll('.panel-ayuda.show').forEach(function (panel) {
+            bootstrap.Offcanvas.getOrCreateInstance(panel).hide();
+        });
+    });
+</script>
+@endpush
 @endonce

@@ -172,6 +172,25 @@ class ProductoFormularioTest extends TestCase
             ->assertDontSee('Clave (ej:');
     }
 
+    /**
+     * Proveedores tiene su ayuda en la lista y en el formulario, y la ayuda (de
+     * cualquier pantalla) se cierra con Escape: el script va una sola vez.
+     */
+    public function test_proveedores_tiene_ayuda_que_se_cierra_con_escape()
+    {
+        $proveedor = $this->producto->proveedor_id;
+
+        foreach (['admin/proveedores', 'admin/proveedores/create', 'admin/proveedores/' . $proveedor . '/edit'] as $ruta) {
+            $html = $this->comoAdmin()->get($this->urlTenant($ruta))
+                ->assertOk()
+                ->assertSee('Cómo funcionan los proveedores')
+                ->assertSee('Letras para los códigos')
+                ->getContent();
+
+            $this->assertSame(1, substr_count($html, "e.key !== 'Escape'"), $ruta);
+        }
+    }
+
     /** Las sugerencias de especificaciones dicen cuántos productos usan cada texto. */
     public function test_las_sugerencias_de_especificaciones_traen_la_cantidad_de_productos()
     {

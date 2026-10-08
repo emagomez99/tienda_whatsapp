@@ -3,11 +3,16 @@
 @section('title', 'Proveedores')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-truck"></i> Proveedores</h3>
-    <a href="{{ route('admin.proveedores.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nuevo
-    </a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-truck"></i> Proveedores</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-proveedores" titulo="Cómo funcionan los proveedores">
+            @include('admin.ayudas.proveedores')
+        </x-ayuda>
+        <a href="{{ route('admin.proveedores.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo
+        </a>
+    </div>
 </div>
 
 @php $filtrosActivos = request()->hasAny(['buscar']); @endphp

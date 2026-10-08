@@ -3,11 +3,16 @@
 @section('title', 'Editar Proveedor')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-pencil"></i> Editar Proveedor</h3>
-    <a href="{{ route('admin.proveedores.index') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Volver
-    </a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-pencil"></i> Editar Proveedor</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-proveedores" titulo="Cómo funcionan los proveedores">
+            @include('admin.ayudas.proveedores')
+        </x-ayuda>
+        <a href="{{ route('admin.proveedores.index') }}" class="btn btn-outline-secondary" title="Volver">
+            <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline"> Volver</span>
+        </a>
+    </div>
 </div>
 
 <div class="row">
