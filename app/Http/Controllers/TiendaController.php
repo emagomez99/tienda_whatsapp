@@ -300,7 +300,11 @@ class TiendaController extends Controller
         $producto->load(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda', 'imagenes']);
         $mostrarPrecios = Configuracion::mostrarPrecios();
 
-        return view('tienda.show', compact('producto', 'mostrarPrecios'));
+        // Inicio › Bebidas › Gaseosas › el producto: en qué estante está.
+        $estante = $producto->estanteParaMigas();
+        $migas = $estante ? array_reverse($estante->linaje()) : [];
+
+        return view('tienda.show', compact('producto', 'mostrarPrecios', 'migas'));
     }
 
     // ─── Helpers privados ────────────────────────────────────────────────────

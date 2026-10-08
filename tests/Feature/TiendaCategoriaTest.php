@@ -211,6 +211,35 @@ class TiendaCategoriaTest extends TestCase
             ->assertSee('<title>Remera lisa | Tienda MC</title>', false);
     }
 
+    /**
+     * La ficha dice en qué estante está: Inicio › Ropa › Remeras › el producto, con
+     * la categoría visible de más niveles. Si sólo está en una oculta, como antes.
+     *
+     * @test
+     */
+    public function la_ficha_muestra_las_migas_de_su_estante()
+    {
+        [$remera, $buzo] = $this->enTenant(function () {
+            $remera = Producto::where('descripcion', 'Remera lisa')->first();
+            // También en la madre: gana la de más niveles.
+            $remera->categorias()->attach(Categoria::resolverCamino('Ropa')->id);
+
+            return [$remera, Producto::where('descripcion', 'Buzo viejo')->first()];
+        });
+
+        $this->get($this->urlTenant('producto/' . $remera->slugUrl() . '/' . $remera->id))
+            ->assertOk()
+            ->assertSee('<li class="breadcrumb-item"><a href="http://' . self::TENANT_DOMAIN . '/categoria/remeras"', false)
+            ->assertSee('"position":2,"name":"Ropa"', false)
+            ->assertSee('"position":3,"name":"Remeras"', false)
+            ->assertSee('"position":4,"name":"Remera lisa"', false);
+
+        $this->get($this->urlTenant('producto/' . $buzo->slugUrl() . '/' . $buzo->id))
+            ->assertOk()
+            ->assertSee('"position":2,"name":"Buzo viejo"', false)
+            ->assertDontSee('/categoria/liquidacion', false);
+    }
+
     /** @test */
     public function un_dominio_sin_tienda_da_404_y_no_un_error()
     {

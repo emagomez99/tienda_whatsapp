@@ -50,6 +50,15 @@
 
     <div class="px-3 pt-3 pb-5">
 
+        {{-- En qué estante está, para ir a ver los parecidos. --}}
+        @if($migas)
+            <nav aria-label="Ruta" class="small mb-1 text-truncate">
+                @foreach($migas as $estante)
+                    <a href="{{ $estante->url() }}" class="text-muted text-decoration-none">{{ $estante->nombre }}</a>@if(!$loop->last)<span class="text-muted mx-1">›</span>@endif
+                @endforeach
+            </nav>
+        @endif
+
         {{-- Nombre + código --}}
         <h2 class="fs-5 fw-bold mb-1">{{ $producto->descripcion }}</h2>
         @if($producto->id_proveedor)

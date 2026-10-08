@@ -266,6 +266,31 @@ class Producto extends Model
         return $this->belongsToMany(Categoria::class, 'categoria_producto')->withTimestamps();
     }
 
+    /**
+     * El estante donde se muestra el producto en las migas de pan de su ficha:
+     * de las categorías visibles en la tienda, la de más niveles (Bebidas ›
+     * Gaseosas dice más que Bebidas sola); entre las de igual nivel, la de menor
+     * orden. null si no está en ninguna visible.
+     *
+     * Las madres vienen en la misma carga (hasta NIVEL_MAXIMO), así que linaje()
+     * no hace consultas de más.
+     */
+    public function estanteParaMigas(): ?Categoria
+    {
+        $elegida = null;
+
+        $categorias = $this->categorias()->with('parent.parent')
+            ->orderBy('categorias.orden')->orderBy('categorias.id')->get();
+
+        foreach ($categorias as $categoria) {
+            if ($categoria->esVisibleEnTienda() && ($elegida === null || $categoria->nivel() > $elegida->nivel())) {
+                $elegida = $categoria;
+            }
+        }
+
+        return $elegida;
+    }
+
     public function especificaciones()
     {
         return $this->hasMany(ProductoEspecificacion::class);

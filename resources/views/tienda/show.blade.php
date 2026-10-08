@@ -12,10 +12,11 @@
 
 @push('schema')
 <script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::productSchema($producto)) !!}</script>
-<script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::breadcrumbSchema([
-    ['name' => 'Inicio', 'url' => route('tienda.index')],
-    ['name' => $producto->descripcion, 'url' => $producto->url()],
-])) !!}</script>
+<script type="application/ld+json">{!! App\Services\SeoService::jsonLd(App\Services\SeoService::breadcrumbSchema(array_merge(
+    [['name' => 'Inicio', 'url' => route('tienda.index')]],
+    array_map(function ($c) { return ['name' => $c->nombre, 'url' => $c->url()]; }, $migas),
+    [['name' => $producto->descripcion, 'url' => $producto->url()]]
+))) !!}</script>
 @endpush
 
 @section('content')

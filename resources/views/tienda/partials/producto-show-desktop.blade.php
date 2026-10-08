@@ -3,9 +3,12 @@
         <ol class="breadcrumb mb-4">
             <li class="breadcrumb-item">
                 <a href="{{ route('tienda.index') }}" class="text-decoration-none">
-                    <i class="bi bi-house-door"></i> Tienda
+                    <i class="bi bi-house-door"></i> Inicio
                 </a>
             </li>
+            @foreach($migas as $estante)
+                <li class="breadcrumb-item"><a href="{{ $estante->url() }}" class="text-decoration-none">{{ $estante->nombre }}</a></li>
+            @endforeach
             <li class="breadcrumb-item active text-truncate" style="max-width: 480px;" aria-current="page">
                 {{ $producto->descripcion }}
             </li>
