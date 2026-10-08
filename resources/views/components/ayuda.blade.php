@@ -53,7 +53,10 @@
     .ayuda-ejemplo .text-muted { font-size: .8rem; }
 </style>
 @endpush
-@push('scripts')
+{{-- En el lugar y no con @push: en Laravel 8 el stack agrupa lo empujado por
+     profundidad de vista, y un push más desde acá reordenaba los scripts de la
+     página (el de categorías en masa quedaba antes de PanelDeCategorias). Sólo usa
+     bootstrap al apretar Escape, cuando ya está cargado. --}}
 <script>
     // Escape cierra la ayuda abierta. Bootstrap sólo lo escucha con el foco adentro
     // del panel, y como este no bloquea la página (sin fondo, con scroll), el foco
@@ -67,5 +70,4 @@
         });
     });
 </script>
-@endpush
 @endonce

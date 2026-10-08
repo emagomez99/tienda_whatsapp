@@ -103,6 +103,26 @@ class ProductoCategoriasEnMasaTest extends TestCase
             ->assertSee('Crear y elegir');
     }
 
+    /**
+     * PanelDeCategorias se define antes de usarse, en el listado y en el alta. Son
+     * scripts distintos del stack, así que el orden importa; en Laravel 8 depende
+     * de la profundidad de las vistas que empujan (pasó con la ayuda).
+     *
+     * @test
+     */
+    public function el_panel_de_categorias_se_define_antes_de_usarse()
+    {
+        foreach (['admin/productos', 'admin/productos/create'] as $ruta) {
+            $html = $this->como()->get($this->urlTenant($ruta))->assertOk()->getContent();
+
+            $definida = strpos($html, 'function PanelDeCategorias');
+            $usada = strpos($html, 'new PanelDeCategorias');
+            $this->assertNotFalse($definida, $ruta);
+            $this->assertNotFalse($usada, $ruta);
+            $this->assertLessThan($usada, $definida, $ruta);
+        }
+    }
+
     /** @test */
     public function agregar_a_los_marcados_suma_sin_duplicar()
     {
