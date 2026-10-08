@@ -14,7 +14,7 @@
 | 1 | "Todos los productos" en Categorías (unificación) | hecho |
 | 2 | Sistema de diseño (tokens + admin.css) | hecho |
 | 3 | Layout: menú lateral fijo en escritorio, barra superior clara | hecho |
-| 4 | Pasada visual por pantalla (productos, categorías, características, menús, pedidos, ajustes) | en curso |
+| 4 | Pasada visual por pantalla (productos, categorías, características, menús, pedidos, ajustes) | hecho: 0051978…96b59ee |
 | 5 | Verificación escritorio + celular, tests, bitácora | pendiente |
 
 ## 1. ¿Unificar Categorías y Características?
@@ -89,3 +89,8 @@ blancas de borde sutil, botones de radio 8px, una barra de búsqueda + "Filtrar"
 | 2026-10-08 | Plan escrito; inspiración de Tiendanube revisada | — |
 | 2026-10-08 | Paso 1: fila "Todos los productos" arriba del árbol de Categorías y su pantalla (`categorias/todos`, mismo editor que una categoría, sin orden); `CategoriaController::caracteristicasDelFormulario` compartido. Formulario de producto: cada dato dice quién lo pide ("Lo pide Medicamentos", "Se pide en todos los productos") | f696f34 |
 | 2026-10-08 | Pasos 2 y 3: `public/css/admin.css` (tokens `--panel-*` volcados en las variables de Bootstrap; Inter; color de acción propio del panel; tarjetas, tablas, campos, botones). Layout nuevo: menú lateral blanco fijo en escritorio y cajón en celular con el mismo marcado (`offcanvas-lg`), agrupado (Inicio · Ventas · Catálogo · Tienda · Equipo) desde `App\Support\MenuDelPanel`; barra superior clara. "Dashboard" → "Inicio", "Configuraciones" → "Ajustes". Verificado en farmacia: escritorio (inicio, productos, categorías, ajustes, pedidos) y celular 390px (listado, formulario, menú abierto) | (este commit) |
+| 2026-10-08 | Paso 4, base y catálogo: piezas repetidas a `admin.css` (`.panel-rotulo`, `.panel-dato`, `.panel-miniatura`, `.cifras`, `.badge-chica`); flecha de filtros plegables por CSS (`aria-expanded`), sin script global; `.panel-barra-guardar` flotante; títulos en minúscula como el menú; Historial con el encabezado común y sin "-0" | 0051978 |
+| 2026-10-08 | Paso 4, Inicio y Pedidos: números del mes con `.panel-dato`, acciones rápidas "Nuevo pedido"/"Ajustes"; Nuevo pedido con tarjetas del panel y "¿Para quién es el pedido?"; detalle sin `<code>` rosa; ayuda nueva `ayudas/pedidos` | 3868aaf |
+| 2026-10-08 | Paso 4, Proveedores, Monedas, Usuarios, Perfiles: `barra-guardar` (con aviso de cambios sin guardar) en vez de botones sueltos; encabezados comunes con el nombre de lo editado; ayudas nuevas `ayudas/monedas` y `ayudas/usuarios` | 53f1631 |
+| 2026-10-08 | Paso 4, Ajustes: `.ajuste-*` e `.imagen-miniatura` a `admin.css` con tokens; vistas previas pegajosas con `--panel-barra-alto` | 8df7901 |
+| 2026-10-08 | Paso 4, inicio de sesión: página propia con el aspecto del panel (antes, layout y botón del color de la tienda). Verificado en farmacia, escritorio 1280 y celular 390 (sin desborde horizontal en ninguna pantalla), pedido de prueba #1 creado; 284 tests en verde | 96b59ee |
