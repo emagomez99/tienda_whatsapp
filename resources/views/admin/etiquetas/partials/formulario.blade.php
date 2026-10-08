@@ -36,13 +36,18 @@
                     <label class="form-check-label" for="global">Pedirla en todos los productos</label>
                     <div class="form-text">Para datos que tiene cualquier producto, como Marca. Si no, la piden sólo las categorías que la elijan.</div>
                 </div>
+                {{-- El mismo control que en "Datos que se piden" de la categoría, para
+                     que obligatoria/opcional se elija igual en los dos lugares. --}}
+                @php $obligatoriaGlobal = (bool) old('obligatoria_global', $etiqueta->obligatoria_global); @endphp
                 <div class="ms-5 mt-2" id="global-obligatoria">
-                    <input type="hidden" name="obligatoria_global" value="0">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="obligatoria_global" name="obligatoria_global" value="1"
-                               {{ old('obligatoria_global', $etiqueta->obligatoria_global) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="obligatoria_global">Obligatoria: sin completarla no se puede guardar un producto</label>
+                    <div class="small text-muted mb-1">En todos los productos, este dato es:</div>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Opcional u obligatoria">
+                        <input type="radio" class="btn-check" name="obligatoria_global" id="obligatoria_global_0" value="0" {{ $obligatoriaGlobal ? '' : 'checked' }}>
+                        <label class="btn btn-outline-secondary" for="obligatoria_global_0">Opcional</label>
+                        <input type="radio" class="btn-check" name="obligatoria_global" id="obligatoria_global_1" value="1" {{ $obligatoriaGlobal ? 'checked' : '' }}>
+                        <label class="btn btn-outline-danger" for="obligatoria_global_1">Obligatoria</label>
                     </div>
+                    <div class="form-text">Obligatoria: sin completarla no se puede guardar un producto.</div>
                 </div>
             </div>
         </div>
@@ -50,10 +55,21 @@
         @isset($categoriasQueLaPiden)
             <div class="card mb-4">
                 <div class="card-header">Qué categorías la piden</div>
-                @if($categoriasQueLaPiden->isEmpty())
-                    <div class="card-body text-muted small">
-                        Ninguna. Se agrega al editar una categoría, en "Datos que se piden al cargar un producto".
+                {{-- Muestra lo guardado: si es global la respuesta es "todos", y
+                     decir "Ninguna" confundía. --}}
+                @if($etiqueta->global)
+                    <div class="card-body small {{ $categoriasQueLaPiden->isEmpty() ? '' : 'border-bottom' }}">
+                        <i class="bi bi-globe2 text-primary"></i>
+                        <strong>La piden todos los productos</strong>
+                        ({{ $etiqueta->obligatoria_global ? 'obligatoria' : 'opcional' }}).
                     </div>
+                @endif
+                @if($categoriasQueLaPiden->isEmpty())
+                    @unless($etiqueta->global)
+                        <div class="card-body text-muted small">
+                            Ninguna. Se agrega al editar una categoría, en "Datos que se piden al cargar un producto".
+                        </div>
+                    @endunless
                 @else
                     <ul class="list-group list-group-flush">
                         @foreach($categoriasQueLaPiden as $categoria)

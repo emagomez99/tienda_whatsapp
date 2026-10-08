@@ -103,6 +103,38 @@ class EtiquetaValorAdminTest extends TestCase
             ->assertSee('Afnann');
     }
 
+    /**
+     * Una global la piden todos los productos: decir "Ninguna" en "Qué categorías
+     * la piden" confundía, y obligatoria/opcional se elige con los mismos botones
+     * que en la categoría.
+     *
+     * @test
+     */
+    public function la_edicion_de_una_global_dice_que_la_piden_todos_los_productos()
+    {
+        $this->enTenant(function () {
+            Etiqueta::find($this->ids['marca'])->update(['global' => true, 'obligatoria_global' => true]);
+        });
+
+        $this->comoAdmin()
+            ->get($this->urlTenant('admin/etiquetas/' . $this->ids['marca'] . '/edit'))
+            ->assertStatus(200)
+            ->assertSee('La piden todos los productos')
+            ->assertSee('(obligatoria)', false)
+            ->assertDontSee('Ninguna. Se agrega')
+            ->assertSee('id="obligatoria_global_1" value="1" checked', false);
+    }
+
+    /** @test */
+    public function la_edicion_de_una_que_no_piden_dice_ninguna()
+    {
+        $this->comoAdmin()
+            ->get($this->urlTenant('admin/etiquetas/' . $this->ids['marca'] . '/edit'))
+            ->assertStatus(200)
+            ->assertSee('Ninguna. Se agrega')
+            ->assertDontSee('La piden todos los productos');
+    }
+
     /** @test */
     public function la_busqueda_muestra_solo_los_valores_que_coinciden()
     {

@@ -40,7 +40,7 @@
 
         <div id="etiquetas-container"></div>
 
-        <small class="text-muted d-none" id="etiquetas-leyenda"><span class="text-danger">*</span> obligatoria en sus categorías: sin completarla no se puede guardar.</small>
+        <small class="text-muted d-none" id="etiquetas-leyenda"><span class="text-danger">*</span> obligatoria: sin completarla no se puede guardar.</small>
 
         @error('etiquetas')
             <div class="text-danger small mt-2"><i class="bi bi-exclamation-circle"></i> {{ $message }}</div>
