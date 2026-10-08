@@ -82,6 +82,34 @@ blancas de borde sutil, botones de radio 8px, una barra de búsqueda + "Filtrar"
    en este stack es Material Design 3 aplicado con tokens (o Material Web Components más adelante),
    y para eso alcanza con esta capa.
 
+## 3. Tienda pública
+
+Mismo enfoque que el panel, aplicado a lo que ven los clientes (`layouts/app`, `tienda/**`,
+`carrito/**`, menús, filtros, paginación, 404/429).
+
+- **`public/css/tienda.css`**: tokens `--tienda-*` (fondo, superficies, bordes, texto, radios,
+  sombras, fuente, medidas) volcados sobre `--bs-*` y las variables de cada componente. Antes:
+  ~220 líneas de CSS en el layout y ~60 estilos inline en las vistas. Un tema futuro (Material 3)
+  = otro archivo cargado después que redefine los tokens.
+- **La identidad sigue siendo de cada tienda.** El layout define sólo lo que sale de Ajustes:
+  `--color-primary` (+ `-rgb`), `--color-primary-texto` (+ `-rgb`), `--logo-alto` y
+  `--color-primary-tinta`. A diferencia del panel, la tienda **sí** usa el color de marca en botones
+  principales, barra, menú lateral, paginación y precios.
+- **`--color-primary-tinta`** (`ColorHex::legibleSobreBlanco`): el color de marca como texto sobre
+  blanco. Igual al de marca si ya llega a 3:1; si es muy claro (amarillo) se oscurece conservando
+  el tono. Antes un precio amarillo sobre blanco no se leía.
+- **`bg-primary` y focos** pasan al color de la tienda (antes, el azul de Bootstrap en todas).
+- **Inter**, como el panel: legible en tamaños chicos, cifras claras para precios; una sola fuente
+  para todo el producto.
+- Piezas comunes: `.selector-cantidad` (− número +, tamaños chico/grande), `.tienda-chip`
+  (características, antes celeste suelto o `bg-info`), `.tienda-vacio` (carrito vacío, 404, 429),
+  `.img-aparece`, `.ficha-*`, `.menu-lateral-*`, y la sangría de menús por `--nivel` en CSS.
+- Paginación compartida con el panel: su `<style>` sale del partial; cada hoja la pinta con sus
+  tokens (`tienda.css` con la marca, `admin.css` con el acento).
+- Inline quedan sólo lo dinámico: `--nivel` de cada opción de menú, `--red` (color de cada red
+  social), los `display:none` que maneja el JS, y el `padding-bottom` de la ficha cuando hay barra
+  de compra fija.
+
 ## Bitácora
 
 | Fecha | Qué | Commit |
@@ -94,3 +122,7 @@ blancas de borde sutil, botones de radio 8px, una barra de búsqueda + "Filtrar"
 | 2026-10-08 | Paso 4, Proveedores, Monedas, Usuarios, Perfiles: `barra-guardar` (con aviso de cambios sin guardar) en vez de botones sueltos; encabezados comunes con el nombre de lo editado; ayudas nuevas `ayudas/monedas` y `ayudas/usuarios` | 53f1631 |
 | 2026-10-08 | Paso 4, Ajustes: `.ajuste-*` e `.imagen-miniatura` a `admin.css` con tokens; vistas previas pegajosas con `--panel-barra-alto` | 8df7901 |
 | 2026-10-08 | Paso 4, inicio de sesión: página propia con el aspecto del panel (antes, layout y botón del color de la tienda). Verificado en farmacia, escritorio 1280 y celular 390 (sin desborde horizontal en ninguna pantalla), pedido de prueba #1 creado; 284 tests en verde | 96b59ee |
+| 2026-10-08 | Tienda pública, base: `public/css/tienda.css` (tokens `--tienda-*`, Inter); layout sólo con las variables de Ajustes; `ColorHex::legibleSobreBlanco` → `--color-primary-tinta` | 3691e69 |
+| 2026-10-08 | Tienda, producto: tarjetas, buscador, migas, ficha escritorio y celular (chips, `.selector-cantidad`, barra de compra que no se parte a 390px) | 1a83ddd |
+| 2026-10-08 | Tienda, carrito y checkout: grilla `.ci-*` a `tienda.css`; checkout sin cabecera azul fija | ffa7ce5 |
+| 2026-10-08 | Tienda, menús (superior, lateral, cajón), filtros, paginación (tienda y panel) y 404/429. Verificado en farmacia: escritorio 1280 y celular 390 sin desborde (inicio, categoría, ficha, carrito, checkout, 404), búsqueda y paginación AJAX, agregar al carrito y cambiar cantidad; menú lateral probado cambiando Ajustes y vuelto a "superior"; 286 tests en verde | fd7a047 |
