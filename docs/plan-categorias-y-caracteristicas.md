@@ -5,7 +5,10 @@
 
 ## Estado actual
 
-- **Etapa en curso:** Etapa 1 (maqueta aprobada el 2026-10-07).
+- **Etapas 1 y 2: hechas** y corridas en las 3 tiendas locales (2026-10-09). Quedan de la 1: línea de destino al arrastrar (detalle visual).
+- **Limpieza pendiente** (cuando el usuario verifique): ocultar y borrar las características "Categoria"/"Subcategoria" y la tabla `proveedor_etiqueta`.
+- **Producción:** `tenants:migrate` → `categorias:desde-etiquetas` (oleomc con `--proveedor="Hercules=Kits hidráulicos"`; en perfumes, armar antes Producto › … como en local) → `caracteristicas:desde-proveedores`. Siempre primero con `--dry-run`. Después, agregar a mano Acoples Rapidos (MC-923370) en Accesorios › Hidráulica.
+- **Próxima:** Etapa 5 (Excel).
 - **Orden de trabajo:** 0 → 1 → 2 (con migración real de las 2 tiendas en cada una) → 5 (Excel) → 3 → 4.
 - **Último commit antes del plan:** `9516afe` (árbol de menús con arrastrar y soltar).
 
@@ -229,7 +232,7 @@ Objetivo: lo que hoy decide el proveedor pasa a decidirlo la categoría.
 - [x] Quitar las reglas por proveedor: tabla `proveedor_etiqueta`, sección "Proveedores" de la edición de etiqueta, `mapEtiquetasObligatorias/Aplicables` en `ProductoController` y `MenuController`, `Proveedor::etiquetas*`.
 - [x] Renombrar en la interfaz "Etiquetas" → **Características** (D1): menú lateral, títulos, ayudas (`resources/lang/es/productos.php`), mensajes.
 - [x] `ImportHercules`: asignar la categoría de Hercules (D6) a los productos que importa.
-- [ ] Tests: herencia y "manda la más cercana", validación de obligatorias por categoría, formulario que cambia de campos, migración de reglas.
+- [x] Tests: herencia y "manda la más cercana", validación de obligatorias por categoría, formulario que cambia de campos, migración de reglas. (El rearmado de campos al cambiar de categoría es JavaScript: se verificó en el navegador; los tests cubren el mapa que recibe y la validación del servidor.)
 
 ### Etapa 3: que se entienda solo
 - [ ] Estado vacío de Categorías: "Categorizá tus productos" con ilustración/ícono y botón, como el competidor.
@@ -313,4 +316,4 @@ Datos útiles:
 | 2026-10-09 | Etapa 2: tabla `categoria_caracteristica` (obligatoria, orden) y `etiquetas.global`. `CaracteristicasPorCategoria` resuelve la herencia (globales + madres + propias; manda la más cercana; en un producto con varias categorías, obligatoria si alguna la exige) y devuelve `Caracteristica` (VO). Formulario de categoría: "Características que pide" (heredadas en gris, propias con opcional/obligatoria, orden, agregar existente o nueva sin duplicar). El árbol muestra qué pide cada una | 1568792 |
 | 2026-10-09 | Etapa 2: el formulario de producto arma los campos con las categorías elegidas (y las globales), se rearma al cambiarlas; `GuardadoDeProducto::validarObligatorias` exige las obligatorias de sus categorías (si los datos no traen categorías, las que ya tiene). Ya no mira al proveedor | 3f20e55 |
 | 2026-10-09 | Etapa 2: comando `caracteristicas:desde-proveedores --tenant= [--dry-run]` (`CaracteristicasDesdeProveedores`): global obligatoria la que exigen todos los proveedores con productos; por categoría, las que usan sus productos (obligatoria si lo era para todos sus proveedores); lo común de todas las hijas sube a la madre; Categoria/Subcategoria no pasan; avisa las obligatorias sin destino. Nueva columna `etiquetas.obligatoria_global`. **Corrido en las 3 tiendas**: perfumes → Marca global obligatoria, Condicion* en Notebooks/Drones/Paletas (+ Demora envio, Rango de Precio); oleomc → Kits hidráulicos: Aplicacion*, Fabricante*, Modelo*; arcor → Georgalos: Calorias y Tamaño sin destino. Ningún producto quedó sin una obligatoria. Fuera del código las reglas por proveedor (relaciones, sección Proveedores de la etiqueta, mapas en Producto y Menú); **la tabla `proveedor_etiqueta` queda hasta la limpieza** (en producción hay que correr el comando antes). Edición de característica: "Pedirla en todos los productos" (+ obligatoria) y "Qué categorías la piden". Menú: con una categoría elegida, los filtros ofrecen sus características. `import:hercules` pone los productos en "Kits hidráulicos" (la crea con sus 3 obligatorias si no existe) | 214112d |
-| 2026-10-09 | Etapa 2: "Etiquetas" → "Características" en todo lo visible (panel, menús, producto, tienda, carrito, WhatsApp, permisos con migración de textos). Rutas, tablas, permisos y código siguen como `etiquetas` (D5). **Pendiente**: tests de "formulario que cambia de campos"; limpieza (ocultar/borrar etiquetas Categoria/Subcategoria y tabla `proveedor_etiqueta`, después de que el usuario verifique) | (este commit) |
+| 2026-10-09 | Etapa 2: "Etiquetas" → "Características" en todo lo visible (panel, menús, producto, tienda, carrito, WhatsApp, permisos con migración de textos). Rutas, tablas, permisos y código siguen como `etiquetas` (D5). **Pendiente**: limpieza (ocultar/borrar etiquetas Categoria/Subcategoria y tabla `proveedor_etiqueta`, después de que el usuario verifique) | 55f6f24 |
