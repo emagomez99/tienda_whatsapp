@@ -16,9 +16,11 @@ class AdminMiddleware
             return redirect()->route('login')->with('error', 'Acceso no autorizado');
         }
 
-        if (!auth()->user()->activo) {
+        // También corta una sesión ya abierta si después se desactivó el usuario o su perfil.
+        if (!auth()->user()->puedeEntrar()) {
+            $mensaje = auth()->user()->activo ? 'Tu perfil está desactivado' : 'Usuario desactivado';
             auth()->logout();
-            return redirect()->route('login')->with('error', 'Usuario desactivado');
+            return redirect()->route('login')->with('error', $mensaje);
         }
 
         return $next($request);

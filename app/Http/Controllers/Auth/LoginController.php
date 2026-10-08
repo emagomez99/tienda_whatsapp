@@ -39,7 +39,9 @@ class LoginController extends Controller
         if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $user = Auth::user();
 
-            if (!$user->activo) {
+            // Usuario o perfil desactivado: el mismo mensaje que con datos incorrectos,
+            // para no confirmarle a nadie que la cuenta existe.
+            if (!$user->puedeEntrar()) {
                 Auth::logout();
                 RateLimiter::hit($key, 180);
                 return back()->withErrors([

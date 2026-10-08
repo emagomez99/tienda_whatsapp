@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Perfil;
 use App\Models\Permiso;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PerfilController extends Controller
 {
@@ -74,6 +75,17 @@ class PerfilController extends Controller
             'permisos'      => 'nullable|array',
             'permisos.*'    => 'exists:permisos,id',
         ]);
+
+        // Desactivar un perfil deja afuera a sus usuarios: que nadie se deje afuera a
+        // sí mismo ni al perfil que administra todo.
+        if (!$request->boolean('activo')) {
+            if ($perfil->id === auth()->user()->perfil_id) {
+                throw ValidationException::withMessages(['activo' => 'No podés desactivar tu propio perfil: te quedarías sin poder entrar.']);
+            }
+            if ($perfil->es_superadmin || $request->boolean('es_superadmin')) {
+                throw ValidationException::withMessages(['activo' => 'El perfil que administra todo no se puede desactivar.']);
+            }
+        }
 
         $perfil->update([
             'nombre'        => $request->nombre,

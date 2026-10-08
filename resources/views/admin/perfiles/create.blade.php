@@ -54,6 +54,8 @@
                                 <input type="checkbox" class="form-check-input" id="activo"
                                        name="activo" value="1" {{ old('activo', true) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="activo">Perfil activo</label>
+                                <small class="text-muted d-block">Si lo apagás, los usuarios con este perfil no pueden entrar al panel.</small>
+                                @error('activo')<div class="text-danger small">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     </div>

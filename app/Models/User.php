@@ -65,6 +65,20 @@ class User extends Authenticatable
 
     // Verifica si el usuario tiene un permiso específico.
     // Si es admin sin perfil asignado, tiene acceso total (compatibilidad hacia atrás).
+    /**
+     * Si puede entrar al panel: el usuario activo y, si tiene perfil, el perfil
+     * activo. Desactivar un perfil deja afuera a todos sus usuarios de una vez (antes
+     * el interruptor "Perfil activo" no tenía efecto).
+     */
+    public function puedeEntrar(): bool
+    {
+        if (!$this->activo) {
+            return false;
+        }
+
+        return !$this->perfil_id || ($this->perfil && $this->perfil->activo);
+    }
+
     public function puede($permiso)
     {
         if ($this->is_admin && !$this->perfil_id) {

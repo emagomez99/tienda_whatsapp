@@ -29,3 +29,7 @@
     <span class="ayuda-icono"><i class="bi bi-toggle-off"></i></span>
     <div><strong>¿Alguien deja de trabajar con vos?</strong><br>Apagá <em>Usuario activo</em> en su ficha: ya no puede entrar, y lo que hizo queda registrado a su nombre.</div>
 </div>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-shield-x"></i></span>
+    <div><strong>¿Cortar el acceso a un grupo entero?</strong><br>Apagá <em>Perfil activo</em> en el perfil: nadie con ese perfil puede entrar hasta que lo vuelvas a prender. Tu propio perfil y el de Superadmin no se pueden apagar, así nadie se queda afuera por error.</div>
+</div>
