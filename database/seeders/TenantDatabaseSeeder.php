@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Configuracion;
+use App\Models\Etiqueta;
 use App\Models\Moneda;
 use App\Models\Perfil;
 use App\Models\User;
@@ -37,6 +38,15 @@ class TenantDatabaseSeeder extends Seeder
         Configuracion::establecer('color_primario', '#0d6efd', 'Color principal de la tienda');
         Configuracion::establecer('posicion_menu', 'superior', 'Posición del menú de navegación');
         Configuracion::establecer('modo_imagen_producto', 'solo_url', 'Modo de carga de imágenes de productos');
+
+        // Marca: la tiene casi cualquier producto (una gaseosa, unos fideos, un
+        // detergente). Arranca pedida en todos los productos, como opcional: la tienda
+        // la puede volver obligatoria o borrarla desde Categorías › Todos los productos.
+        Etiqueta::firstOrCreate(['nombre' => 'Marca'], [
+            'visible_usuarios'   => true,
+            'global'             => true,
+            'obligatoria_global' => false,
+        ]);
 
         // Monedas. El peso es la base: su cotización es 1 y las demás se miden contra
         // ella. Las otras arrancan también en 1 porque no hay ninguna cotización que

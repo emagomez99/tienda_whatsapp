@@ -10,6 +10,8 @@ use App\Models\Menu;
 use App\Models\Producto;
 use App\Services\ArbolDeCategorias;
 use App\Services\CaracteristicasPorCategoria;
+use App\Support\BusquedaDeTexto;
+use App\Support\OrdenDeProductos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -108,8 +110,9 @@ class CategoriaController extends Controller
     public function edit(Categoria $categoria)
     {
         return view('admin.categorias.edit', [
-            'categoria' => $categoria,
-            'madres'    => $this->madresPosibles($categoria),
+            'categoria'  => $categoria,
+            'madres'     => $this->madresPosibles($categoria),
+            'destacados' => $categoria->destacados()->get(['productos.id', 'productos.descripcion', 'productos.id_proveedor']),
         ] + $this->datosCaracteristicas($categoria));
     }
 
@@ -119,11 +122,51 @@ class CategoriaController extends Controller
         DB::transaction(function () use ($categoria, $datos, $request) {
             $categoria->update($datos);
             $this->guardarCaracteristicas($categoria, $request);
+            $this->guardarDestacados($categoria, $request);
         });
 
         return redirect()->route('admin.categorias.index')
             ->with('success', "Se guardó «{$categoria->camino()}».")
             ->with('categoria_movida', $categoria->id);
+    }
+
+    /**
+     * Los productos que se pueden destacar en una categoría: los suyos y los de sus
+     * subcategorías, que son los que se ven en su página.
+     */
+    public function productosParaDestacar(Request $request, Categoria $categoria)
+    {
+        $query = Producto::enCategoria($categoria);
+        foreach (BusquedaDeTexto::palabras((string) $request->input('q', '')) as $palabra) {
+            $patron = BusquedaDeTexto::patron($palabra);
+            $query->where(function ($q) use ($patron) {
+                BusquedaDeTexto::contiene($q, 'descripcion', $patron);
+                BusquedaDeTexto::contiene($q, 'id_proveedor', $patron);
+            });
+        }
+
+        return response()->json($query->orderBy('descripcion')->limit(20)->get(['id', 'descripcion', 'id_proveedor'])
+            ->map(function (Producto $p) {
+                return ['id' => $p->id, 'descripcion' => $p->descripcion, 'codigo' => $p->id_proveedor];
+            }));
+    }
+
+    /**
+     * Los destacados sólo cuentan con el orden "a mano"; con otro orden se dejan como
+     * están, por si se vuelve a elegir. Un producto que no es de la categoría no se
+     * puede destacar en ella.
+     */
+    private function guardarDestacados(Categoria $categoria, Request $request): void
+    {
+        if (!$request->has('destacados_enviados')) {
+            return;
+        }
+
+        $pedidos = array_map('intval', (array) $request->input('destacados', []));
+        $validos = Producto::enCategoria($categoria)->whereIn('id', $pedidos)->pluck('id')->all();
+        $categoria->destacar(array_values(array_filter($pedidos, function ($id) use ($validos) {
+            return in_array($id, $validos, true);
+        })));
     }
 
     /**
@@ -231,11 +274,16 @@ class CategoriaController extends Controller
             'parent_id'        => 'nullable|integer|exists:categorias,id',
             'meta_title'       => 'nullable|string|max:60',
             'meta_description' => 'nullable|string|max:160',
+            'orden_productos'  => 'nullable|in:' . implode(',', array_keys(OrdenDeProductos::OPCIONES)),
+            'destacados'       => 'nullable|array|max:100',
+            'destacados.*'     => 'integer',
         ], [
             'nombre.required' => 'Poné un nombre a la categoría.',
         ]);
 
         $datos['parent_id'] = $datos['parent_id'] ?? null;
+        $datos['orden_productos'] = $datos['orden_productos'] ?? OrdenDeProductos::NOMBRE;
+        unset($datos['destacados']);   // se guardan aparte (guardarDestacados)
         $datos['visible']   = $request->boolean('visible');
         $madre = $datos['parent_id'] ? Categoria::find($datos['parent_id']) : null;
 

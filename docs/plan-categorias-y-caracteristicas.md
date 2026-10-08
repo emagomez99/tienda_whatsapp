@@ -256,8 +256,8 @@ Objetivo: carga y actualización masiva por planilla, con las mismas reglas que 
 - [x] Tests: plantilla por categoría, vista previa con errores, creación y actualización por código, categorías por camino, valores unificados.
 
 ### Etapa 4 (opcional, se decide después)
-- [ ] Marca como característica global por defecto en tiendas nuevas.
-- [ ] **Orden de los productos dentro de una categoría** (hoy siempre por nombre): elegir por categoría entre manual, más nuevos, precio o nombre. Tiendanube lo tiene como función aparte.
+- [x] Marca como característica global por defecto en tiendas nuevas (`TenantDatabaseSeeder`: global, opcional, visible).
+- [x] **Orden de los productos dentro de una categoría**: por nombre, más nuevos, precio (pasado a la moneda base) o "Elijo cuáles van primero" (destacados en `categoria_destacados`, el resto por nombre). `App\Support\OrdenDeProductos`; vale en la página de la categoría, en sus filtros y en un menú que lleva a ella.
 - [ ] Varios valores por característica (ej. "Talles: S, M, L"; Modelo en oleomc). Ver análisis del 2026-10-06.
 - [ ] Variantes con stock propio (talle/color que el cliente elige al comprar). Proyecto aparte.
 
@@ -335,3 +335,4 @@ Datos útiles:
 | 2026-10-10 | Etapa 5, paso A: código único por tienda (índice `productos_codigo_unico`, aviso en el formulario), permiso `productos.importar`, tabla `importaciones` | fe70ac3 |
 | 2026-10-10 | Etapa 5, paso B: `FormatoDePlanilla`, `LecturaDePlanilla`, `AnalisisDeImportacion` (vista previa), `ImportacionDeProductos` (aplicar de a 100 con `GuardadoDeProducto`), exportación y plantilla | 2949d82 |
 | 2026-10-10 | Etapa 5, paso C: pantallas (Productos › Excel, Importar productos, vista previa con avance), ayuda; cambio a OpenSpout por rendimiento; una fila sin código con el nombre de un producto existente frena (no duplica). Probado con oleomc (30.917: exportar 25 s, analizar 23 s, tanda de 100 en 2 s) y en farmacia por el navegador (subir, revisar, aplicar) | (este commit) |
+| 2026-10-11 | Etapa 4: Marca en tiendas nuevas; orden de los productos por categoría (nombre, nuevos, precio, destacados a mano) | (este) |

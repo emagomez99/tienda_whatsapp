@@ -8,6 +8,7 @@ use App\Models\Etiqueta;
 use App\Models\Menu;
 use App\Models\Producto;
 use App\Support\BusquedaDeTexto;
+use App\Support\OrdenDeProductos;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -80,7 +81,7 @@ class TiendaController extends Controller
 
         [$filtrosAplicados, $filtrosIncompletos] = $this->aplicarFiltrosCascada($request, $query, $menuActual);
 
-        $productos = $this->paginar($request, $query, $filtrosIncompletos);
+        $productos = $this->paginar($request, $query, $filtrosIncompletos, OrdenDeProductos::porNombre());
 
         $etiquetas    = Etiqueta::where('visible_usuarios', true)->orderBy('nombre')->get();
         $mostrarPrecios = Configuracion::mostrarPrecios();
@@ -103,7 +104,7 @@ class TiendaController extends Controller
 
         [$filtrosAplicados, $filtrosIncompletos] = $this->aplicarFiltrosCascada($request, $query, $menuActual);
 
-        $productos = $this->paginar($request, $query, $filtrosIncompletos);
+        $productos = $this->paginar($request, $query, $filtrosIncompletos, OrdenDeProductos::deMenu($menuActual));
 
         $etiquetas    = Etiqueta::where('visible_usuarios', true)->orderBy('nombre')->get();
         $mostrarPrecios = Configuracion::mostrarPrecios();
@@ -130,7 +131,7 @@ class TiendaController extends Controller
             $this->aplicarFiltroBusqueda($query, $request->buscar);
         }
 
-        $productos = $this->paginar($request, $query, false);
+        $productos = $this->paginar($request, $query, false, OrdenDeProductos::deCategoria($categoriaActual));
 
         // Los accesos a las de adentro: visibles (la madre ya lo es, alcanza con su
         // propia marca) y con productos, como en el menú: no se ofrece un estante vacío.
@@ -205,10 +206,12 @@ class TiendaController extends Controller
             ->visiblesEnTienda();
 
         $menuActual = null;
+        $orden = OrdenDeProductos::porNombre();
         if ($request->filled('menu_id')) {
             $menuActual = Menu::find($request->menu_id);
             if ($menuActual) {
                 $query->delMenu($menuActual);
+                $orden = OrdenDeProductos::deMenu($menuActual);
             }
         }
 
@@ -218,6 +221,7 @@ class TiendaController extends Controller
                 abort(404);
             }
             $query->enCategoria($categoria);
+            $orden = OrdenDeProductos::deCategoria($categoria);
         }
 
         if ($request->filled('proveedor')) {
@@ -246,7 +250,7 @@ class TiendaController extends Controller
             $this->aplicarFiltroBusqueda($query, $request->buscar);
         }
 
-        $productos = $query->orderBy('descripcion')->paginate(12);
+        $productos = $orden->aplicar($query)->paginate(12);
         $mostrarPrecios = Configuracion::mostrarPrecios();
         $menuEnSidebar  = Configuracion::menuEnSidebar();
 
@@ -364,7 +368,7 @@ class TiendaController extends Controller
         return [$filtrosAplicados, $filtrosIncompletos];
     }
 
-    private function paginar(Request $request, $query, bool $filtrosIncompletos)
+    private function paginar(Request $request, $query, bool $filtrosIncompletos, OrdenDeProductos $orden)
     {
         if ($filtrosIncompletos) {
             return new LengthAwarePaginator([], 0, 12, 1, [
@@ -373,7 +377,7 @@ class TiendaController extends Controller
             ]);
         }
 
-        $productos = $query->orderBy('descripcion')->paginate(12);
+        $productos = $orden->aplicar($query)->paginate(12);
 
         if ($productos->currentPage() > max($productos->lastPage(), 1)) {
             abort(404);

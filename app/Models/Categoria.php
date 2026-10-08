@@ -37,6 +37,7 @@ class Categoria extends Model
         'visible',
         'meta_title',
         'meta_description',
+        'orden_productos',
     ];
 
     protected $casts = [
@@ -70,6 +71,24 @@ class Categoria extends Model
     public function productos()
     {
         return $this->belongsToMany(Producto::class, 'categoria_producto')->withTimestamps();
+    }
+
+    /** Los que se muestran primero cuando el orden es "a mano", en su orden. */
+    public function destacados()
+    {
+        return $this->belongsToMany(Producto::class, 'categoria_destacados')
+            ->withPivot('posicion')
+            ->orderBy('categoria_destacados.posicion');
+    }
+
+    /** @param int[] $productoIds en el orden en que se muestran */
+    public function destacar(array $productoIds): void
+    {
+        $filas = [];
+        foreach (array_values(array_unique(array_map('intval', $productoIds))) as $i => $id) {
+            $filas[$id] = ['posicion' => $i + 1];
+        }
+        $this->destacados()->sync($filas);
     }
 
     /** La categoría y las de arriba, desde ella hasta la raíz. Corta los ciclos. */

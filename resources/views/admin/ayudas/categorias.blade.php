@@ -46,6 +46,11 @@
     <div><strong>Agarrá el <i class="bi bi-grip-vertical"></i> y arrastrá.</strong><br>Hacia arriba o abajo cambia el orden en que se ven en la tienda. Si lo soltás encima de otro estante, queda adentro de ese.</div>
 </div>
 
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-sort-down"></i></span>
+    <div><strong>¿Qué productos se ven primero en un estante?</strong><br>Entrá a la categoría y elegí en <em>Orden de los productos</em>: por nombre, los más nuevos, el más barato o el más caro. Con <em>Elijo cuáles van primero</em> ponés adelante los que quieras, como en la punta de la góndola: por ejemplo, las ofertas.</div>
+</div>
+
 <h6 class="ayuda-titulo">Estantes vacíos, ocultos y borrados</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-inbox"></i></span>

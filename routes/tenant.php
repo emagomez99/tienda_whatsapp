@@ -108,6 +108,7 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::put('/categorias/todos', [CategoriaController::class, 'actualizarTodos'])->name('categorias.todos.update');
         Route::post('/categorias/reordenar', [CategoriaController::class, 'reordenar'])->name('categorias.reordenar');
         Route::post('/categorias/rapida', [CategoriaController::class, 'crearRapida'])->name('categorias.rapida');
+        Route::get('/categorias/{categoria}/productos-para-destacar', [CategoriaController::class, 'productosParaDestacar'])->name('categorias.productos-para-destacar');
         Route::post('/categorias/{categoria}/mover', [CategoriaController::class, 'mover'])->name('categorias.mover');
         Route::patch('/categorias/{categoria}/visibilidad', [CategoriaController::class, 'cambiarVisibilidad'])->name('categorias.visibilidad');
         Route::resource('categorias', CategoriaController::class)->except(['show'])->parameters(['categorias' => 'categoria']);

@@ -42,6 +42,8 @@
 
         @include('admin.categorias.partials.caracteristicas')
 
+        @include('admin.categorias.partials.orden-productos')
+
         <div class="card mb-3">
             <div class="card-header" role="button" data-bs-toggle="collapse" data-bs-target="#seccion-seo"
                  aria-expanded="{{ $hayErroresSeo ? 'true' : 'false' }}">
