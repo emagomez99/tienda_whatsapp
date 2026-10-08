@@ -3,8 +3,8 @@
 @section('title', 'Ajustes')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-sliders"></i> Ajustes</h3>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-sliders"></i> Ajustes</h3>
 </div>
 
 <form action="{{ route('admin.configuraciones.update') }}" method="POST" enctype="multipart/form-data">
@@ -25,7 +25,7 @@
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-redes" type="button" role="tab">
-            <i class="bi bi-share"></i> Redes Sociales
+            <i class="bi bi-share"></i> Redes sociales
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -65,7 +65,7 @@
                          color, el logo (incluso uno recién elegido, antes de guardar), su
                          tamaño y el nombre. El texto pasa a oscuro solo si el color es claro. --}}
                     {{-- Fija bajo la barra del admin: sigue a la vista mientras se ajustan los controles de abajo. --}}
-                    <div class="mb-4 pb-2 bg-white" style="position: sticky; top: 60px; z-index: 1010;">
+                    <div class="ajuste-cabecera-fija mb-4 pb-2">
                         <div class="form-label pt-2">Vista previa de la cabecera</div>
                         <div id="cabecera_preview" class="rounded px-3 d-flex align-items-center justify-content-between gap-3"
                              style="min-height: 72px; background-color: {{ $colorPreview->hex() }}; color: {{ $colorPreview->textoLegible()->hex() }};">
@@ -253,7 +253,7 @@
                             {{-- Vista previa del listado y de la ficha de producto: responde en tiempo
                                  real a los tres switches de la izquierda, con el color elegido en
                                  Apariencia. Usa productos y proveedores reales de la tienda si los hay. --}}
-                            <div class="ajuste-tarjeta" id="preview_cards" style="position: sticky; top: 76px;">
+                            <div class="ajuste-tarjeta ajuste-pegada" id="preview_cards">
                                 <div class="small text-muted mb-2">Vista previa en el listado</div>
                                 <div class="row g-2">
                                     <div class="col-6">
@@ -354,7 +354,7 @@
                         <div class="col-md-6">
                             <label for="social_instagram" class="visually-hidden">Instagram</label>
                             <div class="input-group">
-                                <span class="input-group-text" title="Instagram" style="width: 2.75rem; justify-content: center;"><i class="bi bi-instagram" style="color: #E1306C;"></i></span>
+                                <span class="input-group-text ajuste-red" title="Instagram"><i class="bi bi-instagram" style="color: #E1306C;"></i></span>
                                 <input type="url" class="form-control @error('social_instagram') is-invalid @enderror"
                                        id="social_instagram" name="social_instagram" placeholder="https://instagram.com/tutienda"
                                        value="{{ old('social_instagram', App\Models\Configuracion::socialInstagram()) }}">
@@ -366,7 +366,7 @@
                         <div class="col-md-6">
                             <label for="social_facebook" class="visually-hidden">Facebook</label>
                             <div class="input-group">
-                                <span class="input-group-text" title="Facebook" style="width: 2.75rem; justify-content: center;"><i class="bi bi-facebook" style="color: #1877F2;"></i></span>
+                                <span class="input-group-text ajuste-red" title="Facebook"><i class="bi bi-facebook" style="color: #1877F2;"></i></span>
                                 <input type="url" class="form-control @error('social_facebook') is-invalid @enderror"
                                        id="social_facebook" name="social_facebook" placeholder="https://facebook.com/tutienda"
                                        value="{{ old('social_facebook', App\Models\Configuracion::socialFacebook()) }}">
@@ -378,7 +378,7 @@
                         <div class="col-md-6">
                             <label for="social_twitter" class="visually-hidden">Twitter / X</label>
                             <div class="input-group">
-                                <span class="input-group-text" title="Twitter / X" style="width: 2.75rem; justify-content: center;"><i class="bi bi-twitter-x"></i></span>
+                                <span class="input-group-text ajuste-red" title="Twitter / X"><i class="bi bi-twitter-x"></i></span>
                                 <input type="url" class="form-control @error('social_twitter') is-invalid @enderror"
                                        id="social_twitter" name="social_twitter" placeholder="https://x.com/tutienda"
                                        value="{{ old('social_twitter', App\Models\Configuracion::socialTwitter()) }}">
@@ -390,7 +390,7 @@
                         <div class="col-md-6">
                             <label for="social_tiktok" class="visually-hidden">TikTok</label>
                             <div class="input-group">
-                                <span class="input-group-text" title="TikTok" style="width: 2.75rem; justify-content: center;"><i class="bi bi-tiktok"></i></span>
+                                <span class="input-group-text ajuste-red" title="TikTok"><i class="bi bi-tiktok"></i></span>
                                 <input type="url" class="form-control @error('social_tiktok') is-invalid @enderror"
                                        id="social_tiktok" name="social_tiktok" placeholder="https://tiktok.com/@tutienda"
                                        value="{{ old('social_tiktok', App\Models\Configuracion::socialTiktok()) }}">
@@ -402,7 +402,7 @@
                         <div class="col-md-6">
                             <label for="social_youtube" class="visually-hidden">YouTube</label>
                             <div class="input-group">
-                                <span class="input-group-text" title="YouTube" style="width: 2.75rem; justify-content: center;"><i class="bi bi-youtube" style="color: #FF0000;"></i></span>
+                                <span class="input-group-text ajuste-red" title="YouTube"><i class="bi bi-youtube" style="color: #FF0000;"></i></span>
                                 <input type="url" class="form-control @error('social_youtube') is-invalid @enderror"
                                        id="social_youtube" name="social_youtube" placeholder="https://youtube.com/@tutienda"
                                        value="{{ old('social_youtube', App\Models\Configuracion::socialYoutube()) }}">
@@ -414,7 +414,7 @@
                         <div class="col-md-6">
                             <label for="social_whatsapp" class="visually-hidden">WhatsApp</label>
                             <div class="input-group">
-                                <span class="input-group-text" title="WhatsApp" style="width: 2.75rem; justify-content: center;"><i class="bi bi-whatsapp" style="color: #25D366;"></i></span>
+                                <span class="input-group-text ajuste-red" title="WhatsApp"><i class="bi bi-whatsapp" style="color: #25D366;"></i></span>
                                 <input type="text" class="form-control @error('social_whatsapp') is-invalid @enderror"
                                        id="social_whatsapp" name="social_whatsapp" placeholder="+54 9 11 1234 5678"
                                        value="{{ old('social_whatsapp', App\Models\Configuracion::socialWhatsapp()) }}">
@@ -624,7 +624,7 @@
                         <div class="col-lg-5">
                             {{-- Vista previa con un pedido de ejemplo. La arma el servidor con la misma
                                  clase que el envío real (MensajeWhatsapp), así es exactamente lo que llega. --}}
-                            <div class="whatsapp-preview" style="position: sticky; top: 76px;">
+                            <div class="whatsapp-preview ajuste-pegada">
                                 <div class="whatsapp-preview-cabecera">
                                     <i class="bi bi-whatsapp"></i>
                                     <span class="fw-semibold">Vista previa</span>
@@ -712,7 +712,7 @@
 </div>
 </div>
 
-    <div class="position-sticky bottom-0 bg-white border-top py-2 mt-3" style="z-index:5;">
+    <div class="panel-barra-guardar">
         <div class="d-flex justify-content-end align-items-center gap-3">
             <span class="small text-muted d-none d-sm-inline">Los cambios de todas las pestañas se guardan juntos.</span>
             <button type="submit" class="btn btn-primary px-4">
@@ -724,37 +724,8 @@
 
 @push('styles')
 <style>
-    .ajuste-seccion {
-        font-size: .75rem;
-        font-weight: 600;
-        letter-spacing: .04em;
-        text-transform: uppercase;
-        color: var(--bs-secondary-color, #6c757d);
-        margin-bottom: .5rem;
-    }
-    .ajuste-tarjeta {
-        border: 1px solid var(--bs-border-color);
-        border-radius: .5rem;
-        padding: 1rem;
-        background: #fff;
-    }
-    .ajuste-interruptor { cursor: pointer; }
-    .ajuste-interruptor:hover { border-color: #adb5bd; }
-    .ajuste-opcion {
-        display: block;
-        border: 1px solid var(--bs-border-color);
-        border-radius: .5rem;
-        padding: .6rem .75rem;
-        cursor: pointer;
-        transition: border-color .15s ease, background-color .15s ease;
-    }
-    .ajuste-opcion:hover { border-color: #adb5bd; }
-    .btn-check:checked + .ajuste-opcion {
-        border-color: var(--bs-primary);
-        background-color: rgba(var(--bs-primary-rgb), .08);
-        box-shadow: inset 0 0 0 1px var(--bs-primary);
-    }
-    .btn-check:focus-visible + .ajuste-opcion { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+    /* .ajuste-seccion, .ajuste-tarjeta, .ajuste-opcion: en public/css/admin.css.
+       Acá queda sólo lo que imita a la tienda, a Google o a WhatsApp, con sus colores. */
     .preview-card { font-size: .85rem; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.07); border: none; }
     .preview-card-nombre { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .preview-card-precio { color: var(--preview-primario, #0d6efd); font-size: 1rem; }
@@ -784,22 +755,6 @@
     .whatsapp-preview-burbuja.cargando { opacity: .6; }
     .whatsapp-preview-hora { text-align: right; font-size: .68rem; color: #667781; margin-top: .15rem; }
     .whatsapp-preview-hora .bi { color: #53bdeb; }
-    .imagen-miniatura {
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid var(--bs-border-color);
-        border-radius: .375rem;
-        background-color: #fff;
-        background-image:
-            linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%),
-            linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%);
-        background-size: 12px 12px;
-        background-position: 0 0, 0 6px, 6px -6px, -6px 0;
-        transition: opacity .15s ease;
-    }
-    .imagen-miniatura.se-quita { opacity: .35; }
 </style>
 @endpush
 
