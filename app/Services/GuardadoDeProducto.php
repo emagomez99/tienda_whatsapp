@@ -201,6 +201,14 @@ class GuardadoDeProducto
         if ($cargadas === null) {
             $cargadas = $producto->exists ? $producto->valoresDeCaracteristicas() : [];
         }
+        foreach ($datos->variantes() ?: [] as $variante) {
+            foreach ((array) ($variante['valores'] ?? []) as $propiedad => $valor) {
+                $etiqueta = ctype_digit((string) $propiedad) ? Etiqueta::find((int) $propiedad) : Etiqueta::porNombre((string) $propiedad);
+                if ($etiqueta && trim((string) $valor) !== '') {
+                    $cargadas[$etiqueta->id][] = $valor;
+                }
+            }
+        }
 
         $faltantes = [];
         foreach ($obligatorias as $caracteristica) {

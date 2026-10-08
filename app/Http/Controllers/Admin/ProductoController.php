@@ -313,9 +313,9 @@ class ProductoController extends Controller
             $datos = $datos->conGaleria($request->input('galeria', []), $request->file('galeria_archivos', []));
         }
 
-        // Como la galería: sólo si vino la sección. Apagada ("no tiene variantes"), llega vacía.
+        // Como la galería: sólo si vino la sección. Sin propiedades, llega vacía (sin variantes).
         if ($request->boolean('variantes_enviadas')) {
-            $datos = $datos->conVariantes($request->boolean('usa_variantes') ? $request->input('variantes', []) : []);
+            $datos = $datos->conVariantes($request->input('variantes', []));
         }
 
         return $datos;

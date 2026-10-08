@@ -340,3 +340,4 @@ Datos útiles:
 | 2026-10-11 | Etapa 4: varios valores por característica (fichitas en el producto, "S; M; L" en Excel, unir valores sin chocar) | (este) |
 | 2026-10-11 | Etapa 4: variantes con stock propio (panel, tienda, carrito, pedidos, historial) | (este) |
 | 2026-10-11 | Etapa 4: correcciones de la prueba en el navegador (apagar variantes devuelve el stock y pide confirmación, historial con el nombre de la variante, "Desde $" con precios distintos, flechas en destacados, textos) | (este) |
+| 2026-10-11 | Variantes como Tiendanube: botón Agregar → panel "Crear propiedad" (Color, Talle con valores listos para tildar, o una nueva); la propiedad se crea sola por nombre, sin pasar por Características; hasta 3 | (este) |

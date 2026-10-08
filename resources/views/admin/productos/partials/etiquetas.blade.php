@@ -88,6 +88,11 @@
         (valores[id] = valores[id] || []).push(fila.valor);
     });
 
+    var propiedadesDeVariantes = [];
+    function esDeVariantes(etiqueta) {
+        return propiedadesDeVariantes.indexOf(String(etiqueta.nombre).trim().replace(/\s+/g, ' ').toLowerCase()) !== -1;
+    }
+
     function tieneValor(id) {
         return (valores[id] || []).some(function (v) { return (v || '').trim() !== ''; });
     }
@@ -325,13 +330,25 @@
         var ids = lista.map(function (c) { return c.id; });
 
         lista.forEach(function (c) {
-            if (porId[c.id]) contenedor.appendChild(fila(porId[c.id], c.obligatoria ? 'obligatoria' : 'opcional', quienLoPide(c.origenes)));
+            if (!porId[c.id]) return;
+            // Lo que se carga en Variantes (ej. Talle) no se pide dos veces: una nota y listo.
+            if (esDeVariantes(porId[c.id])) {
+                var nota = el('div', 'row g-2 mb-2 small text-muted');
+                var rotulo = el('div', 'col-md-3 fw-semibold', porId[c.id].nombre);
+                var texto = el('div', 'col-md-9');
+                texto.innerHTML = '<i class="bi bi-grid-3x3-gap"></i> Se carga en <strong>Variantes</strong>, más abajo.';
+                nota.appendChild(rotulo);
+                nota.appendChild(texto);
+                contenedor.appendChild(nota);
+                return;
+            }
+            contenedor.appendChild(fila(porId[c.id], c.obligatoria ? 'obligatoria' : 'opcional', quienLoPide(c.origenes)));
         });
 
         // Valores de características que sus categorías no piden: se muestran para
         // decidir qué hacer con ellos en vez de perderlos en silencio.
         Object.keys(valores).forEach(function (id) {
-            if (ids.indexOf(id) === -1 && porId[id] && tieneValor(id)) {
+            if (ids.indexOf(id) === -1 && porId[id] && tieneValor(id) && !esDeVariantes(porId[id])) {
                 contenedor.appendChild(fila(porId[id], 'no-aplica'));
             }
         });
@@ -438,6 +455,14 @@
 
     // El partial de categorías avisa con un "change" cada vez que se elige o se quita una.
     document.getElementById('categorias-chips').addEventListener('change', pintar);
+
+    // La sección Variantes avisa qué propiedades carga ella (nombres en minúscula).
+    document.addEventListener('propiedades-de-variantes', function (e) {
+        var nuevas = (e.detail || []).join('|');
+        if (nuevas === propiedadesDeVariantes.join('|')) return;
+        propiedadesDeVariantes = e.detail || [];
+        pintar();
+    });
     pintar();
 })();
 </script>

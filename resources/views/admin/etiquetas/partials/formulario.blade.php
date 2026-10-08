@@ -39,7 +39,7 @@
                            {{-- Si no se pudo apagar, sigue prendido: es como quedó guardado. --}}
                            {{ ($errors->has('varios_valores') ? $etiqueta->varios_valores : old('varios_valores', $etiqueta->varios_valores)) ? 'checked' : '' }}>
                     <label class="form-check-label" for="varios_valores">Un producto puede tener varios</label>
-                    <div class="form-text">Por ejemplo Talle: una remera viene en S, M y L. Si cada talle tiene su propio stock, lo vas a poder cargar en el producto. La Marca, en cambio, es una sola.</div>
+                    <div class="form-text">Por ejemplo, «Apto para: Niños y Adultos». La Marca, en cambio, es una sola. (Para talles y colores con su propio stock no hace falta: se cargan en el producto, en Variantes.)</div>
                 </div>
 
                 <input type="hidden" name="global" value="0">

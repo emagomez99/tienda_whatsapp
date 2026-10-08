@@ -40,6 +40,7 @@ class VariantesDeProducto
      */
     public function sincronizar(Producto $producto, array $lista, ?int $usuarioId = null): void
     {
+        $this->propiedades = [];   // una propiedad creada en un guardado que falló no existe
         $existentes = $producto->variantes()->with('valores')->get()->keyBy('id');
 
         if (empty($lista)) {
@@ -147,11 +148,13 @@ class VariantesDeProducto
         $resultado = [];
 
         foreach (array_values($lista) as $i => $datos) {
+            // La propiedad llega por su nombre ("Talle") o por su id.
             $valores = [];
-            foreach ((array) ($datos['valores'] ?? []) as $etiquetaId => $valor) {
+            foreach ((array) ($datos['valores'] ?? []) as $propiedad => $valor) {
                 $valor = EtiquetaValor::limpiar($valor);
-                if ((int) $etiquetaId > 0 && $valor !== '') {
-                    $valores[(int) $etiquetaId] = $valor;
+                $etiquetaId = $this->propiedad((string) $propiedad);
+                if ($etiquetaId && $valor !== '') {
+                    $valores[$etiquetaId] = $valor;
                 }
             }
             ksort($valores);
@@ -206,17 +209,35 @@ class VariantesDeProducto
         return $resultado;
     }
 
-    /** Sólo características con varios valores: con una sola no hay nada que elegir. */
+    /** @var array<string, int> nombre o id => etiqueta_id, de las propiedades ya resueltas */
+    private $propiedades = [];
+
+    /** El id de la propiedad ("Talle" o "12"); la crea si no existe. */
+    private function propiedad(string $propiedad): ?int
+    {
+        $propiedad = trim($propiedad);
+        if ($propiedad === '') {
+            return null;
+        }
+        if (!isset($this->propiedades[$propiedad])) {
+            $etiqueta = ctype_digit($propiedad) ? Etiqueta::find((int) $propiedad) : Etiqueta::paraVariantes($propiedad);
+            if (!$etiqueta) {
+                $this->error('Una de las propiedades de las variantes ya no existe.');
+            }
+            if (!$etiqueta->varios_valores) {
+                $etiqueta->update(['varios_valores' => true]);
+            }
+            $this->propiedades[$propiedad] = $etiqueta->id;
+        }
+
+        return $this->propiedades[$propiedad];
+    }
+
+    /** Hasta 3 propiedades por producto, como en Tiendanube (Color, Talle y una más). */
     private function validarEjes(array $etiquetaIds): void
     {
-        $etiquetas = Etiqueta::whereIn('id', $etiquetaIds)->get(['id', 'nombre', 'varios_valores']);
-        if ($etiquetas->count() !== count($etiquetaIds)) {
-            $this->error('Una de las características de las variantes ya no existe.');
-        }
-        foreach ($etiquetas as $etiqueta) {
-            if (!$etiqueta->varios_valores) {
-                $this->error("«{$etiqueta->nombre}» no admite varios valores: no se puede elegir por ella. Prendé «Un producto puede tener varios» en la característica.");
-            }
+        if (count($etiquetaIds) > 3) {
+            $this->error('Un producto puede tener hasta 3 propiedades (por ejemplo Color, Talle y Material).');
         }
     }
 

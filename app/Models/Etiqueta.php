@@ -34,6 +34,35 @@ class Etiqueta extends Model
                     ->withTimestamps();
     }
 
+    /**
+     * La propiedad de las variantes con este nombre ("Talle", "Color"), como en
+     * Tiendanube: se elige o se escribe en el producto, sin pasar por Características.
+     * Si no existe se crea; si existe, queda admitiendo varios valores (un producto
+     * viene en S, M y L).
+     */
+    public static function paraVariantes(string $nombre): self
+    {
+        $etiqueta = static::porNombre($nombre);
+        if (!$etiqueta) {
+            return static::create([
+                'nombre'           => EtiquetaValor::limpiar($nombre),
+                'visible_usuarios' => true,
+                'varios_valores'   => true,
+            ]);
+        }
+        if (!$etiqueta->varios_valores) {
+            $etiqueta->update(['varios_valores' => true]);
+        }
+
+        return $etiqueta;
+    }
+
+    /** Sin importar mayúsculas ni espacios de más: "talle" es "Talle". */
+    public static function porNombre(string $nombre): ?self
+    {
+        return static::whereRaw('lower(trim(nombre)) = ?', [mb_strtolower(EtiquetaValor::limpiar($nombre), 'UTF-8')])->first();
+    }
+
     /** Cuántos productos tienen más de un valor cargado en esta característica. */
     public function productosConVariosValores(): int
     {

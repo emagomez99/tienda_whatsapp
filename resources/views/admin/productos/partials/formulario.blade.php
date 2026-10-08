@@ -29,16 +29,17 @@
         : $producto->especificaciones->map(function ($e) { return ['clave' => $e->clave, 'valor' => $e->valor]; })->all();
 
     // Variantes: lo guardado o, si volvió con errores, lo que se había mandado.
+    // Cada variante dice su valor por propiedad, por nombre: ['Talle' => 'M'].
     if (session()->hasOldInput()) {
-        $usaVariantes = (bool) old('usa_variantes');
         $variantesIniciales = array_values(old('variantes', []));
+        $usaVariantes = !empty($variantesIniciales);
     } elseif ($editando) {
-        $producto->loadMissing('variantes.valores');
+        $producto->loadMissing('variantes.valores.etiqueta');
         $usaVariantes = $producto->variantes->isNotEmpty();
         $variantesIniciales = $producto->variantes->map(function ($v) {
             $valores = [];
             foreach ($v->valores as $valor) {
-                $valores[$valor->pivot->etiqueta_id] = $valor->valor;
+                $valores[$valor->etiqueta ? $valor->etiqueta->nombre : $valor->pivot->etiqueta_id] = $valor->valor;
             }
             return ['id' => $v->id, 'valores' => $valores, 'codigo' => $v->codigo, 'precio' => $v->precio, 'stock' => $v->stock, 'activa' => $v->activa];
         })->all();

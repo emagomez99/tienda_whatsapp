@@ -43,7 +43,7 @@ return [
 
         'categorias' => 'El estante donde va el producto: Gaseosas, Fideos, Detergentes. Puede estar en más de uno. Si elegís uno de adentro (Bebidas › Gaseosas), aparece también en el de afuera (Bebidas) sin marcarlo.',
         'etiquetas' => 'Los datos del producto que piden sus categorías (Marca, Sabor, Contenido…) y que la tienda usa en los filtros. Cuáles se piden se define en cada categoría; las marcadas con * son obligatorias. Al escribir el valor se sugieren los que ya existen, con cuántos productos los usan: elegir uno de esos evita duplicados como "Asus" y "Asuz".',
-        'variantes' => 'Para un producto que viene en varias opciones, como una remera en talles S, M y L. Cargá los talles en Características (cada uno es una fichita), prendé esto y poné cuántas hay de cada uno. El cliente elige el talle al comprar y se descuenta el stock de ese talle.',
+        'variantes' => 'Para un producto que viene en varias opciones, como una remera en talles S, M y L. Tocá Agregar, elegí Talle, tildá los talles y poné cuántas hay de cada uno. El cliente elige el talle al comprar y se descuenta el stock de ese talle.',
 
         'especificaciones' => 'Datos sueltos que sólo tiene este producto y no hace falta filtrar: el nombre lo escribís vos. Se muestran en la ficha. Ej: Envase → Retornable, Edición → Navidad. Si es un dato que tienen todos los de la categoría (Marca, Sabor), va en Características.',
 

@@ -29,7 +29,7 @@
 <h6 class="ayuda-titulo">Un producto que viene en varios talles o colores</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-grid-3x3-gap"></i></span>
-    <div><strong>Cargalo una sola vez, con sus opciones.</strong><br>Una remera en talles S, M y L es un solo producto. En <em>Características</em> escribí cada talle y apretá Enter (quedan como fichitas). Después, en <em>Variantes</em>, prendé <em>El cliente elige al comprar</em> y poné cuántas hay de cada talle.</div>
+    <div><strong>Cargalo una sola vez, con sus opciones.</strong><br>Una remera en talles S, M y L es un solo producto. En <em>Variantes</em> tocá <em>Agregar</em>, elegí <em>Talle</em> y tildá los talles. Aparece una fila por talle: poné cuántas hay de cada uno.</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-cart-check"></i></span>

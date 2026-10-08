@@ -71,7 +71,6 @@ class VariantesTest extends TestCase
                 ['etiqueta_id' => $this->ids['talle'], 'valor' => 'M'],
             ],
             'variantes_enviadas' => 1,
-            'usa_variantes' => $variantes ? 1 : 0,
             'variantes' => $variantes,
         ];
     }
@@ -118,7 +117,7 @@ class VariantesTest extends TestCase
 
         // La edición muestra la sección prendida, con sus filas.
         $this->get($this->urlTenant('admin/productos/' . $producto->id . '/edit'))->assertOk()
-            ->assertSee('id="usa_variantes" name="usa_variantes" value="1" checked', false)
+            ->assertSee('"valores":{"Talle":"M"}', false)
             ->assertSee('"codigo":"REM-M"', false);
     }
 
@@ -193,13 +192,43 @@ class VariantesTest extends TestCase
     }
 
     /** @test */
+    public function las_propiedades_se_eligen_por_nombre_y_se_crean_solas()
+    {
+        // "Sabor" no existe: se crea al guardar, sin pasar por Características.
+        $this->admin()->post($this->urlTenant('admin/productos'), $this->formulario([
+            ['valores' => ['color' => 'Rojo', 'Sabor' => 'Frutilla'], 'stock' => 2],
+            ['valores' => ['color' => 'Rojo', 'Sabor' => 'Limón'], 'stock' => 1],
+        ], ['descripcion' => 'Chupetín', 'etiquetas' => []]))->assertSessionHasNoErrors();
+
+        $this->enTenant(function () {
+            $sabor = Etiqueta::where('nombre', 'Sabor')->firstOrFail();
+            $this->assertTrue($sabor->varios_valores);
+            // "color" es la que ya existía (Color), no una nueva.
+            $this->assertSame(1, Etiqueta::whereRaw('lower(nombre) = ?', ['color'])->count());
+
+            $producto = Producto::where('descripcion', 'Chupetín')->firstOrFail();
+            $this->assertSame(3, (int) $producto->stock);
+            $this->assertSame(['Rojo · Frutilla', 'Rojo · Limón'], $producto->variantes()->get()->map->nombre()->all());
+            $this->assertSame(['Frutilla', 'Limón'], $producto->valoresDeCaracteristicas()[$sabor->id]);
+        });
+
+        // Una categoría que pide Talle (obligatorio) se conforma con los talles de las variantes.
+        $this->enTenant(function () {
+            Categoria::find($this->ids['remeras'])->caracteristicas()->attach($this->ids['talle'], ['obligatoria' => true, 'orden' => 1]);
+        });
+        $this->post($this->urlTenant('admin/productos'), $this->formulario([
+            ['valores' => ['Talle' => 'XL'], 'stock' => 1],
+        ], ['descripcion' => 'Buzo', 'etiquetas' => []]))->assertSessionHasNoErrors();
+    }
+
+    /** @test */
     public function reglas_de_las_variantes()
     {
         $this->crearRemera();
 
-        // Por una característica de un solo valor no se elige.
+        // Hasta 3 propiedades, como en Tiendanube.
         $this->admin()->post($this->urlTenant('admin/productos'), $this->formulario(
-            [['valores' => [$this->ids['marca'] => 'Topper'], 'stock' => 1]],
+            [['valores' => ['Talle' => 'S', 'Color' => 'Rojo', 'Material' => 'Algodón', 'Corte' => 'Recto'], 'stock' => 1]],
             ['descripcion' => 'Otra']
         ))->assertSessionHasErrors('variantes');
 
