@@ -28,10 +28,18 @@
     </div>
     <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-productos">
     <div class="card-body">
-        <form action="{{ route('admin.productos.index') }}" method="GET" class="row g-3">
-            <div class="col-md-6 col-lg-3">
-                <label class="form-label text-muted mb-1" style="font-size:.75rem;">Buscar</label>
-                <input type="text" name="buscar" class="form-control" placeholder="Buscar..." value="{{ request('buscar') }}">
+        {{-- Los desplegables filtran apenas se elige una opción (script de abajo):
+             tener que tocar además la lupa era un paso que muchos no descubrían.
+             El texto sí espera al botón o a Enter, para no recargar con cada letra. --}}
+        <form action="{{ route('admin.productos.index') }}" method="GET" class="row g-3" id="form-filtros-productos">
+            <div class="col-md-12 col-lg-4">
+                <label for="filtro-buscar" class="form-label text-muted mb-1" style="font-size:.75rem;">Nombre o código</label>
+                <div class="input-group">
+                    <input type="text" name="buscar" id="filtro-buscar" class="form-control" placeholder="Ej: gaseosa" value="{{ request('buscar') }}">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
             </div>
             <div class="col-6 col-md-3 col-lg-2">
                 <label class="form-label text-muted mb-1" style="font-size:.75rem;">Proveedor</label>
@@ -72,13 +80,17 @@
                     <option value="sin" {{ request('stock') === 'sin' ? 'selected' : '' }}>Sin stock</option>
                 </select>
             </div>
-            <div class="col-md-12 col-lg-1">
-                <label class="form-label mb-1 d-none d-lg-block" style="font-size:.75rem; visibility:hidden;">.</label>
-                <button type="submit" class="btn btn-outline-primary w-100" title="Filtrar">
-                    <i class="bi bi-search"></i><span class="d-lg-none"> Filtrar</span>
-                </button>
-            </div>
+            @if($filtrosActivos)
+                <div class="col-12 small">
+                    <a href="{{ route('admin.productos.index') }}" class="text-decoration-none"><i class="bi bi-x-circle"></i> Quitar los filtros</a>
+                </div>
+            @endif
         </form>
+        <script>
+            document.querySelectorAll('#form-filtros-productos select').forEach(function (select) {
+                select.addEventListener('change', function () { select.form.submit(); });
+            });
+        </script>
     </div>
     </div>
 </div>
