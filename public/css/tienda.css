@@ -1,0 +1,753 @@
+/*
+ * Estilos de la tienda pública (lo que ven los clientes): un sistema de diseño
+ * chico, con tokens, hermano de public/css/admin.css.
+ *
+ * Todo el aspecto sale de las variables --tienda-* de :root (fondo, superficies,
+ * bordes, texto, radios, sombras, tipografía, medidas). Bootstrap 5.3 sigue siendo
+ * la base: los tokens se vuelcan sobre sus variables (--bs-*) y sobre las de cada
+ * componente (--bs-btn-*, --bs-card-*, --bs-pagination-*), así las vistas usan las
+ * clases de Bootstrap de siempre y toman el estilo sin cambios.
+ *
+ * Identidad de cada tienda: el layout (layouts/app.blade.php) define SOLO lo que
+ * depende de los Ajustes de la tienda:
+ *   --color-primary            color de marca (botones principales, barra, acentos)
+ *   --color-primary-rgb        el mismo, en "r, g, b" (para rgba())
+ *   --color-primary-texto      texto legible sobre el color de marca (blanco u oscuro)
+ *   --color-primary-texto-rgb
+ *   --color-primary-tinta      el color de marca como texto sobre blanco (precios,
+ *                              links): igual al de marca, u oscurecido si es muy claro
+ *   --logo-alto                alto del logo elegido en Ajustes
+ * Este archivo los usa a través de los tokens --tienda-marca-*.
+ *
+ * Un tema nuevo (por ejemplo, uno tipo Material Design 3) es otro archivo que
+ * redefine los tokens de :root —fuente Roboto, radios más grandes, sombras de
+ * elevación, superficies tonales con color-mix(var(--color-primary) …)— y se carga
+ * DESPUÉS de este en el layout. No hace falta tocar vistas. Ver
+ * docs/plan-diseno-panel.md, sección "Tienda pública".
+ */
+
+/* ── Tokens ─────────────────────────────────────────────────────────────── */
+:root {
+    --tienda-fuente: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    --tienda-fondo: #ffffff;              /* detrás de todo */
+    --tienda-superficie: #ffffff;         /* tarjetas, menús, barras */
+    --tienda-superficie-suave: #f6f7f9;   /* pie, fondos de imagen, chips */
+    --tienda-borde: #e7e9ee;
+    --tienda-borde-fuerte: #d4d8e0;
+
+    --tienda-texto: #1d2433;
+    --tienda-texto-suave: #5f6878;
+    --tienda-texto-tenue: #9aa1ad;
+
+    /* Marca: vienen de los Ajustes de cada tienda (ver cabecera). */
+    --tienda-marca: var(--color-primary);
+    --tienda-marca-rgb: var(--color-primary-rgb);
+    --tienda-marca-texto: var(--color-primary-texto);
+    --tienda-marca-tinta: var(--color-primary-tinta);
+    --tienda-marca-oscuro: color-mix(in srgb, var(--color-primary) 85%, black);
+    --tienda-marca-suave: color-mix(in srgb, var(--color-primary) 10%, white);
+
+    --tienda-radio: 14px;                 /* tarjetas, paneles, imágenes */
+    --tienda-radio-control: 10px;         /* botones, campos, buscador */
+    --tienda-radio-chico: 6px;            /* chips, badges */
+
+    --tienda-sombra: 0 1px 2px rgba(16, 24, 40, .05);
+    --tienda-sombra-hover: 0 12px 28px rgba(16, 24, 40, .12);
+    --tienda-sombra-alta: 0 12px 32px rgba(16, 24, 40, .14), 0 0 0 1px rgba(16, 24, 40, .04);
+
+    --tienda-espacio: 1rem;
+    --tienda-control-alto: 38px;          /* botones y campos de la ficha */
+    --tienda-imagen-alto: 220px;          /* imagen de la tarjeta de producto */
+    --tienda-ficha-imagen-alto: 440px;    /* imagen de la ficha (escritorio) */
+    --tienda-ficha-imagen-alto-movil: 340px;
+}
+
+/* ── Bootstrap, con los tokens ──────────────────────────────────────────── */
+:root {
+    --bs-body-font-family: var(--tienda-fuente);
+    --bs-body-color: var(--tienda-texto);
+    --bs-body-bg: var(--tienda-superficie);
+    --bs-emphasis-color: var(--tienda-texto);
+    --bs-secondary-color: var(--tienda-texto-suave);
+    --bs-border-color: var(--tienda-borde);
+    --bs-border-radius: var(--tienda-radio-control);
+    --bs-border-radius-lg: var(--tienda-radio);
+    --bs-border-radius-sm: var(--tienda-radio-chico);
+    --bs-primary: var(--tienda-marca);
+    --bs-primary-rgb: var(--tienda-marca-rgb);
+    --bs-link-color: var(--tienda-marca-tinta);
+    --bs-link-color-rgb: var(--tienda-marca-rgb);
+    --bs-link-hover-color: var(--tienda-marca-oscuro);
+    --bs-focus-ring-color: rgba(var(--tienda-marca-rgb), .2);
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--tienda-fuente);
+    background: var(--tienda-fondo);
+    color: var(--tienda-texto);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'cv11', 'ss01';   /* Inter: cifras y letras más claras */
+}
+a { color: var(--tienda-marca-tinta); }
+
+/* ── Tipografía ─────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    color: var(--tienda-texto);
+    font-weight: 650;
+    letter-spacing: -.01em;
+}
+.text-muted { color: var(--tienda-texto-suave) !important; }
+.text-dark { color: var(--tienda-texto) !important; }
+/* El color de marca como texto (precios, totales): legible aun en tiendas de color claro. */
+.text-primary { color: var(--tienda-marca-tinta) !important; }
+.text-sobre-primario { color: var(--tienda-marca-texto) !important; }
+.bg-primary { background-color: var(--tienda-marca) !important; color: var(--tienda-marca-texto); }
+.cifras { font-variant-numeric: tabular-nums; }
+
+/* Título de página (carrito, checkout, categoría). */
+.tienda-titulo { font-size: 1.6rem; margin-bottom: 0; }
+.tienda-titulo > .bi:first-child { color: var(--tienda-texto-suave); font-size: .85em; }
+@media (max-width: 575.98px) { .tienda-titulo { font-size: 1.35rem; } }
+
+/* ── Botones ────────────────────────────────────────────────────────────── */
+.btn {
+    --bs-btn-border-radius: var(--tienda-radio-control);
+    --bs-btn-font-weight: 500;
+}
+.btn-sm { --bs-btn-border-radius: calc(var(--tienda-radio-control) - 2px); }
+.btn-primary {
+    --bs-btn-color: var(--tienda-marca-texto);
+    --bs-btn-bg: var(--tienda-marca);
+    --bs-btn-border-color: var(--tienda-marca);
+    --bs-btn-hover-color: var(--tienda-marca-texto);
+    --bs-btn-hover-bg: var(--tienda-marca-oscuro);
+    --bs-btn-hover-border-color: var(--tienda-marca-oscuro);
+    --bs-btn-active-color: var(--tienda-marca-texto);
+    --bs-btn-active-bg: var(--tienda-marca-oscuro);
+    --bs-btn-active-border-color: var(--tienda-marca-oscuro);
+    --bs-btn-disabled-color: var(--tienda-marca-texto);
+    --bs-btn-disabled-bg: var(--tienda-marca);
+    --bs-btn-disabled-border-color: var(--tienda-marca);
+    --bs-btn-focus-shadow-rgb: var(--tienda-marca-rgb);
+    box-shadow: var(--tienda-sombra);
+}
+.btn-outline-secondary {
+    --bs-btn-color: var(--tienda-texto);
+    --bs-btn-bg: var(--tienda-superficie);
+    --bs-btn-border-color: var(--tienda-borde-fuerte);
+    --bs-btn-hover-color: var(--tienda-texto);
+    --bs-btn-hover-bg: var(--tienda-superficie-suave);
+    --bs-btn-hover-border-color: var(--tienda-borde-fuerte);
+    --bs-btn-active-color: var(--tienda-texto);
+    --bs-btn-active-bg: #eceef2;
+    --bs-btn-active-border-color: var(--tienda-borde-fuerte);
+    --bs-btn-disabled-color: var(--tienda-texto-tenue);
+    --bs-btn-disabled-bg: var(--tienda-superficie);
+    --bs-btn-disabled-border-color: var(--tienda-borde);
+}
+.btn-light {
+    --bs-btn-bg: var(--tienda-superficie-suave);
+    --bs-btn-border-color: var(--tienda-borde);
+    --bs-btn-disabled-bg: var(--tienda-superficie-suave);
+    --bs-btn-disabled-border-color: var(--tienda-borde);
+}
+
+/* ── Campos ─────────────────────────────────────────────────────────────── */
+.form-control, .form-select {
+    border-color: var(--tienda-borde-fuerte);
+    border-radius: var(--tienda-radio-control);
+}
+.form-control:focus, .form-select:focus {
+    border-color: rgba(var(--tienda-marca-rgb), .6);
+    box-shadow: 0 0 0 .2rem rgba(var(--tienda-marca-rgb), .15);
+}
+.form-check-input:checked { background-color: var(--tienda-marca); border-color: var(--tienda-marca); }
+.form-label { font-weight: 500; color: var(--tienda-texto); }
+
+/* Cantidad con − y +: el tamaño lo da el contenedor (--tienda-control-alto).
+   Sin las flechitas del navegador, que se superponen con el número. */
+.selector-cantidad { --tienda-control-alto: 38px; }
+.selector-cantidad-chico { --tienda-control-alto: 32px; }
+.selector-cantidad-grande { --tienda-control-alto: 42px; }
+.selector-cantidad .btn,
+.selector-cantidad .form-control { height: var(--tienda-control-alto); }
+.selector-cantidad .btn-decrement, .selector-cantidad .btn-increment,
+.selector-cantidad .btn-dec, .selector-cantidad .btn-inc {
+    width: var(--tienda-control-alto);
+    padding: 0;
+    flex-shrink: 0;
+}
+.selector-cantidad .form-control {
+    width: calc(var(--tienda-control-alto) * 1.45);
+    flex-shrink: 0;
+    padding-left: .25rem;
+    padding-right: .25rem;
+    font-variant-numeric: tabular-nums;
+}
+.selector-cantidad input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+.selector-cantidad input[type=number]::-webkit-outer-spin-button,
+.selector-cantidad input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ── Tarjetas ───────────────────────────────────────────────────────────── */
+.card {
+    --bs-card-border-color: var(--tienda-borde);
+    --bs-card-border-radius: var(--tienda-radio);
+    --bs-card-inner-border-radius: calc(var(--tienda-radio) - 1px);
+    --bs-card-cap-bg: var(--tienda-superficie);
+    --bs-card-cap-padding-y: .85rem;
+    box-shadow: var(--tienda-sombra);
+}
+.card-header { font-weight: 600; }
+.card-header h5, .card-header h6 { font-size: 1rem; font-weight: 600; }
+.card-header h5 > .bi:first-child, .card-header h6 > .bi:first-child { color: var(--tienda-texto-suave); }
+
+/* ── Avisos, badges, chips ──────────────────────────────────────────────── */
+.alert { border-radius: var(--tienda-radio-control); }
+.badge { font-weight: 500; border-radius: var(--tienda-radio-chico); }
+.badge.rounded-pill { border-radius: 50rem; }
+
+/* Característica de un producto ("Marca: Bagó"): chip neutro, igual en la tarjeta,
+   la ficha y el carrito. */
+.tienda-chip {
+    display: inline-block;
+    padding: .2em .55em;
+    border-radius: var(--tienda-radio-chico);
+    background: var(--tienda-superficie-suave);
+    border: 1px solid var(--tienda-borde);
+    color: var(--tienda-texto-suave);
+    font-size: .72rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+.tienda-chip-grande { font-size: .8rem; padding: .3em .7em; }
+
+/* Estado vacío (carrito sin productos, búsqueda sin resultados, 404, 429). */
+.tienda-vacio {
+    min-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1rem;
+}
+.tienda-vacio-icono {
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    background: var(--tienda-superficie-suave);
+    color: var(--tienda-texto-tenue);
+    font-size: 2.4rem;
+}
+.tienda-vacio-chico { min-height: 0; }
+.tienda-vacio-chico .tienda-vacio-icono { width: 4.5rem; height: 4.5rem; font-size: 1.9rem; }
+
+/* ── Barra superior ─────────────────────────────────────────────────────── */
+.navbar-custom {
+    background-color: var(--tienda-marca) !important;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .06), 0 2px 10px rgba(16, 24, 40, .08);
+    --bs-navbar-padding-y: .65rem;
+}
+.navbar-custom .nav-link { font-weight: 500; white-space: nowrap; }
+@media (min-width: 992px) {
+    /* Un menú de 6–8 opciones entra en una línea a 1280px: Inter es más ancha que
+       la fuente del sistema, se compensa con un poco menos de letra y de aire. */
+    .navbar-custom { --bs-navbar-nav-link-padding-x: .55rem; }
+    .navbar-custom .nav-link { font-size: .95rem; }
+}
+.navbar-brand { font-weight: 700; letter-spacing: -.01em; }
+@media (max-width: 991.98px) {
+    .navbar { padding-top: .75rem; padding-bottom: .75rem; }
+}
+
+/* Logo: el alto lo elige la tienda en Ajustes (--logo-alto). En el celular se
+   limita a 44px y el ancho tiene tope para que un logo apaisado no empuje el menú. */
+.logo-tienda { width: auto; height: min(var(--logo-alto), 44px); max-width: 160px; object-fit: contain; }
+@media (min-width: 992px) {
+    .logo-tienda { height: var(--logo-alto); max-width: 320px; }
+}
+.logo-tienda-drawer { width: auto; height: auto; max-height: 40px; max-width: 180px; object-fit: contain; }
+
+/* Barra del celular: ☰ | logo | carrito, con los costados del mismo ancho para que
+   el logo quede centrado. */
+.barra-movil-lado { flex: 1; }
+.barra-movil-lado-derecho { text-align: right; }
+.icono-barra { font-size: 1.4rem; line-height: 1; }
+.badge-carrito { font-size: .6rem; min-width: 1.1rem; padding: .2em .4em; }
+
+/* Menú desplegable de la tienda (escritorio; en celular se usa el cajón).
+   Paneles con sombra y esquinas redondeadas, opciones con el color de la
+   tienda al pasar el mouse, y submenús alineados con la opción que los abre. */
+.navbar .dropdown-menu {
+    --menu-padding: .3rem;
+    border: 0;
+    border-radius: var(--tienda-radio-control);
+    padding: var(--menu-padding);
+    min-width: 0;                      /* el ancho lo da la opción más larga */
+    box-shadow: var(--tienda-sombra-alta);
+}
+.navbar .dropdown-item {
+    border-radius: calc(var(--tienda-radio-control) - 4px);
+    padding: .45rem .75rem;
+    font-size: .95rem;
+    color: var(--tienda-texto);
+}
+.navbar .dropdown-item:hover,
+.navbar .dropdown-item:focus,
+.navbar .dropend:hover > .dropdown-item,
+.navbar .dropend > .dropdown-item.show {
+    background-color: color-mix(in srgb, var(--tienda-marca) 18%, white);
+    color: var(--tienda-texto);
+}
+.navbar .dropdown-divider { margin: .3rem .25rem; border-color: var(--tienda-borde); }
+
+/* Opción que abre un submenú: texto a la izquierda, chevron a la derecha. */
+.dropdown-menu .dropend > .dropdown-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .6rem;
+}
+.dropdown-menu .dropend > .dropdown-toggle::after {
+    content: "\F285";                     /* bi-chevron-right */
+    font-family: "bootstrap-icons";
+    font-size: .65rem;
+    border: 0;
+    margin: 0;
+    vertical-align: 0;
+    opacity: .6;
+}
+/* El submenú sale al costado y con su primera opción a la altura de la que
+   lo abrió: se compensa el padding del panel. */
+.dropdown-menu .dropend { position: relative; }
+.dropdown-menu .dropend > .dropdown-menu {
+    position: absolute;
+    top: calc(-1 * var(--menu-padding));
+    left: 100%;
+    margin: 0 0 0 .2rem;
+}
+/* Puente invisible sobre el espacio entre los dos paneles: sin él, al cruzar
+   con el mouse se pierde el hover y el submenú se cierra. */
+.dropdown-menu .dropend > .dropdown-menu::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -.5rem;
+    width: .5rem;
+}
+.dropdown-menu .dropend:hover > .dropdown-menu { display: block; }
+
+/* ── Cajón del celular (offcanvas) ──────────────────────────────────────── */
+#menuDrawer { background-color: var(--tienda-marca); width: 280px; }
+#menuDrawer .offcanvas-header { border-bottom: 1px solid rgba(var(--color-primary-texto-rgb), .15); }
+.drawer-pie { border-top: 1px solid rgba(var(--color-primary-texto-rgb), .15); }
+.drawer-item {
+    display: block;
+    width: 100%;
+    color: rgba(var(--color-primary-texto-rgb), .92);
+    text-decoration: none;
+    padding: .9rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    background: none;
+    border-bottom: 1px solid rgba(var(--color-primary-texto-rgb), .1);
+    text-align: left;
+    cursor: pointer;
+}
+.drawer-item:hover, .drawer-item:focus {
+    background: rgba(var(--color-primary-texto-rgb), .1);
+    color: var(--tienda-marca-texto);
+    outline: none;
+}
+.drawer-chevron { transition: transform .2s ease; font-size: .85rem; opacity: .7; }
+.drawer-item[aria-expanded="true"] .drawer-chevron,
+.drawer-subitem[aria-expanded="true"] .drawer-chevron { transform: rotate(180deg); }
+/* La sangría crece con la profundidad: cada opción trae su --nivel (0, 1, 2…). */
+.drawer-subitem {
+    display: block;
+    color: rgba(var(--color-primary-texto-rgb), .75);
+    text-decoration: none;
+    padding: .7rem 1.5rem .7rem calc(2.25rem + (var(--nivel, 1) - 1) * .85rem);
+    font-size: .95rem;
+    border-bottom: 1px solid rgba(var(--color-primary-texto-rgb), .07);
+    /* Teñido con el color del texto y no con negro: no oscurece el color elegido. */
+    background: rgba(var(--color-primary-texto-rgb), .04);
+    box-shadow: inset 2px 0 0 rgba(var(--color-primary-texto-rgb), .15);
+}
+.drawer-subitem:hover { background: rgba(var(--color-primary-texto-rgb), .1); color: var(--tienda-marca-texto); }
+.drawer-footer-link {
+    display: block;
+    color: rgba(var(--color-primary-texto-rgb), .8);
+    text-decoration: none;
+    padding: .5rem 0;
+    font-size: .95rem;
+}
+.drawer-footer-link:hover { color: var(--tienda-marca-texto); }
+
+/* ── Menú lateral (Ajustes › posición del menú: lateral) ────────────────── */
+.sidebar-menu { position: sticky; top: 1rem; }
+.sidebar-menu .card { overflow: hidden; }
+.sidebar-menu .card-header {
+    background-color: var(--tienda-marca) !important;
+    color: var(--tienda-marca-texto);
+    border-bottom: 0;
+}
+.sidebar-menu .card-header h6 { color: inherit; }
+.sidebar-menu .card-header .bi { color: inherit !important; }
+.sidebar-menu .list-group { --bs-list-group-border-color: var(--tienda-borde); }
+.sidebar-menu .list-group-item { border-left: 0; border-right: 0; }
+.sidebar-menu .list-group-item:first-child { border-top: 0; }
+.menu-lateral-opcion {
+    padding-left: calc(12px + var(--nivel, 0) * 15px) !important;
+    color: var(--tienda-texto);
+    font-size: .95rem;
+    transition: background-color .15s ease, color .15s ease;
+}
+a.menu-lateral-opcion:hover, .menu-lateral-item:hover > a,
+.menu-lateral-fila:hover {
+    color: var(--tienda-marca-tinta) !important;
+}
+.menu-lateral-fila:hover, .menu-lateral-hoja:hover { background: var(--tienda-superficie-suave); }
+.menu-lateral-fila .btn-link .bi { transition: transform .2s ease; display: inline-block; }
+.menu-lateral-fila .btn-link[aria-expanded="true"] .bi { transform: rotate(180deg); }
+
+/* ── Buscador ───────────────────────────────────────────────────────────── */
+.search-bar { border-radius: var(--tienda-radio-control); box-shadow: var(--tienda-sombra) !important; }
+.search-bar .form-control {
+    height: 46px;
+    border-right: 0;
+    border-radius: var(--tienda-radio-control) 0 0 var(--tienda-radio-control);
+    padding-left: 1.1rem;
+    background: var(--tienda-superficie);
+}
+.search-bar .form-control::placeholder { color: var(--tienda-texto-tenue); }
+.search-bar .form-control:focus { box-shadow: none; border-color: var(--tienda-borde-fuerte); }
+.search-bar:focus-within { box-shadow: 0 0 0 .2rem rgba(var(--tienda-marca-rgb), .15) !important; }
+.search-bar #btn-buscar { border-radius: 0 var(--tienda-radio-control) var(--tienda-radio-control) 0; min-width: 52px; box-shadow: none; }
+.search-bar #btn-limpiar-busqueda { border-radius: var(--tienda-radio-control); margin-left: 6px; }
+
+/* ── Migas de pan ───────────────────────────────────────────────────────── */
+.breadcrumb {
+    --bs-breadcrumb-divider: '›';
+    --bs-breadcrumb-divider-color: var(--tienda-texto-tenue);
+    --bs-breadcrumb-item-active-color: var(--tienda-texto-suave);
+    font-size: .875rem;
+}
+.breadcrumb a, .migas a { color: var(--tienda-texto-suave); text-decoration: none; }
+.breadcrumb a:hover, .migas a:hover { color: var(--tienda-marca-tinta); }
+.breadcrumb-item.active { max-width: 480px; }
+.migas { font-size: .85rem; color: var(--tienda-texto-suave); }
+.migas-separador { color: var(--tienda-texto-tenue); margin: 0 .3rem; }
+
+/* Subcategorías de una categoría (chips con borde). */
+.subcategorias .btn { --bs-btn-padding-x: .9rem; }
+
+/* ── Imágenes que aparecen al cargar ────────────────────────────────────── */
+/* La vista pone onload="this.style.opacity=1": hasta entonces no se ve el ícono
+   roto ni el salto del alt. */
+.img-aparece { opacity: 0; transition: opacity .15s; }
+.img-contenida { width: 100%; height: 100%; object-fit: contain; }
+
+/* ── Tarjeta de producto ────────────────────────────────────────────────── */
+.producto-card {
+    border: 1px solid var(--tienda-borde);
+    border-radius: var(--tienda-radio);
+    box-shadow: var(--tienda-sombra);
+    transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+    overflow: hidden;
+}
+.producto-card:hover {
+    box-shadow: var(--tienda-sombra-hover);
+    border-color: transparent;
+    transform: translateY(-3px);
+}
+.producto-img-wrap {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    height: var(--tienda-imagen-alto);
+    background: var(--tienda-superficie);
+    border-bottom: 1px solid var(--tienda-borde);
+}
+.producto-img-wrap .card-img-top {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: .75rem;
+    background: var(--tienda-superficie);
+    border-radius: 0;
+    transition: opacity .15s, transform .35s ease;
+}
+.producto-card:hover .card-img-top { transform: scale(1.04); }
+.producto-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: .72rem;
+}
+.producto-sin-stock-overlay {
+    position: absolute; inset: 0;
+    background: rgba(255, 255, 255, .6);
+    display: flex; align-items: center; justify-content: center;
+}
+.producto-sin-stock-overlay span {
+    background: rgba(29, 36, 51, .7); color: #fff;
+    padding: .3rem .9rem; border-radius: 50rem;
+    font-size: .78rem; font-weight: 500; letter-spacing: .03em;
+}
+.producto-card .card-body { padding: .9rem 1rem .5rem; }
+.producto-card .card-footer { padding: .25rem 1rem 1rem; }
+.producto-nombre {
+    font-size: .92rem;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.producto-nombre a { color: var(--tienda-texto); }
+.producto-nombre a:hover { color: var(--tienda-marca-tinta); }
+.producto-especificaciones { font-size: .78rem; line-height: 1.6; }
+.producto-precio {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    font-variant-numeric: tabular-nums;
+}
+.producto-sin-stock-boton { border: 1px solid var(--tienda-borde); }
+
+/* Grilla sin resultados. */
+.tienda-sin-resultados .bi { font-size: 2.5rem; opacity: .25; }
+
+/* ── Paginación ─────────────────────────────────────────────────────────── */
+.pagination-wrapper { padding: 1rem 0; }
+.pagination-modern { gap: .25rem; }
+.pagination-modern .page-item .page-link {
+    border: 1px solid var(--tienda-borde);
+    border-radius: var(--tienda-radio-control);
+    padding: .5rem .85rem;
+    font-weight: 500;
+    color: var(--tienda-texto);
+    background-color: var(--tienda-superficie);
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    min-width: 40px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+.pagination-modern .page-item .page-link:hover {
+    background-color: var(--tienda-superficie-suave);
+    border-color: var(--tienda-borde-fuerte);
+    color: var(--tienda-texto);
+}
+.pagination-modern .page-item .page-link:focus { box-shadow: 0 0 0 .2rem rgba(var(--tienda-marca-rgb), .2); }
+.pagination-modern .page-item.active .page-link {
+    background: var(--tienda-marca);
+    border-color: var(--tienda-marca);
+    color: var(--tienda-marca-texto);
+    box-shadow: var(--tienda-sombra);
+}
+.pagination-modern .page-item.disabled .page-link {
+    background-color: var(--tienda-superficie);
+    color: var(--tienda-texto-tenue);
+    cursor: not-allowed;
+}
+.pagination-modern .page-link-nav,
+.pagination-modern .page-ellipsis {
+    background-color: transparent !important;
+    border-color: transparent !important;
+}
+.pagination-modern .page-link-nav { padding: .5rem .6rem; }
+.pagination-modern .page-link-nav:hover { background-color: var(--tienda-superficie-suave) !important; }
+.pagination-modern .page-ellipsis { cursor: default; padding: .5rem .3rem; }
+
+/* ── Filtros en cascada ─────────────────────────────────────────────────── */
+#filtros-cascada .card-header { background: var(--tienda-superficie-suave); cursor: pointer; }
+#filtros-cascada .form-label { font-weight: 600; color: var(--tienda-texto-suave); }
+#filtros-chevron { transition: transform .25s; }
+@media (max-width: 991.98px) {
+    #filtros-body-collapse { overflow: hidden; transition: max-height .3s ease; }
+    #filtros-body-collapse.filtros-collapsed { max-height: 0 !important; }
+    #filtros-body-collapse.filtros-expanded { max-height: 500px; }
+    #filtros-chevron.rotado { transform: rotate(180deg); }
+}
+@media (min-width: 992px) {
+    #filtros-toggle-header { cursor: default !important; }
+    #filtros-chevron { display: none; }
+}
+
+/* ── Ficha del producto ─────────────────────────────────────────────────── */
+.ficha-galeria {
+    height: var(--tienda-ficha-imagen-alto);
+    border-radius: var(--tienda-radio);
+    border: 1px solid var(--tienda-borde);
+    background: var(--tienda-superficie);
+    overflow: hidden;
+}
+.ficha-galeria img { padding: 1rem; }
+.ficha-galeria .carousel-control-prev-icon,
+.ficha-galeria .carousel-control-next-icon { filter: invert(1) brightness(.4); }
+.ficha-puntos { display: flex; justify-content: center; gap: .5rem; margin-top: .75rem; }
+.ficha-punto {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    background-color: var(--tienda-borde-fuerte);
+    transition: background-color .2s, width .2s;
+}
+.ficha-punto.activo { background-color: var(--tienda-texto-suave); width: 20px; border-radius: 4px; }
+.ficha-titulo { font-size: 1.75rem; font-weight: 650; line-height: 1.25; }
+.ficha-precio {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+}
+.ficha-rotulo {
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--tienda-texto-suave);
+    margin-bottom: .5rem;
+}
+.ficha-detalle { color: var(--tienda-texto); line-height: 1.65; }
+.ficha-especificaciones {
+    --bs-table-striped-bg: var(--tienda-superficie-suave);
+    --bs-table-border-color: var(--tienda-borde);
+    font-size: .9rem;
+}
+.ficha-especificaciones td:first-child { color: var(--tienda-texto-suave); font-weight: 500 !important; width: 40%; }
+.ficha-compra .btn { height: var(--tienda-control-alto); }
+.ficha-acciones .btn { height: var(--tienda-control-alto); }
+
+/* Celular: imagen arriba de todo, botones flotantes y barra de compra fija. */
+.ficha-movil-imagen { height: var(--tienda-ficha-imagen-alto-movil); background: var(--tienda-superficie); border-bottom: 1px solid var(--tienda-borde); }
+.ficha-movil-imagen img { padding: .75rem; }
+.ficha-movil-imagen .carousel-control-prev-icon,
+.ficha-movil-imagen .carousel-control-next-icon { filter: invert(1) brightness(.4); }
+.ficha-titulo-movil { font-size: 1.25rem; font-weight: 650; line-height: 1.3; }
+.ficha-precio-movil { font-size: 1.6rem; font-weight: 700; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.ficha-boton-redondo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+/* Volver: fijo debajo de la barra superior, oscuro y translúcido sobre la foto. */
+.ficha-volver {
+    position: fixed;
+    top: 84px;
+    left: 12px;
+    z-index: 1020;
+    background: rgba(29, 36, 51, .72);
+    color: #fff;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .3);
+    font-size: 1rem;
+    backdrop-filter: blur(4px);
+}
+.ficha-compartir-movil {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    z-index: 1;
+    background: var(--tienda-superficie);
+    color: var(--tienda-texto-suave);
+    box-shadow: var(--tienda-sombra-hover);
+}
+.ficha-acordeon {
+    --bs-accordion-bg: transparent;
+    --bs-accordion-btn-color: var(--tienda-texto);
+    --bs-accordion-active-color: var(--tienda-texto);
+    --bs-accordion-active-bg: transparent;
+    --bs-accordion-btn-focus-box-shadow: none;
+    --bs-accordion-border-color: var(--tienda-borde);
+}
+.ficha-barra-compra {
+    z-index: 1030;
+    background: var(--tienda-superficie);
+    border-top: 1px solid var(--tienda-borde);
+    box-shadow: 0 -6px 20px rgba(16, 24, 40, .08);
+    padding: .6rem 1rem calc(.6rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Carrito ────────────────────────────────────────────────────────────── */
+/* Celular: grilla de 2 filas (imagen | nombre y borrar | cantidad y subtotal). */
+.ci-grid {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 12px;
+    row-gap: 8px;
+    align-items: center;
+}
+.ci-img   {
+    grid-column: 1; grid-row: 1 / 3; align-self: center;
+    width: 64px; height: 64px;
+    border-radius: var(--tienda-radio-control);
+    border: 1px solid var(--tienda-borde);
+    background: var(--tienda-superficie);
+}
+.ci-img img { padding: 4px; }
+.ci-name  { grid-column: 2; grid-row: 1; min-width: 0; }
+.ci-del   { grid-column: 3; grid-row: 1; align-self: start; }
+.ci-price { display: none; }
+.ci-qty   { grid-column: 2; grid-row: 2; }
+.ci-sub   { grid-column: 3; grid-row: 2; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ci-del .btn { font-size: 1.1rem; color: var(--tienda-texto-tenue) !important; }
+.ci-del .btn:hover { color: var(--bs-danger) !important; }
+/* Escritorio: una fila. */
+@media (min-width: 576px) {
+    .ci-grid { display: flex; align-items: center; gap: 16px; }
+    .ci-img   { flex-shrink: 0; align-self: auto; }
+    .ci-name  { flex: 1 1 0; min-width: 0; }
+    .ci-price { display: block; flex-shrink: 0; text-align: center; min-width: 72px; font-variant-numeric: tabular-nums; }
+    .ci-qty   { flex-shrink: 0; }
+    .ci-sub   { flex-shrink: 0; min-width: 84px; text-align: right; white-space: normal; }
+    .ci-del   { flex-shrink: 0; align-self: auto; }
+}
+.qty-feedback { min-height: 1rem; font-size: .75rem; }
+.carrito-resumen { position: sticky; top: 5.5rem; }
+.carrito-total { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+
+/* ── Checkout ───────────────────────────────────────────────────────────── */
+.checkout-resumen .list-group-item { padding-left: 0; padding-right: 0; }
+.checkout-resumen .card-footer { background: var(--tienda-superficie-suave); border-top: 1px solid var(--tienda-borde); border-radius: var(--tienda-radio-control); margin-top: .75rem; }
+.checkout-subtotal { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ── Avisos flotantes y pie ─────────────────────────────────────────────── */
+#toast-container { z-index: 1100; }
+.toast { border-radius: var(--tienda-radio-control); box-shadow: var(--tienda-sombra-alta); }
+footer { margin-top: auto; }
+.tienda-pie {
+    background: var(--tienda-superficie-suave) !important;
+    border-top: 1px solid var(--tienda-borde) !important;
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+}
+/* Cada red se pinta con su color al pasar el mouse (--red, lo pone la vista). */
+.footer-social-icon { transition: color .15s ease; }
+.footer-social-icon:hover, .footer-social-icon:focus { color: var(--red) !important; }
+.creado-por { opacity: .4; transition: opacity .2s; }
+.creado-por:hover, .creado-por:focus { opacity: 1; }
+.creado-por img { height: 16px; width: 16px; object-fit: contain; }
+
+/* ── Modal de confirmación ──────────────────────────────────────────────── */
+.modal-content { border-radius: var(--tienda-radio); border-color: var(--tienda-borde); }

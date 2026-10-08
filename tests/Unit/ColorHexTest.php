@@ -56,4 +56,26 @@ class ColorHexTest extends TestCase
     {
         $this->assertSame('13, 110, 253', ColorHex::desde('#0d6efd')->rgb());
     }
+
+    /** Precios y links de la tienda: el color de marca como texto sobre blanco. */
+    public function test_como_texto_sobre_blanco_conserva_los_colores_que_ya_se_leen()
+    {
+        foreach (['#0d6efd', '#198754', '#dc3545', '#212529'] as $legible) {
+            $this->assertSame($legible, ColorHex::desde($legible)->legibleSobreBlanco()->hex(), $legible);
+        }
+    }
+
+    public function test_como_texto_sobre_blanco_oscurece_los_colores_claros_sin_cambiar_el_tono()
+    {
+        $blanco = ColorHex::desde('#ffffff');
+
+        foreach (['#ffeb3b', '#ffc107', '#0dcaf0', '#f8bbd0', '#ffffff'] as $claro) {
+            $texto = ColorHex::desde($claro)->legibleSobreBlanco();
+            $this->assertNotSame($claro, $texto->hex(), $claro);
+            $this->assertGreaterThanOrEqual(3.0, $texto->contrasteCon($blanco), $claro);
+        }
+
+        // Amarillo → ocre: el rojo sigue siendo el canal más fuerte y el azul el más débil.
+        $this->assertMatchesRegularExpression('/^#[89a][0-9a-f][78][0-9a-f]2[0-9a-f]$/', ColorHex::desde('#ffeb3b')->legibleSobreBlanco()->hex());
+    }
 }

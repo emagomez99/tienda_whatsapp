@@ -65,6 +65,29 @@ class ColorHex
         return $this->textoLegible()->hex() === self::TEXTO_OSCURO;
     }
 
+    /**
+     * Este color, usado como texto sobre blanco (precios, links de la tienda). Si no
+     * llega al contraste mínimo se oscurece de a poco hacia el negro, conservando el
+     * tono: un amarillo de marca pasa a un ocre legible en vez de desaparecer. Los
+     * colores que ya se leen bien se devuelven tal cual (no cambia la identidad).
+     *
+     * 3:1 es el mínimo de WCAG para texto grande y en negrita, que es como se usa.
+     */
+    public function legibleSobreBlanco($contrasteMinimo = 3.0)
+    {
+        $blanco = self::desde(self::TEXTO_CLARO);
+        $color = $this;
+
+        for ($paso = 1; $paso <= 20 && $color->contrasteCon($blanco) < $contrasteMinimo; $paso++) {
+            $factor = 1 - $paso * 0.05;
+            $color = self::desde('#' . implode('', array_map(function ($canal) use ($factor) {
+                return str_pad(dechex((int) round($canal * $factor)), 2, '0', STR_PAD_LEFT);
+            }, $this->componentes())));
+        }
+
+        return $color;
+    }
+
     public function contrasteCon(ColorHex $otro)
     {
         $a = $this->luminancia();

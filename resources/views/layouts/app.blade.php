@@ -56,233 +56,30 @@
     @if($favicon)
         <link rel="icon" href="{{ url('storage/' . $favicon) }}" type="image/x-icon">
     @endif
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    {{-- El aspecto de la tienda: tokens y componentes (ver public/css/tienda.css). El
+         ?v= cambia con el archivo, así el navegador no se queda con uno viejo. --}}
+    <link href="{{ asset('css/tienda.css') }}?v={{ @filemtime(public_path('css/tienda.css')) }}" rel="stylesheet">
     @php
         $colorPrimario = App\Models\Configuracion::colorPrimario();
         $textoSobrePrimario = $colorPrimario->textoLegible();
         $menuEnSidebar = App\Models\Configuracion::menuEnSidebar();
     @endphp
+    {{-- Sólo lo que depende de los Ajustes de cada tienda; todo lo demás está en tienda.css. --}}
     <style>
         :root {
             --color-primary: {{ $colorPrimario->hex() }};
+            --color-primary-rgb: {{ $colorPrimario->rgb() }};
             /* Texto legible sobre el color principal: blanco u oscuro según su contraste. */
             --color-primary-texto: {{ $textoSobrePrimario->hex() }};
             --color-primary-texto-rgb: {{ $textoSobrePrimario->rgb() }};
+            /* El color principal como texto sobre blanco (precios, links). */
+            --color-primary-tinta: {{ $colorPrimario->legibleSobreBlanco()->hex() }};
             --logo-alto: {{ App\Models\Configuracion::logoAlto() }}px;
-        }
-        .navbar-brand { font-weight: bold; }
-        /* Logo: el alto lo elige la tienda en Ajustes (--logo-alto). En el celular se
-           limita a 44px y el ancho tiene tope para que un logo apaisado no empuje el menú. */
-        .logo-tienda { width: auto; height: min(var(--logo-alto), 44px); max-width: 160px; object-fit: contain; }
-        @media (min-width: 992px) {
-            .logo-tienda { height: var(--logo-alto); max-width: 320px; }
-        }
-        .logo-tienda-drawer { width: auto; height: auto; max-height: 40px; max-width: 180px; object-fit: contain; }
-        /* Product cards */
-        .producto-card {
-            border: none;
-            border-radius: 14px;
-            box-shadow: 0 1px 6px rgba(0,0,0,.07);
-            transition: box-shadow .25s ease, transform .25s ease;
-            overflow: hidden;
-        }
-        .producto-card:hover {
-            box-shadow: 0 10px 32px rgba(0,0,0,.13);
-            transform: translateY(-4px);
-        }
-        .producto-img-wrap { display: block; position: relative; overflow: hidden; flex-shrink: 0; }
-        .producto-sin-stock-overlay {
-            position: absolute; inset: 0;
-            background: rgba(255,255,255,.6);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .producto-sin-stock-overlay span {
-            background: rgba(0,0,0,.48); color: #fff;
-            padding: .25rem .9rem; border-radius: 4px;
-            font-size: .8rem; font-weight: 500;
-        }
-        .producto-card:hover .card-img-top { transform: scale(1.05); }
-        .producto-nombre {
-            font-size: .88rem;
-            font-weight: 600;
-            line-height: 1.45;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .producto-sin-stock-overlay {
-            position: absolute; inset: 0;
-            background: rgba(255,255,255,.6);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .producto-sin-stock-overlay span {
-            background: rgba(0,0,0,.48); color: #fff;
-            padding: .25rem .9rem; border-radius: 4px;
-            font-size: .8rem; font-weight: 500; letter-spacing: .03em;
-        }
-        /* Search bar */
-        .search-bar .form-control {
-            border-right: 0;
-            border-radius: 10px 0 0 10px;
-            padding-left: 1.1rem;
-            background: #fff;
-        }
-        .search-bar .form-control:focus { box-shadow: none; }
-        .search-bar #btn-buscar { border-radius: 0 10px 10px 0; }
-        .search-bar #btn-limpiar-busqueda { border-radius: 10px; margin-left: 6px; }
-        .badge-etiqueta { font-size: 0.75rem; }
-        .metadata-list { font-size: 0.85rem; }
-        footer { margin-top: auto; }
-        body { min-height: 100vh; display: flex; flex-direction: column; }
-        .bg-purple { background-color: #6f42c1 !important; }
-        .btn-primary, .bg-custom-primary {
-            background-color: var(--color-primary) !important;
-            border-color: var(--color-primary) !important;
-        }
-        .btn-primary, .btn-primary:hover, .btn-primary:focus, .bg-custom-primary { color: var(--color-primary-texto) !important; }
-        .text-sobre-primario { color: var(--color-primary-texto) !important; }
-        .btn-primary:hover {
-            background-color: color-mix(in srgb, var(--color-primary) 85%, black) !important;
-            border-color: color-mix(in srgb, var(--color-primary) 85%, black) !important;
-        }
-        .text-primary { color: var(--color-primary) !important; }
-        .navbar-custom { background-color: var(--color-primary) !important; }
-
-        /* Navbar mobile */
-        @media (max-width: 991.98px) {
-            .navbar { padding-top: .75rem; padding-bottom: .75rem; }
-        }
-
-        /* Drawer offcanvas */
-        #menuDrawer { background-color: var(--color-primary); width: 280px; }
-        .drawer-item {
-            display: block;
-            width: 100%;
-            color: rgba(var(--color-primary-texto-rgb), .92);
-            text-decoration: none;
-            padding: .9rem 1.5rem;
-            font-size: 1rem;
-            border: none;
-            background: none;
-            border-bottom: 1px solid rgba(var(--color-primary-texto-rgb), .1);
-            text-align: left;
-            cursor: pointer;
-        }
-        .drawer-item:hover, .drawer-item:focus {
-            background: rgba(var(--color-primary-texto-rgb), .1);
-            color: var(--color-primary-texto);
-            outline: none;
-        }
-        .drawer-chevron { transition: transform .2s ease; font-size: .85rem; opacity: .7; }
-        .drawer-item[aria-expanded="true"] .drawer-chevron,
-        .drawer-subitem[aria-expanded="true"] .drawer-chevron { transform: rotate(180deg); }
-        .drawer-subitem {
-            display: block;
-            color: rgba(var(--color-primary-texto-rgb), .75);
-            text-decoration: none;
-            padding: .7rem 1.5rem .7rem 2.25rem;
-            font-size: .95rem;
-            border-bottom: 1px solid rgba(var(--color-primary-texto-rgb), .07);
-            /* Teñido con el color del texto y no con negro: no oscurece el color elegido. */
-            background: rgba(var(--color-primary-texto-rgb), .04);
-            box-shadow: inset 2px 0 0 rgba(var(--color-primary-texto-rgb), .15);
-        }
-        .drawer-subitem:hover { background: rgba(var(--color-primary-texto-rgb), .1); color: var(--color-primary-texto); }
-        .drawer-footer-link {
-            display: block;
-            color: rgba(var(--color-primary-texto-rgb), .8);
-            text-decoration: none;
-            padding: .5rem 0;
-            font-size: .95rem;
-        }
-        .drawer-footer-link:hover { color: var(--color-primary-texto); }
-
-        /* Menú desplegable de la tienda (escritorio; en celular se usa el drawer).
-           Paneles con sombra y esquinas redondeadas, opciones con el color de la
-           tienda al pasar el mouse, y submenús alineados con la opción que los abre. */
-        .navbar .dropdown-menu {
-            --menu-padding: .3rem;
-            border: 0;
-            border-radius: .6rem;
-            padding: var(--menu-padding);
-            min-width: 0;                      /* el ancho lo da la opción más larga */
-            box-shadow: 0 .5rem 1.75rem rgba(0, 0, 0, .14), 0 0 0 1px rgba(0, 0, 0, .04);
-        }
-        .navbar .dropdown-item {
-            border-radius: .4rem;
-            padding: .4rem .7rem;
-            font-size: .95rem;
-            color: #212529;
-        }
-        .navbar .dropdown-item:hover,
-        .navbar .dropdown-item:focus,
-        .navbar .dropend:hover > .dropdown-item,
-        .navbar .dropend > .dropdown-item.show {
-            background-color: color-mix(in srgb, var(--color-primary) 25%, white);
-            color: #212529;
-        }
-        .navbar .dropdown-divider { margin: .3rem .25rem; }
-
-        /* Opción que abre un submenú: texto a la izquierda, chevron a la derecha y
-           espacio entre los dos (antes la flecha quedaba pegada al texto). */
-        .dropdown-menu .dropend > .dropdown-toggle {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: .6rem;
-        }
-        .dropdown-menu .dropend > .dropdown-toggle::after {
-            content: "\F285";                     /* bi-chevron-right */
-            font-family: "bootstrap-icons";
-            font-size: .65rem;
-            border: 0;
-            margin: 0;
-            vertical-align: 0;
-            opacity: .6;
-        }
-
-        /* El submenú sale al costado y con su primera opción a la altura de la que
-           lo abrió: se compensa el padding del panel. */
-        .dropdown-menu .dropend { position: relative; }
-        .dropdown-menu .dropend > .dropdown-menu {
-            position: absolute;
-            top: calc(-1 * var(--menu-padding));
-            left: 100%;
-            margin: 0 0 0 .2rem;
-        }
-        /* Puente invisible sobre el espacio entre los dos paneles: sin él, al cruzar
-           con el mouse se pierde el hover y el submenú se cierra. */
-        .dropdown-menu .dropend > .dropdown-menu::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: -.5rem;
-            width: .5rem;
-        }
-        .dropdown-menu .dropend:hover > .dropdown-menu {
-            display: block;
-        }
-
-        /* Estilos para menú sidebar */
-        .sidebar-menu {
-            position: sticky;
-            top: 1rem;
-        }
-        .sidebar-menu .list-group-item {
-            border-left: 0;
-            border-right: 0;
-        }
-        .sidebar-menu .list-group-item:first-child {
-            border-top: 0;
-        }
-        .sidebar-menu .list-group-item a:hover {
-            color: var(--color-primary) !important;
-        }
-        .sidebar-menu .card-header {
-            background-color: var(--color-primary) !important;
         }
     </style>
     @stack('styles')
@@ -301,7 +98,7 @@
             <div class="d-flex d-lg-none align-items-center w-100">
 
                 {{-- Izquierda: abre drawer --}}
-                <div style="flex:1;">
+                <div class="barra-movil-lado">
                     <button class="navbar-toggler border-0 p-1" type="button"
                             data-bs-toggle="offcanvas" data-bs-target="#menuDrawer" aria-label="Abrir menú">
                         <span class="navbar-toggler-icon"></span>
@@ -322,13 +119,11 @@
                 </a>
 
                 {{-- Derecha: carrito --}}
-                <div style="flex:1; text-align:right;">
+                <div class="barra-movil-lado barra-movil-lado-derecho">
                     <a href="{{ route('carrito.index') }}"
-                       class="text-sobre-primario text-decoration-none position-relative p-1 {{ request()->routeIs('carrito.*') ? 'opacity-75' : '' }}"
-                       style="font-size: 1.4rem; line-height: 1;">
+                       class="icono-barra text-sobre-primario text-decoration-none position-relative p-1 {{ request()->routeIs('carrito.*') ? 'opacity-75' : '' }}">
                         <i class="bi bi-cart3"></i>
-                        <span class="cart-badge-mobile badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle{{ $cantidadCarrito > 0 ? '' : ' d-none' }}"
-                              style="font-size: .6rem; min-width: 1.1rem; padding: .2em .4em;">
+                        <span class="cart-badge-mobile badge-carrito badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle{{ $cantidadCarrito > 0 ? '' : ' d-none' }}">
                             {{ $cantidadCarrito ?: '' }}
                         </span>
                     </a>
@@ -356,7 +151,7 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item d-none d-lg-block">
                         <a class="nav-link {{ request()->routeIs('carrito.*') ? 'active' : '' }}" href="{{ route('carrito.index') }}">
-                            <i class="bi bi-cart3" style="font-size:1.4rem;"></i>
+                            <i class="bi bi-cart3 icono-barra"></i>
                             <span class="cart-badge-desktop badge bg-danger{{ $cantidadCarrito > 0 ? '' : ' d-none' }}">
                                 {{ $cantidadCarrito ?: '' }}
                             </span>
@@ -366,7 +161,7 @@
                         @if(auth()->user()->isAdmin())
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('admin.dashboard') }}">
-                                    <i class="bi bi-gear" style="font-size:1.4rem;"></i> Admin
+                                    <i class="bi bi-gear icono-barra"></i> Admin
                                 </a>
                             </li>
                         @endif
@@ -374,14 +169,14 @@
                             <form action="{{ route('logout') }}" method="POST" class="d-inline">
                                 @csrf
                                 <button type="submit" class="nav-link btn btn-link">
-                                    <i class="bi bi-box-arrow-right" style="font-size:1.4rem;"></i> Salir
+                                    <i class="bi bi-box-arrow-right icono-barra"></i> Salir
                                 </button>
                             </form>
                         </li>
                     @else
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('login') }}">
-                                <i class="bi bi-person" style="font-size:1.4rem;"></i> Acceder
+                                <i class="bi bi-person icono-barra"></i> Acceder
                             </a>
                         </li>
                     @endauth
@@ -393,7 +188,7 @@
 
     {{-- Drawer mobile --}}
     <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="menuDrawer" aria-labelledby="menuDrawerLabel">
-        <div class="offcanvas-header" style="border-bottom: 1px solid rgba(var(--color-primary-texto-rgb), .15);">
+        <div class="offcanvas-header">
             <a class="text-sobre-primario text-decoration-none fw-bold fs-5" href="{{ route('tienda.index') }}" id="menuDrawerLabel">
                 @if($logoTienda)
                     <img src="{{ url('storage/' . $logoTienda) }}" alt="{{ $nombreTienda }}" class="logo-tienda-drawer">
@@ -408,7 +203,7 @@
             <nav class="flex-grow-1 overflow-auto">
                 @include('components.menu-drawer')
             </nav>
-            <div class="p-3" style="border-top: 1px solid rgba(var(--color-primary-texto-rgb), .15);">
+            <div class="p-3 drawer-pie">
                 @auth
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('admin.dashboard') }}" class="drawer-footer-link">
@@ -430,7 +225,7 @@
         </div>
     </div>
 
-    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3">
         @if(session('success'))
             <div class="toast align-items-center text-bg-success border-0" role="alert" data-bs-autohide="true" data-bs-delay="4000">
                 <div class="d-flex">
@@ -478,7 +273,7 @@
         @endif
     </main>
 
-    <footer class="bg-light py-3 mt-4 border-top">
+    <footer class="tienda-pie py-3 mt-5">
         <div class="container text-center text-muted small">
             @php
                 $footerSocial = [];
@@ -501,7 +296,7 @@
                         <a href="{{ $red['url'] }}" target="_blank" rel="noopener noreferrer"
                            aria-label="{{ $red['label'] }}"
                            class="footer-social-icon text-muted fs-5"
-                           data-color="{{ $red['color'] }}">
+                           style="--red: {{ $red['color'] }};">
                             <i class="bi {{ $red['icon'] }}"></i>
                         </a>
                     @endforeach
@@ -509,19 +304,12 @@
             @endif
             <div>&copy; {{ date('Y') }} {{ App\Models\Configuracion::obtener('nombre_tienda', 'Tienda MC') }}. Todos los derechos reservados.</div>
             <div class="mt-2">
-                <a href="https://tredevs.com.ar/" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-1 text-muted text-decoration-none" style="opacity:.4;transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">
-                    Creado por <img src="/img/tredevs.ico" alt="Tredevs" style="height:16px;width:16px;object-fit:contain;">
+                <a href="https://tredevs.com.ar/" target="_blank" rel="noopener" class="creado-por d-inline-flex align-items-center gap-1 text-muted text-decoration-none">
+                    Creado por <img src="/img/tredevs.ico" alt="Tredevs">
                 </a>
             </div>
         </div>
     </footer>
-    <script>
-        document.querySelectorAll('.footer-social-icon').forEach(function (el) {
-            var color = el.dataset.color;
-            el.addEventListener('mouseenter', function () { el.style.color = color; });
-            el.addEventListener('mouseleave', function () { el.style.color = ''; });
-        });
-    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
