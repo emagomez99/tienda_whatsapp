@@ -52,6 +52,12 @@ class MenuDeLaTienda
      */
     public static function opciones(): Collection
     {
+        // Sin tienda identificada (ej. la página 404 de un dominio que no es de
+        // ninguna tienda) no hay menú: las tablas no existen en el esquema central.
+        if (!tenancy()->initialized) {
+            return collect();
+        }
+
         $request = request();
         if (!$request->attributes->has('menu_de_la_tienda')) {
             $request->attributes->set('menu_de_la_tienda', self::esAutomatico() ? self::desdeCategorias() : self::desdeMenus());

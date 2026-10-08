@@ -164,4 +164,11 @@ class TiendaCategoriaTest extends TestCase
         });
         $this->get($this->urlTenant('catalogo/ofertas-de-hoy'))->assertOk()->assertSee('Remera lisa');
     }
+
+    /** @test */
+    public function un_dominio_sin_tienda_da_404_y_no_un_error()
+    {
+        // La página 404 usa el diseño de la tienda, con su menú: sin tienda no hay menú que armar.
+        $this->get('http://dominio-sin-tienda.test/')->assertNotFound();
+    }
 }
