@@ -7,7 +7,7 @@
     <h3 class="mb-0"><i class="bi bi-sliders"></i> Ajustes</h3>
 </div>
 
-<form action="{{ route('admin.configuraciones.update') }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('admin.configuraciones.update') }}" method="POST" enctype="multipart/form-data" id="form-ajustes">
     @csrf
     @method('PUT')
 
@@ -712,14 +712,14 @@
 </div>
 </div>
 
-    <div class="panel-barra-guardar">
-        <div class="d-flex justify-content-end align-items-center gap-3">
-            <span class="small text-muted d-none d-sm-inline">Los cambios de todas las pestañas se guardan juntos.</span>
-            <button type="submit" class="btn btn-primary px-4">
-                <i class="bi bi-check2"></i> Guardar
-            </button>
-        </div>
-    </div>
+    {{-- La barra común: avisa si hay cambios sin guardar y pregunta antes de salir.
+         "Cancelar" vuelve a cargar los ajustes como están guardados. --}}
+    @include('admin.partials.barra-guardar', [
+        'formId'       => 'form-ajustes',
+        'textoGuardar' => 'Guardar',
+        'cancelarUrl'  => route('admin.configuraciones.index'),
+        'nota'         => 'Los cambios de todas las pestañas se guardan juntos.',
+    ])
 </form>
 
 @push('styles')

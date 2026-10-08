@@ -12,6 +12,7 @@
       $textoGuardar — texto del botón principal
       $cancelarUrl  — adónde vuelve "Cancelar"
       $formId       — id del <form> que vigila (por defecto form-producto)
+      $nota         — (opcional) aclaración corta al lado de los botones, en pantallas anchas
 --}}
 <div class="panel-barra-guardar">
     <div class="d-flex justify-content-end align-items-center gap-2">
@@ -20,6 +21,9 @@
             <i class="bi bi-circle-fill panel-barra-guardar-punto"></i>
             <span class="d-none d-sm-inline">Cambios sin guardar</span><span class="d-sm-none">Sin guardar</span>
         </span>
+        @isset($nota)
+            <span class="small text-muted d-none d-md-inline me-1">{{ $nota }}</span>
+        @endisset
         <a href="{{ $cancelarUrl }}" class="btn btn-outline-secondary text-nowrap">Cancelar</a>
         <button type="submit" class="btn btn-primary px-3 px-sm-4 text-nowrap">
             <i class="bi bi-check2"></i> {{ $textoGuardar }}
