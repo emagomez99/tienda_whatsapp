@@ -18,7 +18,7 @@
         @endif
     </div>
 </div>
-<p class="text-muted mb-4">Qué es cada producto: Ropa › Remeras, Celulares, Deportes › Pádel. Ayudan a tus clientes a encontrar lo que buscan.</p>
+<p class="text-muted mb-4">Son los estantes de tu negocio: Ropa, Calzado, Accesorios. Tus clientes eligen uno y ven sólo esos productos.</p>
 
 @if($sinCategoria > 0 && $categorias->count() > 0)
     <div class="alert alert-warning d-flex align-items-center gap-2 py-2">
@@ -54,9 +54,9 @@
     <div class="card">
         <div class="card-body text-center py-5">
             <i class="bi bi-diagram-3 display-4 text-muted"></i>
-            <h4 class="mt-3">Categorizá tus productos</h4>
+            <h4 class="mt-3">Armá los estantes de tu tienda</h4>
             <p class="text-muted mx-auto" style="max-width: 32rem;">
-                Agrupalos por lo que son (Ropa, Celulares, Pádel…) y, si querés, en subcategorías (Ropa › Remeras).
+                Ordenalos en estantes, como en un negocio: Ropa, Calzado, Accesorios. Un estante puede tener otros adentro: dentro de Ropa, Remeras y Shorts.
                 Así tus clientes encuentran más rápido lo que buscan.
             </p>
             @if($puedeEditar)

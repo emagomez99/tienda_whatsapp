@@ -1,34 +1,37 @@
-{{-- Ayuda de Productos (listado y formulario). Ver components/ayuda. --}}
-<h6 class="ayuda-titulo">Cargar un producto</h6>
+{{-- Ayuda de Productos (listado y formulario). Ver components/ayuda. Lenguaje simple: ver memoria feedback-ux-simple. --}}
+<h6 class="ayuda-titulo">Cargar un producto, paso a paso</h6>
+<div class="ayuda-ejemplo">
+    <div class="fw-semibold">Ejemplo: Remera Dri-Fit Nike</div>
+</div>
 <div class="ayuda-item">
     <span class="ayuda-icono">1</span>
-    <div><strong>Nombre, precio y stock</strong><br>Lo básico. Cada campo tiene su <i class="bi bi-question-circle"></i> con una explicación corta.</div>
+    <div><strong>Lo básico.</strong><br>Nombre («Remera Dri-Fit Nike»), precio y cuántas tenés. Si un campo no se entiende, tocá su <i class="bi bi-question-circle"></i>.</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono">2</span>
-    <div><strong>Elegí sus categorías</strong><br>Qué es: Notebooks, Remeras… Puede estar en varias. Si elegís una de adentro, aparece también en la de arriba.</div>
+    <div><strong>Elegí su estante.</strong><br>Tocá <em>Elegir categorías</em> y marcá «Remeras». Aparece sola también en «Ropa».</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono">3</span>
-    <div><strong>Completá sus características</strong><br>Aparecen solas según la categoría elegida (Talle, Marca…). Las que tienen <span class="text-danger">*</span> son obligatorias. Al escribir te sugiere valores que ya usaste, así no quedan «Asus» y «Asuz».</div>
+    <div><strong>Completá sus datos.</strong><br>Al elegir «Remeras» aparecen los datos que pide: Marca, Talle, Color. Los que tienen <span class="text-danger">*</span> son obligatorios. Mientras escribís, te sugiere lo que ya usaste, así no queda «Nike» en uno y «Nkie» en otro.</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono">4</span>
-    <div><strong>Imágenes</strong><br>La primera es la que se ve en el listado y en Google.</div>
+    <div><strong>Subí las fotos.</strong><br>La primera es la que se ve en la tienda y en Google.</div>
 </div>
 
 <div class="ayuda-ejemplo">
-    <div class="fw-semibold mb-1">Características u «Otros datos»?</div>
-    <strong>Características</strong>: datos que tienen todos los productos de la categoría y sirven para filtrar (Marca, Talle).<br>
-    <strong>Otros datos</strong>: algo propio de este producto que no se filtra (Peso: 1,7 kg, Incluye cargador).
+    <div class="fw-semibold mb-1">¿Características u «Otros datos»?</div>
+    <strong>Características:</strong> datos que tienen todas las remeras y sirven para buscar. Talle: M, Color: Negro.<br>
+    <strong>Otros datos:</strong> algo especial de esta remera. Tecnología: Dri-FIT, Lavado: a mano.
 </div>
 
 <h6 class="ayuda-titulo">El listado</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-funnel"></i></span>
-    <div><strong>Filtrá</strong><br>Por nombre, proveedor, categoría o stock. «Sin categoría» muestra los que todavía no tienen ninguna.</div>
+    <div><strong>Buscá y filtrá.</strong><br>Por nombre, proveedor, categoría o stock. Elegí <em>Sin categoría</em> para ver los que todavía no están en ningún estante.</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-check2-square"></i></span>
-    <div><strong>Cambiá muchos a la vez</strong><br>Marcá los productos con la casilla y usá «Agregar categorías» o «Quitar categorías» en la barra de abajo. Si marcás todos, podés elegir todos los del filtro, no sólo los de la página.</div>
+    <div><strong>Cambiá muchos de una vez.</strong><br>Marcá la casilla de cada producto. Abajo aparece una barra: tocá <em>Agregar categorías</em>, elegí «Running» y listo. Si marcás todos, te ofrece elegir también los de las otras páginas.</div>
 </div>

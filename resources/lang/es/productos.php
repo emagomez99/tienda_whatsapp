@@ -41,7 +41,7 @@ return [
         'seo' => 'Si dejás estos campos vacíos, se usa el nombre del producto como título y un resumen de la descripción detallada como meta description.',
         'galeria' => 'La primera imagen es la principal: la que se ve en el listado y en Google. Las demás aparecen en el carrusel de la ficha. Arrastrá para cambiar el orden, o usá ★ para pasar una al primer lugar. Se recomienda fondo blanco o transparente.',
 
-        'categorias' => 'Qué es el producto: Ropa › Remeras, Celulares, Pádel. Puede estar en varias. Si elegís una subcategoría, el producto aparece también en las de arriba sin marcarlas.',
+        'categorias' => 'El estante donde va el producto: Remeras, Zapatillas, Mochilas. Puede estar en más de uno. Si elegís uno de adentro (Ropa › Remeras), aparece también en el de afuera (Ropa) sin marcarlo.',
         'etiquetas' => 'Los datos del producto que piden sus categorías (Talle, Color, Marca…) y que la tienda usa en los filtros. Cuáles se piden se define en cada categoría; las marcadas con * son obligatorias. Al escribir el valor se sugieren los que ya existen, con cuántos productos los usan: elegir uno de esos evita duplicados como "Asus" y "Asuz".',
 
         'especificaciones' => 'Datos sueltos que sólo tiene este producto y no hace falta filtrar: el nombre lo escribís vos. Se muestran en la ficha. Ej: Peso → 1,75 kg, Incluye → Cargador. Si es un dato que tienen todos los de la categoría (Marca, Talle), va en Características.',

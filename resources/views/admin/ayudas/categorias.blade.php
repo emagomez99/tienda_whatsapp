@@ -1,45 +1,55 @@
-{{-- Ayuda de Categorías (lista y formulario). Ver components/ayuda. --}}
-<h6 class="ayuda-titulo">Para qué sirven</h6>
+{{-- Ayuda de Categorías (lista y formulario). Ver components/ayuda. Lenguaje simple: ver memoria feedback-ux-simple. --}}
+<h6 class="ayuda-titulo">¿Qué es una categoría?</h6>
 <div class="ayuda-item">
-    <span class="ayuda-icono"><i class="bi bi-diagram-3"></i></span>
-    <div><strong>Dicen qué es cada producto</strong><br>Ropa, Celulares, Pádel… Con ellas tus clientes encuentran lo que buscan, y la tienda arma sola el menú y la página de cada una.</div>
+    <span class="ayuda-icono"><i class="bi bi-bookshelf"></i></span>
+    <div><strong>Es un estante de tu negocio.</strong><br>En un estante van las remeras, en otro las zapatillas. Cada producto se pone en su estante.</div>
+</div>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-shop"></i></span>
+    <div><strong>Tus clientes eligen un estante y ven sólo esos productos.</strong><br>En la tienda aparecen como botones del menú: Ropa, Calzado, Accesorios.</div>
 </div>
 
 <div class="ayuda-ejemplo">
-    <div class="fw-semibold mb-1">Ejemplo</div>
+    <div class="fw-semibold mb-1">Ejemplo: una tienda de ropa deportiva</div>
     Ropa<br>
     &nbsp;&nbsp;└ Remeras<br>
-    &nbsp;&nbsp;└ Pantalones<br>
-    Celulares
-    <div class="text-muted mt-1">Una remera va en «Remeras» y aparece también en «Ropa» sin marcarla.</div>
+    &nbsp;&nbsp;└ Shorts<br>
+    Calzado<br>
+    &nbsp;&nbsp;└ Running<br>
+    &nbsp;&nbsp;└ Fútbol<br>
+    Accesorios<br>
+    &nbsp;&nbsp;└ Medias<br>
+    &nbsp;&nbsp;└ Mochilas
+    <div class="text-muted mt-2">Un estante puede tener estantes adentro. Si ponés una remera en «Remeras», también aparece en «Ropa». No hace falta marcar los dos.</div>
 </div>
 
 <h6 class="ayuda-titulo">Paso a paso</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono">1</span>
-    <div><strong>Creá las categorías</strong><br>Con <i class="bi bi-plus-circle"></i> Crear categoría. Para una dentro de otra, tocá <i class="bi bi-plus-lg"></i> en la fila de la de arriba. Hasta 3 niveles.</div>
+    <div><strong>Creá tus estantes.</strong><br>Tocá <i class="bi bi-plus-circle"></i> <em>Crear categoría</em> y escribí el nombre, por ejemplo «Ropa». Para hacer «Remeras» adentro de «Ropa», tocá el <i class="bi bi-plus-lg"></i> que aparece en la fila de «Ropa».</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono">2</span>
-    <div><strong>Decí qué datos piden</strong><br>Al editar una categoría, en «Datos que se piden al cargar un producto»: Talle, Color… Marcalos <span class="badge text-bg-danger">Obligatoria</span> si no se puede guardar un producto sin ellos. Las de adentro los piden también.</div>
+    <div><strong>Decí qué hay que anotar de cada producto.</strong><br>De una remera hay que saber el talle y el color. Entrá a «Remeras» y agregalos en <em>Datos que se piden al cargar un producto</em>. Si los marcás <span class="badge text-bg-danger">Obligatoria</span>, nadie puede guardar una remera sin talle.</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono">3</span>
-    <div><strong>Poné tus productos</strong><br>Desde cada producto (Elegir categorías), o de a muchos desde el listado de Productos: marcás varios y «Agregar categorías».</div>
+    <div><strong>Poné cada producto en su estante.</strong><br>Al cargar un producto, tocá <em>Elegir categorías</em>. Si son muchos, andá a Productos, marcalos y tocá <em>Agregar categorías</em>.</div>
 </div>
 
-<h6 class="ayuda-titulo">Ordenar y mover</h6>
+<h6 class="ayuda-titulo">Ordenar</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-grip-vertical"></i></span>
-    <div><strong>Arrastrá desde <i class="bi bi-grip-vertical"></i></strong><br>Hacia arriba o abajo para cambiar el orden. Para meterla dentro de otra, soltala sobre el nombre de esa otra (la fila se resalta).</div>
-</div>
-<div class="ayuda-item">
-    <span class="ayuda-icono"><i class="bi bi-three-dots"></i></span>
-    <div><strong>Más opciones en <i class="bi bi-three-dots"></i></strong><br>Editar, ocultar, subir, bajar o eliminar. Eliminar una categoría no borra sus productos.</div>
+    <div><strong>Agarrá el <i class="bi bi-grip-vertical"></i> y arrastrá.</strong><br>Hacia arriba o abajo cambia el orden en que se ven en la tienda. Si lo soltás encima de otro estante, queda adentro de ese.</div>
 </div>
 
-<h6 class="ayuda-titulo">Ocultar</h6>
+<h6 class="ayuda-titulo">Ocultar y borrar</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-eye-slash"></i></span>
-    <div><strong>Una oculta no aparece en la tienda</strong><br>Ni en el menú ni en Google; sus subcategorías tampoco. Los productos no se ocultan: se siguen encontrando con el buscador.</div>
+    <div><strong>Ocultar:</strong> tus clientes dejan de ver ese estante (y los de adentro). Los productos no desaparecen: se siguen encontrando con el buscador.</div>
 </div>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-trash"></i></span>
+    <div><strong>Borrar:</strong> se borra el estante, no los productos. Quedan sin categoría y los podés poner en otro.</div>
+</div>
+<div class="small text-muted"><i class="bi bi-three-dots"></i> En cada fila, los tres puntitos tienen todas las opciones: editar, ocultar, subir, bajar y borrar.</div>

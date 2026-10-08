@@ -1,42 +1,45 @@
-{{-- Ayuda de Menús (lista y formulario). Ver components/ayuda. --}}
-<h6 class="ayuda-titulo">¿Hace falta armarlo?</h6>
+{{-- Ayuda de Menús (lista y formulario). Ver components/ayuda. Lenguaje simple: ver memoria feedback-ux-simple. --}}
+<h6 class="ayuda-titulo">¿Qué es el menú?</h6>
 <div class="ayuda-item">
-    <span class="ayuda-icono"><i class="bi bi-magic"></i></span>
-    <div><strong>Lo más simple: «Con las categorías»</strong><br>El menú de la tienda se arma solo con tus categorías visibles, en su orden. No hay nada que mantener: si creás una categoría, aparece.</div>
-</div>
-<div class="ayuda-item">
-    <span class="ayuda-icono"><i class="bi bi-list-nested"></i></span>
-    <div><strong>«Armado a mano», si querés algo distinto</strong><br>Por ejemplo un menú «Ofertas» o «Kits por modelo» con filtros. Lo que armes queda guardado aunque vuelvas al automático.</div>
+    <span class="ayuda-icono"><i class="bi bi-menu-button-wide"></i></span>
+    <div><strong>Son los botones de arriba de tu tienda.</strong><br>Por ejemplo: <em>Ropa · Calzado · Accesorios</em>. El cliente toca uno y ve esos productos.</div>
 </div>
 
-<h6 class="ayuda-titulo">Qué muestra cada menú</h6>
+<h6 class="ayuda-titulo">Hay dos formas</h6>
 <div class="ayuda-item">
-    <span class="ayuda-icono"><i class="bi bi-folder2"></i></span>
-    <div><strong>Agrupa</strong><br>No muestra productos: al tocarlo se despliegan sus submenús.</div>
+    <span class="ayuda-icono"><i class="bi bi-magic"></i></span>
+    <div><strong>«Con las categorías»: se arma solo.</strong><br>Usa tus estantes de Categorías, en el mismo orden. Si creás «Mochilas», aparece sola. Es la más fácil.</div>
 </div>
 <div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-pencil-square"></i></span>
+    <div><strong>«Armado a mano»: lo armás vos.</strong><br>Sirve si querés botones especiales, como «Mujer» o «Nike». Mientras uses este, el de categorías no se muestra (pero no se pierde).</div>
+</div>
+
+<h6 class="ayuda-titulo">Armarlo a mano: qué muestra cada botón</h6>
+<div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-diagram-3"></i></span>
-    <div><strong>Categoría</strong><br>Los productos de esa categoría y de las de adentro. Ej: Ropa incluye Ropa › Remeras.</div>
+    <div><strong>Los de una categoría.</strong><br>«Calzado» muestra todas las zapatillas, también las de Running y Fútbol.</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-tag"></i></span>
-    <div><strong>Característica</strong><br>Los productos que la tienen, y con ese valor si se eligió uno. Ej: Marca = Asus.</div>
+    <div><strong>Los que tienen un dato.</strong><br>«Mujer» muestra los productos con Género: Mujer. «Nike» muestra los de Marca: Nike.</div>
+</div>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-folder2"></i></span>
+    <div><strong>Ninguno (sólo agrupa).</strong><br>Un botón que junta otros. Por ejemplo «Marcas», y adentro «Nike» y «Adidas».</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-truck"></i></span>
-    <div><strong>Proveedor</strong><br>Todos los productos de ese proveedor.</div>
+    <div><strong>Los de un proveedor.</strong><br>Todo lo que te trae ese proveedor.</div>
 </div>
 
-<h6 class="ayuda-titulo">Cómo se arma</h6>
+<div class="ayuda-ejemplo">
+    <div class="fw-semibold mb-1">Uno adentro de otro se suma</div>
+    «Mujer» › «Calzado» muestra el calzado de mujer, no todo el calzado.
+</div>
+
+<h6 class="ayuda-titulo">Ordenar</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-grip-vertical"></i></span>
-    <div><strong>Ordenar</strong><br>Arrastrá desde <i class="bi bi-grip-vertical"></i> hacia arriba o hacia abajo.</div>
-</div>
-<div class="ayuda-item">
-    <span class="ayuda-icono"><i class="bi bi-arrow-return-right"></i></span>
-    <div><strong>Meter uno dentro de otro</strong><br>Soltalo sobre el nombre del otro menú: la fila se resalta y queda adentro. Para crear uno nuevo adentro, <i class="bi bi-plus-lg"></i> en la fila.</div>
-</div>
-<div class="ayuda-item">
-    <span class="ayuda-icono"><i class="bi bi-diagram-2"></i></span>
-    <div><strong>Los de adentro suman lo de arriba</strong><br>«Notebook › Asus» son las notebooks Asus, no todo lo de Asus.</div>
+    <div><strong>Agarrá el <i class="bi bi-grip-vertical"></i> y arrastrá.</strong><br>Hacia arriba o abajo cambia el orden. Si lo soltás encima de otro botón, queda adentro de ese. Para crear uno adentro, tocá el <i class="bi bi-plus-lg"></i> de la fila.</div>
 </div>

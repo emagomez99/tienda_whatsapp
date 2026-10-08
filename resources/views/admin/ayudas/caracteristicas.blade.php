@@ -1,30 +1,39 @@
-{{-- Ayuda de Características (lista y formulario). Ver components/ayuda. --}}
-<h6 class="ayuda-titulo">Qué son</h6>
+{{-- Ayuda de Características (lista y formulario). Ver components/ayuda. Lenguaje simple: ver memoria feedback-ux-simple. --}}
+<h6 class="ayuda-titulo">¿Qué es una característica?</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-ui-checks"></i></span>
-    <div><strong>Los datos de cada producto</strong><br>Marca, Talle, Color, Modelo… El nombre se crea una vez acá; el valor (Nike, M, Rojo) se escribe en cada producto.</div>
-</div>
-<div class="ayuda-item">
-    <span class="ayuda-icono"><i class="bi bi-funnel"></i></span>
-    <div><strong>Sirven para filtrar</strong><br>El cliente las ve en la ficha del producto y las puede usar en los filtros de los menús.</div>
+    <div><strong>Es un dato que anotás de cada producto.</strong><br>La marca, el talle, el color.</div>
 </div>
 
-<h6 class="ayuda-titulo">Quién las pide</h6>
+<div class="ayuda-ejemplo">
+    <div class="fw-semibold mb-1">Ejemplo: Remera Dri-Fit</div>
+    Marca: <strong>Nike</strong><br>
+    Talle: <strong>M</strong><br>
+    Color: <strong>Negro</strong>
+    <div class="text-muted mt-2">«Marca», «Talle» y «Color» son las características. «Nike», «M» y «Negro» son sus valores, y se escriben en cada producto.</div>
+</div>
+
 <div class="ayuda-item">
-    <span class="ayuda-icono"><i class="bi bi-diagram-3"></i></span>
-    <div><strong>Las categorías</strong><br>Cada categoría dice qué datos pide al cargar un producto (se configura al editar la categoría). Así una remera pide Talle y un celular no.</div>
+    <span class="ayuda-icono"><i class="bi bi-search"></i></span>
+    <div><strong>Sirven para que tus clientes encuentren lo que buscan.</strong><br>Por ejemplo: «zapatillas Nike, número 42».</div>
+</div>
+
+<h6 class="ayuda-titulo">¿Quién decide qué datos se piden?</h6>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-bookshelf"></i></span>
+    <div><strong>Cada categoría.</strong><br>Una remera pide talle y color. Una zapatilla pide número. Una mochila no pide talle. Se configura al editar la categoría.</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-globe"></i></span>
-    <div><strong>O todos los productos</strong><br>Para datos que tiene cualquier producto, como Marca: al editarla, «Pedirla en todos los productos».</div>
+    <div><strong>O todos los productos.</strong><br>La marca la tiene cualquier producto. Editala y prendé <em>Pedirla en todos los productos</em>.</div>
 </div>
 
-<h6 class="ayuda-titulo">Ordenar los valores</h6>
+<h6 class="ayuda-titulo">Corregir errores</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-chevron-right"></i></span>
-    <div><strong>Tocá una para ver sus valores</strong><br>Ahí podés corregir uno mal escrito (se corrige en todos sus productos), juntar dos que son lo mismo u ocultar uno.</div>
+    <div><strong>Tocá una característica para ver sus valores.</strong><br>Si alguien escribió «Nkie», corregilo ahí y se arregla en todos los productos de una vez. Si ya existía «Nike», te pregunta si querés juntarlos en uno solo.</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-eye"></i></span>
-    <div><strong>El ojo</strong><br>Muestra u oculta la característica en la tienda. Oculta, sirve para uso interno.</div>
+    <div><strong>El ojito</strong> muestra u oculta el dato en la tienda. Oculto, lo ves sólo vos.</div>
 </div>
