@@ -3,13 +3,18 @@
 @section('title', 'Perfiles')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-shield-check"></i> Perfiles</h3>
-    @if(auth()->user()->puede('perfiles.gestionar'))
-    <a href="{{ route('admin.perfiles.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nuevo
-    </a>
-    @endif
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-shield-check"></i> Perfiles</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-usuarios" titulo="Cómo funcionan usuarios y perfiles">
+            @include('admin.ayudas.usuarios')
+        </x-ayuda>
+        @if(auth()->user()->puede('perfiles.gestionar'))
+        <a href="{{ route('admin.perfiles.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo
+        </a>
+        @endif
+    </div>
 </div>
 
 <div class="card">

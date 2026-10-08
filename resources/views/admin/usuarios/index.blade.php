@@ -3,20 +3,25 @@
 @section('title', 'Usuarios')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-people"></i> Usuarios</h3>
-    <a href="{{ route('admin.usuarios.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nuevo
-    </a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-people"></i> Usuarios</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-usuarios" titulo="Cómo funcionan usuarios y perfiles">
+            @include('admin.ayudas.usuarios')
+        </x-ayuda>
+        <a href="{{ route('admin.usuarios.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo
+        </a>
+    </div>
 </div>
 
 @php $filtrosActivos = request()->hasAny(['buscar']); @endphp
 <div class="card mb-4">
     <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
-         style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#filtros-usuarios"
+         data-bs-toggle="collapse" data-bs-target="#filtros-usuarios"
          aria-expanded="{{ $filtrosActivos ? 'true' : 'false' }}">
-        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1" style="font-size:.6rem;">activo</span>' : '' !!}</span>
-        <i class="bi bi-chevron-down filtros-chevron" style="transition:transform .2s;{{ $filtrosActivos ? 'transform:rotate(180deg);' : '' }}"></i>
+        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1 badge-chica">activo</span>' : '' !!}</span>
+        <i class="bi bi-chevron-down filtros-chevron"></i>
     </div>
     <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-usuarios">
     <div class="card-body">

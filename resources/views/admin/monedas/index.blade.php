@@ -3,11 +3,16 @@
 @section('title', 'Monedas')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-currency-exchange"></i> Monedas</h3>
-    <a href="{{ route('admin.monedas.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nueva
-    </a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-currency-exchange"></i> Monedas</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-monedas" titulo="Cómo funcionan las monedas">
+            @include('admin.ayudas.monedas')
+        </x-ayuda>
+        <a href="{{ route('admin.monedas.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nueva
+        </a>
+    </div>
 </div>
 
 {{-- Sin banner explicativo a propósito: en qué moneda cobra la tienda se configura en
@@ -35,10 +40,10 @@
 @php $filtrosActivos = request()->hasAny(['buscar']); @endphp
 <div class="card mb-4">
     <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
-         style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#filtros-monedas"
+         data-bs-toggle="collapse" data-bs-target="#filtros-monedas"
          aria-expanded="{{ $filtrosActivos ? 'true' : 'false' }}">
-        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1" style="font-size:.6rem;">activo</span>' : '' !!}</span>
-        <i class="bi bi-chevron-down filtros-chevron" style="transition:transform .2s;{{ $filtrosActivos ? 'transform:rotate(180deg);' : '' }}"></i>
+        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1 badge-chica">activo</span>' : '' !!}</span>
+        <i class="bi bi-chevron-down filtros-chevron"></i>
     </div>
     <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-monedas">
     <div class="card-body">
@@ -104,11 +109,11 @@
                                          la unidad de medida, no un valor cargado. --}}
                                     @if($moneda->es_base)
                                         <span class="text-muted">—</span>
-                                        <div class="text-muted" style="font-size:.75rem;">Es tu moneda</div>
+                                        <div class="text-muted small">Es tu moneda</div>
                                     @else
                                         <span class="fw-semibold">{{ rtrim(rtrim(number_format($moneda->cotizacion, 6, ',', '.'), '0'), ',') }}</span>
                                         @if($base)
-                                            <div class="text-muted" style="font-size:.75rem;">1 {{ $moneda->codigo }} = {{ rtrim(rtrim(number_format($moneda->cotizacion, 6, ',', '.'), '0'), ',') }} {{ $base->codigo }}</div>
+                                            <div class="text-muted small">1 {{ $moneda->codigo }} = {{ rtrim(rtrim(number_format($moneda->cotizacion, 6, ',', '.'), '0'), ',') }} {{ $base->codigo }}</div>
                                         @endif
                                     @endif
                                 </td>
@@ -122,12 +127,12 @@
                                 {{-- El cero se atenúa: en una tabla de conteos lo que se
                                      busca es dónde hay algo, y un cero con el mismo peso
                                      visual que un 30.900 compite por la atención. --}}
-                                <td class="text-end" style="font-variant-numeric:tabular-nums;">
+                                <td class="text-end cifras">
                                     <span class="{{ $moneda->productos_count > 0 ? 'fw-semibold' : 'text-muted opacity-50' }}">
                                         {{ number_format($moneda->productos_count, 0, ',', '.') }}
                                     </span>
                                 </td>
-                                <td class="text-end" style="font-variant-numeric:tabular-nums;">
+                                <td class="text-end cifras">
                                     <span class="{{ $moneda->productos_de_compra_count > 0 ? 'fw-semibold' : 'text-muted opacity-50' }}">
                                         {{ number_format($moneda->productos_de_compra_count, 0, ',', '.') }}
                                     </span>
@@ -174,7 +179,7 @@
 @if($todas->count() > 1)
 <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h6 class="mb-0"><i class="bi bi-arrow-left-right"></i> Equivalencias</h6>
+        <span><i class="bi bi-arrow-left-right"></i> Equivalencias</span>
         <small class="text-muted">Cada fila dice cuánto vale 1 unidad de esa moneda</small>
     </div>
     <div class="card-body">

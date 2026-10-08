@@ -1,21 +1,26 @@
 @extends('layouts.admin')
 
-@section('title', 'Nuevo Perfil')
+@section('title', 'Nuevo perfil')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-plus-circle"></i> Nuevo Perfil</h3>
-    <a href="{{ route('admin.perfiles.index') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Volver
-    </a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-plus-circle"></i> Nuevo perfil</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-usuarios" titulo="Cómo funcionan usuarios y perfiles">
+            @include('admin.ayudas.usuarios')
+        </x-ayuda>
+        <a href="{{ route('admin.perfiles.index') }}" class="btn btn-outline-secondary" title="Volver">
+            <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline"> Volver</span>
+        </a>
+    </div>
 </div>
 
-<form action="{{ route('admin.perfiles.store') }}" method="POST">
+<form action="{{ route('admin.perfiles.store') }}" method="POST" id="form-perfil">
     @csrf
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-lg-8">
             <div class="card mb-4">
-                <div class="card-header"><strong>Datos del Perfil</strong></div>
+                <div class="card-header">Datos del perfil</div>
                 <div class="card-body">
                     <div class="mb-3">
                         <label for="nombre" class="form-label">Nombre *</label>
@@ -57,7 +62,7 @@
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <strong>Permisos</strong>
+                    <span>Permisos</span>
                     <div class="btn-group btn-group-sm">
                         <button type="button" class="btn btn-outline-secondary" id="btn-todos">Marcar todos</button>
                         <button type="button" class="btn btn-outline-secondary" id="btn-ninguno">Desmarcar todos</button>
@@ -66,7 +71,7 @@
                 <div class="card-body">
                     @foreach($catalogo as $grupo => $slugs)
                         <div class="mb-4">
-                            <h6 class="text-uppercase text-muted fw-bold border-bottom pb-1 mb-2">{{ $grupo }}</h6>
+                            <h6 class="panel-rotulo fw-semibold border-bottom pb-1 mb-2">{{ $grupo }}</h6>
                             <div class="row g-2">
                                 @foreach($slugs as $slug)
                                     @if(isset($permisos[$slug]))
@@ -91,14 +96,14 @@
                 </div>
             </div>
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle"></i> Guardar Perfil
-                </button>
-                <a href="{{ route('admin.perfiles.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-            </div>
         </div>
     </div>
+
+    @include('admin.partials.barra-guardar', [
+        'textoGuardar' => 'Crear perfil',
+        'cancelarUrl'  => route('admin.perfiles.index'),
+        'formId'       => 'form-perfil',
+    ])
 </form>
 @endsection
 

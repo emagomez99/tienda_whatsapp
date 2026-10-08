@@ -98,7 +98,7 @@
             <i class="bi bi-info-circle text-primary"></i>
             <span class="small">
                 <strong>Es la moneda en la que cobrás: no se cotiza.</strong>
-                Las demás se cotizan contra ella. Se cambia desde Configuración → Ajustes.
+                Las demás se cotizan contra ella. Se cambia en Ajustes › Tienda.
             </span>
         </div>
     @endif

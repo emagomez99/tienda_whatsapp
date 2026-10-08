@@ -1,22 +1,27 @@
 @extends('layouts.admin')
 
-@section('title', 'Editar Perfil')
+@section('title', 'Editar perfil')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-pencil"></i> Editar Perfil</h3>
-    <a href="{{ route('admin.perfiles.index') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Volver
-    </a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-pencil"></i> Editar perfil <span class="text-muted fw-normal">{{ $perfil->nombre }}</span></h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-usuarios" titulo="Cómo funcionan usuarios y perfiles">
+            @include('admin.ayudas.usuarios')
+        </x-ayuda>
+        <a href="{{ route('admin.perfiles.index') }}" class="btn btn-outline-secondary" title="Volver">
+            <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline"> Volver</span>
+        </a>
+    </div>
 </div>
 
-<form action="{{ route('admin.perfiles.update', $perfil) }}" method="POST">
+<form action="{{ route('admin.perfiles.update', $perfil) }}" method="POST" id="form-perfil">
     @csrf
     @method('PUT')
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-lg-8">
             <div class="card mb-4">
-                <div class="card-header"><strong>Datos del Perfil</strong></div>
+                <div class="card-header">Datos del perfil</div>
                 <div class="card-body">
                     <div class="mb-3">
                         <label for="nombre" class="form-label">Nombre *</label>
@@ -61,7 +66,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <strong>Permisos</strong>
+                        <span>Permisos</span>
                         @if($perfil->es_superadmin)
                             <span class="badge bg-warning text-dark ms-2">
                                 <i class="bi bi-info-circle"></i> Superadmin — tiene todos los permisos automáticamente
@@ -76,7 +81,7 @@
                 <div class="card-body">
                     @foreach($catalogo as $grupo => $slugs)
                         <div class="mb-4">
-                            <h6 class="text-uppercase text-muted fw-bold border-bottom pb-1 mb-2">{{ $grupo }}</h6>
+                            <h6 class="panel-rotulo fw-semibold border-bottom pb-1 mb-2">{{ $grupo }}</h6>
                             <div class="row g-2">
                                 @foreach($slugs as $slug)
                                     @if(isset($permisos[$slug]))
@@ -101,17 +106,11 @@
                 </div>
             </div>
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle"></i> Actualizar Perfil
-                </button>
-                <a href="{{ route('admin.perfiles.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-            </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-lg-4">
             <div class="card">
-                <div class="card-header"><strong>Usuarios con este perfil</strong></div>
+                <div class="card-header">Usuarios con este perfil</div>
                 <div class="card-body">
                     @if($perfil->usuarios->isEmpty())
                         <p class="text-muted mb-0">Ningún usuario asignado.</p>
@@ -129,6 +128,12 @@
             </div>
         </div>
     </div>
+
+    @include('admin.partials.barra-guardar', [
+        'textoGuardar' => 'Guardar cambios',
+        'cancelarUrl'  => route('admin.perfiles.index'),
+        'formId'       => 'form-perfil',
+    ])
 </form>
 @endsection
 
