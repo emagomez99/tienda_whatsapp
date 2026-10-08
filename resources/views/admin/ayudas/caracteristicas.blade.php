@@ -1,4 +1,6 @@
 {{-- Ayuda de Características (lista y formulario). Ver components/ayuda. Lenguaje simple y ejemplo de supermercado: ver memoria feedback-ux-simple. --}}
+@include('admin.ayudas.partials.estante-y-dato')
+
 <h6 class="ayuda-titulo">¿Qué es una característica?</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-ui-checks"></i></span>
