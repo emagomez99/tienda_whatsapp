@@ -9,8 +9,8 @@
         <x-ayuda id="ayuda-caracteristicas" titulo="Cómo funcionan las características">
             @include('admin.ayudas.caracteristicas')
         </x-ayuda>
-        <a href="{{ route('admin.etiquetas.index') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
+        <a href="{{ route('admin.etiquetas.index') }}" class="btn btn-outline-secondary" title="Volver">
+            <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline"> Volver</span>
         </a>
     </div>
 </div>

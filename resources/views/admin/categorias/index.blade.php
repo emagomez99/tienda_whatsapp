@@ -55,7 +55,7 @@
 
 @if($categorias->count() > 0)
     <div class="card">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span>Árbol de categorías</span>
             <small class="text-muted">Arrastrá <i class="bi bi-grip-vertical"></i> para ordenar, o soltala sobre otra para meterla adentro</small>
         </div>

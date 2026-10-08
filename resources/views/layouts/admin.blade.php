@@ -169,16 +169,6 @@
             });
         });
     </script>
-    <script>
-    document.addEventListener('show.bs.collapse', function (e) {
-        var btn = document.querySelector('[data-bs-target="#' + e.target.id + '"]');
-        if (btn) { var c = btn.querySelector('.filtros-chevron'); if (c) c.style.transform = 'rotate(180deg)'; }
-    });
-    document.addEventListener('hide.bs.collapse', function (e) {
-        var btn = document.querySelector('[data-bs-target="#' + e.target.id + '"]');
-        if (btn) { var c = btn.querySelector('.filtros-chevron'); if (c) c.style.transform = 'rotate(0deg)'; }
-    });
-    </script>
     @include('partials.modal-confirmar')
     @stack('scripts')
 

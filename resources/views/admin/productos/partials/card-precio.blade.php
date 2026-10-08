@@ -30,7 +30,7 @@
 
         {{-- ─── Compra ─────────────────────────────────────────────────────── --}}
         <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="fw-semibold text-uppercase text-muted" style="font-size:.75rem;letter-spacing:.04em;">
+            <span class="panel-rotulo fw-semibold">
                 <i class="bi bi-box-arrow-in-down"></i> Compra
             </span>
             <span class="badge bg-light text-muted fw-normal">opcional</span>
@@ -73,7 +73,7 @@
 
         {{-- ─── Venta ──────────────────────────────────────────────────────── --}}
         <div class="d-flex align-items-center gap-2 mb-3">
-            <span class="fw-semibold text-uppercase text-muted" style="font-size:.75rem;letter-spacing:.04em;">
+            <span class="panel-rotulo fw-semibold">
                 <i class="bi bi-tag"></i> Venta
             </span>
             @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.venta'), 'grande' => true])

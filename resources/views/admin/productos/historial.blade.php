@@ -3,9 +3,9 @@
 @section('title', 'Historial de stock — ' . $producto->descripcion)
 
 @section('content')
-<div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-start gap-3 mb-4">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
-        <h3><i class="bi bi-clock-history"></i> Historial de stock</h3>
+        <h3 class="mb-0"><i class="bi bi-clock-history"></i> Historial de stock</h3>
         <p class="text-muted mb-0">
             <strong>{{ $producto->descripcion }}</strong>
             @if($producto->id_proveedor)
@@ -17,13 +17,13 @@
         </p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-ajuste-stock">
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-ajuste-stock">
             <i class="bi bi-arrow-left-right"></i><span class="d-none d-sm-inline"> Ajustar stock</span>
         </button>
-        <a href="{{ route('admin.productos.edit', $producto) }}" class="btn btn-outline-secondary btn-sm">
+        <a href="{{ route('admin.productos.edit', $producto) }}" class="btn btn-outline-secondary" title="Editar">
             <i class="bi bi-pencil"></i><span class="d-none d-sm-inline"> Editar</span>
         </a>
-        <a href="{{ route('admin.productos.index') }}" class="btn btn-outline-secondary btn-sm">
+        <a href="{{ route('admin.productos.index') }}" class="btn btn-outline-secondary" title="Volver">
             <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline"> Volver</span>
         </a>
     </div>
@@ -37,38 +37,32 @@
 @endif
 
 {{-- Resumen de stock --}}
-<div class="row g-3 mb-4">
+{{-- Números: mismas tarjetas que en Inicio (.panel-dato). Un cero va sin signo y
+     atenuado: "-0" parecía un error. --}}
+<div class="row g-2 mb-4">
     <div class="col-6 col-md-3">
-        <div class="card text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-2 fw-bold text-primary">{{ $producto->stock }}</div>
-                <div class="text-muted small">Stock actual</div>
-            </div>
-        </div>
+        <div class="panel-dato"><div class="card"><div class="card-body">
+            <div class="panel-rotulo">Stock actual</div>
+            <div class="panel-dato-valor">{{ $producto->stock }}</div>
+        </div></div></div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-2 fw-bold text-muted">{{ $movimientos->total() }}</div>
-                <div class="text-muted small">Movimientos</div>
-            </div>
-        </div>
+        <div class="panel-dato"><div class="card"><div class="card-body">
+            <div class="panel-rotulo">Movimientos</div>
+            <div class="panel-dato-valor">{{ $movimientos->total() }}</div>
+        </div></div></div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-2 fw-bold text-success">+{{ $totales['entradas'] }}</div>
-                <div class="text-muted small">Entradas</div>
-            </div>
-        </div>
+        <div class="panel-dato"><div class="card"><div class="card-body">
+            <div class="panel-rotulo">Entradas</div>
+            <div class="panel-dato-valor {{ $totales['entradas'] ? 'text-success' : 'text-muted' }}">{{ $totales['entradas'] ? '+' . $totales['entradas'] : '0' }}</div>
+        </div></div></div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-2 fw-bold text-danger">-{{ $totales['salidas'] }}</div>
-                <div class="text-muted small">Salidas</div>
-            </div>
-        </div>
+        <div class="panel-dato"><div class="card"><div class="card-body">
+            <div class="panel-rotulo">Salidas</div>
+            <div class="panel-dato-valor {{ $totales['salidas'] ? 'text-danger' : 'text-muted' }}">{{ $totales['salidas'] ? '-' . $totales['salidas'] : '0' }}</div>
+        </div></div></div>
     </div>
 </div>
 

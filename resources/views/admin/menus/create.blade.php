@@ -9,8 +9,8 @@
         <x-ayuda id="ayuda-menus" titulo="Cómo funciona el menú">
             @include('admin.ayudas.menus')
         </x-ayuda>
-        <a href="{{ route('admin.menus.index') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
+        <a href="{{ route('admin.menus.index') }}" class="btn btn-outline-secondary" title="Volver">
+            <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline"> Volver</span>
         </a>
     </div>
 </div>

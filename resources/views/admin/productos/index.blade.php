@@ -21,10 +21,10 @@
 @endphp
 <div class="card mb-4">
     <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
-         style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#filtros-productos"
+         data-bs-toggle="collapse" data-bs-target="#filtros-productos"
          aria-expanded="{{ $filtrosActivos ? 'true' : 'false' }}">
-        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1" style="font-size:.6rem;">activo</span>' : '' !!}</span>
-        <i class="bi bi-chevron-down filtros-chevron" style="transition:transform .2s;{{ $filtrosActivos ? 'transform:rotate(180deg);' : '' }}"></i>
+        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1 badge-chica">activo</span>' : '' !!}</span>
+        <i class="bi bi-chevron-down filtros-chevron"></i>
     </div>
     <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-productos">
     <div class="card-body">
@@ -33,7 +33,7 @@
              El texto sí espera al botón o a Enter, para no recargar con cada letra. --}}
         <form action="{{ route('admin.productos.index') }}" method="GET" class="row g-3" id="form-filtros-productos">
             <div class="col-md-12 col-lg-4">
-                <label for="filtro-buscar" class="form-label text-muted mb-1" style="font-size:.75rem;">Nombre o código</label>
+                <label for="filtro-buscar" class="form-label small text-muted mb-1">Nombre o código</label>
                 <div class="input-group">
                     <input type="text" name="buscar" id="filtro-buscar" class="form-control" placeholder="Ej: gaseosa" value="{{ request('buscar') }}">
                     <button type="submit" class="btn btn-outline-primary">
@@ -42,7 +42,7 @@
                 </div>
             </div>
             <div class="col-6 col-md-3 col-lg-2">
-                <label class="form-label text-muted mb-1" style="font-size:.75rem;">Proveedor</label>
+                <label class="form-label small text-muted mb-1">Proveedor</label>
                 <select name="proveedor" class="form-select">
                     <option value="">Todos</option>
                     @foreach($proveedores as $proveedor)
@@ -53,7 +53,7 @@
                 </select>
             </div>
             <div class="col-6 col-md-3 col-lg-2">
-                <label class="form-label text-muted mb-1" style="font-size:.75rem;">Categoría</label>
+                <label class="form-label small text-muted mb-1">Categoría</label>
                 <select name="categoria" class="form-select">
                     <option value="">Todas</option>
                     <option value="{{ App\Support\FiltroDeProductos::SIN_CATEGORIA }}" {{ request('categoria') === App\Support\FiltroDeProductos::SIN_CATEGORIA ? 'selected' : '' }}>Sin categoría</option>
@@ -65,7 +65,7 @@
                 </select>
             </div>
             <div class="col-6 col-md-3 col-lg-2">
-                <label class="form-label text-muted mb-1" style="font-size:.75rem;">Estado</label>
+                <label class="form-label small text-muted mb-1">Estado</label>
                 <select name="disponible" class="form-select">
                     <option value="">Todos</option>
                     <option value="1" {{ request('disponible') === '1' ? 'selected' : '' }}>Disponibles</option>
@@ -73,7 +73,7 @@
                 </select>
             </div>
             <div class="col-6 col-md-3 col-lg-2">
-                <label class="form-label text-muted mb-1" style="font-size:.75rem;">Stock</label>
+                <label class="form-label small text-muted mb-1">Stock</label>
                 <select name="stock" class="form-select">
                     <option value="">Todos</option>
                     <option value="con" {{ request('stock') === 'con' ? 'selected' : '' }}>Con stock</option>
@@ -108,14 +108,14 @@
         @if($productos->isEmpty() && $filtrosActivos)
             {{-- Vacío por el filtro: que se note que hay productos, sólo que no éstos. --}}
             <div class="text-center py-4">
-                <i class="bi bi-funnel text-muted" style="font-size:2rem;"></i>
+                <i class="bi bi-funnel text-muted fs-2"></i>
                 <p class="fw-semibold mt-2 mb-1">Ningún producto coincide con el filtro</p>
                 <a href="{{ route('admin.productos.index') }}">Quitar los filtros y ver todos</a>
             </div>
         @elseif($productos->isEmpty())
             {{-- La tienda todavía no tiene ningún producto: el primer paso, a mano. --}}
             <div class="text-center py-5">
-                <i class="bi bi-box-seam text-muted" style="font-size:2.5rem;"></i>
+                <i class="bi bi-box-seam text-muted display-6"></i>
                 <p class="fw-semibold mt-2 mb-1">Todavía no cargaste ningún producto</p>
                 <p class="text-muted small mb-3">Por ejemplo, una «Gaseosa Coca-Cola 1,5 L»: su nombre, su precio y en qué estante va.</p>
                 <a href="{{ route('admin.productos.create') }}" class="btn btn-primary">
@@ -151,10 +151,9 @@
                                     </td>
                                 @endif
                                 <td style="width: 60px;">
-                                    <div class="rounded overflow-hidden bg-light" style="width: 50px; height: 50px; flex-shrink: 0;">
+                                    <div class="panel-miniatura">
                                         <img src="{{ $producto->imagen_url ?? '/img/no-image.svg' }}"
                                              alt=""
-                                             style="width: 100%; height: 100%; object-fit: cover; display: block;"
                                              onerror="this.onerror=null;this.src='/img/no-image.svg';">
                                     </div>
                                 </td>
@@ -177,12 +176,12 @@
                                 <td>
                                     <span class="d-flex flex-column gap-1">
                                     @if($producto->disponible)
-                                        <span class="badge rounded-pill text-bg-success" style="font-size:.68rem;font-weight:500;">Disponible</span>
+                                        <span class="badge rounded-pill text-bg-success">Disponible</span>
                                     @else
-                                        <span class="badge rounded-pill text-bg-secondary" style="font-size:.68rem;font-weight:500;">No disponible</span>
+                                        <span class="badge rounded-pill text-bg-secondary">No disponible</span>
                                     @endif
                                     @if($producto->por_encargue)
-                                        <span class="badge rounded-pill text-bg-info" style="font-size:.68rem;font-weight:500;">
+                                        <span class="badge rounded-pill text-bg-info">
                                             <i class="bi bi-clock"></i> Se puede pedir sin stock
                                         </span>
                                     @endif

@@ -73,6 +73,7 @@ body {
 
 /* ── Tipografía ─────────────────────────────────────────────────────────── */
 .contenido-panel h3 { font-size: 1.6rem; font-weight: 650; letter-spacing: -.01em; }
+@media (max-width: 575.98px) { .contenido-panel h3 { font-size: 1.35rem; } }
 .contenido-panel h3 > .bi:first-child { color: var(--panel-texto-suave); font-size: .85em; }
 .contenido-panel h5 { font-weight: 600; }
 .text-muted { color: var(--panel-texto-suave) !important; }
@@ -262,3 +263,122 @@ body {
 .card-header small, .card-header .small, .card-header .text-muted { font-weight: 400; }
 /* Título de página al lado de sus botones: alineado al centro, sin margen abajo. */
 .contenido-panel .d-flex > h3 { margin-bottom: 0; }
+
+/* ── Piezas chicas que comparten varias pantallas ───────────────────────── */
+
+/* Rótulo de un dato chico, arriba de su valor (CLIENTE, TOTAL, SIN STOCK...). */
+.panel-rotulo {
+    font-size: .72rem; font-weight: 500; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--panel-texto-suave);
+}
+/* Números que se comparan en columna: todas las cifras del mismo ancho. */
+.cifras { font-variant-numeric: tabular-nums; }
+.badge-chica { font-size: .6rem; }
+
+/* Filtros que en celular se pliegan: la cabecera entera abre y cierra, y la flecha
+   gira según el aria-expanded que Bootstrap mantiene en el disparador. */
+.card-header[data-bs-toggle="collapse"] { cursor: pointer; }
+.filtros-chevron { transition: transform .2s; }
+[aria-expanded="true"] > .filtros-chevron, [aria-expanded="true"] .filtros-chevron { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .filtros-chevron { transition: none; } }
+
+/* Barra de guardar al pie de los formularios (admin.partials.barra-guardar). */
+/* Flota sobre el fondo gris como una tarjeta, pegada al pie mientras se baja. */
+.panel-barra-guardar {
+    position: sticky; bottom: .75rem; z-index: 5;
+    margin-top: 1rem; padding: .6rem .75rem;
+    background: var(--panel-superficie); border: 1px solid var(--panel-borde);
+    border-radius: var(--panel-radio); box-shadow: var(--panel-sombra-alta);
+}
+.panel-barra-guardar-punto { font-size: .5rem; vertical-align: middle; }
+
+/* ── Inicio ─────────────────────────────────────────────────────────────── */
+/* Números del mes: tarjetas chicas con rótulo y cifra. */
+.panel-dato { display: block; height: 100%; color: inherit; text-decoration: none; }
+.panel-dato .card { height: 100%; }
+.panel-dato .card-body { padding: .7rem 1rem; }
+a.panel-dato:hover .card { border-color: var(--panel-borde-fuerte); }
+.panel-dato-valor { font-size: 1.5rem; font-weight: 700; line-height: 1.1; margin-top: .25rem; }
+.panel-dato-nota { font-size: .75rem; margin-top: .25rem; }
+.panel-dato-alerta .card { border-color: var(--bs-warning-border-subtle); background: var(--bs-warning-bg-subtle); }
+
+/* Acciones rápidas: filas con ícono, qué hace y una flecha. */
+.accion-rapida {
+    display: flex; align-items: center; gap: .7rem; padding: .7rem 1rem;
+    color: inherit; text-decoration: none; border-bottom: 1px solid var(--panel-borde);
+    transition: background-color .15s ease;
+}
+.accion-rapida:last-child { border-bottom: 0; }
+.accion-rapida:hover { background: var(--panel-superficie-suave); color: inherit; }
+.accion-rapida:focus-visible { outline: 2px solid var(--panel-acento); outline-offset: -2px; }
+.accion-icono {
+    flex: 0 0 2.1rem; height: 2.1rem; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--panel-radio-control); font-size: .95rem;
+    background: var(--panel-acento-suave); color: var(--panel-acento-oscuro);
+}
+/* La destacada (la que más se usa) lleva el ícono lleno; si se destacan todas, no se destaca ninguna. */
+.accion-rapida.destacada .accion-icono { background: var(--panel-acento); color: #fff; }
+.accion-texto { flex: 1 1 auto; min-width: 0; line-height: 1.25; }
+.accion-titulo { display: block; font-size: .875rem; font-weight: 600; }
+.accion-detalle { display: block; font-size: .75rem; color: var(--panel-texto-suave); }
+.accion-flecha { color: var(--panel-texto-tenue); font-size: .8rem; transition: transform .15s ease; }
+.accion-rapida:hover .accion-flecha { transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce) {
+    .accion-rapida, .accion-flecha { transition: none; }
+    .accion-rapida:hover .accion-flecha { transform: none; }
+}
+
+/* ── Ajustes ────────────────────────────────────────────────────────────── */
+/* Rótulo de cada sección dentro de una pestaña (QUÉ VE EL CLIENTE, MONEDAS...). */
+.ajuste-seccion {
+    font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--panel-texto-suave); margin-bottom: .5rem;
+}
+.ajuste-tarjeta {
+    border: 1px solid var(--panel-borde); border-radius: var(--panel-radio-control);
+    padding: 1rem; background: var(--panel-superficie);
+}
+.ajuste-interruptor { cursor: pointer; }
+.ajuste-interruptor:hover, .ajuste-opcion:hover { border-color: var(--panel-borde-fuerte); }
+/* Opción elegible con un radio escondido (.btn-check) adelante. */
+.ajuste-opcion {
+    display: block; padding: .6rem .75rem; cursor: pointer;
+    border: 1px solid var(--panel-borde); border-radius: var(--panel-radio-control);
+    transition: border-color .15s ease, background-color .15s ease;
+}
+.btn-check:checked + .ajuste-opcion {
+    border-color: var(--panel-acento); background-color: var(--panel-acento-suave);
+    box-shadow: inset 0 0 0 1px var(--panel-acento);
+}
+.btn-check:focus-visible + .ajuste-opcion { outline: 2px solid var(--panel-acento); outline-offset: 2px; }
+/* Vistas previas que acompañan mientras se baja por los controles. */
+.ajuste-cabecera-fija { position: sticky; top: var(--panel-barra-alto); z-index: 1010; background: var(--panel-superficie); }
+.ajuste-pegada { position: sticky; top: calc(var(--panel-barra-alto) + 1rem); }
+/* Ícono de cada red social delante de su campo. */
+.ajuste-red { width: 2.75rem; justify-content: center; }
+/* Miniatura de logo/favicon sobre un damero, para que se vean las transparencias. */
+.imagen-miniatura {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--panel-borde); border-radius: var(--panel-radio-control);
+    background-color: #fff;
+    background-image:
+        linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%);
+    background-size: 12px 12px; background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+    transition: opacity .15s ease;
+}
+.imagen-miniatura.se-quita { opacity: .35; }
+
+/* Foto chica de un producto en una tabla. */
+.panel-miniatura {
+    width: 50px; height: 50px; flex-shrink: 0; overflow: hidden;
+    border-radius: var(--panel-radio-control); background: var(--panel-superficie-suave);
+    border: 1px solid var(--panel-borde);
+}
+.panel-miniatura img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ── Inicio de sesión (auth/login) ──────────────────────────────────────── */
+.panel-acceso { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+.panel-acceso-caja { width: 100%; max-width: 400px; }
+.panel-acceso-logo { max-height: 56px; max-width: 220px; object-fit: contain; }
+.panel-acceso-inicial { width: 3rem; height: 3rem; border-radius: var(--panel-radio); font-size: 1.35rem; }

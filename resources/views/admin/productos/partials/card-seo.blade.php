@@ -7,8 +7,8 @@
     el sistema las completa solo (ver Producto::getMetaTitleAttribute). Ocupaba el
     segundo lugar del formulario, arriba de la imagen y del precio.
 
-    El chevron lo rota el manejador global de layouts/admin.blade.php, que busca la
-    clase .filtros-chevron en el botón que dispara el colapso.
+    El chevron (.filtros-chevron) gira solo, por CSS (public/css/admin.css), según el
+    aria-expanded que Bootstrap mantiene en el botón que dispara el colapso.
 --}}
 @php
     $productoEditado = isset($producto) ? $producto : null;
@@ -26,8 +26,7 @@
                 <span class="fw-normal">— Cómo se ve en Google</span>
                 <span class="badge bg-light text-muted fw-normal ms-1">opcional</span>
             </span>
-            <i class="bi bi-chevron-down filtros-chevron text-muted"
-               style="transition:transform .2s;{{ $abrirSeo ? 'transform:rotate(180deg);' : '' }}"></i>
+            <i class="bi bi-chevron-down filtros-chevron text-muted"></i>
         </button>
     </div>
 

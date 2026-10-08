@@ -1,7 +1,8 @@
 {{--
     Barra fija al pie de un formulario del panel (producto, categoría, menú,
-    característica), con el mismo criterio que la de Ajustes: los botones quedan
-    siempre a mano, sin tener que subir a buscarlos. Va adentro del <form>.
+    característica, proveedor, moneda, usuario, perfil), con el mismo criterio que la
+    de Ajustes: los botones quedan siempre a mano, sin tener que subir a buscarlos.
+    Va adentro del <form>. El aspecto, en .panel-barra-guardar (public/css/admin.css).
 
     Además avisa si hay cambios sin guardar y pide confirmación antes de perderlos al
     salir por un enlace (Cancelar, Volver, el menú) o al enviar otro formulario de la
@@ -12,11 +13,11 @@
       $cancelarUrl  — adónde vuelve "Cancelar"
       $formId       — id del <form> que vigila (por defecto form-producto)
 --}}
-<div class="position-sticky bottom-0 bg-white border-top py-2 mt-3" style="z-index: 5;">
+<div class="panel-barra-guardar">
     <div class="d-flex justify-content-end align-items-center gap-2">
         {{-- En celular el texto se acorta para que los botones entren en una línea. --}}
         <span class="text-warning-emphasis small me-auto text-nowrap d-none" id="cambios-sin-guardar">
-            <i class="bi bi-circle-fill" style="font-size:.5rem; vertical-align:middle;"></i>
+            <i class="bi bi-circle-fill panel-barra-guardar-punto"></i>
             <span class="d-none d-sm-inline">Cambios sin guardar</span><span class="d-sm-none">Sin guardar</span>
         </span>
         <a href="{{ $cancelarUrl }}" class="btn btn-outline-secondary text-nowrap">Cancelar</a>

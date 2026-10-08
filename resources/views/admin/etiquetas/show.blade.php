@@ -17,8 +17,8 @@
                     <i class="bi bi-pencil"></i> Editar característica
                 </a>
             @endif
-            <a href="{{ route('admin.etiquetas.index') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Volver
+            <a href="{{ route('admin.etiquetas.index') }}" class="btn btn-outline-secondary" title="Volver">
+                <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline"> Volver</span>
             </a>
         </div>
     </div>

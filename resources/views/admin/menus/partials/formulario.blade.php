@@ -279,7 +279,7 @@
     <div class="col-lg-4">
         @if($menu->exists && $menu->children->count() > 0)
             <div class="card">
-                <div class="card-header bg-light">
+                <div class="card-header">
                     <i class="bi bi-diagram-3"></i> Submenús ({{ $menu->children->count() }})
                 </div>
                 <ul class="list-group list-group-flush">

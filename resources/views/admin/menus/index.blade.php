@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'Gestión de Menú')
+@section('title', 'Menú de la tienda')
 
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <h3 class="mb-0"><i class="bi bi-list-nested"></i> Menú de la Tienda</h3>
+    <h3 class="mb-0"><i class="bi bi-list-nested"></i> Menú de la tienda</h3>
     <div class="d-flex flex-wrap align-items-center gap-2">
         <x-ayuda id="ayuda-menus" titulo="Cómo funciona el menú">
             @include('admin.ayudas.menus')
@@ -57,7 +57,7 @@
 @if($automatico)
     {{-- Cómo queda el menú automático: el de las categorías visibles. --}}
     <div class="card mb-4">
-        <div class="card-header bg-light"><i class="bi bi-eye"></i> Así se ve en la tienda</div>
+        <div class="card-header"><i class="bi bi-eye"></i> Así se ve en la tienda</div>
         <div class="card-body">
             @forelse(App\Services\MenuDeLaTienda::opciones() as $opcion)
                 <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
@@ -85,12 +85,12 @@
 <div class="card">
     @if($automatico)
         {{-- Con el automático, lo armado a mano no se usa: queda plegado para no confundir. --}}
-        <div class="card-header bg-light" role="button" data-bs-toggle="collapse" data-bs-target="#estructura-menu" aria-expanded="false" aria-controls="estructura-menu">
+        <div class="card-header" role="button" data-bs-toggle="collapse" data-bs-target="#estructura-menu" aria-expanded="false" aria-controls="estructura-menu">
             <i class="bi bi-archive"></i> Menú armado a mano <small class="text-muted">(guardado, no se muestra mientras uses el de categorías)</small>
             <i class="bi bi-chevron-down float-end"></i>
         </div>
     @else
-        <div class="card-header bg-light">Estructura del menú <small class="text-muted">· arrastrá <i class="bi bi-grip-vertical"></i> para ordenar</small></div>
+        <div class="card-header">Estructura del menú <small class="text-muted">· arrastrá <i class="bi bi-grip-vertical"></i> para ordenar</small></div>
     @endif
     <div class="card-body p-0 {{ $automatico ? 'collapse' : '' }}" id="estructura-menu">
         @if($menus->count() > 0)

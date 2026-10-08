@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'Nuevo Producto')
+@section('title', 'Nuevo producto')
 
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <h3 class="mb-0"><i class="bi bi-plus-circle"></i> Nuevo Producto</h3>
+    <h3 class="mb-0"><i class="bi bi-plus-circle"></i> Nuevo producto</h3>
     <div class="d-flex flex-wrap align-items-center gap-2">
         <x-ayuda id="ayuda-productos" titulo="Cómo cargar productos">
             @include('admin.ayudas.productos')

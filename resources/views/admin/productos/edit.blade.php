@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Editar Producto')
+@section('title', 'Editar producto')
 
 @section('content')
 @php
@@ -9,7 +9,7 @@
         : route('admin.productos.index') . (request('_back') ? '?' . request('_back') : '');
 @endphp
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <h3 class="mb-0"><i class="bi bi-pencil"></i> Editar Producto <span class="text-muted fw-normal">#{{ $producto->id }}</span></h3>
+    <h3 class="mb-0"><i class="bi bi-pencil"></i> Editar producto <span class="text-muted fw-normal">#{{ $producto->id }}</span></h3>
     <div class="d-flex flex-wrap align-items-center gap-2">
         <x-ayuda id="ayuda-productos" titulo="Cómo cargar productos">
             @include('admin.ayudas.productos')

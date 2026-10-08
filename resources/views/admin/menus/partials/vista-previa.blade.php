@@ -14,7 +14,7 @@
 @endphp
 
 <div class="card mb-4" id="vista-previa-menu">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span><i class="bi bi-eye"></i> Así se ve en la tienda</span>
         <div class="btn-group btn-group-sm" role="tablist">
             <button type="button" class="btn btn-outline-secondary active" data-bs-toggle="tab" data-bs-target="#vp-escritorio" role="tab">
