@@ -5,17 +5,22 @@
 @section('content')
 @php $puedeEditar = auth()->user()->puede('etiquetas.editar'); @endphp
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-tag"></i> {{ $etiqueta->nombre }}</h3>
-    <div class="d-flex gap-2">
-        @if($puedeEditar)
-            <a href="{{ route('admin.etiquetas.edit', $etiqueta) }}" class="btn btn-outline-primary">
-                <i class="bi bi-pencil"></i> Editar característica
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-tag"></i> {{ $etiqueta->nombre }}</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-caracteristicas" titulo="Cómo funcionan las características">
+            @include('admin.ayudas.caracteristicas')
+        </x-ayuda>
+        <div class="d-flex gap-2">
+            @if($puedeEditar)
+                <a href="{{ route('admin.etiquetas.edit', $etiqueta) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Editar característica
+                </a>
+            @endif
+            <a href="{{ route('admin.etiquetas.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
             </a>
-        @endif
-        <a href="{{ route('admin.etiquetas.index') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
-        </a>
+        </div>
     </div>
 </div>
 

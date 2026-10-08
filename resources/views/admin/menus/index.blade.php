@@ -3,11 +3,16 @@
 @section('title', 'Gestión de Menú')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-list-nested"></i> Menú de la Tienda</h3>
-    <a href="{{ route('admin.menus.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nuevo
-    </a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h3 class="mb-0"><i class="bi bi-list-nested"></i> Menú de la Tienda</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-menus" titulo="Cómo funciona el menú">
+            @include('admin.ayudas.menus')
+        </x-ayuda>
+        <a href="{{ route('admin.menus.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo
+        </a>
+    </div>
 </div>
 
 @php $puedeGestionar = auth()->user()->puede('menus.gestionar'); @endphp
@@ -49,9 +54,27 @@
     </div>
 </div>
 
-@if($automatico && $menus->count() > 0)
-    <div class="alert alert-light border small">
-        <i class="bi bi-info-circle"></i> Los menús de abajo no se muestran en la tienda mientras uses el de categorías. Sus páginas siguen funcionando para quien llegue desde Google o un enlace viejo.
+@if($automatico)
+    {{-- Cómo queda el menú automático: el de las categorías visibles. --}}
+    <div class="card mb-4">
+        <div class="card-header bg-light"><i class="bi bi-eye"></i> Así se ve en la tienda</div>
+        <div class="card-body">
+            @forelse(App\Services\MenuDeLaTienda::opciones() as $opcion)
+                <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
+                    <strong>{{ $opcion->nombre() }}</strong>
+                    @if($opcion->tieneHijos())
+                        <i class="bi bi-chevron-down small text-muted"></i>
+                        <span class="text-muted small">{{ $opcion->hijos()->map(function ($h) { return $h->nombre(); })->implode(' · ') }}</span>
+                    @endif
+                </div>
+            @empty
+                <div class="text-muted">
+                    Todavía no hay categorías visibles, así que la tienda no muestra menú.
+                    <a href="{{ route('admin.categorias.index') }}">Crear categorías</a>
+                </div>
+            @endforelse
+            <div class="small text-muted mt-2"><i class="bi bi-info-circle"></i> Para cambiar el orden o los nombres, andá a <a href="{{ route('admin.categorias.index') }}">Categorías</a>.</div>
+        </div>
     </div>
 @endif
 
@@ -60,15 +83,16 @@
 @endif
 
 <div class="card">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <span>Estructura del menú</span>
-        <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" id="boton-ayuda-menus"
-                data-bs-toggle="collapse" data-bs-target="#ayuda-menus" aria-expanded="false" aria-controls="ayuda-menus">
-            <i class="bi bi-question-circle"></i> Cómo funciona
-        </button>
-    </div>
-    @include('admin.menus.partials.ayuda')
-    <div class="card-body p-0">
+    @if($automatico)
+        {{-- Con el automático, lo armado a mano no se usa: queda plegado para no confundir. --}}
+        <div class="card-header bg-light" role="button" data-bs-toggle="collapse" data-bs-target="#estructura-menu" aria-expanded="false" aria-controls="estructura-menu">
+            <i class="bi bi-archive"></i> Menú armado a mano <small class="text-muted">(guardado, no se muestra mientras uses el de categorías)</small>
+            <i class="bi bi-chevron-down float-end"></i>
+        </div>
+    @else
+        <div class="card-header bg-light">Estructura del menú <small class="text-muted">· arrastrá <i class="bi bi-grip-vertical"></i> para ordenar</small></div>
+    @endif
+    <div class="card-body p-0 {{ $automatico ? 'collapse' : '' }}" id="estructura-menu">
         @if($menus->count() > 0)
             <ul class="arbol-lista" id="menu-tree" data-nivel="0">
                 @foreach($menus as $menu)

@@ -41,10 +41,10 @@
                 </span>
             @endif
             @php
-                // Las propias; las heredadas no se repiten (se ven en la madre), por eso el "+".
-                $pide = $categoria->caracteristicas->map(function ($c) { return $c->nombre . ($c->pivot->obligatoria ? ' *' : ''); })->implode(', ');
+                // Las propias; las de la madre no se repiten: se ven en su fila.
+                $pide = $categoria->caracteristicas->map(function ($c) { return $c->nombre . ($c->pivot->obligatoria ? ' (obligatoria)' : ''); })->implode(', ');
                 $detalle = array_filter([
-                    $pide !== '' ? ($categoria->parent_id ? '+ ' : '') . $pide : null,
+                    $pide !== '' ? 'Pide: ' . $pide : null,
                     $hijas->count() ? $hijas->count() . ($hijas->count() === 1 ? ' subcategoría' : ' subcategorías') : null,
                 ]);
             @endphp

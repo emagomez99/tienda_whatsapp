@@ -7,11 +7,16 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
     <h3 class="mb-0"><i class="bi bi-diagram-3"></i> Categorías</h3>
-    @if($puedeEditar)
-        <a href="{{ route('admin.categorias.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Crear categoría
-        </a>
-    @endif
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-categorias" titulo="Cómo funcionan las categorías">
+            @include('admin.ayudas.categorias')
+        </x-ayuda>
+        @if($puedeEditar)
+            <a href="{{ route('admin.categorias.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Crear categoría
+            </a>
+        @endif
+    </div>
 </div>
 <p class="text-muted mb-4">Qué es cada producto: Ropa › Remeras, Celulares, Deportes › Pádel. Ayudan a tus clientes a encontrar lo que buscan.</p>
 
@@ -29,7 +34,7 @@
     <div class="card">
         <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span>Árbol de categorías</span>
-            <small class="text-muted">Arrastrá <i class="bi bi-grip-vertical"></i> para ordenar · a la derecha, sobre otra, para meterla adentro · hasta {{ App\Models\Categoria::NIVEL_MAXIMO + 1 }} niveles</small>
+            <small class="text-muted">Arrastrá <i class="bi bi-grip-vertical"></i> para ordenar, o soltala sobre otra para meterla adentro</small>
         </div>
         <div class="card-body p-0">
             <ul class="arbol-lista" id="categoria-tree" data-nivel="0">

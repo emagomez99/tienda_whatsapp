@@ -19,7 +19,7 @@
 @endphp
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Especificaciones
+        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Otros datos de este producto
             @include('admin.productos.partials.ayuda', ['texto' => __('productos.ayuda.especificaciones'), 'lugar' => 'right', 'grande' => true])
         </h5>
         <button type="button" class="btn btn-sm btn-outline-primary" id="agregar-especificacion">

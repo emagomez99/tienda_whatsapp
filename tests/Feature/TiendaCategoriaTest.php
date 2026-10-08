@@ -152,6 +152,12 @@ class TiendaCategoriaTest extends TestCase
             ->assertSee('/categoria/deportes', false)
             ->assertDontSee('Ofertas de hoy');
 
+        // En el panel: cómo queda el automático, y lo armado a mano plegado.
+        $this->actingAs($admin)->get($this->urlTenant('admin/menus'))
+            ->assertSee('Así se ve en la tienda')
+            ->assertSee('Remeras')
+            ->assertSee('Menú armado a mano');
+
         // El menú armado sigue ahí, y su página también.
         $this->enTenant(function () {
             $this->assertSame(1, Menu::count());

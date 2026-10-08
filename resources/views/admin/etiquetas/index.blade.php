@@ -5,12 +5,19 @@
 @section('content')
 @php $puedeEditar = auth()->user()->puede('etiquetas.editar'); @endphp
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-ui-checks"></i> Características</h3>
-    <a href="{{ route('admin.etiquetas.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nueva
-    </a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <h3 class="mb-0"><i class="bi bi-ui-checks"></i> Características</h3>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <x-ayuda id="ayuda-caracteristicas" titulo="Cómo funcionan las características">
+            @include('admin.ayudas.caracteristicas')
+        </x-ayuda>
+        <a href="{{ route('admin.etiquetas.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nueva
+        </a>
+    </div>
 </div>
+
+<p class="text-muted mb-4">Los datos que se cargan en cada producto: Marca, Talle, Color… Qué datos pide cada producto se elige en su <a href="{{ route('admin.categorias.index') }}">categoría</a>.</p>
 
 @include('admin.etiquetas.partials.fusion-propuesta')
 

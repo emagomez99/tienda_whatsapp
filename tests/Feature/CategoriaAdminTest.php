@@ -150,7 +150,10 @@ class CategoriaAdminTest extends TestCase
     /** @test */
     public function el_operador_ve_pero_no_edita()
     {
-        $this->como('Operador')->get($this->urlTenant('admin/categorias'))->assertOk()->assertDontSee('Crear categoría');
+        // El botón no está (la ayuda sí nombra "Crear categoría": se busca el enlace).
+        $this->como('Operador')->get($this->urlTenant('admin/categorias'))->assertOk()
+            ->assertSee('Cómo funcionan las categorías')
+            ->assertDontSee('href="' . $this->urlTenant('admin/categorias/create') . '"', false);
         // PermisoMiddleware redirige (no responde 403): es la convención del panel.
         $this->como('Operador')->get($this->urlTenant('admin/categorias/create'))->assertRedirect();
     }

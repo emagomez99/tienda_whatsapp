@@ -44,7 +44,7 @@ return [
         'categorias' => 'Qué es el producto: Ropa › Remeras, Celulares, Pádel. Puede estar en varias. Si elegís una subcategoría, el producto aparece también en las de arriba sin marcarlas.',
         'etiquetas' => 'Los datos del producto que piden sus categorías (Talle, Color, Marca…) y que la tienda usa en los filtros. Cuáles se piden se define en cada categoría; las marcadas con * son obligatorias. Al escribir el valor se sugieren los que ya existen, con cuántos productos los usan: elegir uno de esos evita duplicados como "Asus" y "Asuz".',
 
-        'especificaciones' => 'Campos personalizados, exclusivos de este producto: el nombre lo escribís vos y no se comparte con los demás. Arman la tabla de detalles de la ficha. Ej: Peso → 1.75 kg, Material → Acero inoxidable.',
+        'especificaciones' => 'Datos sueltos que sólo tiene este producto y no hace falta filtrar: el nombre lo escribís vos. Se muestran en la ficha. Ej: Peso → 1,75 kg, Incluye → Cargador. Si es un dato que tienen todos los de la categoría (Marca, Talle), va en Características.',
 
     ],
 
