@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\OrdenDeCaracteristicas;
 use App\Support\PrecioVenta;
 use App\Support\StockResult;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -245,16 +246,26 @@ class Producto extends Model
      *
      * Es la única definición de "qué ve el cliente": tarjetas, ficha y meta title la
      * usan, así que ocultar un valor desde el panel lo saca de todos lados a la vez.
+     *
+     * Vienen siempre en el mismo orden (globales, las de las categorías, el resto
+     * por nombre): ver OrdenDeCaracteristicas.
      */
     public function etiquetasPublicas()
     {
         // Subconsulta y no join: un join no sobrevive a whereHas, y el buscador de la
         // tienda filtra con whereHas sobre esta misma relación.
-        return $this->etiquetas()
+        $relacion = $this->etiquetas()
             ->where('etiquetas.visible_usuarios', true)
             ->whereIn('producto_etiqueta.etiqueta_valor_id', function ($q) {
                 $q->select('id')->from('etiqueta_valores')->where('visible', true);
             });
+
+        $orden = OrdenDeCaracteristicas::ordenSql();
+        if ($orden) {
+            $relacion->orderByRaw($orden);
+        }
+
+        return $relacion->orderBy('etiquetas.nombre');
     }
 
     /**

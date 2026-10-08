@@ -240,6 +240,48 @@ class TiendaCategoriaTest extends TestCase
             ->assertDontSee('/categoria/liquidacion', false);
     }
 
+    /**
+     * Los datos del producto salen siempre en el mismo orden: las globales
+     * (Marca), después las de sus categorías en el orden configurado, el resto
+     * por nombre. Antes dependía de la base y Marca solía ir última.
+     *
+     * @test
+     */
+    public function los_datos_salen_en_orden_estable()
+    {
+        $producto = $this->enTenant(function () {
+            $crear = function ($nombre, $global = false) {
+                return Etiqueta::create(['nombre' => $nombre, 'visible_usuarios' => true, 'global' => $global])->id;
+            };
+            $suelta = $crear('Aaa suelta');
+            $contenido = $crear('Contenido');
+            $sabor = $crear('Sabor');
+            $marca = $crear('Marca', true);
+
+            // Remeras pide Sabor y después Contenido (al revés del alfabeto).
+            Categoria::find($this->ids['remeras'])->caracteristicas()->sync([
+                $sabor => ['obligatoria' => false, 'orden' => 0],
+                $contenido => ['obligatoria' => false, 'orden' => 1],
+            ]);
+
+            $producto = Producto::where('descripcion', 'Remera lisa')->first();
+            // Cargadas en otro orden a propósito.
+            foreach ([$suelta => 'Algo', $contenido => '500 g', $marca => 'Acme', $sabor => 'Frutilla'] as $id => $valor) {
+                $producto->etiquetas()->attach($id, ['valor' => $valor]);
+            }
+
+            return $producto;
+        });
+
+        $esperado = ['Marca: Acme', 'Sabor: Frutilla', 'Contenido: 500 g', 'Aaa suelta: Algo'];
+
+        $ficha = $this->get($this->urlTenant('producto/' . $producto->slugUrl() . '/' . $producto->id))->assertOk();
+        $ficha->assertSeeInOrder($esperado);
+
+        // La tarjeta del listado, igual.
+        $this->get($this->urlTenant('categoria/remeras'))->assertOk()->assertSeeInOrder($esperado);
+    }
+
     /** @test */
     public function un_dominio_sin_tienda_da_404_y_no_un_error()
     {
