@@ -9,6 +9,18 @@
         <x-ayuda id="ayuda-productos" titulo="Cómo cargar productos">
             @include('admin.ayudas.productos')
         </x-ayuda>
+        @if(auth()->user()->puede('productos.importar'))
+            {{-- Excel: importar, o exportar lo que muestra el listado (con sus filtros). --}}
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ route('admin.importaciones.index') }}"><i class="bi bi-upload me-2"></i>Importar desde Excel</a></li>
+                    <li><a class="dropdown-item" href="{{ route('admin.importaciones.exportar', $filtro->valores()) }}"><i class="bi bi-download me-2"></i>{{ $filtro->hayActivos() ? 'Exportar los de este filtro' : 'Exportar todos los productos' }}</a></li>
+                </ul>
+            </div>
+        @endif
         <a href="{{ route('admin.productos.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Crear producto
         </a>

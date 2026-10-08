@@ -7,23 +7,18 @@ use App\Models\Etiqueta;
 use App\Models\Producto;
 use App\Support\Planilla\FormatoDePlanilla;
 use Illuminate\Database\Eloquent\Builder;
-use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Events\AfterSheet;
+use OpenSpout\Writer\Common\Creator\Style\StyleBuilder;
+use OpenSpout\Writer\Common\Creator\WriterEntityFactory;
 
 /**
  * Los productos en una planilla con el formato de FormatoDePlanilla: lo que se
  * exporta se puede editar en Excel y volver a subir (se actualiza por el Código).
  *
  * Una columna por característica de la tienda: primero las que se piden en todos
- * los productos (Marca), después por nombre. FromQuery la arma por partes, así
- * exportar los 30.000 productos de oleomc no necesita tenerlos todos en memoria.
+ * los productos (Marca), después por nombre. Se escribe de a 1.000 productos con
+ * OpenSpout, de corrido: los 30.000 de oleomc no necesitan estar en memoria.
  */
-class ProductosExport implements FromQuery, WithHeadings, WithMapping, WithTitle, WithColumnWidths, WithEvents
+class ProductosExport
 {
     /** @var Builder */
     private $consulta;
@@ -34,6 +29,9 @@ class ProductosExport implements FromQuery, WithHeadings, WithMapping, WithTitle
     /** @var array<int, string> categoria_id => camino ("Bebidas > Gaseosas") */
     private $caminos;
 
+    /** @var int columnas de imágenes (se calcula una vez: lee la configuración) */
+    private $imagenes;
+
     public function __construct(Builder $consulta)
     {
         $this->consulta = $consulta;
@@ -43,38 +41,51 @@ class ProductosExport implements FromQuery, WithHeadings, WithMapping, WithTitle
         $this->caminos = Categoria::enOrdenDeArbol()->mapWithKeys(function (Categoria $c) {
             return [$c->id => $c->camino()];
         })->all();
+        $this->imagenes = FormatoDePlanilla::cantidadDeImagenes();
     }
 
-    public function query()
+    /** Escribe la planilla en $ruta (.xlsx). */
+    public function escribir(string $ruta): void
     {
-        return $this->consulta->with(['proveedor:id,nombre', 'moneda:id,codigo', 'categorias:categorias.id', 'etiquetas', 'imagenes'])
-            ->orderBy('productos.id');
+        $escritor = WriterEntityFactory::createXLSXWriter();
+        AnchosDeColumna::antesDeAbrir($escritor);
+        $escritor->openToFile($ruta);
+        $escritor->getCurrentSheet()->setName('Productos');
+        AnchosDeColumna::aplicar($escritor);
+
+        $titulos = (new StyleBuilder())->setFontBold()->build();
+        $escritor->addRow(WriterEntityFactory::createRowFromArray($this->titulos(), $titulos));
+
+        $this->consulta
+            ->with(['proveedor:id,nombre', 'moneda:id,codigo', 'categorias:categorias.id', 'etiquetas', 'imagenes'])
+            ->orderBy('productos.id')
+            ->chunk(1000, function ($productos) use ($escritor) {
+                foreach ($productos as $producto) {
+                    $escritor->addRow(WriterEntityFactory::createRowFromArray($this->fila($producto)));
+                }
+            });
+
+        $escritor->close();
     }
 
-    public function title(): string
-    {
-        return 'Productos';
-    }
-
-    public function headings(): array
+    public function titulos(): array
     {
         return FormatoDePlanilla::titulos($this->caracteristicas);
     }
 
-    /** @param Producto $producto */
-    public function map($producto): array
+    public function fila(Producto $producto): array
     {
         $fila = [
-            $producto->id_proveedor,
+            (string) $producto->id_proveedor,
             $producto->descripcion,
-            optional($producto->proveedor)->nombre,
+            (string) optional($producto->proveedor)->nombre,
             $producto->categorias->map(function ($c) { return $this->caminos[$c->id] ?? null; })->filter()->implode(', '),
-            $producto->precio !== null ? (float) $producto->precio : null,
-            optional($producto->moneda)->codigo,
+            $producto->precio !== null ? (float) $producto->precio : '',
+            (string) optional($producto->moneda)->codigo,
             (int) $producto->stock,
             FormatoDePlanilla::escribirSiNo((bool) $producto->disponible),
             FormatoDePlanilla::escribirSiNo((bool) $producto->por_encargue),
-            $producto->detalle,
+            (string) $producto->detalle,
         ];
 
         // Las imágenes como direcciones completas: así se pueden volver a importar.
@@ -87,31 +98,15 @@ class ProductosExport implements FromQuery, WithHeadings, WithMapping, WithTitle
                 $imagenes[] = $imagen->imagen_url;
             }
         }
-        for ($i = 0; $i < FormatoDePlanilla::cantidadDeImagenes(); $i++) {
-            $fila[] = $imagenes[$i] ?? null;
+        for ($i = 0; $i < $this->imagenes; $i++) {
+            $fila[] = $imagenes[$i] ?? '';
         }
 
         $valores = $producto->etiquetas->mapWithKeys(function ($e) { return [$e->id => $e->pivot->valor]; });
         foreach ($this->caracteristicas as $c) {
-            $fila[] = $valores[$c['id']] ?? null;
+            $fila[] = (string) ($valores[$c['id']] ?? '');
         }
 
         return $fila;
-    }
-
-    public function columnWidths(): array
-    {
-        return ['A' => 16, 'B' => 40, 'C' => 20, 'D' => 32, 'E' => 12, 'F' => 9, 'G' => 9, 'H' => 12, 'I' => 14, 'J' => 40];
-    }
-
-    public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function (AfterSheet $evento) {
-                $hoja = $evento->sheet->getDelegate();
-                $hoja->freezePane('C2');   // títulos y código/nombre siempre a la vista
-                $hoja->getStyle('1:1')->getFont()->setBold(true);
-            },
-        ];
     }
 }

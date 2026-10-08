@@ -40,6 +40,9 @@ class AnalisisDeImportacion
     /** @var array<string, int> código normalizado => producto_id */
     private $productosPorCodigo = [];
 
+    /** @var array<string, true> nombres normalizados de los productos que ya existen */
+    private $nombresExistentes = [];
+
     /** @var array<int, Producto> datos chicos de los productos que se actualizan */
     private $productos = [];
 
@@ -80,6 +83,7 @@ class AnalisisDeImportacion
             'proveedores_nuevos' => [], 'categorias_nuevas' => [], 'parecidos' => [],
         ];
         $codigosVistos = [];
+        $nombresSinCodigo = [];
         $unSoloProveedor = count($this->proveedores) === 1 ? reset($this->proveedores) : null;
 
         foreach ($filas as &$fila) {
@@ -101,6 +105,17 @@ class AnalisisDeImportacion
             if (!$productoId) {
                 if (empty($v['nombre'])) {
                     $errores[] = 'Falta el nombre (es obligatorio para un producto nuevo).';
+                } elseif ($codigo === null) {
+                    // Sin código no hay forma de saber si es uno que ya está: se frena en
+                    // vez de duplicarlo (pasa al volver a subir productos exportados sin código).
+                    $nombre = $this->normalizar($v['nombre']);
+                    if (isset($this->nombresExistentes[$nombre])) {
+                        $errores[] = "Ya tenés un producto «{$v['nombre']}». Si es ese, poné su código para actualizarlo; si es otro, cambiale el nombre.";
+                    } elseif (isset($nombresSinCodigo[$nombre])) {
+                        $errores[] = "«{$v['nombre']}» ya aparece sin código en la fila {$nombresSinCodigo[$nombre]}: se crearía dos veces. Poneles código.";
+                    } else {
+                        $nombresSinCodigo[$nombre] = $fila['fila'];
+                    }
                 }
                 if (empty($v['proveedor']) && !$unSoloProveedor) {
                     $errores[] = 'Falta el proveedor (es obligatorio para un producto nuevo).';
@@ -178,6 +193,10 @@ class AnalisisDeImportacion
             foreach (DB::table('categoria_producto')->whereIn('producto_id', $ids)->get(['producto_id', 'categoria_id']) as $r) {
                 $this->categoriasDelProducto[$r->producto_id][] = (int) $r->categoria_id;
             }
+        }
+
+        foreach (DB::table('productos')->pluck('descripcion') as $descripcion) {
+            $this->nombresExistentes[$this->normalizar((string) $descripcion)] = true;
         }
 
         foreach (Proveedor::all(['id', 'nombre']) as $p) {

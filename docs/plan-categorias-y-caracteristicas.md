@@ -8,7 +8,8 @@
 - **Etapas 1 y 2: hechas** y corridas en las 3 tiendas locales (2026-10-09). Quedan de la 1: línea de destino al arrastrar (detalle visual).
 - **Limpieza: hecha** (2026-10-10). La migración `2026_10_10_000001_migrar_etiquetas_viejas_y_limpiar` pasa "Categoria"/"Subcategoria" a categorías, pasa las reglas por proveedor a las categorías y recién después borra esas etiquetas y la tabla `proveedor_etiqueta`. Los comandos `categorias:desde-etiquetas` y `caracteristicas:desde-proveedores` se quitaron: los reemplaza la migración.
 - **Producción (o una copia nueva de la base de un cliente):** alcanza con `php artisan tenants:migrate`; se puede repetir sobre copias nuevas cuantas veces se quiera y da lo mismo. Después, a mano: Acoples Rapidos (MC-923370) también en Accesorios › Hidráulica. En perfumes, las categorías se crean sueltas (Notebooks, Drones, Paletas): para tenerlas dentro de "Producto" como en local, crear "Producto › …" antes de migrar, o moverlas después arrastrando.
-- **Próxima:** Etapa 5 (Excel), decidida por el dueño.
+- **Etapa 5 (Excel): hecha** (2026-10-10). Productos › Excel: plantilla por categoría, exportar con los filtros, subir, vista previa y aplicar por partes con barra de avance. Ver la Bitácora.
+- **Próxima:** a decidir (variantes de talle/color, plantillas por rubro).
 - **Orden de trabajo:** 0 → 1 → 2 (con migración real de las 2 tiendas en cada una) → 5 (Excel) → 3 → 4.
 - **Último commit antes del plan:** `9516afe` (árbol de menús con arrastrar y soltar).
 
@@ -244,15 +245,15 @@ Objetivo: lo que hoy decide el proveedor pasa a decidirlo la categoría.
 ### Etapa 5: Importar productos desde Excel (próxima, después de 1 y 2)
 Objetivo: carga y actualización masiva por planilla, con las mismas reglas que el formulario.
 
-- [ ] D10: código único por tienda (índice único parcial `WHERE id_proveedor IS NOT NULL`) y aviso en el formulario si se repite.
-- [ ] Librería: `maatwebsite/excel` 3.1 (compatible con Laravel 8 y PHP 7.4; verificar al instalar).
-- [ ] **Plantilla descargable por categoría**: columnas fijas (Código, Nombre, Descripción, Precio, Moneda, Stock, Disponible, Por encargue, Categorías, Imagen 1…N) + **una columna por característica de esa categoría**, marcando las obligatorias. Así el cliente no adivina qué cargar.
-- [ ] Formato: Categorías como Tiendanube (`Ropa > Remeras, Ofertas`); imágenes por URL (la primera es la principal, vía `GaleriaProducto`); valores de características uno por celda (varios valores: separador a definir junto con la Etapa 4).
-- [ ] **Vista previa antes de aplicar**: cuántos se crean, cuántos se actualizan (por código), errores por fila ("Fila 12: falta Talle, obligatoria en Remeras"), categorías y valores nuevos que se van a crear, y valores parecidos a existentes ("Asuz" ≈ "Asus") para corregir antes.
-- [ ] Aplicar en lotes (oleomc tiene 30.917 productos), con el servicio de guardado de la Etapa 1. El stock inicial entra como movimiento de stock, como en el alta.
-- [ ] Exportar a Excel con el mismo formato (sirve de respaldo y para editar en masa).
-- [ ] Permiso propio (`productos.importar`) y registro de quién importó qué.
-- [ ] Tests: plantilla por categoría, vista previa con errores, creación y actualización por código, categorías por camino, valores unificados.
+- [x] D10: código único por tienda (índice único parcial `WHERE id_proveedor IS NOT NULL`) y aviso en el formulario si se repite.
+- [x] Librería: **OpenSpout 3.7** (lee y escribe de corrido; compatible con PHP 7.4). Se probó `maatwebsite/excel` (PhpSpreadsheet) y se descartó: con los 30.917 productos de oleomc tardaba 144 s en exportar y 174 s en leer, con cientos de MB; con OpenSpout, 25 s y 23 s.
+- [x] **Plantilla descargable por categoría**: columnas fijas (Código, Nombre, Descripción, Precio, Moneda, Stock, Disponible, Por encargue, Categorías, Imagen 1…N) + **una columna por característica de esa categoría**, marcando las obligatorias. Así el cliente no adivina qué cargar.
+- [x] Formato: Categorías como Tiendanube (`Ropa > Remeras, Ofertas`); imágenes por URL (la primera es la principal, vía `GaleriaProducto`); valores de características uno por celda (varios valores: separador a definir junto con la Etapa 4).
+- [x] **Vista previa antes de aplicar**: cuántos se crean, cuántos se actualizan (por código), errores por fila ("Fila 12: falta Talle, obligatoria en Remeras"), categorías y valores nuevos que se van a crear, y valores parecidos a existentes ("Asuz" ≈ "Asus") para corregir antes.
+- [x] Aplicar en lotes (oleomc tiene 30.917 productos), con el servicio de guardado de la Etapa 1. El stock inicial entra como movimiento de stock, como en el alta.
+- [x] Exportar a Excel con el mismo formato (sirve de respaldo y para editar en masa).
+- [x] Permiso propio (`productos.importar`) y registro de quién importó qué.
+- [x] Tests: plantilla por categoría, vista previa con errores, creación y actualización por código, categorías por camino, valores unificados.
 
 ### Etapa 4 (opcional, se decide después)
 - [ ] Marca como característica global por defecto en tiendas nuevas.
@@ -331,3 +332,6 @@ Datos útiles:
 | 2026-10-08 | Tanda 3: orden estable de las características en la tienda (globales, las de las categorías en su orden, el resto por nombre) con un ranking único por pedido (`OrdenDeCaracteristicas`, array_position en `etiquetasPublicas`, sin N+1) | 94542b9 |
 | 2026-10-08 | Tanda 3: listado de productos vacío con "Cargar el primer producto", o "Ningún producto coincide con el filtro" con enlace para quitarlo | 1e0b527 |
 | 2026-10-10 | Limpieza en una migración que primero pasa los datos y después borra lo viejo ("Categoria", "Subcategoria", `proveedor_etiqueta`); se quitan los dos comandos. Corrida en las 4 tiendas locales: menús y categorías muestran los mismos productos que antes; 261 pantallas OK | (este commit) |
+| 2026-10-10 | Etapa 5, paso A: código único por tienda (índice `productos_codigo_unico`, aviso en el formulario), permiso `productos.importar`, tabla `importaciones` | fe70ac3 |
+| 2026-10-10 | Etapa 5, paso B: `FormatoDePlanilla`, `LecturaDePlanilla`, `AnalisisDeImportacion` (vista previa), `ImportacionDeProductos` (aplicar de a 100 con `GuardadoDeProducto`), exportación y plantilla | 2949d82 |
+| 2026-10-10 | Etapa 5, paso C: pantallas (Productos › Excel, Importar productos, vista previa con avance), ayuda; cambio a OpenSpout por rendimiento; una fila sin código con el nombre de un producto existente frena (no duplica). Probado con oleomc (30.917: exportar 25 s, analizar 23 s, tanda de 100 en 2 s) y en farmacia por el navegador (subir, revisar, aplicar) | (este commit) |

@@ -28,6 +28,10 @@
 
 <h6 class="ayuda-titulo">El listado</h6>
 <div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-file-earmark-spreadsheet"></i></span>
+    <div><strong>¿Muchos productos? Usá Excel.</strong><br>Con el botón <em>Excel</em> podés cargar o actualizar cientos de productos con una planilla, o bajar los tuyos para editarlos.</div>
+</div>
+<div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-funnel"></i></span>
     <div><strong>Buscá y filtrá.</strong><br>Por nombre, proveedor, categoría o stock. Elegí <em>Sin categoría</em> para ver los que todavía no están en ningún estante.</div>
 </div>

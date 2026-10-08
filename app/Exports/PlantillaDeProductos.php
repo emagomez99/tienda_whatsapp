@@ -8,12 +8,8 @@ use App\Services\CaracteristicasPorCategoria;
 use App\Support\Caracteristica;
 use App\Support\Planilla\FormatoDePlanilla;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Events\AfterSheet;
+use OpenSpout\Writer\Common\Creator\Style\StyleBuilder;
+use OpenSpout\Writer\Common\Creator\WriterEntityFactory;
 
 /**
  * La planilla vacía para cargar productos: la hoja "Productos" con los títulos (las
@@ -24,7 +20,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
  * categoría (con lo heredado y lo que piden todos los productos); sin categoría,
  * todas las características de la tienda.
  */
-class PlantillaDeProductos implements WithMultipleSheets
+class PlantillaDeProductos
 {
     /** @var Categoria|null */
     private $categoria;
@@ -34,84 +30,33 @@ class PlantillaDeProductos implements WithMultipleSheets
         $this->categoria = $categoria;
     }
 
-    public function sheets(): array
+    /** Escribe la plantilla en $ruta (.xlsx). */
+    public function escribir(string $ruta): void
     {
         $caracteristicas = $this->caracteristicas();
+        $negrita = (new StyleBuilder())->setFontBold()->build();
 
-        return [
-            new class($caracteristicas, $this->categoria) implements FromArray, WithTitle, WithEvents, WithColumnWidths {
-                private $caracteristicas;
-                private $categoria;
+        $escritor = WriterEntityFactory::createXLSXWriter();
+        AnchosDeColumna::antesDeAbrir($escritor);
+        $escritor->openToFile($ruta);
 
-                public function __construct(array $caracteristicas, ?Categoria $categoria)
-                {
-                    $this->caracteristicas = $caracteristicas;
-                    $this->categoria = $categoria;
-                }
+        // Sólo los títulos: una fila de ejemplo se importaría como producto.
+        $escritor->getCurrentSheet()->setName('Productos');
+        AnchosDeColumna::aplicar($escritor);
+        $escritor->addRow(WriterEntityFactory::createRowFromArray(FormatoDePlanilla::titulos($caracteristicas, true), $negrita));
 
-                public function array(): array
-                {
-                    // Sólo los títulos; con la categoría ya puesta en la segunda fila
-                    // no: una fila de ejemplo se importaría como producto.
-                    return [FormatoDePlanilla::titulos($this->caracteristicas, true)];
-                }
+        $escritor->addNewSheetAndMakeItCurrent()->setName('Cómo completarla');
+        AnchosDeColumna::aplicar($escritor, AnchosDeColumna::INSTRUCCIONES);
+        $ajustado = (new StyleBuilder())->setShouldWrapText()->build();
+        foreach ($this->instrucciones($caracteristicas) as $i => $fila) {
+            $escritor->addRow(WriterEntityFactory::createRowFromArray($fila, $i === 0 ? $negrita : $ajustado));
+        }
 
-                public function title(): string
-                {
-                    return 'Productos';
-                }
-
-                public function columnWidths(): array
-                {
-                    return ['A' => 16, 'B' => 40, 'C' => 20, 'D' => 32, 'E' => 12, 'F' => 9, 'G' => 9, 'H' => 12, 'I' => 14, 'J' => 40];
-                }
-
-                public function registerEvents(): array
-                {
-                    return [AfterSheet::class => function (AfterSheet $evento) {
-                        $hoja = $evento->sheet->getDelegate();
-                        $hoja->freezePane('A2');
-                        $hoja->getStyle('1:1')->getFont()->setBold(true);
-                    }];
-                }
-            },
-            new class($this->instrucciones($caracteristicas)) implements FromArray, WithTitle, WithEvents, WithColumnWidths {
-                private $filas;
-
-                public function __construct(array $filas)
-                {
-                    $this->filas = $filas;
-                }
-
-                public function array(): array
-                {
-                    return $this->filas;
-                }
-
-                public function title(): string
-                {
-                    return 'Cómo completarla';
-                }
-
-                public function columnWidths(): array
-                {
-                    return ['A' => 28, 'B' => 90, 'C' => 30];
-                }
-
-                public function registerEvents(): array
-                {
-                    return [AfterSheet::class => function (AfterSheet $evento) {
-                        $hoja = $evento->sheet->getDelegate();
-                        $hoja->getStyle('1:1')->getFont()->setBold(true);
-                        $hoja->getStyle('B:B')->getAlignment()->setWrapText(true);
-                    }];
-                }
-            },
-        ];
+        $escritor->close();
     }
 
     /** @return array<int, array{id: int, nombre: string, obligatoria: bool, origen: ?string}> */
-    private function caracteristicas(): array
+    public function caracteristicas(): array
     {
         if ($this->categoria) {
             return array_map(function (Caracteristica $c) {

@@ -15,8 +15,9 @@ use App\Support\DatosDeProducto;
 use App\Support\Planilla\FormatoDePlanilla;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
 
 /**
@@ -54,12 +55,19 @@ class ImportacionDeProductos
 
     public function preparar(UploadedFile $archivo, ?int $usuarioId): Importacion
     {
-        @set_time_limit(300);   // leer y analizar una planilla grande lleva su tiempo
+        // Una planilla de 30.000 productos se lee y analiza en ~25 s y ~250 MB (medido
+        // con oleomc): más que los límites habituales de una página.
+        @set_time_limit(300);
+        @ini_set('memory_limit', '512M');
 
-        $ruta = $archivo->store('importaciones/' . tenant('id'), 'local');
+        // Con su extensión original: el lector elige el formato por ahí (y un .csv
+        // guardado con store() quedaría como .txt).
+        $extension = strtolower($archivo->getClientOriginalExtension() ?: 'xlsx');
+        $extension = $extension === 'txt' ? 'csv' : $extension;   // un CSV que llegó como texto
+        $ruta = $archivo->storeAs('importaciones/' . tenant('id'), Str::random(24) . '.' . $extension, 'local');
 
         $lectura = new LecturaDePlanilla($this->caracteristicasPorNombre());
-        Excel::import($lectura, $ruta, 'local');
+        $lectura->leer(Storage::disk('local')->path($ruta));
 
         $columnas = [];
         foreach ($lectura->columnas() as $columna) {

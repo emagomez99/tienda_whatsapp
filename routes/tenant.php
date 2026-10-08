@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\EtiquetaValorController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\MonedaController;
 use App\Http\Controllers\Admin\PedidoController;
+use App\Http\Controllers\Admin\ImportacionController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\ProveedorController;
 use App\Http\Controllers\Admin\PerfilController;
@@ -91,6 +92,14 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::post('/productos/{producto}/ajustar-stock', [ProductoController::class, 'ajustarStock'])->name('productos.ajustar-stock');
 
         Route::post('/productos/categorias', [ProductoController::class, 'categoriasEnMasa'])->name('productos.categorias-en-masa');
+        // Productos con Excel (ver ImportacionController). Antes del resource de productos.
+        Route::get('/productos/importar', [ImportacionController::class, 'index'])->name('importaciones.index');
+        Route::post('/productos/importar', [ImportacionController::class, 'store'])->name('importaciones.store');
+        Route::get('/productos/plantilla', [ImportacionController::class, 'plantilla'])->name('importaciones.plantilla');
+        Route::get('/productos/exportar', [ImportacionController::class, 'exportar'])->name('importaciones.exportar');
+        Route::get('/importaciones/{importacion}', [ImportacionController::class, 'show'])->name('importaciones.show');
+        Route::post('/importaciones/{importacion}/aplicar', [ImportacionController::class, 'aplicar'])->name('importaciones.aplicar');
+        Route::post('/importaciones/{importacion}/cancelar', [ImportacionController::class, 'cancelar'])->name('importaciones.cancelar');
         // Sin "show": ningún controlador del panel lo tiene y nadie enlaza a esas
         // direcciones; escritas a mano daban error 500 en vez de "no encontrado".
         Route::resource('productos', ProductoController::class)->except(['show']);

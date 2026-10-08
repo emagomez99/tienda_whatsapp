@@ -3,20 +3,23 @@
 namespace App\Imports;
 
 use App\Support\Planilla\FormatoDePlanilla;
-use Maatwebsite\Excel\Concerns\OnEachRow;
-use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Row;
+use DateTimeInterface;
+use OpenSpout\Reader\Common\Creator\ReaderEntityFactory;
+use OpenSpout\Reader\CSV\Reader as LectorCsv;
 
 /**
  * Lee la primera hoja de la planilla subida y la deja en filas con el formato de
  * FormatoDePlanilla: cada valor ya interpretado (número, sí/no, categorías) y los
  * errores de escritura de cada fila ("Precio: «mil» no es un precio").
  *
- * Por partes de 1.000 filas: cargar una planilla de 30.000 productos entera en
- * memoria necesitaría cientos de MB.
+ * Con OpenSpout, que lee de corrido sin cargar el archivo entero: una planilla de
+ * 30.000 productos se lee en segundos y con poca memoria (PhpSpreadsheet tardaba
+ * minutos y usaba cientos de MB).
+ *
+ * Formatos: .xlsx, .ods y .csv (el CSV del Excel en castellano viene separado por
+ * punto y coma; se detecta solo). El .xls viejo no: se guarda como .xlsx desde Excel.
  */
-class LecturaDePlanilla implements OnEachRow, WithChunkReading, WithCalculatedFormulas
+class LecturaDePlanilla
 {
     /** @var array<string, int> nombre normalizado => etiqueta_id */
     private $caracteristicasPorNombre;
@@ -35,15 +38,32 @@ class LecturaDePlanilla implements OnEachRow, WithChunkReading, WithCalculatedFo
         $this->caracteristicasPorNombre = $caracteristicasPorNombre;
     }
 
-    public function chunkSize(): int
+    /** Lee el archivo (ruta absoluta, con su extensión). */
+    public function leer(string $ruta): void
     {
-        return 1000;
+        $lector = ReaderEntityFactory::createReaderFromFile($ruta);
+        if ($lector instanceof LectorCsv) {
+            $lector->setFieldDelimiter($this->separadorCsv($ruta));
+        }
+
+        $lector->open($ruta);
+        foreach ($lector->getSheetIterator() as $hoja) {
+            foreach ($hoja->getRowIterator() as $numero => $fila) {
+                $this->procesar((int) $numero, $fila->toArray());
+            }
+            break;   // sólo la primera hoja: la segunda de la plantilla es la ayuda
+        }
+        $lector->close();
     }
 
-    public function onRow(Row $row)
+    /** Las columnas reconocidas (para saber, por ejemplo, si vino la columna Código). */
+    public function columnas(): array
     {
-        $valores = $row->toArray();
+        return $this->columnas ?: [];
+    }
 
+    private function procesar(int $numero, array $valores): void
+    {
         if ($this->columnas === null) {
             $interpretacion = FormatoDePlanilla::interpretarTitulos($valores, $this->caracteristicasPorNombre);
             $this->columnas = $interpretacion['columnas'];
@@ -51,16 +71,20 @@ class LecturaDePlanilla implements OnEachRow, WithChunkReading, WithCalculatedFo
             return;
         }
 
-        $fila = $this->leerFila($row->getIndex(), $valores);
+        $fila = $this->leerFila($numero, $valores);
         if ($fila !== null) {
             $this->filas[] = $fila;
         }
     }
 
-    /** Las columnas reconocidas (para saber, por ejemplo, si vino la columna Código). */
-    public function columnas(): array
+    /** ";" si la primera línea tiene más punto y coma que comas (CSV del Excel en castellano). */
+    private function separadorCsv(string $ruta): string
     {
-        return $this->columnas ?: [];
+        $archivo = fopen($ruta, 'r');
+        $primera = (string) fgets($archivo);
+        fclose($archivo);
+
+        return substr_count($primera, ';') > substr_count($primera, ',') ? ';' : ',';
     }
 
     private function leerFila(int $numero, array $celdas): ?array
@@ -70,6 +94,9 @@ class LecturaDePlanilla implements OnEachRow, WithChunkReading, WithCalculatedFo
 
         foreach ($this->columnas as $indice => $columna) {
             $celda = $celdas[$indice] ?? null;
+            if ($celda instanceof DateTimeInterface) {
+                $celda = $celda->format('d/m/Y');   // una fecha escrita en una celda de texto
+            }
             if ($celda !== null && trim((string) $celda) !== '') {
                 $vacia = false;
             }
