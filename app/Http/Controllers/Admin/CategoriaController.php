@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Categoria;
+use App\Models\Etiqueta;
 use App\Models\EtiquetaValor;
 use App\Models\Menu;
 use App\Models\Producto;
 use App\Services\ArbolDeCategorias;
+use App\Services\CaracteristicasPorCategoria;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -28,7 +31,7 @@ class CategoriaController extends Controller
         $categorias = Categoria::whereNull('parent_id')
             ->orderBy('orden')
             ->orderBy('id')
-            ->with('children.children')
+            ->with(['caracteristicas', 'children.caracteristicas', 'children.children.caracteristicas'])
             ->get();
 
         // Cuántos productos tiene cada una, contando los de sus subcategorías (un
@@ -56,7 +59,7 @@ class CategoriaController extends Controller
         return view('admin.categorias.create', [
             'categoria' => $categoria,
             'madres'    => $this->madresPosibles(),
-        ]);
+        ] + $this->datosCaracteristicas($categoria));
     }
 
     public function store(Request $request)
@@ -64,7 +67,11 @@ class CategoriaController extends Controller
         $datos = $this->validar($request);
         $datos['orden'] = (int) Categoria::where('parent_id', $datos['parent_id'])->max('orden') + 1;
 
-        $categoria = Categoria::create($datos);
+        $categoria = DB::transaction(function () use ($datos, $request) {
+            $categoria = Categoria::create($datos);
+            $this->guardarCaracteristicas($categoria, $request);
+            return $categoria;
+        });
 
         return redirect()->route('admin.categorias.index')
             ->with('success', "Se creó la categoría «{$categoria->camino()}».")
@@ -96,12 +103,16 @@ class CategoriaController extends Controller
         return view('admin.categorias.edit', [
             'categoria' => $categoria,
             'madres'    => $this->madresPosibles($categoria),
-        ]);
+        ] + $this->datosCaracteristicas($categoria));
     }
 
     public function update(Request $request, Categoria $categoria)
     {
-        $categoria->update($this->validar($request, $categoria));
+        $datos = $this->validar($request, $categoria);
+        DB::transaction(function () use ($categoria, $datos, $request) {
+            $categoria->update($datos);
+            $this->guardarCaracteristicas($categoria, $request);
+        });
 
         return redirect()->route('admin.categorias.index')
             ->with('success', "Se guardó «{$categoria->camino()}».")
@@ -207,6 +218,69 @@ class CategoriaController extends Controller
         }
 
         return $datos;
+    }
+
+    /**
+     * Lo que necesita la sección "Características que pide": todas las que existen
+     * (para agregar), las propias de la categoría y, para cada madre posible, lo que
+     * heredaría de ella (cambia si se elige otro "Dentro de").
+     */
+    private function datosCaracteristicas(Categoria $categoria): array
+    {
+        $porCategoria = new CaracteristicasPorCategoria();
+        $mapa = $porCategoria->mapaParaFormulario();
+
+        $propias = $categoria->exists
+            ? $categoria->caracteristicas->map(function (Etiqueta $e) {
+                return ['etiqueta_id' => $e->id, 'nombre' => $e->nombre, 'obligatoria' => (bool) $e->pivot->obligatoria];
+            })->values()->all()
+            : [];
+
+        return [
+            'todasLasCaracteristicas' => Etiqueta::orderBy('nombre')->get(['id', 'nombre']),
+            'caracteristicasPropias'  => $propias,
+            'heredablesPorMadre'      => $mapa['porCategoria'],
+            'caracteristicasGlobales' => $mapa['globales'],
+        ];
+    }
+
+    /**
+     * Las características propias, tal como vinieron del formulario y en ese orden.
+     * Una escrita que no existe se crea; si ya hay una con ese nombre ("talle" y
+     * "Talle"), se usa esa en vez de duplicarla.
+     */
+    private function guardarCaracteristicas(Categoria $categoria, Request $request): void
+    {
+        $request->validate([
+            'caracteristicas'               => 'nullable|array',
+            'caracteristicas.*.etiqueta_id' => 'nullable|integer|exists:etiquetas,id',
+            'caracteristicas.*.nueva'       => 'nullable|string|max:255',
+            'caracteristicas.*.obligatoria' => 'nullable|boolean',
+        ]);
+
+        $sync = [];
+        // El formulario manda siempre la lista completa: sin filas, la categoría no pide nada propio.
+        foreach (array_values((array) $request->input('caracteristicas')) as $fila) {
+            $id = $fila['etiqueta_id'] ?? null;
+            if (!$id && trim((string) ($fila['nueva'] ?? '')) !== '') {
+                $id = $this->etiquetaPorNombre($fila['nueva'])->id;
+            }
+            if ($id && !isset($sync[$id])) {
+                $sync[(int) $id] = ['obligatoria' => !empty($fila['obligatoria']), 'orden' => count($sync)];
+            }
+        }
+
+        $categoria->caracteristicas()->sync($sync);
+    }
+
+    private function etiquetaPorNombre(string $nombre): Etiqueta
+    {
+        $limpio = EtiquetaValor::limpiar($nombre);
+        $existente = Etiqueta::all()->first(function (Etiqueta $e) use ($limpio) {
+            return EtiquetaValor::normalizar($e->nombre) === EtiquetaValor::normalizar($limpio);
+        });
+
+        return $existente ?: Etiqueta::create(['nombre' => $limpio, 'visible_usuarios' => true]);
     }
 
     /** Cuántos niveles tiene una categoría hacia adentro (0 si no tiene subcategorías). */

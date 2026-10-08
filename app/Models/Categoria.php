@@ -102,6 +102,19 @@ class Categoria extends Model
         }, array_reverse($this->linaje())));
     }
 
+    /**
+     * Las características que pide esta categoría ella misma, en su orden. Con las
+     * heredadas y las globales: CaracteristicasPorCategoria.
+     */
+    public function caracteristicas()
+    {
+        return $this->belongsToMany(Etiqueta::class, 'categoria_caracteristica')
+            ->withPivot('obligatoria', 'orden')
+            ->withTimestamps()
+            ->orderBy('categoria_caracteristica.orden')
+            ->orderBy('categoria_caracteristica.id');
+    }
+
     /** La página de la categoría en la tienda. */
     public function url(): string
     {

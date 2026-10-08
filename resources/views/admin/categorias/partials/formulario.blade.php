@@ -40,6 +40,8 @@
             </div>
         </div>
 
+        @include('admin.categorias.partials.caracteristicas')
+
         <div class="card mb-3">
             <div class="card-header" role="button" data-bs-toggle="collapse" data-bs-target="#seccion-seo"
                  aria-expanded="{{ $hayErroresSeo ? 'true' : 'false' }}">

@@ -219,9 +219,9 @@ Objetivo: cada producto tiene una categoría, y los menús pueden apuntar a cate
 ### Etapa 2: Características por categoría
 Objetivo: lo que hoy decide el proveedor pasa a decidirlo la categoría.
 
-- [ ] Migración `create_categoria_caracteristica_table`.
-- [ ] `Categoria::caracteristicas()` efectivas (con herencia) y `obligatorias()`.
-- [ ] Pantalla de la categoría: lista de características con obligatoria/opcional, orden, y las heredadas (en gris, "de Ropa").
+- [x] Migración `create_categoria_caracteristica_table`.
+- [x] `Categoria::caracteristicas()` efectivas (con herencia) y `obligatorias()`.
+- [x] Pantalla de la categoría: lista de características con obligatoria/opcional, orden, y las heredadas (en gris, "de Ropa").
 - [ ] Formulario de producto: el componente `partials/etiquetas` pasa a tomar los campos **de la categoría** en vez del proveedor (al cambiar de categoría se rearma, como hoy con el proveedor).
 - [ ] `ProductoController::validarEtiquetasObligatorias` según la categoría.
 - [ ] Menú: los filtros en cascada sugieren las características de la categoría elegida.
@@ -310,3 +310,4 @@ Datos útiles:
 | 2026-10-08 | Etapa 1: página `/categoria/{slug}` (migas, subcategorías visibles como accesos, búsqueda dentro, título/descripción/canónica; oculta = 404) y en el sitemap. Menú automático: `MenuDeLaTienda` arma el árbol desde los menús o desde las categorías visibles (`OpcionDeMenu`, lo dibujan los 3 componentes); se elige en Admin › Menús ("Con las categorías" / "Armado a mano"). Sin ajuste: automático si la tienda no tiene menús (D9). Los menús armados se conservan | 31540df |
 | 2026-10-08 | Etapa 1: comando `categorias:desde-etiquetas --tenant= [--proveedor="Hercules=Kits hidráulicos"] [--dry-run]` (`CategoriasDesdeEtiquetas`). Usa las categorías existentes por nombre (y madre), crea las que faltan, sólo agrega, se puede repetir; convierte los menús y avisa si alguno cambia lo que muestra. `--dry-run` = transacción deshecha. **perfumes migrado** (Notebook y Drones → Producto › …, mismos productos). arcor: nada que migrar. **oleomc pendiente**: el menú Hidráulica pasaría de 12 a 11 (Acoples Rapidos, MC-923370, es Industrial › Hidráulica) | 90a30ae |
 | 2026-10-08 | **oleomc migrado** (opción 2 del usuario): Acoples Rapidos (MC-923370) queda en Industrial › Hidráulica y también en Accesorios › Hidráulica; el menú Hidráulica sigue en 12 y "Todos" (Accesorios) pasa de 13 a 14. **perfumes**: la rama de categorías "Marca" se quitó a pedido del usuario (Marca va a ser característica en la Etapa 2); de paso se corrigió la Notebook Lenovo, que tenía la etiqueta Marca = Asus (el menú Notebook › Asus pasa de 2 a 1, que es lo correcto). Categorías de perfumes: Producto › Celulares, Notebooks, Drones, Paletas | — |
+| 2026-10-09 | Etapa 2: tabla `categoria_caracteristica` (obligatoria, orden) y `etiquetas.global`. `CaracteristicasPorCategoria` resuelve la herencia (globales + madres + propias; manda la más cercana; en un producto con varias categorías, obligatoria si alguna la exige) y devuelve `Caracteristica` (VO). Formulario de categoría: "Características que pide" (heredadas en gris, propias con opcional/obligatoria, orden, agregar existente o nueva sin duplicar). El árbol muestra qué pide cada una | (este commit) |

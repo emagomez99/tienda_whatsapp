@@ -13,10 +13,12 @@ class Etiqueta extends Model
     protected $fillable = [
         'nombre',
         'visible_usuarios',
+        'global',
     ];
 
     protected $casts = [
         'visible_usuarios' => 'boolean',
+        'global' => 'boolean',
     ];
 
     public function productos()

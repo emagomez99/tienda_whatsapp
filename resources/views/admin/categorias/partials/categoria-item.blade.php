@@ -40,8 +40,16 @@
                     {{ $ocultaPor->id === $categoria->id ? 'Oculta' : 'Oculta por «' . $ocultaPor->nombre . '»' }}
                 </span>
             @endif
-            @if($hijas->count())
-                <div class="arbol-detalle">{{ $hijas->count() }} {{ $hijas->count() === 1 ? 'subcategoría' : 'subcategorías' }}</div>
+            @php
+                // Las propias; las heredadas no se repiten (se ven en la madre), por eso el "+".
+                $pide = $categoria->caracteristicas->map(function ($c) { return $c->nombre . ($c->pivot->obligatoria ? ' *' : ''); })->implode(', ');
+                $detalle = array_filter([
+                    $pide !== '' ? ($categoria->parent_id ? '+ ' : '') . $pide : null,
+                    $hijas->count() ? $hijas->count() . ($hijas->count() === 1 ? ' subcategoría' : ' subcategorías') : null,
+                ]);
+            @endphp
+            @if($detalle)
+                <div class="arbol-detalle">{{ implode(' · ', $detalle) }}</div>
             @endif
         </div>
 
