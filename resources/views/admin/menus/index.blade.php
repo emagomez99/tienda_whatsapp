@@ -10,7 +10,7 @@
             @include('admin.ayudas.menus')
         </x-ayuda>
         <a href="{{ route('admin.menus.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo
+            <i class="bi bi-plus-circle"></i> Crear menú
         </a>
     </div>
 </div>

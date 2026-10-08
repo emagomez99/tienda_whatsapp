@@ -240,7 +240,7 @@
                 $acciones[] = [
                     'url'      => route('admin.pedidos.create'),
                     'icono'    => 'bi-bag-plus',
-                    'titulo'   => 'Nuevo pedido',
+                    'titulo'   => 'Crear pedido',
                     'detalle'  => 'Cargar un nuevo pedido',
                     'destacar' => true,
                 ];
@@ -250,7 +250,7 @@
                 $acciones[] = [
                     'url'     => route('admin.productos.create'),
                     'icono'   => 'bi-box-seam',
-                    'titulo'  => 'Nuevo producto',
+                    'titulo'  => 'Crear producto',
                     'detalle' => 'Sumar un artículo al catálogo',
                 ];
             }
@@ -259,7 +259,7 @@
                 $acciones[] = [
                     'url'     => route('admin.proveedores.create'),
                     'icono'   => 'bi-truck',
-                    'titulo'  => 'Nuevo proveedor',
+                    'titulo'  => 'Crear proveedor',
                     'detalle' => 'Dar de alta un nuevo proveedor',
                 ];
             }

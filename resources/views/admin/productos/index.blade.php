@@ -10,7 +10,7 @@
             @include('admin.ayudas.productos')
         </x-ayuda>
         <a href="{{ route('admin.productos.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo
+            <i class="bi bi-plus-circle"></i> Crear producto
         </a>
     </div>
 </div>

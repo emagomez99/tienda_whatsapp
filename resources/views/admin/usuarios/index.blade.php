@@ -10,7 +10,7 @@
             @include('admin.ayudas.usuarios')
         </x-ayuda>
         <a href="{{ route('admin.usuarios.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo
+            <i class="bi bi-plus-circle"></i> Crear usuario
         </a>
     </div>
 </div>

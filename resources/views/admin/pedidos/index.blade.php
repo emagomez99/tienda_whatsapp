@@ -11,7 +11,7 @@
         </x-ayuda>
         @if(auth()->user()->puede('pedidos.gestionar'))
             <a href="{{ route('admin.pedidos.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Nuevo
+                <i class="bi bi-plus-circle"></i> Crear pedido
             </a>
         @endif
     </div>

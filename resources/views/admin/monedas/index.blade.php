@@ -10,7 +10,7 @@
             @include('admin.ayudas.monedas')
         </x-ayuda>
         <a href="{{ route('admin.monedas.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nueva
+            <i class="bi bi-plus-circle"></i> Crear moneda
         </a>
     </div>
 </div>

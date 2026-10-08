@@ -11,7 +11,7 @@
         </x-ayuda>
         @if(auth()->user()->puede('perfiles.gestionar'))
         <a href="{{ route('admin.perfiles.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo
+            <i class="bi bi-plus-circle"></i> Crear perfil
         </a>
         @endif
     </div>

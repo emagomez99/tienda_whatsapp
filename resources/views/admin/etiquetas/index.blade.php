@@ -12,7 +12,7 @@
             @include('admin.ayudas.caracteristicas')
         </x-ayuda>
         <a href="{{ route('admin.etiquetas.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nueva
+            <i class="bi bi-plus-circle"></i> Crear característica
         </a>
     </div>
 </div>

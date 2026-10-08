@@ -10,7 +10,7 @@
             @include('admin.ayudas.proveedores')
         </x-ayuda>
         <a href="{{ route('admin.proveedores.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo
+            <i class="bi bi-plus-circle"></i> Crear proveedor
         </a>
     </div>
 </div>

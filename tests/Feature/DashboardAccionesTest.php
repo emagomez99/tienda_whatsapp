@@ -76,9 +76,9 @@ class DashboardAccionesTest extends TestCase
         ])->get($this->urlTenant('admin'))->assertStatus(200)->getContent();
 
         $posiciones = [
-            'Nuevo pedido'    => strpos($html, 'Nuevo pedido'),
-            'Nuevo producto'  => strpos($html, 'Nuevo producto'),
-            'Nuevo proveedor' => strpos($html, 'Nuevo proveedor'),
+            'Crear pedido'    => strpos($html, 'Crear pedido'),
+            'Crear producto'  => strpos($html, 'Crear producto'),
+            'Crear proveedor' => strpos($html, 'Crear proveedor'),
             // Textos en minúscula y "Ajustes" (antes "Configuración"): la pasada visual
             // del panel unificó los nombres con los del menú lateral.
             'Ajustes'         => strpos($html, 'Logo, colores, WhatsApp y más'),
@@ -89,7 +89,7 @@ class DashboardAccionesTest extends TestCase
         }
 
         $this->assertSame(
-            ['Nuevo pedido', 'Nuevo producto', 'Nuevo proveedor', 'Ajustes'],
+            ['Crear pedido', 'Crear producto', 'Crear proveedor', 'Ajustes'],
             array_keys($posiciones),
             'El orden esperado del arreglo cambió; revisá el test.'
         );
@@ -119,9 +119,9 @@ class DashboardAccionesTest extends TestCase
             ->assertStatus(200)
             ->getContent();
 
-        $this->assertStringContainsString('Nuevo producto', $html);
-        $this->assertStringNotContainsString('Nuevo pedido', $html);
-        $this->assertStringNotContainsString('Nuevo proveedor', $html);
+        $this->assertStringContainsString('Crear producto', $html);
+        $this->assertStringNotContainsString('Crear pedido', $html);
+        $this->assertStringNotContainsString('Crear proveedor', $html);
         $this->assertStringNotContainsString('Logo, colores, WhatsApp y más', $html);
     }
 
