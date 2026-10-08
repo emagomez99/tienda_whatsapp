@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container py-4">
-    <h2><i class="bi bi-whatsapp"></i> Finalizar Pedido</h2>
+    <h2 class="tienda-titulo"><i class="bi bi-whatsapp"></i> Finalizar Pedido</h2>
 
     @php
         $todosAjustes = array_merge($ajustes ?? [], session('ajustes_stock', []));
@@ -20,10 +20,10 @@
         </div>
     @endif
 
-    <div class="row mt-4">
+    <div class="row g-4 mt-1">
         <div class="col-md-7">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
+            <div class="card">
+                <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-person"></i> Datos de contacto</h5>
                 </div>
                 <div class="card-body">
@@ -109,8 +109,8 @@
             </div>
         </div>
         <div class="col-md-5">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
+            <div class="card checkout-resumen">
+                <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-cart3"></i> Resumen del pedido</h5>
                 </div>
                 <div class="card-body">
@@ -125,7 +125,7 @@
                                     @endif
                                 </div>
                                 @if($mostrarPrecios)
-                                    <span class="badge bg-primary rounded-pill">
+                                    <span class="checkout-subtotal">
                                         {{ $item['producto']->moneda ? $item['producto']->moneda->simbolo : '$' }}{{ number_format($item['subtotal'], 2, ',', '.') }}
                                     </span>
                                 @endif
@@ -133,7 +133,7 @@
                         @endforeach
                     </ul>
                     @if($mostrarPrecios)
-                        <div class="card-footer bg-light">
+                        <div class="card-footer">
                             @foreach($totalesPorMoneda as $grupo)
                                 @php $simbolo = $grupo['moneda'] ? $grupo['moneda']->simbolo : '$'; @endphp
                                 <div class="d-flex justify-content-between{{ $loop->first ? '' : ' mt-1' }}">

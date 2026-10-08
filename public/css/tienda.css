@@ -149,6 +149,10 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     --bs-btn-disabled-bg: var(--tienda-superficie);
     --bs-btn-disabled-border-color: var(--tienda-borde);
 }
+/* Acciones secundarias como link ("Vaciar carrito", "Ver características"): sin
+   subrayado fijo, que en Bootstrap 5.3 viene puesto; aparece al pasar el mouse. */
+.btn-link { text-decoration: none; }
+.btn-link:hover { text-decoration: underline; }
 .btn-light {
     --bs-btn-bg: var(--tienda-superficie-suave);
     --bs-btn-border-color: var(--tienda-borde);
