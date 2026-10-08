@@ -8,10 +8,11 @@ use App\Models\Menu;
 use App\Models\Moneda;
 use App\Models\Producto;
 use App\Models\Proveedor;
+use App\Services\CategoriasDesdeEtiquetas;
 use Tests\CreaTenantDePrueba;
 use Tests\TestCase;
 
-/** El comando que pasa las etiquetas Categoria/Subcategoria a categorías (plan, sección 6). */
+/** El servicio que pasa las etiquetas Categoria/Subcategoria a categorías (lo usa la migración de limpieza). */
 class CategoriasDesdeEtiquetasTest extends TestCase
 {
     use CreaTenantDePrueba;
@@ -72,13 +73,12 @@ class CategoriasDesdeEtiquetasTest extends TestCase
         parent::tearDown();
     }
 
-    private function migrar(bool $simular = false)
+    /** Corre el servicio, como lo hace la migración de limpieza. @return array el informe */
+    private function migrar(array $porProveedor = ['Hercules' => 'Kits hidráulicos']): array
     {
-        return $this->artisan('categorias:desde-etiquetas', array_filter([
-            '--tenant' => [self::TENANT_ID],
-            '--proveedor' => ['Hercules=Kits hidráulicos'],
-            '--dry-run' => $simular,
-        ]));
+        return $this->enTenant(function () use ($porProveedor) {
+            return (new CategoriasDesdeEtiquetas())->ejecutar($porProveedor);
+        });
     }
 
     private function caminosDe(string $producto): array
@@ -89,24 +89,20 @@ class CategoriasDesdeEtiquetasTest extends TestCase
     }
 
     /** @test */
-    public function la_simulacion_muestra_y_no_guarda()
+    public function el_informe_dice_que_creo_y_si_un_menu_cambia_lo_que_muestra()
     {
-        $this->migrar(true)
-            ->expectsOutput('  Accesorios > Hidráulica')
-            ->expectsOutput('  Hidráulica → Accesorios > Hidráulica (CAMBIA: mostraba 2, va a mostrar 1)')
-            ->expectsOutput('  Notebooks → Producto > Notebooks (el mismo producto)')
-            ->assertExitCode(0);
+        $informe = $this->migrar();
 
-        $this->enTenant(function () {
-            $this->assertSame(2, Categoria::count());   // sólo "Producto › Notebooks"
-            $this->assertSame('etiqueta', Menu::find($this->ids['menuHidraulica'])->tipo_enlace);
-        });
+        $this->assertContains('Accesorios > Hidráulica', $informe['creadas']);
+        $this->assertContains('Producto > Notebooks', $informe['usadas']);
+        $this->assertSame('Accesorios > Hidráulica (CAMBIA: mostraba 2, va a mostrar 1)', $informe['menus']['Hidráulica']);
+        $this->assertSame('Producto > Notebooks (el mismo producto)', $informe['menus']['Notebooks']);
     }
 
     /** @test */
     public function asigna_usando_las_existentes_y_crea_las_que_faltan()
     {
-        $this->migrar()->assertExitCode(0);
+        $this->migrar();
 
         $this->assertSame(['Accesorios > Hidráulica'], $this->caminosDe('valvula'));
         $this->assertSame(['Industrial > Hidráulica'], $this->caminosDe('compresor'));
@@ -118,7 +114,7 @@ class CategoriasDesdeEtiquetasTest extends TestCase
     /** @test */
     public function convierte_los_menus_y_deja_los_que_no_puede_resolver()
     {
-        $this->migrar()->assertExitCode(0);
+        $this->migrar();
 
         $this->enTenant(function () {
             $hidraulica = Menu::find($this->ids['menuHidraulica']);
@@ -135,8 +131,8 @@ class CategoriasDesdeEtiquetasTest extends TestCase
     /** @test */
     public function correrlo_dos_veces_da_lo_mismo()
     {
-        $this->migrar()->assertExitCode(0);
-        $this->migrar()->assertExitCode(0);
+        $this->migrar();
+        $this->migrar();
 
         $this->enTenant(function () {
             $this->assertSame(7, Categoria::count());
@@ -147,8 +143,12 @@ class CategoriasDesdeEtiquetasTest extends TestCase
     /** @test */
     public function un_proveedor_que_no_existe_no_cambia_nada()
     {
-        $this->artisan('categorias:desde-etiquetas', ['--tenant' => [self::TENANT_ID], '--proveedor' => ['Nadie=Algo']])
-            ->assertExitCode(1);
+        try {
+            $this->migrar(['Nadie' => 'Algo']);
+            $this->fail('Tenía que avisar que el proveedor no existe.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('Nadie', $e->getMessage());
+        }
 
         $this->enTenant(function () {
             $this->assertSame(0, \DB::table('categoria_producto')->count());

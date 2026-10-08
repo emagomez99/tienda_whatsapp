@@ -7,10 +7,11 @@ use App\Models\Etiqueta;
 use App\Models\Moneda;
 use App\Models\Producto;
 use App\Models\Proveedor;
+use App\Services\CaracteristicasDesdeProveedores;
 use Tests\CreaTenantDePrueba;
 use Tests\TestCase;
 
-/** El comando que pasa las reglas por proveedor a las categorías (plan, sección 6). */
+/** El servicio que pasa las reglas por proveedor a las categorías, y la migración que lo usa y limpia lo viejo. */
 class CaracteristicasDesdeProveedoresTest extends TestCase
 {
     use CreaTenantDePrueba;
@@ -35,6 +36,10 @@ class CaracteristicasDesdeProveedoresTest extends TestCase
             $ropaSA = Proveedor::create(['nombre' => 'Ropa SA']);
             $otro = Proveedor::create(['nombre' => 'Otro']);
             $sinProductos = Proveedor::create(['nombre' => 'Golosinas']);
+            // La tabla vieja ya no existe en una tienda nueva (la borra la migración de
+            // limpieza): se vuelve a crear vacía con su down(), como en una base anterior.
+            static::migracionDeLimpieza()->down();
+
             // Las reglas viejas, como quedaron en la tabla (el código ya no las usa).
             $regla = function ($proveedor, $etiqueta, $obligatoria) {
                 \DB::table('proveedor_etiqueta')->insert(['proveedor_id' => $proveedor->id, 'etiqueta_id' => $etiqueta, 'obligatoria' => $obligatoria]);
@@ -85,13 +90,24 @@ class CaracteristicasDesdeProveedoresTest extends TestCase
         });
     }
 
+    /** La migración que usa este servicio (y la que borra la tabla vieja). */
+    public static function migracionDeLimpieza()
+    {
+        return require base_path('database/migrations/tenant/2026_10_10_000001_migrar_etiquetas_viejas_y_limpiar.php');
+    }
+
+    private function pasar(): array
+    {
+        return $this->enTenant(function () {
+            return (new CaracteristicasDesdeProveedores())->ejecutar();
+        });
+    }
+
     /** @test */
     public function pasa_las_reglas_a_las_categorias_y_sube_lo_comun_a_la_madre()
     {
-        $this->artisan('categorias:desde-etiquetas', ['--tenant' => [self::TENANT_ID]]);   // no molesta: ya hay categorías
-        $this->artisan('caracteristicas:desde-proveedores', ['--tenant' => [self::TENANT_ID]])
-            ->expectsOutput('  Golosinas: Sabor')
-            ->assertExitCode(0);
+        $informe = $this->pasar();
+        $this->assertContains('Golosinas: Sabor', $informe['sinDestino']);
 
         $this->enTenant(function () {
             // La exigen los dos proveedores con productos: global. Categoria no pasa: ahora es la categoría.
@@ -108,13 +124,35 @@ class CaracteristicasDesdeProveedoresTest extends TestCase
     }
 
     /** @test */
-    public function la_simulacion_no_guarda_y_correrlo_dos_veces_da_lo_mismo()
+    public function correrlo_dos_veces_da_lo_mismo()
     {
-        $this->artisan('caracteristicas:desde-proveedores', ['--tenant' => [self::TENANT_ID], '--dry-run' => true])->assertExitCode(0);
-        $this->assertSame([], $this->pide('ropa'));
+        $this->pasar();
+        $this->pasar();
+        $this->assertSame(['Talle*', 'Color'], $this->pide('ropa'));
+    }
 
-        $this->artisan('caracteristicas:desde-proveedores', ['--tenant' => [self::TENANT_ID]]);
-        $this->artisan('caracteristicas:desde-proveedores', ['--tenant' => [self::TENANT_ID]]);
+    /**
+     * La migración entera, como en una copia de la base de un cliente: pasa las
+     * etiquetas y las reglas, y después borra lo viejo.
+     *
+     * @test
+     */
+    public function la_migracion_pasa_todo_y_despues_borra_lo_viejo()
+    {
+        $this->enTenant(function () {
+            static::migracionDeLimpieza()->up();
+
+            // Las reglas quedaron en las categorías…
+            $this->assertTrue(Etiqueta::find($this->ids['marca'])->obligatoria_global);
+            // …y lo viejo ya no está: ni la etiqueta Categoria (con sus valores) ni la tabla.
+            $this->assertNull(Etiqueta::find($this->ids['categoria']));
+            $this->assertSame(0, \DB::table('etiqueta_valores')->where('etiqueta_id', $this->ids['categoria'])->count());
+            $this->assertFalse(\Schema::hasTable('proveedor_etiqueta'));
+
+            // Correrla de nuevo (ya sin la tabla) no rompe ni cambia nada.
+            static::migracionDeLimpieza()->up();
+        });
+
         $this->assertSame(['Talle*', 'Color'], $this->pide('ropa'));
     }
 }

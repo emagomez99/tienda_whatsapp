@@ -6,9 +6,9 @@
 ## Estado actual
 
 - **Etapas 1 y 2: hechas** y corridas en las 3 tiendas locales (2026-10-09). Quedan de la 1: línea de destino al arrastrar (detalle visual).
-- **Limpieza pendiente** (cuando el usuario verifique): ocultar y borrar las características "Categoria"/"Subcategoria" y la tabla `proveedor_etiqueta`.
-- **Producción:** `tenants:migrate` → `categorias:desde-etiquetas` (oleomc con `--proveedor="Hercules=Kits hidráulicos"`; en perfumes, armar antes Producto › … como en local) → `caracteristicas:desde-proveedores`. Siempre primero con `--dry-run`. Después, agregar a mano Acoples Rapidos (MC-923370) en Accesorios › Hidráulica.
-- **Próxima:** Etapa 5 (Excel).
+- **Limpieza: hecha** (2026-10-10). La migración `2026_10_10_000001_migrar_etiquetas_viejas_y_limpiar` pasa "Categoria"/"Subcategoria" a categorías, pasa las reglas por proveedor a las categorías y recién después borra esas etiquetas y la tabla `proveedor_etiqueta`. Los comandos `categorias:desde-etiquetas` y `caracteristicas:desde-proveedores` se quitaron: los reemplaza la migración.
+- **Producción (o una copia nueva de la base de un cliente):** alcanza con `php artisan tenants:migrate`; se puede repetir sobre copias nuevas cuantas veces se quiera y da lo mismo. Después, a mano: Acoples Rapidos (MC-923370) también en Accesorios › Hidráulica. En perfumes, las categorías se crean sueltas (Notebooks, Drones, Paletas): para tenerlas dentro de "Producto" como en local, crear "Producto › …" antes de migrar, o moverlas después arrastrando.
+- **Próxima:** Etapa 5 (Excel), decidida por el dueño.
 - **Orden de trabajo:** 0 → 1 → 2 (con migración real de las 2 tiendas en cada una) → 5 (Excel) → 3 → 4.
 - **Último commit antes del plan:** `9516afe` (árbol de menús con arrastrar y soltar).
 
@@ -330,3 +330,4 @@ Datos útiles:
 | 2026-10-08 | Tanda 3: crear categoría desde el panel con etiquetas visibles, scroll y resaltado de la nueva; arreglo: crear una subcategoría desde el panel daba error (madre como texto) | b7398e0 |
 | 2026-10-08 | Tanda 3: orden estable de las características en la tienda (globales, las de las categorías en su orden, el resto por nombre) con un ranking único por pedido (`OrdenDeCaracteristicas`, array_position en `etiquetasPublicas`, sin N+1) | 94542b9 |
 | 2026-10-08 | Tanda 3: listado de productos vacío con "Cargar el primer producto", o "Ningún producto coincide con el filtro" con enlace para quitarlo | 1e0b527 |
+| 2026-10-10 | Limpieza en una migración que primero pasa los datos y después borra lo viejo ("Categoria", "Subcategoria", `proveedor_etiqueta`); se quitan los dos comandos. Corrida en las 4 tiendas locales: menús y categorías muestran los mismos productos que antes; 261 pantallas OK | (este commit) |

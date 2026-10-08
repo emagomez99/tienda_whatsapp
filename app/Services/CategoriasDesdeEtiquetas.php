@@ -14,7 +14,8 @@ use InvalidArgumentException;
 
 /**
  * Pasa a categorías lo que hoy dicen las etiquetas "Categoria" y "Subcategoria",
- * y los menús que filtraban por ellas a menús "Los de una categoría".
+ * y los menús que filtraban por ellas a menús "Los de una categoría". Lo usa la
+ * migración 2026_10_10_000001_migrar_etiquetas_viejas_y_limpiar.
  * Ver la sección 6 del plan (docs/plan-categorias-y-caracteristicas.md).
  *
  * Usa las categorías que ya existen: si alguien armó "Producto › Notebooks" a
@@ -52,6 +53,17 @@ class CategoriasDesdeEtiquetas
             'menus' => [], 'menusSinConvertir' => [], 'sinCategoria' => 0,
         ];
 
+        // Los proveedores se buscan antes de cambiar nada: si uno no existe, no queda
+        // nada a medio hacer.
+        $proveedores = [];
+        foreach ($porProveedor as $nombreProveedor => $camino) {
+            $proveedor = Proveedor::where('nombre', 'ilike', $nombreProveedor)->first();
+            if (!$proveedor) {
+                throw new InvalidArgumentException("No hay un proveedor «{$nombreProveedor}».");
+            }
+            $proveedores[] = [$proveedor, $camino];
+        }
+
         $antes = Categoria::pluck('id')->all();
 
         $categoria    = $this->etiqueta(self::ETIQUETA_CATEGORIA);
@@ -61,8 +73,8 @@ class CategoriasDesdeEtiquetas
             $this->desdeEtiquetas($categoria, $subcategoria);
         }
 
-        foreach ($porProveedor as $nombreProveedor => $camino) {
-            $this->desdeProveedor($nombreProveedor, $camino);
+        foreach ($proveedores as $par) {
+            $this->desdeProveedor($par[0], $par[1]);
         }
 
         // Al final, con todos los productos ya en sus categorías, para comparar bien.
@@ -118,13 +130,8 @@ class CategoriasDesdeEtiquetas
         }
     }
 
-    private function desdeProveedor(string $nombreProveedor, string $camino): void
+    private function desdeProveedor(Proveedor $proveedor, string $camino): void
     {
-        $proveedor = Proveedor::where('nombre', 'ilike', $nombreProveedor)->first();
-        if (!$proveedor) {
-            throw new InvalidArgumentException("No hay un proveedor «{$nombreProveedor}».");
-        }
-
         $destino = $this->ubicar(array_map('trim', explode(Categoria::SEPARADOR, $camino)));
         $this->asignar($destino, Producto::where('proveedor_id', $proveedor->id));
     }

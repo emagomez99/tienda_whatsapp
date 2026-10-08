@@ -21,6 +21,8 @@ use Illuminate\Support\Str;
  *  - Categoria y Subcategoria no se pasan: ahora son las categorías.
  *
  * Sólo agrega: lo que una categoría ya pide no se toca. Se puede correr de nuevo.
+ * Lo usa la migración 2026_10_10_000001_migrar_etiquetas_viejas_y_limpiar, antes
+ * de borrar la tabla proveedor_etiqueta.
  */
 class CaracteristicasDesdeProveedores
 {
