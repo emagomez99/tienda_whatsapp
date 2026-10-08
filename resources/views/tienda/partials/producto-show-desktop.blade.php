@@ -1,5 +1,5 @@
 <div class="container py-4 d-none d-md-block">
-    <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '›';">
+    <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-4">
             <li class="breadcrumb-item">
                 <a href="{{ route('tienda.index') }}" class="text-decoration-none">
@@ -9,24 +9,23 @@
             @foreach($migas as $estante)
                 <li class="breadcrumb-item"><a href="{{ $estante->url() }}" class="text-decoration-none">{{ $estante->nombre }}</a></li>
             @endforeach
-            <li class="breadcrumb-item active text-truncate" style="max-width: 480px;" aria-current="page">
+            <li class="breadcrumb-item active text-truncate" aria-current="page">
                 {{ $producto->descripcion }}
             </li>
         </ol>
     </nav>
 
-    <div class="row g-4">
+    <div class="row g-4 g-lg-5">
         <div class="col-md-5">
             @php $galeria = $producto->galeria(); @endphp
             @if($galeria->count() > 1)
-                <div id="carousel-producto-desktop" class="carousel slide rounded shadow overflow-hidden bg-light"
-                     style="height:420px;" data-bs-ride="false">
+                <div id="carousel-producto-desktop" class="carousel slide ficha-galeria" data-bs-ride="false">
                     <div class="carousel-inner h-100">
                         @foreach($galeria as $i => $img)
                             <div class="carousel-item h-100 {{ $i === 0 ? 'active' : '' }}">
                                 <img src="{{ $img->imagen_url }}"
                                      alt="{{ $producto->descripcion }}"
-                                     style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
+                                     class="img-contenida img-aparece"
                                      onload="this.style.opacity=1"
                                      onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
                             </div>
@@ -34,66 +33,67 @@
                     </div>
                     <button class="carousel-control-prev" type="button"
                             data-bs-target="#carousel-producto-desktop" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" style="filter:invert(1) brightness(.4)"></span>
+                        <span class="carousel-control-prev-icon"></span>
                     </button>
                     <button class="carousel-control-next" type="button"
                             data-bs-target="#carousel-producto-desktop" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" style="filter:invert(1) brightness(.4)"></span>
+                        <span class="carousel-control-next-icon"></span>
                     </button>
                 </div>
-                <div class="d-flex justify-content-center gap-2 mt-2">
+                <div class="ficha-puntos">
                     @foreach($galeria as $i => $img)
                         <button type="button"
+                                class="ficha-punto {{ $i === 0 ? 'activo' : '' }}"
                                 data-bs-target="#carousel-producto-desktop"
                                 data-bs-slide-to="{{ $i }}"
-                                style="width:8px;height:8px;border-radius:50%;border:none;padding:0;background-color:{{ $i === 0 ? '#555' : '#ccc' }};transition:background-color .2s;"
                                 aria-label="Imagen {{ $i + 1 }}"></button>
                     @endforeach
                 </div>
             @else
-                <div class="rounded shadow overflow-hidden bg-light d-flex align-items-center justify-content-center"
-                     style="height:420px;">
+                <div class="ficha-galeria d-flex align-items-center justify-content-center">
                     <img src="{{ $producto->imagen_url ?? '/img/no-image.svg' }}"
                          alt="{{ $producto->descripcion }}"
-                         style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .15s;"
+                         class="img-contenida img-aparece"
                          onload="this.style.opacity=1"
                          onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
                 </div>
             @endif
         </div>
         <div class="col-md-7">
-            <h2 class="fs-3">{{ $producto->descripcion }}</h2>
+            <h2 class="ficha-titulo mb-2">{{ $producto->descripcion }}</h2>
 
             @if($producto->id_proveedor)
-                <p class="text-muted mb-1">Código: {{ $producto->id_proveedor }}</p>
+                <p class="text-muted small mb-1">Código: {{ $producto->id_proveedor }}</p>
             @endif
 
             @if($producto->proveedor && App\Models\Configuracion::mostrarProveedor())
-                <p class="text-muted mb-1">Proveedor: {{ $producto->proveedor->nombre }}</p>
+                <p class="text-muted small mb-1">Proveedor: {{ $producto->proveedor->nombre }}</p>
             @endif
 
             @if($producto->detalle)
-                <div class="my-3">{!! $producto->detalle !!}</div>
+                <div class="my-3 ficha-detalle">{!! $producto->detalle !!}</div>
                 <hr>
             @endif
 
             @if($mostrarPrecios)
-                <h3 class="text-primary my-3">{{ $producto->precio_con_moneda }}</h3>
+                <div class="ficha-precio text-primary my-3">{{ $producto->precio_con_moneda }}</div>
             @endif
 
             @if($producto->etiquetasPublicas->isNotEmpty())
                 <div class="mb-3">
-                    <strong>Características:</strong><br>
-                    @foreach($producto->etiquetasPublicas as $etiqueta)
-                        <span class="badge bg-info me-1">{{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}</span>
-                    @endforeach
+                    <div class="ficha-rotulo">Características:</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach($producto->etiquetasPublicas as $etiqueta)
+                            <span class="tienda-chip tienda-chip-grande">{{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}</span>
+                        @endforeach
+                    </div>
                 </div>
             @endif
 
             @if($producto->especificaciones->count() > 0)
                 <div class="mb-3">
-                    <strong>Especificaciones:</strong>
-                    <table class="table table-sm table-striped mt-2">
+                    <div class="ficha-rotulo">Especificaciones:</div>
+                    <table class="table table-sm table-striped ficha-especificaciones mt-2">
                         @foreach($producto->especificaciones as $espec)
                             <tr>
                                 <td class="fw-bold">{{ $espec->clave }}</td>
@@ -108,42 +108,39 @@
                 {{-- Por encargue sólo importa cuando no hay stock; "Sin stock" en rojo al
                      lado de "Disponible por encargue" se leía como una contradicción. --}}
                 @if($producto->stock > 0)
-                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> En stock ({{ $producto->stock }} disponibles)</span>
+                    <span class="badge bg-success-subtle text-success-emphasis"><i class="bi bi-check-circle"></i> En stock ({{ $producto->stock }} disponibles)</span>
                 @elseif($producto->por_encargue)
-                    <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Sin stock ahora: lo encargamos para vos</span>
+                    <span class="badge bg-warning-subtle text-warning-emphasis"><i class="bi bi-clock"></i> Sin stock ahora: lo encargamos para vos</span>
                 @elseif($producto->stock !== null)
-                    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Sin stock</span>
+                    <span class="badge bg-danger-subtle text-danger-emphasis"><i class="bi bi-x-circle"></i> Sin stock</span>
                 @endif
             </div>
 
             @if($producto->estaDisponible())
                 <form class="form-agregar mt-4">
                     @csrf
-                    <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-outline-secondary btn-decrement"
-                                style="width:38px;height:38px;padding:0;flex-shrink:0;" disabled>
+                    <div class="selector-cantidad selector-cantidad-grande d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-decrement" disabled>
                             <i class="bi bi-dash"></i>
                         </button>
                         <input type="number" name="cantidad" value="1" min="1"
                                @if($maxStock !== null) max="{{ $maxStock }}" @endif
-                               class="form-control text-center input-cantidad"
-                               style="width:60px;height:38px;-moz-appearance:textfield;flex-shrink:0;">
-                        <button type="button" class="btn btn-outline-secondary btn-increment"
-                                style="width:38px;height:38px;padding:0;flex-shrink:0;" {{ $maxStock === 1 ? 'disabled' : '' }}>
+                               class="form-control text-center input-cantidad">
+                        <button type="button" class="btn btn-outline-secondary btn-increment" {{ $maxStock === 1 ? 'disabled' : '' }}>
                             <i class="bi bi-plus"></i>
                         </button>
-                        <button type="submit" class="btn btn-primary flex-grow-1" style="height:38px;">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
                             <i class="bi bi-cart-plus"></i> Agregar al carrito
                         </button>
                     </div>
                 </form>
             @endif
 
-            <div class="d-flex gap-2 mt-3">
-                <button type="button" onclick="history.length > 1 ? history.back() : window.location='{{ route('tienda.index') }}'" class="btn btn-outline-secondary flex-grow-1" style="height:38px;">
+            <div class="ficha-acciones d-flex gap-2 mt-3">
+                <button type="button" onclick="history.length > 1 ? history.back() : window.location='{{ route('tienda.index') }}'" class="btn btn-outline-secondary flex-grow-1">
                     <i class="bi bi-arrow-left me-1"></i> Volver a la tienda
                 </button>
-                <button type="button" class="btn btn-outline-secondary btn-compartir" style="height:38px;">
+                <button type="button" class="btn btn-outline-secondary btn-compartir">
                     <i class="bi bi-share me-1"></i> Compartir
                 </button>
             </div>

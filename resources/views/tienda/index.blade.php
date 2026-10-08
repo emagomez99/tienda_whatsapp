@@ -40,20 +40,20 @@
 <div class="container py-4">
 @endif
     @if($categoriaActual)
-        <nav aria-label="Ruta" class="small mb-1">
-            <a href="{{ route('tienda.index') }}" class="text-muted text-decoration-none">Inicio</a>
+        <nav aria-label="Ruta" class="migas mb-1">
+            <a href="{{ route('tienda.index') }}">Inicio</a>
             @foreach($migas as $miga)
-                <span class="text-muted mx-1">›</span>
+                <span class="migas-separador">›</span>
                 @if($loop->last)
-                    <span class="text-muted" aria-current="page">{{ $miga['name'] }}</span>
+                    <span aria-current="page">{{ $miga['name'] }}</span>
                 @else
-                    <a href="{{ $miga['url'] }}" class="text-muted text-decoration-none">{{ $miga['name'] }}</a>
+                    <a href="{{ $miga['url'] }}">{{ $miga['name'] }}</a>
                 @endif
             @endforeach
         </nav>
-        <h1 class="h3 mb-3">{{ $categoriaActual->nombre }}</h1>
+        <h1 class="h3 tienda-titulo mb-3">{{ $categoriaActual->nombre }}</h1>
         @if($subcategorias->isNotEmpty())
-            <div class="d-flex flex-wrap gap-2 mb-3">
+            <div class="subcategorias d-flex flex-wrap gap-2 mb-3">
                 @foreach($subcategorias as $sub)
                     <a href="{{ $sub->url() }}" class="btn btn-sm btn-outline-secondary rounded-pill">{{ $sub->nombre }}</a>
                 @endforeach
@@ -63,7 +63,7 @@
 
     <div class="row mb-4">
         <div class="col-12">
-            <div class="input-group search-bar shadow-sm">
+            <div class="input-group search-bar">
                 <input type="text"
                        id="buscar-productos"
                        class="form-control"
@@ -101,10 +101,6 @@
 @endif
 
 @push('scripts')
-<style>
-.qty-grid::-webkit-outer-spin-button,
-.qty-grid::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-</style>
 <script>
 // +/- del grid (delegado para funcionar con carga dinámica)
 document.addEventListener('click', function (e) {

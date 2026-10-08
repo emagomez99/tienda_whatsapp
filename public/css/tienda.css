@@ -182,12 +182,15 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     flex-shrink: 0;
 }
 .selector-cantidad .form-control {
-    width: calc(var(--tienda-control-alto) * 1.45);
+    width: calc(var(--tienda-control-alto) * 1.3);
     flex-shrink: 0;
     padding-left: .25rem;
     padding-right: .25rem;
     font-variant-numeric: tabular-nums;
 }
+/* El botón de agregar no se parte en dos renglones en un celular angosto. */
+.selector-cantidad .btn-primary { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 575.98px) { .selector-cantidad-grande { --tienda-control-alto: 40px; } }
 .selector-cantidad input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 .selector-cantidad input[type=number]::-webkit-outer-spin-button,
 .selector-cantidad input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -255,6 +258,13 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
     background-color: var(--tienda-marca) !important;
     box-shadow: 0 1px 0 rgba(0, 0, 0, .06), 0 2px 10px rgba(16, 24, 40, .08);
     --bs-navbar-padding-y: .65rem;
+    /* Opciones con el texto legible sobre la marca (Bootstrap las deja al 55%,
+       que sobre un color de marca se lee apagado). */
+    --bs-navbar-color: rgba(var(--color-primary-texto-rgb), .86);
+    --bs-navbar-hover-color: var(--color-primary-texto);
+    --bs-navbar-active-color: var(--color-primary-texto);
+    --bs-navbar-brand-color: var(--color-primary-texto);
+    --bs-navbar-brand-hover-color: var(--color-primary-texto);
 }
 .navbar-custom .nav-link { font-weight: 500; white-space: nowrap; }
 @media (min-width: 992px) {
@@ -617,10 +627,8 @@ a.menu-lateral-opcion:hover, .menu-lateral-item:hover > a,
     font-variant-numeric: tabular-nums;
 }
 .ficha-rotulo {
-    font-size: .78rem;
+    font-size: .875rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .04em;
     color: var(--tienda-texto-suave);
     margin-bottom: .5rem;
 }
@@ -631,7 +639,8 @@ a.menu-lateral-opcion:hover, .menu-lateral-item:hover > a,
     font-size: .9rem;
 }
 .ficha-especificaciones td:first-child { color: var(--tienda-texto-suave); font-weight: 500 !important; width: 40%; }
-.ficha-compra .btn { height: var(--tienda-control-alto); }
+/* Volver y Compartir, del mismo alto que la fila de compra de arriba. */
+.ficha-acciones { --tienda-control-alto: 42px; }
 .ficha-acciones .btn { height: var(--tienda-control-alto); }
 
 /* Celular: imagen arriba de todo, botones flotantes y barra de compra fija. */

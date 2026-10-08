@@ -24,11 +24,12 @@
     @include('tienda.partials.producto-show-mobile')
 @endsection
 
+{{-- Lugar para la barra de compra fija del celular, que sólo existe si se puede comprar. --}}
 @if($producto->estaDisponible())
 @push('styles')
 <style>
 @media (max-width: 767.98px) {
-    body { padding-bottom: 68px; }
+    body { padding-bottom: 72px; }
 }
 </style>
 @endpush
@@ -104,7 +105,7 @@
         new bootstrap.Carousel(carouselDesktopEl, { touch: true, ride: false });
     }
 
-    // Sincronizar puntos indicadores del carousel desktop
+    // Sincronizar puntos indicadores del carousel desktop (el aspecto, en tienda.css)
     var carouselDesktop = document.getElementById('carousel-producto-desktop');
     if (carouselDesktop) {
         var dotsWrap = carouselDesktop.nextElementSibling;
@@ -112,7 +113,7 @@
             if (!dotsWrap) return;
             dotsWrap.querySelectorAll('button[data-bs-slide-to]').forEach(function (dot) {
                 var idx = parseInt(dot.getAttribute('data-bs-slide-to'));
-                dot.style.backgroundColor = idx === e.to ? '#555' : '#ccc';
+                dot.classList.toggle('activo', idx === e.to);
             });
         });
     }

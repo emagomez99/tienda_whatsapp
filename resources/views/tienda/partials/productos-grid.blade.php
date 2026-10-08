@@ -1,6 +1,6 @@
 @if($productos->isEmpty())
-    <div class="text-center py-5 text-muted">
-        <i class="bi bi-search" style="font-size:2.5rem;opacity:.25;"></i>
+    <div class="text-center py-5 text-muted tienda-sin-resultados">
+        <i class="bi bi-search"></i>
         <p class="mt-3 mb-0 fs-6">No se encontraron productos.</p>
     </div>
 @else
@@ -10,19 +10,17 @@
                 <div class="card h-100 producto-card">
 
                     {{-- Imagen --}}
-                    <a href="{{ $producto->url() }}" class="producto-img-wrap position-relative d-block" style="height:220px;">
+                    <a href="{{ $producto->url() }}" class="producto-img-wrap position-relative d-block">
                         <img src="{{ $producto->imagen_url ?? '/img/no-image.svg' }}"
-                             class="card-img-top"
+                             class="card-img-top img-aparece"
                              alt="{{ $producto->descripcion }}"
-                             style="width:100%;height:100%;object-fit:contain;background:#fff;opacity:0;transition:opacity .15s;"
                              onload="this.style.opacity=1"
                              onerror="this.onerror=null;this.src='/img/no-image.svg';this.style.opacity=1;">
 
                         @if($producto->stock > 0)
                             {{-- En stock: sin badge --}}
                         @elseif($producto->por_encargue)
-                            <span class="badge bg-warning text-dark position-absolute"
-                                  style="top:9px;left:9px;font-size:.72rem;">
+                            <span class="badge bg-warning text-dark producto-badge">
                                 <i class="bi bi-clock"></i> Por encargue
                             </span>
                         @else
@@ -33,9 +31,9 @@
                     </a>
 
                     {{-- Cuerpo --}}
-                    <div class="card-body d-flex flex-column px-3 pt-3 pb-2">
+                    <div class="card-body d-flex flex-column">
                         <h6 class="producto-nombre mb-2">
-                            <a href="{{ $producto->url() }}" class="text-decoration-none text-dark">
+                            <a href="{{ $producto->url() }}" class="text-decoration-none">
                                 {{ $producto->descripcion }}
                             </a>
                         </h6>
@@ -43,8 +41,7 @@
                         @if($producto->etiquetasPublicas->isNotEmpty())
                             <div class="d-flex flex-wrap gap-1 mb-2">
                                 @foreach($producto->etiquetasPublicas as $etiqueta)
-                                    <span class="badge fw-normal"
-                                          style="background:rgba(13,202,240,.12);color:#0a6a77;font-size:.7rem;">
+                                    <span class="tienda-chip">
                                         {{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}
                                     </span>
                                 @endforeach
@@ -52,7 +49,7 @@
                         @endif
 
                         @if($producto->especificaciones->count() > 0)
-                            <div class="text-muted mb-2" style="font-size:.78rem;line-height:1.6;">
+                            <div class="text-muted mb-2 producto-especificaciones">
                                 @foreach($producto->especificaciones as $espec)
                                     {{ $espec->clave }}: <strong>{{ $espec->valor }}</strong><br>
                                 @endforeach
@@ -61,38 +58,34 @@
 
                         @if($mostrarPrecios)
                             <div class="mt-auto pt-1">
-                                <span class="fs-5 fw-bold text-primary">{{ $producto->precio_con_moneda }}</span>
+                                <span class="producto-precio text-primary">{{ $producto->precio_con_moneda }}</span>
                             </div>
                         @endif
                     </div>
 
                     {{-- Footer --}}
-                    <div class="card-footer border-0 bg-transparent px-3 pb-3 pt-1">
+                    <div class="card-footer border-0 bg-transparent">
                         @if($producto->estaDisponible())
                             @php $maxGrid = $producto->stockMaximo(); @endphp
                             <form class="form-agregar" data-url="{{ route('carrito.agregar', $producto) }}">
                                 @csrf
-                                <div class="d-flex gap-1 align-items-center">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-dec"
-                                            style="width:32px;height:32px;padding:0;flex-shrink:0;" disabled>
+                                <div class="selector-cantidad selector-cantidad-chico d-flex gap-1 align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-dec" disabled>
                                         <i class="bi bi-dash"></i>
                                     </button>
                                     <input type="number" name="cantidad" value="1" min="1"
                                            @if($maxGrid !== null) max="{{ $maxGrid }}" @endif
-                                           class="form-control form-control-sm text-center qty-grid"
-                                           style="width:44px;height:32px;-moz-appearance:textfield;flex-shrink:0;">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-inc"
-                                            style="width:32px;height:32px;padding:0;flex-shrink:0;" {{ $maxGrid === 1 ? 'disabled' : '' }}>
+                                           class="form-control form-control-sm text-center qty-grid">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-inc" {{ $maxGrid === 1 ? 'disabled' : '' }}>
                                         <i class="bi bi-plus"></i>
                                     </button>
-                                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1" style="height:32px;">
+                                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
                                         <i class="bi bi-cart-plus"></i> Agregar
                                     </button>
                                 </div>
                             </form>
                         @else
-                            <button class="btn btn-light btn-sm w-100 text-muted"
-                                    style="border:1px solid #e9ecef;" disabled>
+                            <button class="btn btn-light btn-sm w-100 text-muted producto-sin-stock-boton" disabled>
                                 <i class="bi bi-x-circle me-1"></i> Sin stock
                             </button>
                         @endif
