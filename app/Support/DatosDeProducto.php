@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\EtiquetaValor;
 use Illuminate\Http\UploadedFile;
 
 /**
@@ -24,7 +25,7 @@ final class DatosDeProducto
     /** @var int[]|null ids de categorías */
     private $categorias = null;
 
-    /** @var array|null etiqueta_id => valor */
+    /** @var array<int, string[]>|null etiqueta_id => valores (uno, o varios si la característica lo admite) */
     private $etiquetas = null;
 
     /** @var array|null [['clave' => ..., 'valor' => ...], ...] */
@@ -56,14 +57,26 @@ final class DatosDeProducto
         return $copia;
     }
 
-    /** @param array $valores etiqueta_id => valor; los vacíos se descartan */
+    /**
+     * @param array $valores etiqueta_id => valor o lista de valores. Los vacíos se
+     *        descartan, y un valor repetido ("M" y "m") cuenta una vez.
+     */
     public function conEtiquetas(array $valores): self
     {
         $copia = clone $this;
         $copia->etiquetas = [];
-        foreach ($valores as $etiquetaId => $valor) {
-            if ($etiquetaId && trim((string) $valor) !== '') {
-                $copia->etiquetas[(int) $etiquetaId] = (string) $valor;
+        foreach ($valores as $etiquetaId => $lista) {
+            if (!$etiquetaId) {
+                continue;
+            }
+            $vistos = [];
+            foreach ((array) $lista as $valor) {
+                $valor = trim((string) $valor);
+                $clave = EtiquetaValor::normalizar($valor);
+                if ($valor !== '' && !isset($vistos[$clave])) {
+                    $vistos[$clave] = true;
+                    $copia->etiquetas[(int) $etiquetaId][] = $valor;
+                }
             }
         }
         return $copia;

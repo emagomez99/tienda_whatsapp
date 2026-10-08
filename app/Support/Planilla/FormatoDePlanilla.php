@@ -182,6 +182,33 @@ class FormatoDePlanilla
         return array_values(array_filter(array_map('trim', explode(',', (string) $valor)), 'strlen'));
     }
 
+    /**
+     * Separador de los valores de una característica que admite varios: "S; M; L".
+     * Punto y coma y no coma: "1,5 L" es un solo valor.
+     */
+    const SEPARADOR_VALORES = ';';
+
+    /**
+     * Los valores de una celda de característica. Si la característica admite uno
+     * solo, el punto y coma es parte del texto.
+     *
+     * @return string[]
+     */
+    public static function leerValores(string $texto, bool $admiteVarios): array
+    {
+        if (!$admiteVarios) {
+            return [$texto];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(self::SEPARADOR_VALORES, $texto)), 'strlen'));
+    }
+
+    /** @param string[] $valores */
+    public static function escribirValores(array $valores): string
+    {
+        return implode(self::SEPARADOR_VALORES . ' ', $valores);
+    }
+
     /** Texto de una celda: sin espacios de más; null si está vacía. */
     public static function leerTexto($valor): ?string
     {

@@ -188,7 +188,7 @@ class AnalisisDeImportacion
                 $this->productos[$p->id] = $p;
             }
             foreach (DB::table('producto_etiqueta')->whereIn('producto_id', $ids)->get(['producto_id', 'etiqueta_id', 'valor']) as $r) {
-                $this->valoresDelProducto[$r->producto_id][$r->etiqueta_id] = $r->valor;
+                $this->valoresDelProducto[$r->producto_id][$r->etiqueta_id][] = $r->valor;
             }
             foreach (DB::table('categoria_producto')->whereIn('producto_id', $ids)->get(['producto_id', 'categoria_id']) as $r) {
                 $this->categoriasDelProducto[$r->producto_id][] = (int) $r->categoria_id;
@@ -278,7 +278,7 @@ class AnalisisDeImportacion
 
         $faltantes = [];
         foreach ($obligatorias as $c) {
-            if (trim((string) ($tiene[$c->etiquetaId()] ?? '')) === '') {
+            if (empty($tiene[$c->etiquetaId()])) {
                 $faltantes[] = "Falta {$c->nombre()}, " . ($c->esGlobal() ? 'obligatoria en todos los productos.' : "obligatoria en {$c->origen()}.");
             }
         }
@@ -289,26 +289,33 @@ class AnalisisDeImportacion
     /** Valores nuevos que se parecen a uno existente: probablemente un error de tipeo. */
     private function buscarParecidos(array $fila, array &$resumen): void
     {
-        foreach ($fila['caracteristicas'] as $etiquetaId => $valor) {
-            $normal = EtiquetaValor::normalizar($valor);
-            $clave = $etiquetaId . '|' . $normal;
-            if (isset($this->valoresExistentes[$etiquetaId][$normal]) || isset($this->valoresMirados[$clave])) {
-                continue;
+        foreach ($fila['caracteristicas'] as $etiquetaId => $valores) {
+            foreach ((array) $valores as $valor) {
+                $this->buscarParecido((int) $etiquetaId, (string) $valor, $fila['fila'], $resumen);
             }
-            $this->valoresMirados[$clave] = true;   // cada valor nuevo se mira una vez
+        }
+    }
 
-            $etiqueta = new Etiqueta();
-            $etiqueta->id = (int) $etiquetaId;
-            $etiqueta->exists = true;
-            $parecido = $etiqueta->valorParecido($valor);
-            if ($parecido) {
-                $resumen['parecidos'][$clave] = [
-                    'caracteristica' => $this->nombresDeEtiqueta[$etiquetaId] ?? '',
-                    'escrito' => $valor,
-                    'existente' => $parecido->valor,
-                    'fila' => $fila['fila'],
-                ];
-            }
+    private function buscarParecido(int $etiquetaId, string $valor, int $numeroDeFila, array &$resumen): void
+    {
+        $normal = EtiquetaValor::normalizar($valor);
+        $clave = $etiquetaId . '|' . $normal;
+        if (isset($this->valoresExistentes[$etiquetaId][$normal]) || isset($this->valoresMirados[$clave])) {
+            return;
+        }
+        $this->valoresMirados[$clave] = true;   // cada valor nuevo se mira una vez
+
+        $etiqueta = new Etiqueta();
+        $etiqueta->id = $etiquetaId;
+        $etiqueta->exists = true;
+        $parecido = $etiqueta->valorParecido($valor);
+        if ($parecido) {
+            $resumen['parecidos'][$clave] = [
+                'caracteristica' => $this->nombresDeEtiqueta[$etiquetaId] ?? '',
+                'escrito' => $valor,
+                'existente' => $parecido->valor,
+                'fila' => $numeroDeFila,
+            ];
         }
     }
 

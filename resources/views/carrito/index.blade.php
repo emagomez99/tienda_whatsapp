@@ -74,9 +74,9 @@
                                                 </button>
                                                 <div class="collapse mt-1" id="detalle-{{ $prod->public_id }}">
                                                     <div class="d-flex flex-wrap gap-1">
-                                                        @foreach($prod->etiquetasPublicas as $etiqueta)
+                                                        @foreach(App\Models\Producto::agruparCaracteristicas($prod->etiquetasPublicas) as $caracteristica)
                                                             <span class="tienda-chip">
-                                                                {{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}
+                                                                {{ $caracteristica['etiqueta']->nombre }}: {{ $caracteristica['texto'] }}
                                                             </span>
                                                         @endforeach
                                                     </div>

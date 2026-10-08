@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Etiqueta;
+use App\Models\EtiquetaValor;
 use App\Models\Producto;
 use App\Models\ProductoEspecificacion;
+use App\Models\ProductoEtiqueta;
 use App\Models\StockMovimiento;
 use App\Support\Caracteristica;
 use App\Support\DatosDeProducto;
@@ -96,11 +99,7 @@ class GuardadoDeProducto
         }
 
         if ($datos->etiquetas() !== null) {
-            $sync = [];
-            foreach ($datos->etiquetas() as $etiquetaId => $valor) {
-                $sync[$etiquetaId] = ['valor' => $valor];
-            }
-            $producto->etiquetas()->sync($sync);
+            $this->guardarCaracteristicas($producto, $datos->etiquetas());
         }
 
         if ($datos->especificaciones() !== null) {
@@ -113,6 +112,46 @@ class GuardadoDeProducto
         if ($datos->galeria() !== null) {
             $this->galeria->sincronizar($producto, $datos->galeria(), $datos->archivosGaleria());
         }
+    }
+
+    /**
+     * Reemplaza los valores de las características: una fila de producto_etiqueta por
+     * valor. Una característica que admite uno solo se queda con el primero.
+     *
+     * Las filas que no cambian se dejan como están (no se borra y vuelve a crear todo).
+     *
+     * @param array<int, string[]> $valores
+     */
+    private function guardarCaracteristicas(Producto $producto, array $valores): void
+    {
+        $admiteVarios = Etiqueta::whereIn('id', array_keys($valores))->pluck('varios_valores', 'id')->all();
+
+        $quedan = [];
+        foreach ($valores as $etiquetaId => $lista) {
+            if (!array_key_exists($etiquetaId, $admiteVarios)) {
+                continue;   // la característica ya no existe
+            }
+            if (!$admiteVarios[$etiquetaId]) {
+                $lista = array_slice($lista, 0, 1);
+            }
+            foreach ($lista as $valor) {
+                $valorId = EtiquetaValor::resolver($etiquetaId, $valor)->id;
+                $quedan[] = $valorId;
+
+                $existe = DB::table('producto_etiqueta')
+                    ->where(['producto_id' => $producto->id, 'etiqueta_id' => $etiquetaId, 'etiqueta_valor_id' => $valorId])
+                    ->exists();
+                if (!$existe) {
+                    (new ProductoEtiqueta(['producto_id' => $producto->id, 'etiqueta_id' => $etiquetaId, 'valor' => $valor]))->save();
+                }
+            }
+        }
+
+        DB::table('producto_etiqueta')->where('producto_id', $producto->id)
+            ->when($quedan, function ($q) use ($quedan) { $q->whereNotIn('etiqueta_valor_id', $quedan); })
+            ->delete();
+
+        $producto->unsetRelation('etiquetas')->unsetRelation('etiquetasPublicas');
     }
 
     /**
@@ -141,14 +180,12 @@ class GuardadoDeProducto
 
         $cargadas = $datos->etiquetas();
         if ($cargadas === null) {
-            $cargadas = $producto->exists
-                ? $producto->etiquetas()->pluck('producto_etiqueta.valor', 'etiquetas.id')->all()
-                : [];
+            $cargadas = $producto->exists ? $producto->valoresDeCaracteristicas() : [];
         }
 
         $faltantes = [];
         foreach ($obligatorias as $caracteristica) {
-            if (trim((string) ($cargadas[$caracteristica->etiquetaId()] ?? '')) === '') {
+            if (empty($cargadas[$caracteristica->etiquetaId()])) {
                 $faltantes[] = $caracteristica->nombre();
             }
         }

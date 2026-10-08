@@ -69,6 +69,12 @@ class PlantillaDeProductos
         })->all();
     }
 
+    /** @return array<int, bool> etiqueta_id => true, las que admiten varios valores */
+    private function conVariosValores(): array
+    {
+        return array_fill_keys(Etiqueta::where('varios_valores', true)->pluck('id')->all(), true);
+    }
+
     /** Una fila por columna: qué poner y un ejemplo. */
     private function instrucciones(array $caracteristicas): array
     {
@@ -87,11 +93,15 @@ class PlantillaDeProductos
         }
         $filas[] = [FormatoDePlanilla::IMAGEN . ' 1, 2…', 'La dirección web de cada foto. La primera es la principal. Si ponés fotos, reemplazan a las que tenía el producto.', 'https://…/foto.jpg'];
 
+        $varios = $this->conVariosValores();
         foreach ($caracteristicas as $c) {
             $quien = $c['obligatoria']
                 ? ($c['origen'] ? "Obligatoria (la pide {$c['origen']})." : 'Obligatoria en todos los productos.')
                 : 'Opcional.';
-            $filas[] = [$c['nombre'] . ($c['obligatoria'] ? ' *' : ''), "Característica. {$quien} Si ya usaste valores, conviene escribirlos igual.", $this->ejemploDeValor($c['id'])];
+            $cuantos = isset($varios[$c['id']])
+                ? ' Podés poner varios, separados con punto y coma: S; M; L.'
+                : '';
+            $filas[] = [$c['nombre'] . ($c['obligatoria'] ? ' *' : ''), "Característica. {$quien}{$cuantos} Si ya usaste valores, conviene escribirlos igual.", $this->ejemploDeValor($c['id'], isset($varios[$c['id']]))];
         }
 
         $filas[] = ['', '', ''];
@@ -101,10 +111,10 @@ class PlantillaDeProductos
     }
 
     /** Los valores más usados de una característica, para que se escriban igual. */
-    private function ejemploDeValor(int $etiquetaId): string
+    private function ejemploDeValor(int $etiquetaId, bool $admiteVarios = false): string
     {
         return DB::table('producto_etiqueta')->where('etiqueta_id', $etiquetaId)
             ->select('valor', DB::raw('count(*) as n'))->groupBy('valor')->orderByDesc('n')->limit(3)
-            ->pluck('valor')->implode(', ');
+            ->pluck('valor')->implode($admiteVarios ? FormatoDePlanilla::SEPARADOR_VALORES . ' ' : ', ');
     }
 }

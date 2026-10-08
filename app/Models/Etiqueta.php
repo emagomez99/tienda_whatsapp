@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Support\EstadoValorEtiqueta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Etiqueta extends Model
 {
@@ -15,12 +16,14 @@ class Etiqueta extends Model
         'visible_usuarios',
         'global',
         'obligatoria_global',
+        'varios_valores',
     ];
 
     protected $casts = [
         'visible_usuarios' => 'boolean',
         'global' => 'boolean',
         'obligatoria_global' => 'boolean',
+        'varios_valores' => 'boolean',
     ];
 
     public function productos()
@@ -29,6 +32,14 @@ class Etiqueta extends Model
                     ->using(ProductoEtiqueta::class)
                     ->withPivot('valor', 'etiqueta_valor_id')
                     ->withTimestamps();
+    }
+
+    /** Cuántos productos tienen más de un valor cargado en esta característica. */
+    public function productosConVariosValores(): int
+    {
+        return DB::table('producto_etiqueta')->where('etiqueta_id', $this->id)
+            ->select('producto_id')->groupBy('producto_id')->havingRaw('count(*) > 1')
+            ->get()->count();
     }
 
     public function valores()

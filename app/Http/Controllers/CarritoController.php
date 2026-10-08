@@ -253,8 +253,8 @@ class CarritoController extends Controller
             $productosTextoDetalle .= $lineaBase . "\n";
 
             if ($producto->etiquetas->count() > 0) {
-                $etiquetasTexto = $producto->etiquetas->map(function ($e) {
-                    return "{$e->nombre}={$e->pivot->valor}";
+                $etiquetasTexto = collect(Producto::agruparCaracteristicas($producto->etiquetas))->map(function ($c) {
+                    return "{$c['etiqueta']->nombre}={$c['texto']}";
                 })->implode(', ');
                 $productosTextoDetalle .= "  Características: {$etiquetasTexto}\n";
             }

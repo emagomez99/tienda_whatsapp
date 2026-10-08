@@ -129,8 +129,8 @@
         {{-- Etiquetas --}}
         @if($producto->etiquetasPublicas->isNotEmpty())
             <div class="mb-3 d-flex flex-wrap gap-2">
-                @foreach($producto->etiquetasPublicas as $etiqueta)
-                    <span class="tienda-chip tienda-chip-grande">{{ $etiqueta->nombre }}: {{ $etiqueta->pivot->valor }}</span>
+                @foreach(App\Models\Producto::agruparCaracteristicas($producto->etiquetasPublicas) as $caracteristica)
+                    <span class="tienda-chip tienda-chip-grande">{{ $caracteristica['etiqueta']->nombre }}: {{ $caracteristica['texto'] }}</span>
                 @endforeach
             </div>
         @endif

@@ -102,9 +102,13 @@ class ProductosExport
             $fila[] = $imagenes[$i] ?? '';
         }
 
-        $valores = $producto->etiquetas->mapWithKeys(function ($e) { return [$e->id => $e->pivot->valor]; });
+        // Varios valores en una celda: "S; M; L" (se leen igual al volver a subirla).
+        $valores = [];
+        foreach ($producto->etiquetas as $e) {
+            $valores[$e->id][] = $e->pivot->valor;
+        }
         foreach ($this->caracteristicas as $c) {
-            $fila[] = (string) ($valores[$c['id']] ?? '');
+            $fila[] = FormatoDePlanilla::escribirValores($valores[$c['id']] ?? []);
         }
 
         return $fila;

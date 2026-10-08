@@ -29,6 +29,15 @@
                     <div class="form-text">Apagada, sirve sólo para uso interno: el cliente no la ve en el producto ni en los filtros.</div>
                 </div>
 
+                <input type="hidden" name="varios_valores" value="0">
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input @error('varios_valores') is-invalid @enderror" type="checkbox" role="switch" id="varios_valores" name="varios_valores" value="1"
+                           {{ old('varios_valores', $etiqueta->varios_valores) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="varios_valores">Un producto puede tener varios</label>
+                    <div class="form-text">Por ejemplo Talle: una remera viene en S, M y L. Si cada talle tiene su propio stock, lo vas a poder cargar en el producto. La Marca, en cambio, es una sola.</div>
+                    @error('varios_valores')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+
                 <input type="hidden" name="global" value="0">
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" role="switch" id="global" name="global" value="1"

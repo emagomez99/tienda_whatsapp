@@ -265,7 +265,49 @@ class Producto extends Model
             $relacion->orderByRaw($orden);
         }
 
-        return $relacion->orderBy('etiquetas.nombre');
+        // Con varios valores (Talle: S, M, L), en el orden en que se cargaron.
+        return $relacion->orderBy('etiquetas.nombre')->orderBy('producto_etiqueta.id');
+    }
+
+    /**
+     * Los valores cargados, por característica: etiqueta_id => [valores], en el orden
+     * en que se cargaron. Una característica puede tener varios (ver Etiqueta::varios_valores).
+     *
+     * @return array<int, string[]>
+     */
+    public function valoresDeCaracteristicas(): array
+    {
+        $valores = [];
+        $filas = DB::table('producto_etiqueta')->where('producto_id', $this->id)->orderBy('id')->get(['etiqueta_id', 'valor']);
+        foreach ($filas as $fila) {
+            $valores[(int) $fila->etiqueta_id][] = $fila->valor;
+        }
+
+        return $valores;
+    }
+
+    /**
+     * Para mostrar: una entrada por característica con todos sus valores juntos, en
+     * el orden de la lista recibida (etiquetas o etiquetasPublicas, ya cargadas).
+     * "Talle: S, M, L" en vez de tres chips de Talle.
+     *
+     * @param \Illuminate\Support\Collection $etiquetas con pivot->valor
+     * @return array<int, array{etiqueta: Etiqueta, valores: string[], texto: string}>
+     */
+    public static function agruparCaracteristicas($etiquetas): array
+    {
+        $grupos = [];
+        foreach ($etiquetas as $etiqueta) {
+            if (!isset($grupos[$etiqueta->id])) {
+                $grupos[$etiqueta->id] = ['etiqueta' => $etiqueta, 'valores' => []];
+            }
+            $grupos[$etiqueta->id]['valores'][] = (string) $etiqueta->pivot->valor;
+        }
+
+        return array_values(array_map(function ($grupo) {
+            $grupo['texto'] = implode(', ', $grupo['valores']);
+            return $grupo;
+        }, $grupos));
     }
 
     /**

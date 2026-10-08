@@ -15,7 +15,9 @@
     mapaParaFormulario) y $valoresIniciales ([{etiqueta_id, valor}]). Las categorías
     elegidas las lee de los campos categorias[] del partial de categorías.
 
-    Envía lo mismo que antes: etiquetas[i][etiqueta_id] y etiquetas[i][valor].
+    Envía etiquetas[i][etiqueta_id] y etiquetas[i][valor]: una fila por valor. Una
+    característica que admite varios (Talle: S, M, L) se carga con fichitas y manda
+    una fila por fichita.
 --}}
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -56,13 +58,20 @@
 </style>
 @endpush
 
+@php
+    // Armado acá: el @json de Blade corta mal una expresión larga con varios paréntesis.
+    $etiquetasParaElFormulario = $etiquetas->map(function ($e) {
+        return ['id' => $e->id, 'nombre' => $e->nombre, 'visible' => (bool) $e->visible_usuarios, 'varios' => (bool) $e->varios_valores];
+    })->values();
+@endphp
+
 @push('scripts')
 <script>
 (function () {
     var URL_VALORES = @json(route('admin.etiquetas.valores', ['etiqueta' => '__ID__']));
     var URL_ESTADO  = @json(route('admin.etiquetas.valores.estado', ['etiqueta' => '__ID__']));
 
-    var ETIQUETAS    = @json($etiquetas->map(function ($e) { return ['id' => $e->id, 'nombre' => $e->nombre, 'visible' => (bool) $e->visible_usuarios]; })->values());
+    var ETIQUETAS    = @json($etiquetasParaElFormulario);
     var MAPA         = @json($caracteristicasPorCategoria);
     var INICIALES    = @json(array_values($valoresIniciales));
 
@@ -70,11 +79,18 @@
     var contenedor = document.getElementById('etiquetas-container');
     var indice     = 0;
 
-    // Lo escrito, por etiqueta: sobrevive a los cambios de categoría.
+    // Lo escrito, por etiqueta (una lista: puede tener varios valores): sobrevive a
+    // los cambios de categoría.
     var valores = {};
     INICIALES.forEach(function (fila) {
-        if (fila && fila.etiqueta_id) valores[String(fila.etiqueta_id)] = fila.valor || '';
+        if (!fila || !fila.etiqueta_id || !(fila.valor || '').trim()) return;
+        var id = String(fila.etiqueta_id);
+        (valores[id] = valores[id] || []).push(fila.valor);
     });
+
+    function tieneValor(id) {
+        return (valores[id] || []).some(function (v) { return (v || '').trim() !== ''; });
+    }
 
     var porId = {};
     ETIQUETAS.forEach(function (e) { porId[String(e.id)] = e; });
@@ -88,8 +104,81 @@
 
     function guardarLoEscrito() {
         contenedor.querySelectorAll('.etiqueta-row').forEach(function (fila) {
-            valores[fila.dataset.etiquetaId] = fila.querySelector('.etiqueta-valor').value;
+            var lista = Array.prototype.map.call(fila.querySelectorAll('.etiqueta-valor-chip'), function (c) { return c.value; });
+            var escrito = fila.querySelector('.etiqueta-valor').value;
+            if (escrito.trim() !== '') lista.push(escrito);
+            valores[fila.dataset.etiquetaId] = lista;
         });
+    }
+
+    function campoOculto(nombre, valor, clase) {
+        var campo = el('input', clase || '');
+        campo.type = 'hidden';
+        campo.name = nombre;
+        campo.value = valor;
+        return campo;
+    }
+
+    /**
+     * Las fichitas de una característica con varios valores (Talle: S, M, L). Cada
+     * una manda su propia fila etiquetas[i]; el campo de texto, la que se está escribiendo.
+     */
+    function fichas(id, input, lista) {
+        var caja = el('div', 'd-flex flex-wrap gap-1 mb-1 etiqueta-fichas');
+
+        function agregar(valor) {
+            valor = (valor || '').trim();
+            if (valor === '') return false;
+            var repetido = Array.prototype.some.call(caja.querySelectorAll('.etiqueta-valor-chip'), function (c) {
+                return c.value.trim().toLowerCase() === valor.toLowerCase();
+            });
+            if (repetido) return false;
+
+            var i = indice++;
+            var ficha = el('span', 'badge rounded-pill text-bg-light border d-inline-flex align-items-center gap-1 fw-normal fs-6');
+            ficha.appendChild(el('span', '', valor));
+            ficha.appendChild(campoOculto('etiquetas[' + i + '][etiqueta_id]', id));
+            ficha.appendChild(campoOculto('etiquetas[' + i + '][valor]', valor, 'etiqueta-valor-chip'));
+            var quitar = el('button', 'btn btn-link btn-sm p-0 text-danger lh-1');
+            quitar.type = 'button';
+            quitar.title = 'Quitar «' + valor + '»';
+            quitar.setAttribute('aria-label', 'Quitar ' + valor);
+            quitar.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+            quitar.addEventListener('click', function () {
+                ficha.remove();
+                actualizarRequerido();
+                input.dispatchEvent(new Event('input', { bubbles: true }));   // vista previa y "sin guardar"
+            });
+            ficha.appendChild(quitar);
+            caja.appendChild(ficha);
+            actualizarRequerido();
+            return true;
+        }
+
+        // Obligatoria: alcanza con una fichita; el campo deja de exigirse.
+        var obligatorio = input.required;
+        function actualizarRequerido() {
+            input.required = obligatorio && caja.children.length === 0;
+        }
+
+        function agregarLoEscrito() {
+            if (agregar(input.value)) {
+                input.value = '';
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        lista.forEach(agregar);
+        input.addEventListener('keydown', function (e) {
+            // Enter con la lista de sugerencias abierta lo maneja el combo (elige y avisa con change).
+            if (e.key === 'Enter' && !input.parentElement.querySelector('.combo-lista:not(.d-none) .activo')) {
+                e.preventDefault();
+                agregarLoEscrito();
+            }
+        });
+        input.addEventListener('change', function () { setTimeout(agregarLoEscrito, 0); });
+
+        return { caja: caja, agregarLoEscrito: agregarLoEscrito };
     }
 
     /**
@@ -140,13 +229,24 @@
         input.type = 'text';
         input.id = 'etiqueta-valor-' + i;
         input.name = 'etiquetas[' + i + '][valor]';
-        input.value = valores[id] || '';
         input.maxLength = 255;
         input.autocomplete = 'off';
-        input.placeholder = tipo === 'obligatoria' ? 'Escribí o elegí un valor' : 'Opcional';
         input.required = tipo === 'obligatoria';
         input.setAttribute('data-combo', URL_VALORES.replace('__ID__', id));
-        col.appendChild(input);
+
+        if (etiqueta.varios) {
+            // Varios valores: fichitas arriba y el campo para sumar otro.
+            input.placeholder = 'Escribí un valor y apretá Enter (podés poner varios)';
+            var envoltorio = el('div');
+            var widget = fichas(id, input, valores[id] || []);
+            col.appendChild(widget.caja);
+            envoltorio.appendChild(input);
+            col.appendChild(envoltorio);
+        } else {
+            input.value = (valores[id] || [])[0] || '';
+            input.placeholder = tipo === 'obligatoria' ? 'Escribí o elegí un valor' : 'Opcional';
+            col.appendChild(input);
+        }
 
         var estado = el('div', 'etiqueta-estado small mt-1');
         if (tipo === 'no-aplica') {
@@ -221,7 +321,7 @@
         // Valores de características que sus categorías no piden: se muestran para
         // decidir qué hacer con ellos en vez de perderlos en silencio.
         Object.keys(valores).forEach(function (id) {
-            if (ids.indexOf(id) === -1 && porId[id] && (valores[id] || '').trim() !== '') {
+            if (ids.indexOf(id) === -1 && porId[id] && tieneValor(id)) {
                 contenedor.appendChild(fila(porId[id], 'no-aplica'));
             }
         });
@@ -247,7 +347,9 @@
     // avisar (al editar, cada fila diría "valor existente" sin aportar nada).
     var alAbrir = {};
     INICIALES.forEach(function (fila) {
-        if (fila && fila.etiqueta_id) alAbrir[String(fila.etiqueta_id)] = (fila.valor || '').trim();
+        if (fila && fila.etiqueta_id && alAbrir[String(fila.etiqueta_id)] === undefined) {
+            alAbrir[String(fila.etiqueta_id)] = (fila.valor || '').trim();
+        }
     });
 
     function vigilar(input, estado, etiquetaId) {

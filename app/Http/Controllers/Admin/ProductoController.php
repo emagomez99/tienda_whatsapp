@@ -268,10 +268,11 @@ class ProductoController extends Controller
             'stock', 'categorias', 'etiquetas', 'especificaciones', 'galeria', 'galeria_archivos',
         ]));
 
+        // Una fila por valor: una característica con varios (Talle: S, M, L) manda varias.
         $etiquetas = [];
         foreach ($request->input('etiquetas', []) as $fila) {
             if (!empty($fila['etiqueta_id'])) {
-                $etiquetas[$fila['etiqueta_id']] = $fila['valor'] ?? '';
+                $etiquetas[$fila['etiqueta_id']][] = $fila['valor'] ?? '';
             }
         }
 

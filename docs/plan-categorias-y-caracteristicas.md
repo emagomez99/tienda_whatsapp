@@ -258,7 +258,7 @@ Objetivo: carga y actualización masiva por planilla, con las mismas reglas que 
 ### Etapa 4 (opcional, se decide después)
 - [x] Marca como característica global por defecto en tiendas nuevas (`TenantDatabaseSeeder`: global, opcional, visible).
 - [x] **Orden de los productos dentro de una categoría**: por nombre, más nuevos, precio (pasado a la moneda base) o "Elijo cuáles van primero" (destacados en `categoria_destacados`, el resto por nombre). `App\Support\OrdenDeProductos`; vale en la página de la categoría, en sus filtros y en un menú que lleva a ella.
-- [ ] Varios valores por característica (ej. "Talles: S, M, L"; Modelo en oleomc). Ver análisis del 2026-10-06.
+- [x] Varios valores por característica (ej. "Talles: S, M, L"; Modelo en oleomc): se prende en la característica (`etiquetas.varios_valores`). `producto_etiqueta` pasa a una fila por valor (único producto+característica+valor). Formulario con fichitas; tienda "Talle: S, M"; Excel con punto y coma ("S; M; L"); no se apaga si hay productos con varios.
 - [ ] Variantes con stock propio (talle/color que el cliente elige al comprar). Proyecto aparte.
 
 ## 6. Migración por tienda (datos reales al 2026-10-07)
@@ -336,3 +336,4 @@ Datos útiles:
 | 2026-10-10 | Etapa 5, paso B: `FormatoDePlanilla`, `LecturaDePlanilla`, `AnalisisDeImportacion` (vista previa), `ImportacionDeProductos` (aplicar de a 100 con `GuardadoDeProducto`), exportación y plantilla | 2949d82 |
 | 2026-10-10 | Etapa 5, paso C: pantallas (Productos › Excel, Importar productos, vista previa con avance), ayuda; cambio a OpenSpout por rendimiento; una fila sin código con el nombre de un producto existente frena (no duplica). Probado con oleomc (30.917: exportar 25 s, analizar 23 s, tanda de 100 en 2 s) y en farmacia por el navegador (subir, revisar, aplicar) | (este commit) |
 | 2026-10-11 | Etapa 4: Marca en tiendas nuevas; orden de los productos por categoría (nombre, nuevos, precio, destacados a mano) | (este) |
+| 2026-10-11 | Etapa 4: varios valores por característica (fichitas en el producto, "S; M; L" en Excel, unir valores sin chocar) | (este) |

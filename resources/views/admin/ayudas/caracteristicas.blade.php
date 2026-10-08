@@ -28,6 +28,12 @@
     <div><strong>O todos los productos.</strong><br>La marca la tiene cualquier producto. Editala y prendé <em>Pedirla en todos los productos</em>.</div>
 </div>
 
+<h6 class="ayuda-titulo">¿Un producto con varios?</h6>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-tags"></i></span>
+    <div><strong>Prendé <em>Un producto puede tener varios</em>.</strong><br>Un pack de gaseosas puede venir en sabor Cola y Lima. Al cargar el producto escribís cada sabor y apretás Enter: queda como una fichita. En Excel, separalos con punto y coma: <em>Cola; Lima</em>.</div>
+</div>
+
 <h6 class="ayuda-titulo">Corregir errores</h6>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-chevron-right"></i></span>

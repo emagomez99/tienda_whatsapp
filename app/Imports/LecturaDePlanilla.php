@@ -24,6 +24,9 @@ class LecturaDePlanilla
     /** @var array<string, int> nombre normalizado => etiqueta_id */
     private $caracteristicasPorNombre;
 
+    /** @var array<int, bool> etiqueta_id => true, las que admiten varios valores ("S; M; L") */
+    private $conVariosValores;
+
     /** @var array|null qué es cada columna (se arma con la primera fila) */
     private $columnas = null;
 
@@ -33,9 +36,11 @@ class LecturaDePlanilla
     /** @var array filas leídas */
     public $filas = [];
 
-    public function __construct(array $caracteristicasPorNombre)
+    /** @param int[] $conVariosValores ids de las características que admiten varios valores */
+    public function __construct(array $caracteristicasPorNombre, array $conVariosValores = [])
     {
         $this->caracteristicasPorNombre = $caracteristicasPorNombre;
+        $this->conVariosValores = array_fill_keys(array_map('intval', $conVariosValores), true);
     }
 
     /** Lee el archivo (ruta absoluta, con su extensión). */
@@ -107,9 +112,12 @@ class LecturaDePlanilla
                     $fila['imagenes'][$columna['clave']] = $url;
                 }
             } elseif ($columna['tipo'] === 'caracteristica') {
+                // Siempre una lista: varios si la característica los admite ("S; M; L").
                 $valor = FormatoDePlanilla::leerTexto($celda);
                 if ($valor !== null) {
-                    $fila['caracteristicas'][$columna['clave']] = $valor;
+                    $fila['caracteristicas'][$columna['clave']] = FormatoDePlanilla::leerValores(
+                        $valor, isset($this->conVariosValores[(int) $columna['clave']])
+                    );
                 }
             } else {
                 $this->leerFija($fila, $columna['clave'], $celda);

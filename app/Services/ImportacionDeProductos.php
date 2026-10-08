@@ -66,7 +66,7 @@ class ImportacionDeProductos
         $extension = $extension === 'txt' ? 'csv' : $extension;   // un CSV que llegó como texto
         $ruta = $archivo->storeAs('importaciones/' . tenant('id'), Str::random(24) . '.' . $extension, 'local');
 
-        $lectura = new LecturaDePlanilla($this->caracteristicasPorNombre());
+        $lectura = new LecturaDePlanilla($this->caracteristicasPorNombre(), Etiqueta::where('varios_valores', true)->pluck('id')->all());
         $lectura->leer(Storage::disk('local')->path($ruta));
 
         $columnas = [];
@@ -160,9 +160,10 @@ class ImportacionDeProductos
             }
 
             // Las características que trae la planilla se suman a las que ya tiene
-            // (una columna que no vino o una celda vacía no borra nada).
+            // (una columna que no vino o una celda vacía no borra nada). Una celda con
+            // valores reemplaza todos los de esa característica: "S; M" deja S y M.
             if ($fila['caracteristicas']) {
-                $actuales = $producto ? $producto->etiquetas()->pluck('producto_etiqueta.valor', 'etiquetas.id')->all() : [];
+                $actuales = $producto ? $producto->valoresDeCaracteristicas() : [];
                 $datos = $datos->conEtiquetas(array_replace($actuales, $fila['caracteristicas']));
             }
 

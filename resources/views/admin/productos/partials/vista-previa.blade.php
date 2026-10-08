@@ -128,14 +128,17 @@
     function etiquetas() {
         var html = '';
         // Cada fila es una etiqueta (ver partials/etiquetas): su id y nombre van en la fila.
+        // Con varios valores (fichitas), van juntos: "Talle: S, M, L".
         form.querySelectorAll('.etiqueta-row').forEach(function (fila) {
-            var id    = fila.dataset.etiquetaId;
-            var valor = fila.querySelector('.etiqueta-valor');
-            if (!id || !valor || !valor.value.trim()) return;
-            if (DATOS.etiquetasVisibles.indexOf(id) === -1) return;
+            var id = fila.dataset.etiquetaId;
+            if (!id || DATOS.etiquetasVisibles.indexOf(id) === -1) return;
             var ocultos = DATOS.valoresOcultos[id] || [];
-            if (ocultos.indexOf(valor.value.trim().replace(/\s+/g, ' ').toLowerCase()) !== -1) return;
-            html += '<span class="badge fw-normal vp-etiqueta">' + texto(fila.dataset.nombre) + ': ' + texto(valor.value.trim()) + '</span>';
+            var campos = Array.prototype.slice.call(fila.querySelectorAll('.etiqueta-valor-chip, .etiqueta-valor'));
+            var lista = campos.map(function (c) { return c.value.trim(); }).filter(function (v) {
+                return v !== '' && ocultos.indexOf(v.replace(/\s+/g, ' ').toLowerCase()) === -1;
+            });
+            if (!lista.length) return;
+            html += '<span class="badge fw-normal vp-etiqueta">' + texto(fila.dataset.nombre) + ': ' + texto(lista.join(', ')) + '</span>';
         });
         return html;
     }

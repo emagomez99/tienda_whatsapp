@@ -7,6 +7,7 @@ use App\Models\Categoria;
 use App\Models\Etiqueta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class EtiquetaController extends Controller
 {
@@ -129,7 +130,19 @@ class EtiquetaController extends Controller
             'obligatoria_global' => 'boolean',
         ]);
 
-        $etiqueta->update($this->conInterruptores($validated, $request));
+        $datos = $this->conInterruptores($validated, $request);
+
+        // Volver a "un solo valor" dejaría productos con dos: primero hay que elegir uno.
+        if ($etiqueta->varios_valores && !$datos['varios_valores']) {
+            $conVarios = $etiqueta->productosConVariosValores();
+            if ($conVarios > 0) {
+                throw ValidationException::withMessages(['varios_valores' => $conVarios === 1
+                    ? 'Hay 1 producto con más de un valor: dejale uno solo antes de cambiar esto.'
+                    : "Hay {$conVarios} productos con más de un valor: dejales uno solo antes de cambiar esto."]);
+            }
+        }
+
+        $etiqueta->update($datos);
 
         return redirect()->route('admin.etiquetas.index')
             ->with('success', 'Característica actualizada correctamente');
@@ -141,6 +154,7 @@ class EtiquetaController extends Controller
         $validated['visible_usuarios'] = $request->boolean('visible_usuarios');
         $validated['global'] = $request->boolean('global');
         $validated['obligatoria_global'] = $validated['global'] && $request->boolean('obligatoria_global');
+        $validated['varios_valores'] = $request->boolean('varios_valores');
 
         return $validated;
     }

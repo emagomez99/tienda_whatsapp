@@ -127,8 +127,8 @@ class EtiquetaValor extends Model
     /**
      * Pasa los productos de este valor a $destino y borra este.
      *
-     * Ningún producto puede quedar con los dos: producto_etiqueta admite un solo valor
-     * por producto y etiqueta, así que mover las filas no choca con nada.
+     * Con una característica de varios valores, un producto puede tener los dos
+     * (Talle "M" y "Mediano"): ése se queda con el destino, sin repetirlo.
      */
     public function fusionarEn(EtiquetaValor $destino): void
     {
@@ -141,6 +141,12 @@ class EtiquetaValor extends Model
         }
 
         DB::transaction(function () use ($destino) {
+            $this->asignaciones()
+                ->whereIn('producto_id', function ($q) use ($destino) {
+                    $q->select('producto_id')->from('producto_etiqueta')->where('etiqueta_valor_id', $destino->id);
+                })
+                ->delete();
+
             $this->asignaciones()->update([
                 'etiqueta_valor_id' => $destino->id,
                 'valor'             => $destino->valor,
