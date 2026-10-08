@@ -21,6 +21,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \App\Http\Middleware\CabecerasDeSeguridad::class,
     ];
 
     /**
@@ -67,6 +68,6 @@ class Kernel extends HttpKernel
         'permiso'  => \App\Http\Middleware\PermisoMiddleware::class,
         'tenant'   => \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
         'tenant.activo' => \App\Http\Middleware\CheckTenantActivo::class,
-        'central'  => \Stancl\Tenancy\Middleware\PreventAccessFromTenants::class,
+        'central'  => \App\Http\Middleware\AccesoPlataforma::class,
     ];
 }

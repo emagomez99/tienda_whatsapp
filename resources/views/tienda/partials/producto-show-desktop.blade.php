@@ -71,7 +71,7 @@
             @endif
 
             @if($producto->detalle)
-                <div class="my-3 ficha-detalle">{!! $producto->detalle !!}</div>
+                <div class="my-3 ficha-detalle">{!! \App\Support\HtmlSeguro::limpiar($producto->detalle) !!}</div>
                 <hr>
             @endif
 

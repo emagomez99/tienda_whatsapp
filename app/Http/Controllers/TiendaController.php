@@ -301,6 +301,12 @@ class TiendaController extends Controller
             return $this->redirigirACanonica($producto);
         }
 
+        // "Mostrar en tienda" apagado: no existe para el público, aunque tenga el
+        // enlace. Quien lo edita en el panel sí lo ve, para revisarlo antes de mostrarlo.
+        if (!$producto->disponible && !optional(auth()->user())->puede('productos.ver')) {
+            abort(404);
+        }
+
         $producto->load(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda', 'imagenes']);
         $mostrarPrecios = Configuracion::mostrarPrecios();
 

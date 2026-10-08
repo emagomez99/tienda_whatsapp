@@ -7,6 +7,7 @@ use App\Models\ProductoEspecificacion;
 use App\Models\StockMovimiento;
 use App\Support\Caracteristica;
 use App\Support\DatosDeProducto;
+use App\Support\HtmlSeguro;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -24,9 +25,6 @@ use Illuminate\Validation\ValidationException;
  */
 class GuardadoDeProducto
 {
-    /** Lo que se conserva del HTML de la descripción detallada. */
-    const HTML_PERMITIDO = '<p><br><b><strong><i><em><u><ul><ol><li><a><h1><h2><h3><h4><blockquote><pre><code><img><table><thead><tbody><tr><th><td>';
-
     /** @var GaleriaProducto */
     private $galeria;
 
@@ -78,7 +76,7 @@ class GuardadoDeProducto
         unset($atributos['stock']);   // sólo por movimientos
 
         if (!empty($atributos['detalle'])) {
-            $atributos['detalle'] = strip_tags($atributos['detalle'], self::HTML_PERMITIDO);
+            $atributos['detalle'] = HtmlSeguro::limpiar($atributos['detalle']);
         }
 
         // En modo margen el precio de venta se calcula: lo que llegue en `precio`

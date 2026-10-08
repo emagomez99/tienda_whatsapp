@@ -94,7 +94,7 @@
                         </button>
                     </h2>
                     <div id="detalle-mobile" class="accordion-collapse collapse show">
-                        <div class="accordion-body px-0 ficha-detalle">{!! $producto->detalle !!}</div>
+                        <div class="accordion-body px-0 ficha-detalle">{!! \App\Support\HtmlSeguro::limpiar($producto->detalle) !!}</div>
                     </div>
                 </div>
             </div>

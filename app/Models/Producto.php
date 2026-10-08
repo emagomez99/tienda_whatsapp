@@ -393,6 +393,19 @@ class Producto extends Model
     }
 
     /**
+     * Lo mismo que evaluarCantidad, para el carrito de la tienda: un producto que no
+     * se muestra en la tienda tampoco se puede pedir (aunque alguien tenga el enlace).
+     */
+    public function evaluarParaLaTienda($solicitada)
+    {
+        if (!$this->disponible) {
+            return StockResult::insuficiente(0, '"' . $this->descripcion . '" ya no está a la venta.');
+        }
+
+        return $this->evaluarCantidad($solicitada);
+    }
+
+    /**
      * Evalúa si la cantidad solicitada es satisfacible con el stock actual.
      * Retorna un StockResult con la cantidad permitida y, si corresponde, el motivo del recorte.
      */
@@ -527,7 +540,7 @@ class Producto extends Model
             return $value;
         }
 
-        $texto = $this->detalle ? strip_tags($this->detalle) : $this->descripcion;
+        $texto = $this->detalle ? strip_tags(\App\Support\HtmlSeguro::limpiar($this->detalle)) : $this->descripcion;
         $texto = trim(preg_replace('/\s+/', ' ', $texto));
 
         // Str::limit() agrega "..." DESPUÉS del límite indicado, así que hay que

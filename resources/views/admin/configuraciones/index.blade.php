@@ -159,7 +159,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <input type="file" class="d-none" id="favicon" name="favicon" accept=".ico,.png,.jpg,.jpeg,.svg"
+                                <input type="file" class="d-none" id="favicon" name="favicon" accept=".ico,.png,.jpg,.jpeg"
                                        data-miniatura="favicon_miniatura" data-estado="favicon_estado" data-quitar="eliminar_favicon">
                                 @error('favicon')
                                     <div class="small text-danger mt-2">{{ $message }}</div>

@@ -25,7 +25,7 @@ class TenantController extends Controller
             'slug'    => 'required|alpha_dash|max:50|unique:tenants,id',
             'nombre'  => 'required|string|max:255',
             'email'   => 'required|email|unique:tenants,email',
-            'dominio' => 'required|string|max:255',
+            'dominio' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9-]+(\.[a-z0-9-]+)+$/i', 'unique:domains,domain'],
             'plan'    => 'in:free,basic,pro',
         ]);
 

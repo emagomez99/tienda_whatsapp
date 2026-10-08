@@ -136,7 +136,7 @@ class SeoService
      */
     public static function productSchema(Producto $producto)
     {
-        $texto = $producto->detalle ? strip_tags($producto->detalle) : $producto->descripcion;
+        $texto = $producto->detalle ? strip_tags(\App\Support\HtmlSeguro::limpiar($producto->detalle)) : $producto->descripcion;
         $texto = trim(preg_replace('/\s+/', ' ', $texto));
 
         $schema = [
@@ -183,7 +183,8 @@ class SeoService
      */
     public static function jsonLd(array $schema)
     {
-        return json_encode($schema, JSON_UNESCAPED_UNICODE);
+        // HEX_TAG: un nombre con "</script>" no puede cerrar el bloque y meter HTML.
+        return json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
     }
 
     /**

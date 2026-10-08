@@ -47,11 +47,11 @@ class CarritoController extends Controller
 
     public function agregar(Request $request, Producto $producto)
     {
-        $cantidad = $request->input('cantidad', 1);
+        $cantidad = $this->cantidadPedida($request);
         $carrito = session()->get('carrito', []);
 
         $cantidadActual = isset($carrito[$producto->id]) ? $carrito[$producto->id] : 0;
-        $result  = $producto->evaluarCantidad($cantidadActual + $cantidad);
+        $result  = $producto->evaluarParaLaTienda($cantidadActual + $cantidad);
         $warning = null;
 
         if (! $result->esSuficiente()) {
@@ -104,7 +104,7 @@ class CarritoController extends Controller
         $cantidad = (int) $request->input('cantidad', 1);
         $carrito = session()->get('carrito', []);
 
-        $result  = $producto->evaluarCantidad($cantidad);
+        $result  = $producto->evaluarParaLaTienda($cantidad);
         $warning = null;
         if (! $result->esSuficiente()) {
             $cantidad = $result->cantidad;
@@ -354,6 +354,14 @@ class CarritoController extends Controller
         return response()->json(['stock' => $producto->stockMaximo()]);
     }
 
+    /** Un número entero de 1 en adelante: "abc", 0 o -3 no se piden. */
+    private function cantidadPedida(Request $request): int
+    {
+        $request->validate(['cantidad' => 'nullable|integer|min:1|max:100000']);
+
+        return (int) $request->input('cantidad', 1);
+    }
+
     private function validarYCorregirStock()
     {
         $carrito = session()->get('carrito', []);
@@ -364,11 +372,13 @@ class CarritoController extends Controller
             if (!$producto) {
                 continue;
             }
-            $result = $producto->evaluarCantidad($cantidad);
+            $result = $producto->evaluarParaLaTienda($cantidad);
             if (! $result->esSuficiente()) {
                 if ($result->cantidad <= 0) {
                     unset($carrito[$id]);
-                    $ajustes[] = '"' . $producto->descripcion . '" fue eliminado del carrito porque no tiene stock disponible.';
+                    $ajustes[] = $producto->disponible
+                        ? '"' . $producto->descripcion . '" fue eliminado del carrito porque no tiene stock disponible.'
+                        : '"' . $producto->descripcion . '" fue eliminado del carrito porque ya no está a la venta.';
                 } else {
                     $carrito[$id] = $result->cantidad;
                     $ajustes[] = 'La cantidad de "' . $producto->descripcion . '" fue ajustada a ' . $result->cantidad . ' (stock disponible).';

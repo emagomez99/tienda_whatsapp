@@ -48,7 +48,7 @@
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', {!! json_encode($googleAnalyticsId) !!});
+            gtag('config', @json($googleAnalyticsId));
         </script>
     @endif
 

@@ -42,7 +42,7 @@ class GaleriaProducto
             'galeria'            => 'nullable|array|max:' . static::maximo(),
             'galeria.*'          => ['string', 'max:2100', 'regex:' . static::PATRON_FICHA],
             'galeria_archivos'   => 'nullable|array',
-            'galeria_archivos.*' => 'image|max:2048',
+            'galeria_archivos.*' => 'file|mimes:jpg,jpeg,png,gif,webp|max:2048',   // sin SVG: puede traer scripts
         ];
     }
 
@@ -51,7 +51,7 @@ class GaleriaProducto
         return [
             'galeria.max'                => 'Se pueden cargar hasta :max imágenes por producto.',
             'galeria.*.regex'            => 'Una de las imágenes no es válida: si es una URL, tiene que empezar con http:// o https://.',
-            'galeria_archivos.*.image'   => 'Uno de los archivos no es una imagen.',
+            'galeria_archivos.*.mimes'   => 'Uno de los archivos no es una foto (JPG, PNG, GIF o WEBP).',
             'galeria_archivos.*.max'     => 'Cada imagen puede pesar hasta 2 MB.',
         ];
     }

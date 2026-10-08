@@ -85,9 +85,9 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/productos/buscar', [ProductoController::class, 'buscarParaPedido'])->name('productos.buscar');
-        Route::get('/productos/preview-slug', [ProductoController::class, 'previewSlug'])->name('productos.preview-slug');
-        Route::get('/especificaciones/claves', [ProductoController::class, 'buscarEspecificacionClaves'])->name('especificaciones.claves');
-        Route::get('/especificaciones/valores', [ProductoController::class, 'buscarEspecificacionValores'])->name('especificaciones.valores');
+        Route::get('/productos/preview-slug', [ProductoController::class, 'previewSlug'])->name('productos.preview-slug')->middleware('permiso:productos.ver');
+        Route::get('/especificaciones/claves', [ProductoController::class, 'buscarEspecificacionClaves'])->name('especificaciones.claves')->middleware('permiso:productos.ver');
+        Route::get('/especificaciones/valores', [ProductoController::class, 'buscarEspecificacionValores'])->name('especificaciones.valores')->middleware('permiso:productos.ver');
         Route::get('/productos/{producto}/historial', [ProductoController::class, 'historial'])->name('productos.historial');
         Route::post('/productos/{producto}/ajustar-stock', [ProductoController::class, 'ajustarStock'])->name('productos.ajustar-stock');
 

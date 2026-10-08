@@ -72,8 +72,8 @@ class ConfiguracionController extends Controller
             'mostrar_nombre_tienda'      => 'required|in:true,false',
             'whatsapp_admin'             => 'nullable|string|max:20',
             'nombre_tienda'              => 'required|string|max:255',
-            'logo'                       => 'nullable|image|max:2048',
-            'favicon'                    => 'nullable|mimes:ico,png,jpg,jpeg,svg|max:512',
+            'logo'                       => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:2048',   // sin SVG: puede traer scripts
+            'favicon'                    => 'nullable|file|mimes:ico,png,jpg,jpeg|max:512',
             'logo_alto'                  => 'nullable|integer|between:' . Configuracion::LOGO_ALTO_MIN . ',' . Configuracion::LOGO_ALTO_MAX,
             'color_primario'             => ['required', 'regex:' . ColorHex::PATRON],
             'posicion_menu'              => 'required|in:superior,lateral',
