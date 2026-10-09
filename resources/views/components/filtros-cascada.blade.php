@@ -6,6 +6,9 @@
     @endphp
 
     @php $hayFiltrosActivos = !empty($filtrosAplicados); @endphp
+    {{-- Obligatorios: a la vista (sin elegirlos no se ve nada). Opcionales: en el panel
+         "Filtrar" de tienda/partials/barra-refinar, que trae los mismos selects. --}}
+    @if($filtrosRequeridos)
     <div class="card mb-4" id="filtros-cascada">
         <div class="card-header py-2"
              id="filtros-toggle-header"
@@ -28,33 +31,11 @@
         </div>
         <div id="filtros-body-collapse">
         <div class="card-body py-3">
-            <div class="row g-2 align-items-end">
-                @foreach($etiquetasFiltro as $index => $etiqueta)
-                    <div class="col-6 col-md-4">
-                        <label for="filtro_{{ $etiqueta->id }}" class="form-label small fw-bold mb-1">
-                            {{ $etiqueta->nombre }}
-                            @if($filtrosRequeridos)
-                                <span class="text-danger">*</span>
-                            @endif
-                        </label>
-                        <select class="form-select form-select-sm filtro-select"
-                                id="filtro_{{ $etiqueta->id }}"
-                                data-etiqueta-id="{{ $etiqueta->id }}"
-                                data-orden="{{ $index }}"
-                                data-nombre="{{ $etiqueta->nombre }}">
-                            @php
-                                $mostrarTodosEst = $filtrosConfig[(string)$etiqueta->id] ?? true;
-                                $opcionTexto = $mostrarTodosEst ? 'Todos' : 'Seleccionar ' . $etiqueta->nombre . '...';
-                                $opcionDisabled = !$mostrarTodosEst && !$filtrosRequeridos;
-                            @endphp
-                            <option value="" {{ $opcionDisabled ? 'disabled' : '' }}>{{ $opcionTexto }}</option>
-                        </select>
-                    </div>
-                @endforeach
-            </div>
+            @include('tienda.partials.selects-cascada')
         </div>
         </div>
     </div>
+    @endif
 
     {{-- El plegado en el celular (.filtros-collapsed/.filtros-expanded) está en tienda.css. --}}
     @push('scripts')
@@ -231,6 +212,12 @@
                     if (busqueda) {
                         params.append('buscar', busqueda);
                     }
+
+                    // Lo de la barra "Filtrar / Ordenar por" (está en la dirección).
+                    const actual = new URLSearchParams(window.location.search);
+                    ['orden', 'precio_desde', 'precio_hasta', 'con_stock'].forEach(function (clave) {
+                        if (actual.get(clave)) params.append(clave, actual.get(clave));
+                    });
 
                     const response = await fetch(`/productos/ajax?${params.toString()}`);
                     const data = await response.json();

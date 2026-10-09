@@ -53,6 +53,12 @@ final class OrdenDeProductos
         $this->categoriaId = $categoriaId;
     }
 
+    /** El que elige el cliente en "Ordenar por" (nunca "a mano": ése es de la categoría). */
+    public static function elegido(string $criterio): self
+    {
+        return new self($criterio === self::MANUAL ? self::NOMBRE : $criterio);
+    }
+
     public static function porNombre(): self
     {
         return new self(self::NOMBRE);
@@ -89,7 +95,7 @@ final class OrdenDeProductos
             case self::PRECIO_MAYOR:
                 $direccion = $this->criterio === self::PRECIO_MENOR ? 'asc' : 'desc';
                 // Sin precio (null) van al final en los dos sentidos: no son "gratis".
-                [$cotizacion, $valores] = $this->cotizacionPorMoneda();
+                [$cotizacion, $valores] = self::cotizacionPorMoneda();
                 $query->orderByRaw('(productos.precio * ' . $cotizacion . ') ' . $direccion . ' NULLS LAST', $valores);
                 break;
 
@@ -118,7 +124,7 @@ final class OrdenDeProductos
      *
      * @return array{0: string, 1: array} la expresión SQL y sus valores
      */
-    private function cotizacionPorMoneda(): array
+    public static function cotizacionPorMoneda(): array
     {
         $cuando = '';
         $valores = [];

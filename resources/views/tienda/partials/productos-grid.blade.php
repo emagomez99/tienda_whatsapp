@@ -1,7 +1,13 @@
 @if($productos->isEmpty())
     <div class="text-center py-5 text-muted tienda-sin-resultados">
         <i class="bi bi-search"></i>
-        <p class="mt-3 mb-0 fs-6">No se encontraron productos.</p>
+        <p class="mt-3 mb-1 fs-6">No encontramos productos con lo que elegiste.</p>
+        {{-- Con filtros, búsqueda o precio puestos, la salida es sacarlos. --}}
+        @php $hayAlgoElegido = collect(request()->query())->keys()->contains(function ($k) { return in_array($k, ['buscar', 'precio_desde', 'precio_hasta', 'con_stock', 'filtros'], true) || preg_match('/^f\d+$/', $k); }); @endphp
+        @if($hayAlgoElegido)
+            <p class="small mb-0">Probá sacando algún filtro, o
+                <a href="{{ request()->is('productos/ajax') ? strtok(url()->previous(), '?') : url()->current() }}" class="link-primary">ver todos los de esta página</a>.</p>
+        @endif
     </div>
 @else
     <div class="row row-cols-1 row-cols-md-2 {{ $menuEnSidebar ? 'row-cols-lg-2 row-cols-xl-3' : 'row-cols-lg-3 row-cols-xl-4' }} g-3 g-md-4">

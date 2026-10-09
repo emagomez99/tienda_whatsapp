@@ -9,6 +9,7 @@ use App\Models\Menu;
 use App\Models\Producto;
 use App\Support\BusquedaDeTexto;
 use App\Support\OrdenDeProductos;
+use App\Support\RefinadoDelCatalogo;
 use App\Support\SelectorDeVariantes;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -251,7 +252,9 @@ class TiendaController extends Controller
             $this->aplicarFiltroBusqueda($query, $request->buscar);
         }
 
-        $productos = $orden->aplicar($query)->paginate(12);
+        $refinado = RefinadoDelCatalogo::desde($request);
+        $refinado->aplicar($query);
+        $productos = $refinado->orden($orden)->aplicar($query)->paginate(12);
         Producto::cargarResumenDeVariantes($productos->getCollection());
         $mostrarPrecios = Configuracion::mostrarPrecios();
         $menuEnSidebar  = Configuracion::menuEnSidebar();
@@ -387,6 +390,11 @@ class TiendaController extends Controller
 
     private function paginar(Request $request, $query, bool $filtrosIncompletos, OrdenDeProductos $orden)
     {
+        // Lo que eligió el cliente: rango de precio, "solo con stock" y "Ordenar por".
+        $refinado = RefinadoDelCatalogo::desde($request);
+        $refinado->aplicar($query);
+        $orden = $refinado->orden($orden);
+
         if ($filtrosIncompletos) {
             return new LengthAwarePaginator([], 0, 12, 1, [
                 'path'  => $request->url(),

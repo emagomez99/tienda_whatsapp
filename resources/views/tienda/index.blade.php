@@ -83,7 +83,10 @@
         </div>
     </div>
 
-    {{-- Filtros en cascada si el menú los tiene configurados --}}
+    {{-- Filtrar (opcionales, precio, stock) y Ordenar por: en todas las páginas del catálogo. --}}
+    @include('tienda.partials.barra-refinar')
+
+    {{-- Filtros en cascada si el menú los tiene configurados (los obligatorios, a la vista) --}}
     @include('components.filtros-cascada', ['menuActual' => $menuActual ?? null, 'filtrosAplicados' => $filtrosAplicados ?? []])
 
     {{-- Contenedor de productos (actualizable via AJAX) --}}
@@ -200,6 +203,10 @@ document.addEventListener('submit', function (e) {
             if (urlParams.etiqueta_valor) params.append('etiqueta_valor', urlParams.etiqueta_valor);
             if (urlParams.especificacion) params.append('especificacion', urlParams.especificacion);
             if (busqueda) params.append('buscar', busqueda);
+            // Lo de la barra "Filtrar / Ordenar por" (está en la dirección).
+            new URLSearchParams(window.location.search).forEach(function (valor, clave) {
+                if (['orden', 'precio_desde', 'precio_hasta', 'con_stock'].indexOf(clave) !== -1 && valor) params.append(clave, valor);
+            });
 
             // Mostrar loading
             productosContainer.innerHTML = `
@@ -297,6 +304,10 @@ document.addEventListener('submit', function (e) {
                 if (urlParams.etiqueta_valor) params.append('etiqueta_valor', urlParams.etiqueta_valor);
                 if (urlParams.especificacion) params.append('especificacion', urlParams.especificacion);
                 if (busqueda) params.append('buscar', busqueda);
+                // Lo de la barra "Filtrar / Ordenar por" (está en la dirección).
+                new URLSearchParams(window.location.search).forEach(function (valor, clave) {
+                    if (['orden', 'precio_desde', 'precio_hasta', 'con_stock'].indexOf(clave) !== -1 && valor) params.append(clave, valor);
+                });
                 params.append('page', page);
 
                 productosContainer.innerHTML = `
