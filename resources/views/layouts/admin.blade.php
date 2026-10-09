@@ -147,6 +147,15 @@
                 </div>
             </div>
         @endif
+        {{-- Un aviso (ej. "No se devolvió el stock de..."): queda hasta que se cierra, para poder leerlo. --}}
+        @if(session('warning'))
+            <div class="toast align-items-center text-bg-warning border-0" role="alert" data-bs-autohide="false">
+                <div class="d-flex">
+                    <div class="toast-body"><i class="bi bi-exclamation-triangle me-1"></i> {{ session('warning') }}</div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+                </div>
+            </div>
+        @endif
         @if(session('error'))
             <div class="toast align-items-center text-bg-danger border-0" role="alert" data-bs-autohide="true" data-bs-delay="4000">
                 <div class="d-flex">

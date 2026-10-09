@@ -215,7 +215,7 @@
                                         <a href="{{ route('admin.productos.edit', $producto) . (request()->getQueryString() ? '?_back=' . urlencode(request()->getQueryString()) : '') }}" class="btn btn-sm btn-outline-primary" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="{{ route('admin.productos.destroy', $producto) }}" method="POST" data-confirmar="¿Eliminar este producto?" data-confirmar-boton="Sí, eliminar">
+                                        <form action="{{ route('admin.productos.destroy', $producto) }}" method="POST" data-confirmar="¿Eliminar «{{ $producto->descripcion }}»?" data-confirmar-detalle="No se puede deshacer: se borra con su historial de stock. Los pedidos donde está lo siguen mostrando por su nombre." data-confirmar-boton="Sí, eliminar">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">

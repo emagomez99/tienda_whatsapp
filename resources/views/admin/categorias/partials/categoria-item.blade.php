@@ -116,7 +116,7 @@
                             @else
                                 <form action="{{ route('admin.categorias.destroy', $categoria) }}" method="POST"
                                       data-confirmar="¿Eliminar la categoría «{{ $categoria->nombre }}»?"
-                                      data-confirmar-detalle="{{ $cantidad ? 'Sus ' . $cantidad . ($cantidad === 1 ? ' producto no se borra: deja' : ' productos no se borran: dejan') . ' de estar en esta categoría.' : 'No tiene productos.' }}"
+                                      data-confirmar-detalle="{{ $cantidad ? ($cantidad === 1 ? 'Su producto no se borra: deja' : 'Sus ' . $cantidad . ' productos no se borran: dejan') . ' de estar en esta categoría.' : 'No tiene productos.' }}"
                                       data-confirmar-boton="Sí, eliminar">
                                     @csrf
                                     @method('DELETE')

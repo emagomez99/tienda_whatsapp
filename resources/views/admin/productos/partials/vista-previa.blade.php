@@ -120,6 +120,17 @@
     }
 
     function stock() {
+        // Con variantes, el stock es la suma de las que se venden (Producto::recalcularStockDeVariantes).
+        var variantes = form.querySelectorAll('#variantes-filas tr');
+        if (variantes.length) {
+            var suma = 0;
+            variantes.forEach(function (fila) {
+                var activa = fila.querySelector('.variante-activa');
+                var cantidad = parseInt((fila.querySelector('.variante-stock') || {}).value, 10);
+                if ((!activa || activa.checked) && !isNaN(cantidad)) suma += cantidad;
+            });
+            return suma;
+        }
         if (DATOS.stockGuardado !== null) return DATOS.stockGuardado;
         var valor = parseInt((el('stock') || {}).value, 10);
         return isNaN(valor) ? 0 : valor;

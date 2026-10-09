@@ -460,7 +460,17 @@
     document.addEventListener('propiedades-de-variantes', function (e) {
         var nuevas = (e.detail || []).join('|');
         if (nuevas === propiedadesDeVariantes.join('|')) return;
+        var antes = propiedadesDeVariantes;
         propiedadesDeVariantes = e.detail || [];
+        // Una propiedad que se quita de Variantes (Color) se va con sus valores: eran
+        // los de las variantes, no un dato aparte. Si no, el producto seguiría diciendo
+        // "Color: Azul, Blanco" en la tienda sin tener colores para elegir.
+        ETIQUETAS.forEach(function (etiqueta) {
+            var nombre = String(etiqueta.nombre).trim().replace(/\s+/g, ' ').toLowerCase();
+            if (antes.indexOf(nombre) !== -1 && propiedadesDeVariantes.indexOf(nombre) === -1) {
+                delete valores[String(etiqueta.id)];
+            }
+        });
         pintar();
     });
     pintar();

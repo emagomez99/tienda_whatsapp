@@ -27,6 +27,8 @@ final class TemasDeAyuda
             'Cargar, editar y encontrar tus productos.', 'cargar alta precio stock foto imagen codigo descripcion'],
         'variantes' => ['Talles, colores y variantes', 'bi-grid-3x3-gap', 'admin.ayudas.variantes', 'admin.productos.index', 'Ir a Productos', 'productos.ver',
             'Un producto que viene en varios talles o colores.', 'talle color sabor variante opcion propiedad stock'],
+        'historial' => ['Historial de stock', 'bi-clock-history', 'admin.ayudas.historial', 'admin.productos.index', 'Ir a Productos', 'productos.ver',
+            'Cuándo y por qué cambió el stock de un producto.', 'stock historial movimiento entrada salida devolucion ajuste cuaderno'],
         'importar' => ['Excel', 'bi-file-earmark-spreadsheet', 'admin.ayudas.importar', 'admin.importaciones.index', 'Ir a Excel', 'productos.importar',
             'Cargar o cambiar muchos productos de una vez.', 'excel planilla importar exportar masivo precios muchos'],
         'pedidos' => ['Pedidos', 'bi-bag-check', 'admin.ayudas.pedidos', 'admin.pedidos.index', 'Ir a Pedidos', 'pedidos.ver',

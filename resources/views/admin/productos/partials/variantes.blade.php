@@ -217,8 +217,71 @@
         return input;
     }
 
+    // Las filas que se ven ahora, con lo escrito: [{clave, valores, dato}].
+    function filasActuales() {
+        return Array.prototype.map.call(filas.querySelectorAll('tr[data-clave]'), function (tr) {
+            return { clave: tr.dataset.clave, valores: JSON.parse(tr.dataset.valores), dato: porCombinacion[tr.dataset.clave] || {} };
+        });
+    }
+
+    function contiene(grande, chico) {
+        return Object.keys(chico).every(function (p) {
+            return Object.prototype.hasOwnProperty.call(grande, p) && normal(grande[p]) === normal(chico[p]);
+        });
+    }
+
+    function stockDe(dato) {
+        var n = parseInt(dato.stock, 10);
+        return isNaN(n) ? 0 : n;
+    }
+
+    /**
+     * Una combinación nueva que sale de las que había, para no perder stock:
+     * - Se quitó una propiedad (Color): "S · Azul" y "S · Blanco" se juntan en "S",
+     *   que suma su stock.
+     * - Se agregó una propiedad: "S" pasa entera (stock, precio, código) a la primera
+     *   de sus combinaciones ("S · Azul"); las demás empiezan en 0.
+     * Anota en `heredadas` las filas anteriores que pasaron lo suyo a otra.
+     */
+    function heredar(valores, anteriores, heredadas) {
+        var n = Object.keys(valores).length;
+
+        var juntadas = anteriores.filter(function (a) { return Object.keys(a.valores).length > n && contiene(a.valores, valores); });
+        if (juntadas.length) {
+            var stock = 0, precios = {}, activa = false;
+            juntadas.forEach(function (a) {
+                stock += stockDe(a.dato);
+                precios[a.dato.precio || ''] = true;
+                activa = activa || a.dato.activa !== false;
+                heredadas[a.clave] = true;
+            });
+            var conId = juntadas.filter(function (a) { return a.dato.id; })[0];
+            var unPrecio = Object.keys(precios);
+            return {
+                id: conId ? conId.dato.id : null,
+                stock: String(stock),
+                precio: unPrecio.length === 1 ? unPrecio[0] : '',
+                codigo: juntadas.length === 1 ? (juntadas[0].dato.codigo || '') : '',
+                activa: activa
+            };
+        }
+
+        var madre = anteriores.filter(function (a) { return Object.keys(a.valores).length < n && contiene(valores, a.valores); })[0];
+        if (madre) {
+            if (!heredadas[madre.clave]) {
+                heredadas[madre.clave] = true;
+                return Object.assign({}, madre.dato);
+            }
+            return { activa: madre.dato.activa !== false, precio: madre.dato.precio || '' };
+        }
+        return null;
+    }
+
     function pintar() {
         guardarLoEscrito();
+        var anteriores = filasActuales();
+        var heredadas = {};
+        var nuevasClaves = {};
         var hay = propiedades.length > 0;
 
         vacio.classList.toggle('d-none', hay);
@@ -269,9 +332,12 @@
         if (hay) {
             combinaciones().forEach(function (valores, i) {
                 var k = clave(valores);
-                var dato = porCombinacion[k] || { activa: true };
+                var dato = porCombinacion[k] || heredar(valores, anteriores, heredadas) || { activa: true };
+                porCombinacion[k] = dato;
+                nuevasClaves[k] = true;
                 var tr = document.createElement('tr');
                 tr.dataset.clave = k;
+                tr.dataset.valores = JSON.stringify(valores);
 
                 var td = document.createElement('td');
                 td.className = 'fw-semibold';
@@ -311,6 +377,22 @@
 
                 filas.appendChild(tr);
             });
+
+            // Lo que pasó a otra fila ya no se recupera al volver a tildarla: el stock
+            // se contaría dos veces.
+            Object.keys(heredadas).forEach(function (k) {
+                if (!nuevasClaves[k]) delete porCombinacion[k];
+            });
+
+            // Una fila que se va con stock (se destildó M): avisar antes de guardar.
+            var seVan = anteriores.filter(function (a) {
+                return stockDe(a.dato) > 0 && !nuevasClaves[a.clave] && !heredadas[a.clave];
+            });
+            if (seVan.length && typeof showToast === 'function') {
+                showToast('Al guardar, se quita del stock: ' + seVan.map(function (a) {
+                    return Object.keys(a.valores).map(function (n) { return a.valores[n]; }).join(' · ') + ' (' + stockDe(a.dato) + ')';
+                }).join(', ') + '.', 'warning');
+            }
         }
 
         // Características no vuelve a pedir lo que se carga acá (ej. Talle).
@@ -373,7 +455,10 @@
     }
 
     function valoresMarcados() {
-        return Array.prototype.filter.call(grupos.querySelectorAll('.propiedad-valor'), function (c) { return c.checked; })
+        var marcadas = Array.prototype.filter.call(grupos.querySelectorAll('.propiedad-valor'), function (c) { return c.checked; });
+        // Los escritos a mano van al final, como al editar: "S, M, L, Único" y no "Único, S, M, L".
+        var escritas = marcadas.filter(function (c) { return c.closest('.grupo-nuevos'); });
+        return marcadas.filter(function (c) { return escritas.indexOf(c) === -1; }).concat(escritas)
             .map(function (c) { return c.value; });
     }
 

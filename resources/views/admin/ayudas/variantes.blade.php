@@ -30,6 +30,10 @@
     <div><strong>El cliente elige el talle con un botón.</strong><br>Si uno se terminó, aparece tachado. Al confirmar el pedido se descuenta el stock de ese talle.</div>
 </div>
 <div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-dash-circle"></i></span>
+    <div><strong>¿Sacás el Color pero seguís con los talles?</strong><br>Quitá Color con la <i class="bi bi-x-lg"></i>: «S Rojo» y «S Azul» se juntan en «S», con el stock de las dos sumado. Si destildás un talle (Editar), lo que tenía de ese talle sale del stock: te avisa antes de guardar.</div>
+</div>
+<div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-x-circle"></i></span>
     <div><strong>¿Ya no lo vendés en talles?</strong><br>Quitá las propiedades con la <i class="bi bi-x-lg"></i>. Al guardar te pregunta, y el stock de las variantes vuelve al producto.</div>
 </div>

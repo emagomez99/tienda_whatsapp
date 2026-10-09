@@ -205,7 +205,7 @@
             </div>
             <div class="modal-body">
                 <p>¿Confirmás el pedido <strong>#{{ $pedido->id }}</strong> de <strong>{{ $pedido->nombre }} {{ $pedido->apellido }}</strong>?</p>
-                <p class="text-muted mb-0"><i class="bi bi-info-circle"></i> Se descontará el stock de los productos que lo tengan disponible.</p>
+                <p class="text-muted mb-0"><i class="bi bi-info-circle"></i> Se descuenta del stock lo que lleva cada producto. Si de alguno no alcanza, te avisamos y no se confirma.</p>
             </div>
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
@@ -261,7 +261,11 @@
             </div>
             <div class="modal-body">
                 <p>¿Eliminás este ítem del pedido?</p>
-                <p class="text-muted mb-0"><i class="bi bi-arrow-counterclockwise"></i> El stock del producto será restaurado.</p>
+                @if($pedido->esConfirmado())
+                    <p class="text-muted mb-0"><i class="bi bi-arrow-counterclockwise"></i> Lo que se descontó de este ítem vuelve al stock.</p>
+                @else
+                    <p class="text-muted mb-0"><i class="bi bi-info-circle"></i> El pedido todavía no descontó stock: no cambia nada en el stock.</p>
+                @endif
             </div>
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>

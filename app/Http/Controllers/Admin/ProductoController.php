@@ -399,6 +399,10 @@ class ProductoController extends Controller
         $movimientos = $producto->movimientos()
             ->with(['pedido', 'user', 'variante.valores.etiqueta'])
             ->orderBy('created_at', 'desc')
+            // Varios movimientos del mismo guardado tienen la misma hora: sin esto salían
+            // mezclados ("vuelve al producto" debajo de lo que lo causó) y la paginación
+            // podía repetir o saltear alguno.
+            ->orderBy('id', 'desc')
             ->paginate(25);
 
         $totales = [

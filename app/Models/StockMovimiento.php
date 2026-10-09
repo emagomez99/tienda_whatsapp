@@ -36,14 +36,18 @@ class StockMovimiento extends Model
         return $this->belongsTo(Variante::class);
     }
 
-    /** "Talle: P", aunque la variante ya no exista; null si el movimiento es del producto. */
+    /**
+     * "Talle: P", aunque la variante ya no exista; null si el movimiento es del producto.
+     * Es el nombre que tenía al moverse: si después se le quitó el Color, un movimiento
+     * de "S · Azul" no pasa a decir "S".
+     */
     public function nombreDeVariante(): ?string
     {
-        if ($this->variante) {
-            return $this->variante->nombreDetallado();
+        if ($this->variante_nombre) {
+            return $this->variante_nombre;
         }
 
-        return $this->variante_nombre ?: null;
+        return $this->variante ? $this->variante->nombreDetallado() : null;
     }
 
     public function pedido()

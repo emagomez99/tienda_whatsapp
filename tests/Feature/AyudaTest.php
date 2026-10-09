@@ -78,6 +78,9 @@ class AyudaTest extends TestCase
 
         // Cada "Cómo funciona" lleva a la Ayuda completa.
         $this->get($this->urlTenant('admin/categorias'))->assertSee('Ver toda la ayuda');
+        // Ajustes también tiene su "Cómo funciona" (el tema existía pero la pantalla no lo mostraba).
+        $this->get($this->urlTenant('admin/configuraciones'))->assertOk()->assertSee('Cómo funcionan los ajustes');
+        $this->get($this->urlTenant('admin/ayuda/historial'))->assertOk()->assertSee('el cuaderno del stock');
     }
 
     /** @test */

@@ -17,6 +17,9 @@
         </p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
+        <x-ayuda id="ayuda-historial" titulo="Cómo leer el historial">
+            @include('admin.ayudas.historial')
+        </x-ayuda>
         {{-- Con variantes, el stock se cambia en cada una (en la edición del producto). --}}
         @unless($producto->tieneVariantes())
             <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-ajuste-stock">

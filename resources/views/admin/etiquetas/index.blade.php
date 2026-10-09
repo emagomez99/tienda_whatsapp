@@ -82,7 +82,10 @@
                             </a>
                             <form action="{{ route('admin.etiquetas.destroy', $etiqueta) }}" method="POST"
                                   data-confirmar="¿Eliminar la característica «{{ $etiqueta->nombre }}»?"
-                                  data-confirmar-detalle="Se {{ $etiqueta->valores_count === 1 ? 'borra también su único valor' : 'borran también sus ' . $etiqueta->valores_count . ' valores' }} y se quita de {{ $etiqueta->productos_count }} {{ $etiqueta->productos_count === 1 ? 'producto' : 'productos' }}."
+                                  data-confirmar-detalle="{{ $etiqueta->valores_count === 0
+                                      ? 'No tiene valores: ningún producto la usa.'
+                                      : 'Se ' . ($etiqueta->valores_count === 1 ? 'borra también su único valor' : 'borran también sus ' . $etiqueta->valores_count . ' valores')
+                                        . ($etiqueta->productos_count === 0 ? ', que ningún producto usa.' : ' y se quita de ' . $etiqueta->productos_count . ($etiqueta->productos_count === 1 ? ' producto.' : ' productos.')) }}"
                                   data-confirmar-boton="Sí, eliminar">
                                 @csrf
                                 @method('DELETE')

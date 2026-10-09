@@ -443,10 +443,22 @@ class CarritoController extends Controller
             }
         }
 
-        // Las líneas de productos que ya no existen se van sin aviso.
+        // Las líneas de productos que ya no existen se van sin aviso. Si lo que ya no
+        // existe es la opción (se le quitó el Color al producto), se avisa: el cliente
+        // la había elegido y si no la ve más no sabe qué pasó.
+        $sinOpcion = [];
         foreach (array_keys($carrito) as $clave) {
             if (!isset($quedan[(string) $clave])) {
+                [$productoId, $varianteId] = LineaDeCarrito::leerClave($clave);
+                if ($varianteId) {
+                    $sinOpcion[] = $productoId;
+                }
                 unset($carrito[$clave]);
+            }
+        }
+        if ($sinOpcion) {
+            foreach (Producto::whereIn('id', array_unique($sinOpcion))->orderBy('descripcion')->pluck('descripcion') as $nombre) {
+                $ajustes[] = 'La opción de "' . $nombre . '" que elegiste ya no está a la venta y se quitó del carrito. Fijate si hay otra que te sirva.';
             }
         }
 

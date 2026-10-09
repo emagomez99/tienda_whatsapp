@@ -5,6 +5,9 @@
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h3 class="mb-0"><i class="bi bi-sliders"></i> Ajustes</h3>
+    <x-ayuda id="ayuda-ajustes" titulo="Cómo funcionan los ajustes">
+        @include('admin.ayudas.ajustes')
+    </x-ayuda>
 </div>
 
 <form action="{{ route('admin.configuraciones.update') }}" method="POST" enctype="multipart/form-data" id="form-ajustes">

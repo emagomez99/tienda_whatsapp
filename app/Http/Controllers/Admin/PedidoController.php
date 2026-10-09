@@ -253,7 +253,8 @@ class PedidoController extends Controller
     public function cancelar(Pedido $pedido)
     {
         // Con el pedido bloqueado: dos "Cancelar" a la vez devolvían el stock dos veces.
-        $error = DB::transaction(function () use ($pedido) {
+        $sinDevolver = [];
+        $error = DB::transaction(function () use ($pedido, &$sinDevolver) {
             if ($pedido->bloquear()->esCancelado()) {
                 return 'El pedido ya está cancelado.';
             }
@@ -270,6 +271,8 @@ class PedidoController extends Controller
                             $pedido->id,
                             auth()->id()
                         );
+                    } elseif ($this->sinDondeDevolver($item)) {
+                        $sinDevolver[] = $item->descripcion;
                     }
                 }
             }
@@ -283,8 +286,25 @@ class PedidoController extends Controller
             return redirect()->route('admin.pedidos.show', $pedido)->with('error', $error);
         }
 
-        return redirect()->route('admin.pedidos.show', $pedido)
-            ->with('success', 'Pedido cancelado.');
+        $redireccion = redirect()->route('admin.pedidos.show', $pedido)->with('success', 'Pedido cancelado.');
+
+        return $sinDevolver ? $redireccion->with('warning', $this->avisoSinDevolver($sinDevolver)) : $redireccion;
+    }
+
+    /**
+     * Un ítem confirmado cuyo stock no tiene adónde volver: se borró la opción que se
+     * vendió (al producto se le quitó el Color) o el producto. Hay que avisarlo, si no
+     * el dueño cree que el stock volvió.
+     */
+    private function sinDondeDevolver(PedidoProducto $item): bool
+    {
+        return !$item->producto || (!$item->producto->por_encargue && !$this->puedeDevolver($item));
+    }
+
+    private function avisoSinDevolver(array $descripciones): string
+    {
+        return 'No se devolvió el stock de ' . implode(', ', array_map(function ($d) { return '"' . $d . '"'; }, $descripciones))
+            . ': esa opción o ese producto ya no existe. Si lo tenés, sumalo a mano desde el producto.';
     }
 
     public function updateProducto(Request $request, Pedido $pedido, PedidoProducto $item)
@@ -315,7 +335,8 @@ class PedidoController extends Controller
 
         // La devolución y el borrado van juntos y con el pedido bloqueado: dos clics
         // en "Quitar" devolvían el stock dos veces.
-        $error = DB::transaction(function () use ($pedido, $item) {
+        $sinDevolver = false;
+        $error = DB::transaction(function () use ($pedido, $item, &$sinDevolver) {
             if ($pedido->bloquear()->esCancelado()) {
                 return 'No se puede editar un pedido cancelado.';
             }
@@ -332,6 +353,8 @@ class PedidoController extends Controller
                     $pedido->id,
                     auth()->id()
                 );
+            } elseif ($pedido->esConfirmado() && $this->sinDondeDevolver($item)) {
+                $sinDevolver = true;
             }
 
             $item->delete();
@@ -342,6 +365,12 @@ class PedidoController extends Controller
 
         if ($error) {
             return redirect()->route('admin.pedidos.show', $pedido)->with('error', $error);
+        }
+
+        if ($sinDevolver) {
+            return redirect()->route('admin.pedidos.show', $pedido)
+                ->with('success', 'Ítem eliminado.')
+                ->with('warning', $this->avisoSinDevolver([$item->descripcion]));
         }
 
         $msg = $pedido->esConfirmado() ? 'Ítem eliminado y stock restaurado.' : 'Ítem eliminado.';

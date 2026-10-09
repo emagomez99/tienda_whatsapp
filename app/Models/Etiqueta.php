@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\BusquedaDeTexto;
 use App\Support\EstadoValorEtiqueta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -57,10 +58,21 @@ class Etiqueta extends Model
         return $etiqueta;
     }
 
-    /** Sin importar mayúsculas ni espacios de más: "talle" es "Talle". */
+    /**
+     * Sin importar mayúsculas ni espacios de más: "talle" es "Talle". Y si no hay una
+     * igual, sin importar las tildes: "Presentacion" es "Presentación" (al crear una
+     * propiedad desde Variantes se escribe rápido, y quedaban dos características).
+     */
     public static function porNombre(string $nombre): ?self
     {
-        return static::whereRaw('lower(trim(nombre)) = ?', [mb_strtolower(EtiquetaValor::limpiar($nombre), 'UTF-8')])->first();
+        $limpio = EtiquetaValor::limpiar($nombre);
+        $igual = static::whereRaw('lower(trim(nombre)) = ?', [mb_strtolower($limpio, 'UTF-8')])->first();
+        if ($igual) {
+            return $igual;
+        }
+
+        return static::whereRaw(BusquedaDeTexto::columnaPlana('trim(nombre)') . ' = ?', [BusquedaDeTexto::aplanar($limpio)])
+            ->orderBy('id')->first();
     }
 
     /** Cuántos productos tienen más de un valor cargado en esta característica. */

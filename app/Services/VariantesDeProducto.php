@@ -56,10 +56,19 @@ class VariantesDeProducto
         // Con la característica de cada valor: el historial guarda "Talle: M" en cada movimiento.
         $existentes = $producto->variantes()->with('valores.etiqueta')->get()->keyBy('id');
 
+        // Los valores de cada propiedad que usaban las variantes (Color => [Azul, Blanco]).
+        $valoresDeAntes = [];
+        foreach ($existentes as $variante) {
+            foreach ($variante->combinacion() as $etiquetaId => $valorId) {
+                $valoresDeAntes[$etiquetaId][$valorId] = $valorId;
+            }
+        }
+
         if (empty($lista)) {
             if ($existentes->isEmpty()) {
                 return;
             }
+            $this->quitarValoresDePropiedadesQueNoQuedan($producto, $valoresDeAntes, []);
             // Dejar de usar variantes no pierde stock: lo que había en las que se
             // venden vuelve al producto, con su movimiento en el historial.
             $total = (int) $existentes->where('activa', true)->sum('stock');
@@ -80,6 +89,7 @@ class VariantesDeProducto
         }
 
         $lista = $this->validar($lista);
+        $this->quitarValoresDePropiedadesQueNoQuedan($producto, $valoresDeAntes, array_keys($lista[0]['combinacion']));
         $this->sumarValoresAlProducto($producto, $lista);
 
         // El stock que tenía el producto pasa a las variantes: sale antes de crearlas.
@@ -272,6 +282,30 @@ class VariantesDeProducto
         }
     }
 
+    /**
+     * Una propiedad que se le quita a las variantes (Color) se va también de las
+     * características del producto, con los valores que venían de ellas: si no, la
+     * tienda seguiría diciendo "Color: Azul, Blanco" sin colores para elegir, y el
+     * producto aparecería al filtrar por Azul.
+     *
+     * @param array<int, int[]> $valoresDeAntes etiqueta_id => ids de valores que usaban las variantes
+     * @param int[] $propiedadesQueQuedan etiqueta_id de las propiedades de las variantes nuevas
+     */
+    private function quitarValoresDePropiedadesQueNoQuedan(Producto $producto, array $valoresDeAntes, array $propiedadesQueQuedan): void
+    {
+        foreach ($valoresDeAntes as $etiquetaId => $valorIds) {
+            if (in_array($etiquetaId, $propiedadesQueQuedan, true)) {
+                continue;
+            }
+            DB::table('producto_etiqueta')
+                ->where('producto_id', $producto->id)
+                ->where('etiqueta_id', $etiquetaId)
+                ->whereIn('etiqueta_valor_id', array_values($valorIds))
+                ->delete();
+        }
+        $producto->unsetRelation('etiquetas')->unsetRelation('etiquetasPublicas');
+    }
+
     /** Si hay Talle M para comprar, el producto tiene Talle M. */
     private function sumarValoresAlProducto(Producto $producto, array $lista): void
     {
@@ -281,6 +315,11 @@ class VariantesDeProducto
         }
 
         foreach ($lista as $datos) {
+            // Una que no se vende (Se vende apagado) no cuenta: la tienda no diría
+            // "Talle: L" ni lo mostraría al filtrar por L si no hay L para elegir.
+            if (!$datos['activa']) {
+                continue;
+            }
             foreach ($datos['combinacion'] as $etiquetaId => $valorId) {
                 if (!isset($tiene[$valorId])) {
                     (new ProductoEtiqueta(['producto_id' => $producto->id, 'etiqueta_id' => $etiquetaId, 'valor' => $datos['valores'][$etiquetaId]]))->save();

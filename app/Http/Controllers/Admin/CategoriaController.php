@@ -112,7 +112,12 @@ class CategoriaController extends Controller
         return view('admin.categorias.edit', [
             'categoria'  => $categoria,
             'madres'     => $this->madresPosibles($categoria),
-            'destacados' => $categoria->destacados()->get(['productos.id', 'productos.descripcion', 'productos.id_proveedor']),
+            // Sólo los que siguen en la categoría: un destacado que se fue (se borró su
+            // subcategoría o se lo cambió de categoría) ya no se ve en la tienda, y
+            // mostrarlo en la lista confunde.
+            'destacados' => $categoria->destacados()
+                ->whereIn('productos.id', Producto::enCategoria($categoria)->select('productos.id'))
+                ->get(['productos.id', 'productos.descripcion', 'productos.id_proveedor']),
         ] + $this->datosCaracteristicas($categoria));
     }
 
