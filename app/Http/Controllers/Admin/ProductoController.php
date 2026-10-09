@@ -61,7 +61,9 @@ class ProductoController extends Controller
         $caminos = $categorias->mapWithKeys(function (Categoria $c) { return [$c->id => $c->camino()]; })->all();
         $sinCategoria = $categorias->isNotEmpty() ? Producto::sinCategoria()->count() : 0;
 
-        return view('admin.productos.index', compact('productos', 'proveedores', 'filtro', 'categorias', 'caminos', 'sinCategoria'));
+        $caracteristicas = Etiqueta::orderBy('nombre')->get(['id', 'nombre']);
+
+        return view('admin.productos.index', compact('productos', 'proveedores', 'filtro', 'categorias', 'caminos', 'sinCategoria', 'caracteristicas'));
     }
 
     /**
