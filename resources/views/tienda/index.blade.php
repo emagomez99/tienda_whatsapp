@@ -61,29 +61,7 @@
         @endif
     @endif
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="input-group search-bar">
-                <input type="text"
-                       id="buscar-productos"
-                       class="form-control"
-                       placeholder="Buscar productos..."
-                       value="{{ request('buscar') }}"
-                       autocomplete="off">
-                <button class="btn btn-primary px-3" type="button" id="btn-buscar">
-                    <i class="bi bi-search"></i>
-                </button>
-                <button class="btn btn-outline-secondary" type="button" id="btn-limpiar-busqueda" style="display: none;">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-            <small class="text-muted" id="busqueda-contexto" style="display: none;">
-                <i class="bi bi-info-circle"></i> Buscando dentro de los productos filtrados
-            </small>
-        </div>
-    </div>
-
-    {{-- Filtrar (opcionales, precio, stock) y Ordenar por: en todas las páginas del catálogo. --}}
+    {{-- Buscador, Ordenar por y Filtrar (opcionales, precio, stock), en una fila: en todas las páginas del catálogo. --}}
     @include('tienda.partials.barra-refinar')
 
     {{-- Filtros en cascada si el menú los tiene configurados (los obligatorios, a la vista) --}}

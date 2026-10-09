@@ -35,29 +35,46 @@
     }
 @endphp
 
-{{-- Todo a la derecha, como el embudo del panel: Ordenar por y, al final, Filtrar. --}}
-<div class="d-flex flex-wrap align-items-center justify-content-end gap-2 mb-2 barra-refinar">
+{{-- Una fila: el buscador a la izquierda (de un tamaño cómodo, no toda la pantalla) y,
+     a la derecha como el embudo del panel, Ordenar por y Filtrar. En el celular el
+     buscador ocupa la primera línea y los controles bajan. Los ids del buscador los
+     usan los scripts de tienda/index y components/filtros-cascada. --}}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2 barra-refinar">
+    {{-- Buscador: píldora con la lupa (que también busca) y la ✕ para borrar, adentro. --}}
+    <div class="buscador-catalogo me-auto">
+        <div class="buscador-pildora">
+            <button class="buscador-lupa" type="button" id="btn-buscar" aria-label="Buscar"><i class="bi bi-search"></i></button>
+            <input type="search" id="buscar-productos" placeholder="Buscar productos" value="{{ request('buscar') }}" autocomplete="off" aria-label="Buscar productos">
+            <button class="buscador-borrar" type="button" id="btn-limpiar-busqueda" style="display: none;" aria-label="Borrar la búsqueda"><i class="bi bi-x-circle-fill"></i></button>
+        </div>
+        <small class="text-muted ms-3" id="busqueda-contexto" style="display: none;">
+            <i class="bi bi-info-circle"></i> Buscando dentro de los productos filtrados
+        </small>
+    </div>
+
     @if($cascadaEnPanel)
-        <span class="small text-muted me-auto" id="contador-resultados" style="display: none;"><span id="total-productos">0</span> productos</span>
+        <span class="small text-muted" id="contador-resultados" style="display: none;"><span id="total-productos">0</span> productos</span>
     @endif
-    <label for="refinar-orden" class="small text-muted text-nowrap mb-0">Ordenar por</label>
-    <select id="refinar-orden" class="form-select form-select-sm" style="width: auto;">
-        @foreach(App\Support\RefinadoDelCatalogo::ORDENES as $valor => $texto)
-            <option value="{{ $valor }}" {{ $refinado->ordenElegido() === $valor ? 'selected' : '' }}>{{ $texto }}</option>
-        @endforeach
-    </select>
-    <button type="button" class="btn btn-outline-secondary btn-sm position-relative" data-bs-toggle="offcanvas" data-bs-target="#panel-refinar" aria-controls="panel-refinar">
-        <i class="bi bi-funnel"></i> Filtrar
-        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ $refinado->cantidad() ? '' : 'd-none' }}"
-              id="refinar-globito" data-servidor="{{ $refinado->cantidad() }}">{{ $refinado->cantidad() }}</span>
+
+    <div class="refinar-pildora">
+        <i class="bi bi-arrow-down-up" aria-hidden="true"></i>
+        <select id="refinar-orden" aria-label="Ordenar por">
+            @foreach(App\Support\RefinadoDelCatalogo::ORDENES as $valor => $texto)
+                <option value="{{ $valor }}" {{ $refinado->ordenElegido() === $valor ? 'selected' : '' }}>{{ $valor === '' ? 'Ordenar' : $texto }}</option>
+            @endforeach
+        </select>
+    </div>
+    <button type="button" class="refinar-pildora refinar-boton" data-bs-toggle="offcanvas" data-bs-target="#panel-refinar" aria-controls="panel-refinar">
+        <i class="bi bi-sliders2" aria-hidden="true"></i> Filtros
+        <span class="refinar-cuenta {{ $refinado->cantidad() ? '' : 'd-none' }}" id="refinar-globito" data-servidor="{{ $refinado->cantidad() }}">{{ $refinado->cantidad() }}</span>
     </button>
 </div>
 
-<div class="d-flex flex-wrap justify-content-end gap-2 mb-3" id="refinar-fichas">
+<div class="d-flex flex-wrap gap-2 mb-3" id="refinar-fichas">
     @foreach($fichas as [$texto, $url])
-        <span class="badge rounded-pill text-bg-light border fw-normal d-inline-flex align-items-center gap-1 py-2 px-3">
+        <span class="refinar-ficha">
             {{ $texto }}
-            <a href="{{ $url }}" class="text-secondary lh-1" title="Quitar este filtro" aria-label="Quitar {{ $texto }}"><i class="bi bi-x-lg"></i></a>
+            <a href="{{ $url }}" title="Quitar este filtro" aria-label="Quitar {{ $texto }}"><i class="bi bi-x"></i></a>
         </span>
     @endforeach
 </div>
@@ -143,13 +160,13 @@
             if (!select.value) return;
             elegidos++;
             var ficha = document.createElement('span');
-            ficha.className = 'badge rounded-pill text-bg-light border fw-normal d-inline-flex align-items-center gap-1 py-2 px-3 ficha-menu';
+            ficha.className = 'refinar-ficha ficha-menu';
             ficha.appendChild(document.createTextNode(select.dataset.nombre + ': ' + select.options[select.selectedIndex].text + ' '));
             var quitar = document.createElement('button');
             quitar.type = 'button';
-            quitar.className = 'btn btn-link p-0 text-secondary lh-1';
+            quitar.className = 'refinar-ficha-quitar';
             quitar.setAttribute('aria-label', 'Quitar ' + select.dataset.nombre);
-            quitar.innerHTML = '<i class="bi bi-x-lg"></i>';
+            quitar.innerHTML = '<i class="bi bi-x"></i>';
             quitar.addEventListener('click', function () {
                 select.value = '';
                 select.dispatchEvent(new Event('change', { bubbles: true }));

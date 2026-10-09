@@ -774,3 +774,80 @@ footer { margin-top: auto; }
 
 /* ── Modal de confirmación ──────────────────────────────────────────────── */
 .modal-content { border-radius: var(--tienda-radio); border-color: var(--tienda-borde); }
+
+/* ── Barra del catálogo: buscador, Ordenar y Filtros (tienda/partials/barra-refinar) ──
+   Píldoras suaves, sin bordes duros; el color de la tienda sólo en lo que está elegido. */
+.buscador-catalogo { flex: 1 1 280px; max-width: 480px; }
+.buscador-pildora {
+    display: flex; align-items: center; gap: .25rem;
+    height: 44px; padding: 0 .35rem;
+    background: var(--tienda-superficie-suave);
+    border: 1px solid transparent; border-radius: 999px;
+    transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.buscador-pildora:hover { border-color: var(--tienda-borde); }
+.buscador-pildora:focus-within {
+    background: var(--tienda-superficie); border-color: var(--tienda-marca);
+    box-shadow: 0 0 0 4px rgba(var(--tienda-marca-rgb), .14);
+}
+.buscador-pildora input {
+    flex: 1; min-width: 0; height: 100%;
+    border: 0; outline: 0; background: transparent;
+    color: var(--tienda-texto); font-size: .95rem;
+}
+.buscador-pildora input::placeholder { color: var(--tienda-texto-tenue); }
+.buscador-pildora input::-webkit-search-cancel-button { display: none; }
+.buscador-lupa, .buscador-borrar {
+    flex-shrink: 0; width: 34px; height: 34px; border: 0; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; color: var(--tienda-texto-suave);
+}
+.buscador-lupa:hover { background: rgba(var(--tienda-marca-rgb), .12); color: var(--tienda-texto); }
+.buscador-borrar { color: var(--tienda-texto-tenue); }
+.buscador-borrar:hover { color: var(--tienda-texto); }
+
+.refinar-pildora {
+    position: relative; display: inline-flex; align-items: center; gap: .45rem;
+    height: 44px; padding: 0 1rem;
+    background: var(--tienda-superficie-suave); color: var(--tienda-texto);
+    border: 1px solid transparent; border-radius: 999px;
+    font-size: .9rem; font-weight: 500; white-space: nowrap;
+    transition: background .15s, border-color .15s;
+}
+.refinar-pildora:hover { border-color: var(--tienda-borde-fuerte); }
+.refinar-pildora i { color: var(--tienda-texto-suave); }
+.refinar-pildora select {
+    border: 0; outline: 0; background: transparent; color: inherit; font: inherit;
+    padding-right: .25rem; cursor: pointer; appearance: auto;
+}
+.refinar-boton { cursor: pointer; }
+.refinar-cuenta {
+    min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--tienda-marca); color: var(--tienda-marca-texto);
+    font-size: .75rem; font-weight: 700;
+}
+
+.refinar-ficha {
+    display: inline-flex; align-items: center; gap: .2rem;
+    padding: .3rem .35rem .3rem .8rem; border-radius: 999px;
+    background: var(--tienda-marca-suave); color: var(--tienda-texto);
+    font-size: .82rem; font-weight: 500;
+}
+.refinar-ficha a, .refinar-ficha-quitar {
+    width: 22px; height: 22px; border: 0; border-radius: 50%; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; color: var(--tienda-texto-suave); font-size: 1.05rem; text-decoration: none;
+}
+.refinar-ficha a:hover, .refinar-ficha-quitar:hover { background: rgba(0, 0, 0, .07); color: var(--tienda-texto); }
+
+@media (max-width: 575.98px) {
+    .buscador-catalogo { flex-basis: 100%; max-width: none; }
+    .barra-refinar .refinar-pildora { flex: 1; justify-content: center; }
+}
+
+/* Panel "Filtros" del catálogo: al costado en la computadora, pantalla completa en el celular. */
+.panel-refinar { --bs-offcanvas-width: 380px; }
+@media (max-width: 575.98px) {
+    .panel-refinar { --bs-offcanvas-width: 100%; }
+}
