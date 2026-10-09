@@ -10,6 +10,7 @@ use App\Models\Variante;
 use App\Support\LineaDeCarrito;
 use App\Support\MensajeWhatsapp;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * El carrito de la tienda, en la sesión: clave de línea => cantidad (ver
@@ -224,39 +225,45 @@ class CarritoController extends Controller
             $totalTexto = rtrim($totalTexto);
         }
 
-        // Guardar pedido en la base de datos
-        $pedido = Pedido::create([
-            'nombre'    => $request->nombre,
-            'apellido'  => $request->apellido,
-            'email'     => $request->email,
-            'celular'   => $request->celular,
-            'direccion' => $request->direccion,
-            'localidad' => $request->localidad,
-            'provincia' => $request->provincia,
-            'cp'        => $request->cp,
-            'estado'    => 'pendiente',
-        ]);
-
-        foreach ($lineas as $linea) {
-            PedidoProducto::create([
-                'pedido_id'       => $pedido->id,
-                'producto_id'     => $linea->producto->id,
-                'variante_id'     => $linea->variante ? $linea->variante->id : null,
-                'descripcion'     => $linea->descripcion(),
-                'precio_unitario' => $linea->precio(),
-                'cantidad'        => $linea->cantidad,
-                'subtotal'        => $linea->subtotal(),
-                'moneda_id'       => $linea->producto->moneda_id,
+        // El pedido, sus ítems y sus totales juntos: si algo falla a la mitad no
+        // queda un pedido sin ítems o sin total en el panel.
+        $pedido = DB::transaction(function () use ($request, $lineas, $totalesPorMoneda) {
+            // Guardar pedido en la base de datos
+            $pedido = Pedido::create([
+                'nombre'    => $request->nombre,
+                'apellido'  => $request->apellido,
+                'email'     => $request->email,
+                'celular'   => $request->celular,
+                'direccion' => $request->direccion,
+                'localidad' => $request->localidad,
+                'provincia' => $request->provincia,
+                'cp'        => $request->cp,
+                'estado'    => 'pendiente',
             ]);
-        }
 
-        // Guardar totales por moneda
-        foreach ($totalesPorMoneda as $monedaId => $grupo) {
-            $pedido->totales()->create([
-                'moneda_id' => $monedaId ?: null,
-                'total'     => $grupo['total'],
-            ]);
-        }
+            foreach ($lineas as $linea) {
+                PedidoProducto::create([
+                    'pedido_id'       => $pedido->id,
+                    'producto_id'     => $linea->producto->id,
+                    'variante_id'     => $linea->variante ? $linea->variante->id : null,
+                    'descripcion'     => $linea->descripcion(),
+                    'precio_unitario' => $linea->precio(),
+                    'cantidad'        => $linea->cantidad,
+                    'subtotal'        => $linea->subtotal(),
+                    'moneda_id'       => $linea->producto->moneda_id,
+                ]);
+            }
+
+            // Guardar totales por moneda
+            foreach ($totalesPorMoneda as $monedaId => $grupo) {
+                $pedido->totales()->create([
+                    'moneda_id' => $monedaId ?: null,
+                    'total'     => $grupo['total'],
+                ]);
+            }
+
+            return $pedido;
+        });
 
         // Mensaje con la plantilla configurable. MensajeWhatsapp limpia lo que queda de
         // los datos vacíos (la dirección cuando no se pide, un email que falta...).
@@ -344,8 +351,12 @@ class CarritoController extends Controller
             }
         }
 
-        $productos = Producto::with($con)->whereIn('id', array_unique($ids))->get()->keyBy('id');
-        $variantes = Variante::with('valores.etiqueta')->whereIn('id', array_unique($idsVariantes))->get()->keyBy('id');
+        // Con el conteo de variantes: validarYCorregirStock pregunta tieneVariantes()
+        // por cada línea, y sin esto era una consulta por producto.
+        $productos = Producto::with($con)->withCount('variantes')->whereIn('id', array_unique($ids))->get()->keyBy('id');
+        $variantes = empty($idsVariantes)
+            ? collect()
+            : Variante::with('valores.etiqueta')->whereIn('id', array_unique($idsVariantes))->get()->keyBy('id');
 
         $lineas = [];
         foreach ($carrito as $clave => $cantidad) {

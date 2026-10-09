@@ -384,28 +384,102 @@ class Producto extends Model
         if ($this->relationLoaded('variantes')) {
             return $this->variantes->isNotEmpty();
         }
+        // Una lista (el carrito) lo trae con withCount('variantes'): sin una consulta por producto.
+        if (array_key_exists('variantes_count', $this->attributes)) {
+            return (int) $this->attributes['variantes_count'] > 0;
+        }
 
         return $this->exists && $this->variantes()->exists();
     }
 
     /**
-     * Con variantes, el stock del producto es la suma del de las activas (una apagada
-     * no se vende). Lo llama cada movimiento de una variante.
+     * Cuántas variantes activas tiene y el precio de la más barata y la más cara,
+     * para la tarjeta de la tienda. Lo carga cargarResumenDeVariantes para toda la
+     * página de una vez; si no, se consulta para este producto.
+     *
+     * @var array{activas: int, minimo: float|null, maximo: float|null}|null
      */
+    private $resumenDeVariantes = null;
+
+    /**
+     * Una sola consulta para toda la grilla: antes cada tarjeta con variantes hacía
+     * la suya para el "Desde $…", y el conteo de activas se calculaba como subconsulta
+     * en las 30.000 filas de una categoría de oleomc antes de ordenarlas y cortar la
+     * página (de ~100 ms a ~10 ms al ordenar por precio o por más nuevos).
+     *
+     * @param iterable<Producto> $productos
+     */
+    public static function cargarResumenDeVariantes($productos): void
+    {
+        $porId = collect($productos)->filter(function ($p) { return $p instanceof self && $p->exists; })->keyBy('id');
+        if ($porId->isEmpty()) {
+            return;
+        }
+
+        $resumenes = static::consultarResumenesDeVariantes($porId->keys()->all());
+        foreach ($porId as $id => $producto) {
+            $producto->resumenDeVariantes = $resumenes[$id];
+        }
+    }
+
+    /** @return array<int, array{activas: int, minimo: float|null, maximo: float|null}> por producto_id */
+    private static function consultarResumenesDeVariantes(array $ids): array
+    {
+        $filas = DB::table('producto_variantes as v')
+            ->join('productos as p', 'p.id', '=', 'v.producto_id')
+            ->where('v.activa', true)
+            ->whereIn('v.producto_id', $ids)
+            ->groupBy('v.producto_id')
+            ->selectRaw('v.producto_id, count(*) AS activas, min(COALESCE(v.precio, p.precio)) AS minimo, max(COALESCE(v.precio, p.precio)) AS maximo')
+            ->get()
+            ->keyBy('producto_id');
+
+        $resumenes = [];
+        foreach ($ids as $id) {
+            $fila = $filas->get($id);
+            $resumenes[$id] = [
+                'activas' => $fila ? (int) $fila->activas : 0,
+                'minimo'  => ($fila && $fila->minimo !== null) ? (float) $fila->minimo : null,
+                'maximo'  => ($fila && $fila->maximo !== null) ? (float) $fila->maximo : null,
+            ];
+        }
+
+        return $resumenes;
+    }
+
+    /** @return array{activas: int, minimo: float|null, maximo: float|null} */
+    private function resumenDeVariantes(): array
+    {
+        if ($this->resumenDeVariantes !== null) {
+            return $this->resumenDeVariantes;
+        }
+        if (!$this->exists) {
+            return ['activas' => 0, 'minimo' => null, 'maximo' => null];
+        }
+
+        // Suelto no se guarda: un producto que se edita en el mismo pedido no se
+        // tiene que quedar con el resumen de antes.
+        return static::consultarResumenesDeVariantes([$this->id])[$this->id];
+    }
+
+    /** $producto->variantes_activas: cuántas variantes se venden (la tarjeta lleva a elegir una). */
+    public function getVariantesActivasAttribute(): int
+    {
+        return $this->resumenDeVariantes()['activas'];
+    }
+
     /**
      * Con variantes de precios distintos, el más barato y el más caro de las que se
      * venden ([min, max]); null si no tiene variantes o cuestan todas lo mismo.
      */
     public function rangoDePrecios(): ?array
     {
-        $precios = $this->variantes()->where('activa', true)->pluck('precio')->map(function ($precio) {
-            return (float) ($precio !== null ? $precio : $this->precio);
-        });
-        if ($precios->isEmpty() || $precios->min() === $precios->max()) {
+        $resumen = $this->resumenDeVariantes();
+        if ($resumen['activas'] === 0 || $resumen['minimo'] === null || $resumen['minimo'] === $resumen['maximo']) {
             return null;
         }
 
-        return [$precios->min(), $precios->max()];
+        return [$resumen['minimo'], $resumen['maximo']];
     }
 
     /** "$19.000,00" o, con variantes de precios distintos, "Desde $19.000,00". */
@@ -753,14 +827,15 @@ class Producto extends Model
     }
 
     /**
-     * Lo que muestra cada tarjeta de la tienda, sin una consulta por producto. Cuenta
-     * las variantes activas: una tarjeta con variantes lleva a elegir (Talle M) en vez
-     * de agregar directo.
+     * Lo que muestra cada tarjeta de la tienda, sin una consulta por producto.
+     *
+     * Las variantes (cuántas activas y el "Desde $…") no van acá como withCount: la
+     * subconsulta se calculaba para cada fila antes de ordenar y cortar la página.
+     * Después de paginar, Producto::cargarResumenDeVariantes($pagina).
      */
     public function scopeParaLaGrilla($query)
     {
-        return $query->with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda'])
-            ->withCount(['variantes as variantes_activas' => function ($q) { $q->where('activa', true); }]);
+        return $query->with(['proveedor', 'etiquetasPublicas', 'especificaciones', 'moneda']);
     }
 
     public function scopeDisponibles($query)

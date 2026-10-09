@@ -4,7 +4,9 @@ namespace App\Support;
 
 use App\Models\Categoria;
 use App\Models\Menu;
+use App\Models\Moneda;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * En qué orden se ven los productos en la tienda.
@@ -87,19 +89,49 @@ final class OrdenDeProductos
             case self::PRECIO_MAYOR:
                 $direccion = $this->criterio === self::PRECIO_MENOR ? 'asc' : 'desc';
                 // Sin precio (null) van al final en los dos sentidos: no son "gratis".
-                $query->orderByRaw(
-                    '(productos.precio * COALESCE((SELECT cotizacion FROM monedas WHERE monedas.id = productos.moneda_id), 1)) ' . $direccion . ' NULLS LAST'
-                );
+                [$cotizacion, $valores] = $this->cotizacionPorMoneda();
+                $query->orderByRaw('(productos.precio * ' . $cotizacion . ') ' . $direccion . ' NULLS LAST', $valores);
                 break;
 
             case self::MANUAL:
-                $query->orderByRaw(
-                    '(SELECT posicion FROM categoria_destacados WHERE categoria_destacados.producto_id = productos.id AND categoria_destacados.categoria_id = ?) ASC NULLS LAST',
-                    [(int) $this->categoriaId]
-                );
+                // Los destacados son pocos: van como lista y no como subconsulta por
+                // fila, que en una categoría de 30.000 productos son 30.000 búsquedas.
+                $destacados = DB::table('categoria_destacados')
+                    ->where('categoria_id', (int) $this->categoriaId)
+                    ->orderBy('posicion')
+                    ->pluck('producto_id')
+                    ->map(function ($id) { return (int) $id; })
+                    ->all();
+                if (!empty($destacados)) {
+                    $query->orderByRaw('array_position(ARRAY[' . implode(',', $destacados) . ']::bigint[], productos.id) ASC NULLS LAST');
+                }
                 break;
         }
 
         return $query->orderBy('productos.descripcion')->orderBy('productos.id');
+    }
+
+    /**
+     * La cotización de la moneda de cada producto, como CASE con las monedas de la
+     * tienda (son un puñado). Antes era una subconsulta a monedas por fila: ordenar
+     * una categoría de 30.000 productos por precio tardaba el doble.
+     *
+     * @return array{0: string, 1: array} la expresión SQL y sus valores
+     */
+    private function cotizacionPorMoneda(): array
+    {
+        $cuando = '';
+        $valores = [];
+        foreach (Moneda::query()->pluck('cotizacion', 'id') as $id => $cotizacion) {
+            $cuando .= ' WHEN ? THEN CAST(? AS numeric)';
+            $valores[] = (int) $id;
+            $valores[] = $cotizacion === null ? '1' : (string) $cotizacion;
+        }
+
+        if ($cuando === '') {
+            return ['1', []];
+        }
+
+        return ['(CASE productos.moneda_id' . $cuando . ' ELSE 1 END)', $valores];
     }
 }

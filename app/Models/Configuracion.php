@@ -30,13 +30,24 @@ class Configuracion extends Model
     public static function obtener($clave, $default = null)
     {
         try {
-            return Cache::remember(static::cacheKey($clave), 3600, function () use ($clave, $default) {
+            // Se guarda envuelto en un array: Cache::remember toma un null como "no
+            // está en caché", y los ajustes vacíos (logo, redes, SEO…) se volvían a
+            // consultar cada vez: ~20 consultas por página de la tienda.
+            $guardado = Cache::remember(static::cacheKey($clave), 3600, function () use ($clave) {
                 $config = self::where('clave', $clave)->first();
-                return $config ? $config->valor : $default;
+
+                return ['existe' => $config !== null, 'valor' => $config ? $config->valor : null];
             });
         } catch (\Exception $e) {
             return $default;
         }
+
+        // Un valor guardado con el formato anterior (texto suelto) vale tal cual.
+        if (!is_array($guardado)) {
+            return $guardado;
+        }
+
+        return $guardado['existe'] ? $guardado['valor'] : $default;
     }
 
     public static function establecer($clave, $valor, $descripcion = null)

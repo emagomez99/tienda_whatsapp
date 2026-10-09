@@ -77,6 +77,22 @@ class Etiqueta extends Model
         return Producto::whereIn('id', $ids)->orderBy('descripcion')->pluck('descripcion')->all();
     }
 
+    /**
+     * Los productos cuyas variantes se eligen por esta característica (Talle M):
+     * mientras haya alguno no se puede borrar, o esas variantes quedarían sin
+     * nombre y con su stock. La base también lo impide (RESTRICT).
+     *
+     * @return string[] hasta $cuantos nombres
+     */
+    public function productosConVariantes(int $cuantos = 3): array
+    {
+        return Producto::whereIn('id', function ($q) {
+            $q->select('v.producto_id')->from('producto_variantes as v')
+              ->join('producto_variante_valores as vv', 'vv.variante_id', '=', 'v.id')
+              ->where('vv.etiqueta_id', $this->id);
+        })->orderBy('descripcion')->limit($cuantos)->pluck('descripcion')->all();
+    }
+
     private function consultaConVariosValores()
     {
         return DB::table('producto_etiqueta')->where('etiqueta_id', $this->id)

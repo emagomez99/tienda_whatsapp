@@ -162,6 +162,15 @@ class EtiquetaController extends Controller
 
     public function destroy(Etiqueta $etiqueta)
     {
+        // Las variantes (Talle M) se eligen por esta característica: sin ella
+        // quedarían sin nombre, con su stock, y nadie podría elegirlas.
+        $conVariantes = $etiqueta->productosConVariantes();
+        if (!empty($conVariantes)) {
+            return redirect()->route('admin.etiquetas.index')->with('error',
+                "No se borró «{$etiqueta->nombre}»: la usan las variantes de «" . implode('», «', $conVariantes) . '»'
+                . (count($conVariantes) >= 3 ? ' y quizás otros' : '') . '. Primero sacá esas variantes del producto.');
+        }
+
         $etiqueta->delete();
 
         return redirect()->route('admin.etiquetas.index')

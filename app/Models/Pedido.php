@@ -59,6 +59,22 @@ class Pedido extends Model
         return $this->estado === 'cancelado';
     }
 
+    /**
+     * Bloquea el pedido hasta que termine la transacción y trae su estado de ahora.
+     *
+     * Confirmar, cancelar y cambiar ítems mueven stock: dos a la vez sobre el mismo
+     * pedido (un doble clic, dos personas en el panel) descontaban o devolvían el
+     * stock dos veces. Con el bloqueo, el segundo espera y ve el estado que dejó el
+     * primero. Sólo tiene sentido dentro de DB::transaction.
+     */
+    public function bloquear(): self
+    {
+        $this->estado = static::whereKey($this->id)->lockForUpdate()->value('estado');
+        $this->syncOriginalAttribute('estado');
+
+        return $this;
+    }
+
     public function recalcularTotal()
     {
         $this->totales()->delete();
@@ -81,11 +97,13 @@ class Pedido extends Model
      */
     public function agregarProducto(Producto $producto, $cantidad, Variante $variante = null)
     {
-        $item = $this->items()->where('producto_id', $producto->id)
-            ->where('variante_id', $variante ? $variante->id : null)->first();
-        $cantAnterior = $item ? $item->cantidad : 0;
+        return $this->enTransaccion(function () use ($producto, $cantidad, $variante) {
+            $item = $this->items()->where('producto_id', $producto->id)
+                ->where('variante_id', $variante ? $variante->id : null)->first();
+            $cantAnterior = $item ? $item->cantidad : 0;
 
-        return $this->aplicarCantidad($producto, $cantAnterior + $cantidad, $item, $variante);
+            return $this->aplicarCantidad($producto, $cantAnterior + $cantidad, $item, $variante);
+        });
     }
 
     /**
@@ -93,7 +111,36 @@ class Pedido extends Model
      */
     public function actualizarItem(Producto $producto, $nuevaCantidad, PedidoProducto $item)
     {
-        return $this->aplicarCantidad($producto, $nuevaCantidad, $item, $item->variante_id ? $item->variante : null);
+        return $this->enTransaccion(function () use ($producto, $nuevaCantidad, $item) {
+            // La cantidad de ahora, no la de cuando se abrió la pantalla.
+            $item = $item->fresh();
+            if (!$item) {
+                return ['ok' => false, 'error' => 'Ese ítem ya no está en el pedido.'];
+            }
+
+            return $this->aplicarCantidad($producto, $nuevaCantidad, $item, $item->variante_id ? $item->variante : null);
+        });
+    }
+
+    /**
+     * Todo o nada, con el pedido bloqueado: si el stock cambió entre que se miró y
+     * se movió (otra venta al mismo tiempo), no queda un movimiento sin su ítem ni
+     * un error 500.
+     */
+    private function enTransaccion(callable $cambio): array
+    {
+        try {
+            return DB::transaction(function () use ($cambio) {
+                $this->bloquear();
+                if ($this->esCancelado()) {
+                    return ['ok' => false, 'error' => 'No se puede editar un pedido cancelado.'];
+                }
+
+                return $cambio();
+            });
+        } catch (\UnderflowException $e) {
+            return ['ok' => false, 'error' => 'El stock cambió mientras se guardaba (¿otra venta al mismo tiempo?). No se cambió nada. ' . $e->getMessage()];
+        }
     }
 
     /**

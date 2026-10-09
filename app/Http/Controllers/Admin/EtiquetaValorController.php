@@ -6,6 +6,7 @@ use App\Exceptions\ValorDeEtiquetaDuplicado;
 use App\Http\Controllers\Controller;
 use App\Models\EtiquetaValor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Acciones sobre un valor de etiqueta desde el árbol del panel: ocultarlo,
@@ -57,7 +58,11 @@ class EtiquetaValorController extends Controller
             ->findOrFail($request->input('destino_id'));
 
         $origen = $valor->valor;
-        $valor->fusionarEn($destino);
+        try {
+            $valor->fusionarEn($destino);
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', "Los productos de «{$origen}» pasaron a «{$destino->valor}».");
     }
@@ -67,6 +72,11 @@ class EtiquetaValorController extends Controller
     {
         if ($valor->asignaciones()->exists()) {
             return back()->with('error', "«{$valor->valor}» todavía lo usan productos: no se puede borrar.");
+        }
+        // Una variante (Talle M) también lo usa: la base no deja borrarlo (RESTRICT) y
+        // sin este aviso era un error 500.
+        if (DB::table('producto_variante_valores')->where('etiqueta_valor_id', $valor->id)->exists()) {
+            return back()->with('error', "«{$valor->valor}» lo usan variantes de productos: no se puede borrar.");
         }
 
         $valor->delete();

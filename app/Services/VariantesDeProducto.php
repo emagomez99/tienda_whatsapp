@@ -41,7 +41,20 @@ class VariantesDeProducto
     public function sincronizar(Producto $producto, array $lista, ?int $usuarioId = null): void
     {
         $this->propiedades = [];   // una propiedad creada en un guardado que falló no existe
-        $existentes = $producto->variantes()->with('valores')->get()->keyBy('id');
+
+        // Todo o nada (quien llama puede no tener su propia transacción), y con el
+        // producto bloqueado: dos guardados a la vez del mismo producto leían las
+        // mismas variantes y creaban cada uno las suyas, con la combinación repetida.
+        DB::transaction(function () use ($producto, $lista, $usuarioId) {
+            Producto::whereKey($producto->id)->lockForUpdate()->value('id');
+            $this->sincronizarBloqueado($producto, $lista, $usuarioId);
+        });
+    }
+
+    private function sincronizarBloqueado(Producto $producto, array $lista, ?int $usuarioId): void
+    {
+        // Con la característica de cada valor: el historial guarda "Talle: M" en cada movimiento.
+        $existentes = $producto->variantes()->with('valores.etiqueta')->get()->keyBy('id');
 
         if (empty($lista)) {
             if ($existentes->isEmpty()) {
@@ -108,7 +121,7 @@ class VariantesDeProducto
             }
             $variante->valores()->sync($filas);
             $variante->setRelation('producto', $producto);
-            $variante->load('valores');
+            $variante->load('valores.etiqueta');
 
             if ($datos['stock'] !== null && $datos['stock'] !== (int) $variante->stock) {
                 $variante->registrarMovimiento(

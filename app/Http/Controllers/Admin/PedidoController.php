@@ -183,52 +183,68 @@ class PedidoController extends Controller
         return view('admin.pedidos.show', compact('pedido'));
     }
 
+    /**
+     * Confirma y descuenta el stock. Todo en una transacción con el pedido
+     * bloqueado: un doble clic descontaba dos veces, y si un ítem fallaba a la mitad
+     * (otra venta se llevó el stock) los anteriores ya se habían descontado con el
+     * pedido todavía pendiente, y al reintentar se descontaban otra vez.
+     */
     public function confirmar(Pedido $pedido)
     {
-        if (! $pedido->esPendiente()) {
-            return redirect()->route('admin.pedidos.show', $pedido)
-                ->with('error', 'Solo se pueden confirmar pedidos pendientes.');
+        try {
+            $problema = DB::transaction(function () use ($pedido) {
+                if (! $pedido->bloquear()->esPendiente()) {
+                    return ['error' => 'Solo se pueden confirmar pedidos pendientes.'];
+                }
+
+                $pedido->load(['items.producto' => function ($q) { $q->withCount('variantes'); }, 'items.variante.valores']);
+
+                // Validar stock antes de confirmar (el de la variante, si el ítem es de una)
+                $errores = [];
+                foreach ($pedido->items as $item) {
+                    if (!$item->producto) {
+                        continue;
+                    }
+                    if (!$item->variante_id && $item->producto->tieneVariantes()) {
+                        $errores[] = '"' . $item->descripcion . '": ahora tiene variantes. Quitalo y volvé a agregarlo eligiendo cuál.';
+                        continue;
+                    }
+                    $origen = $item->origenDeStock();
+                    if (! $item->producto->por_encargue && $origen->stock < $item->cantidad) {
+                        $errores[] = '"' . $item->descripcion . '": stock disponible ' . $origen->stock . ', requerido ' . $item->cantidad;
+                    }
+                }
+
+                if (!empty($errores)) {
+                    return ['error_stock' => $errores];
+                }
+
+                // Descontar stock registrando movimiento por cada ítem con stock disponible
+                foreach ($pedido->items as $item) {
+                    $origen = $item->producto ? $item->origenDeStock() : null;
+                    if ($origen && $origen->stock > 0) {
+                        $cantidad = min($item->cantidad, $origen->stock);
+                        $origen->registrarMovimiento(
+                            -$cantidad,
+                            StockMovimiento::TIPO_SALIDA_PEDIDO,
+                            'Pedido #' . $pedido->id . ' confirmado',
+                            $pedido->id,
+                            auth()->id()
+                        );
+                    }
+                }
+
+                $pedido->update(['estado' => 'confirmado']);
+
+                return null;
+            });
+        } catch (\UnderflowException $e) {
+            $problema = ['error' => 'El stock cambió mientras se confirmaba (¿otra venta al mismo tiempo?). No se descontó nada. ' . $e->getMessage()];
         }
 
-        $pedido->load('items.producto', 'items.variante.valores');
-
-        // Validar stock antes de confirmar (el de la variante, si el ítem es de una)
-        $errores = [];
-        foreach ($pedido->items as $item) {
-            if (!$item->producto) {
-                continue;
-            }
-            if (!$item->variante_id && $item->producto->tieneVariantes()) {
-                $errores[] = '"' . $item->descripcion . '": ahora tiene variantes. Quitalo y volvé a agregarlo eligiendo cuál.';
-                continue;
-            }
-            $origen = $item->origenDeStock();
-            if (! $item->producto->por_encargue && $origen->stock < $item->cantidad) {
-                $errores[] = '"' . $item->descripcion . '": stock disponible ' . $origen->stock . ', requerido ' . $item->cantidad;
-            }
+        if ($problema) {
+            return redirect()->route('admin.pedidos.show', $pedido)->with($problema);
         }
-
-        if (!empty($errores)) {
-            return redirect()->route('admin.pedidos.show', $pedido)
-                ->with('error_stock', $errores);
-        }
-
-        // Descontar stock registrando movimiento por cada ítem con stock disponible
-        foreach ($pedido->items as $item) {
-            $origen = $item->producto ? $item->origenDeStock() : null;
-            if ($origen && $origen->stock > 0) {
-                $cantidad = min($item->cantidad, $origen->stock);
-                $origen->registrarMovimiento(
-                    -$cantidad,
-                    StockMovimiento::TIPO_SALIDA_PEDIDO,
-                    'Pedido #' . $pedido->id . ' confirmado',
-                    $pedido->id,
-                    auth()->id()
-                );
-            }
-        }
-
-        $pedido->update(['estado' => 'confirmado']);
 
         return redirect()->route('admin.pedidos.show', $pedido)
             ->with('success', 'Pedido confirmado y stock descontado.');
@@ -236,28 +252,36 @@ class PedidoController extends Controller
 
     public function cancelar(Pedido $pedido)
     {
-        if ($pedido->esCancelado()) {
-            return redirect()->route('admin.pedidos.show', $pedido)
-                ->with('error', 'El pedido ya está cancelado.');
-        }
+        // Con el pedido bloqueado: dos "Cancelar" a la vez devolvían el stock dos veces.
+        $error = DB::transaction(function () use ($pedido) {
+            if ($pedido->bloquear()->esCancelado()) {
+                return 'El pedido ya está cancelado.';
+            }
 
-        // Si estaba confirmado, restaurar stock mediante devolución
-        if ($pedido->esConfirmado()) {
-            $pedido->load('items.producto', 'items.variante.valores');
-            foreach ($pedido->items as $item) {
-                if ($this->puedeDevolver($item)) {
-                    $item->origenDeStock()->registrarMovimiento(
-                        $item->cantidad,
-                        StockMovimiento::TIPO_DEVOLUCION_PEDIDO,
-                        'Pedido #' . $pedido->id . ' cancelado',
-                        $pedido->id,
-                        auth()->id()
-                    );
+            // Si estaba confirmado, restaurar stock mediante devolución
+            if ($pedido->esConfirmado()) {
+                $pedido->load(['items.producto' => function ($q) { $q->withCount('variantes'); }, 'items.variante.valores']);
+                foreach ($pedido->items as $item) {
+                    if ($this->puedeDevolver($item)) {
+                        $item->origenDeStock()->registrarMovimiento(
+                            $item->cantidad,
+                            StockMovimiento::TIPO_DEVOLUCION_PEDIDO,
+                            'Pedido #' . $pedido->id . ' cancelado',
+                            $pedido->id,
+                            auth()->id()
+                        );
+                    }
                 }
             }
-        }
 
-        $pedido->update(['estado' => 'cancelado']);
+            $pedido->update(['estado' => 'cancelado']);
+
+            return null;
+        });
+
+        if ($error) {
+            return redirect()->route('admin.pedidos.show', $pedido)->with('error', $error);
+        }
 
         return redirect()->route('admin.pedidos.show', $pedido)
             ->with('success', 'Pedido cancelado.');
@@ -265,6 +289,8 @@ class PedidoController extends Controller
 
     public function updateProducto(Request $request, Pedido $pedido, PedidoProducto $item)
     {
+        $this->asegurarQueEsDelPedido($pedido, $item);
+
         if ($pedido->esCancelado()) {
             return redirect()->route('admin.pedidos.show', $pedido)
                 ->with('error', 'No se puede editar un pedido cancelado.');
@@ -285,24 +311,38 @@ class PedidoController extends Controller
 
     public function destroyProducto(Pedido $pedido, PedidoProducto $item)
     {
-        if ($pedido->esCancelado()) {
-            return redirect()->route('admin.pedidos.show', $pedido)
-                ->with('error', 'No se puede editar un pedido cancelado.');
-        }
+        $this->asegurarQueEsDelPedido($pedido, $item);
 
-        // Restaurar stock solo si el pedido ya estaba confirmado y el producto tiene stock físico
-        if ($pedido->esConfirmado() && $this->puedeDevolver($item)) {
-            $item->origenDeStock()->registrarMovimiento(
-                $item->cantidad,
-                StockMovimiento::TIPO_DEVOLUCION_PEDIDO,
-                'Ítem eliminado del pedido #' . $pedido->id,
-                $pedido->id,
-                auth()->id()
-            );
-        }
+        // La devolución y el borrado van juntos y con el pedido bloqueado: dos clics
+        // en "Quitar" devolvían el stock dos veces.
+        $error = DB::transaction(function () use ($pedido, $item) {
+            if ($pedido->bloquear()->esCancelado()) {
+                return 'No se puede editar un pedido cancelado.';
+            }
+            if (!PedidoProducto::whereKey($item->id)->exists()) {
+                return 'Ese ítem ya no estaba en el pedido.';
+            }
 
-        $item->delete();
-        $pedido->recalcularTotal();
+            // Restaurar stock solo si el pedido ya estaba confirmado y el producto tiene stock físico
+            if ($pedido->esConfirmado() && $this->puedeDevolver($item)) {
+                $item->origenDeStock()->registrarMovimiento(
+                    $item->cantidad,
+                    StockMovimiento::TIPO_DEVOLUCION_PEDIDO,
+                    'Ítem eliminado del pedido #' . $pedido->id,
+                    $pedido->id,
+                    auth()->id()
+                );
+            }
+
+            $item->delete();
+            $pedido->recalcularTotal();
+
+            return null;
+        });
+
+        if ($error) {
+            return redirect()->route('admin.pedidos.show', $pedido)->with('error', $error);
+        }
 
         $msg = $pedido->esConfirmado() ? 'Ítem eliminado y stock restaurado.' : 'Ítem eliminado.';
 
@@ -330,6 +370,17 @@ class PedidoController extends Controller
 
         return redirect()->route('admin.pedidos.show', $pedido)
             ->with($resultado['ok'] ? 'success' : 'error', $resultado['ok'] ? 'Producto agregado al pedido.' : $resultado['error']);
+    }
+
+    /**
+     * El ítem de la URL tiene que ser de este pedido: si no, se podía cambiar o
+     * quitar (y mover su stock) un ítem de otro pedido escribiendo su número.
+     */
+    private function asegurarQueEsDelPedido(Pedido $pedido, PedidoProducto $item): void
+    {
+        if ((int) $item->pedido_id !== (int) $pedido->id) {
+            abort(404);
+        }
     }
 
     /**

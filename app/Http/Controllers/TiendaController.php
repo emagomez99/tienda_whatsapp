@@ -252,6 +252,7 @@ class TiendaController extends Controller
         }
 
         $productos = $orden->aplicar($query)->paginate(12);
+        Producto::cargarResumenDeVariantes($productos->getCollection());
         $mostrarPrecios = Configuracion::mostrarPrecios();
         $menuEnSidebar  = Configuracion::menuEnSidebar();
 
@@ -340,8 +341,20 @@ class TiendaController extends Controller
                 BusquedaDeTexto::contiene($q, 'id_proveedor', $patron);
                 // Sólo lo que el cliente ve: buscar por un dato interno (un valor o una
                 // característica ocultos) no tiene que traer productos que no lo muestran.
-                $q->orWhereHas('etiquetasPublicas', function ($q2) use ($patron) {
-                    BusquedaDeTexto::contiene($q2, 'producto_etiqueta.valor', $patron, 'and');
+                //
+                // El texto se busca en la lista de valores (etiqueta_valores, ~2.400 en
+                // oleomc) y no fila por fila en producto_etiqueta (~93.000): es el mismo
+                // texto (ProductoEtiqueta lo copia al guardarse) y cada búsqueda de la
+                // tienda pasa de ~180 ms a ~60 ms.
+                $q->orWhereIn('productos.id', function ($conValor) use ($patron) {
+                    $conValor->select('producto_etiqueta.producto_id')->from('producto_etiqueta')
+                        ->whereIn('producto_etiqueta.etiqueta_valor_id', function ($valores) use ($patron) {
+                            $valores->select('etiqueta_valores.id')->from('etiqueta_valores')
+                                ->join('etiquetas', 'etiquetas.id', '=', 'etiqueta_valores.etiqueta_id')
+                                ->where('etiquetas.visible_usuarios', true)
+                                ->where('etiqueta_valores.visible', true);
+                            BusquedaDeTexto::contiene($valores, 'etiqueta_valores.valor', $patron, 'and');
+                        });
                 });
             });
         }
@@ -386,6 +399,9 @@ class TiendaController extends Controller
         if ($productos->currentPage() > max($productos->lastPage(), 1)) {
             abort(404);
         }
+
+        // Variantes activas y "Desde $…" de toda la página, en una consulta.
+        Producto::cargarResumenDeVariantes($productos->getCollection());
 
         return $productos;
     }

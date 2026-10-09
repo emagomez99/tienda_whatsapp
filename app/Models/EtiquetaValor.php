@@ -148,8 +148,15 @@ class EtiquetaValor extends Model
                 ->delete();
 
             // Las variantes que usaban este valor (Talle "Mediano") pasan al destino ("M").
+            $conVariantes = DB::table('producto_variantes as v')
+                ->join('producto_variante_valores as vv', 'vv.variante_id', '=', 'v.id')
+                ->where('vv.etiqueta_valor_id', $this->id)
+                ->distinct()->pluck('v.producto_id')->all();
             DB::table('producto_variante_valores')->where('etiqueta_valor_id', $this->id)
                 ->update(['etiqueta_valor_id' => $destino->id]);
+            // Un producto con variante "Mediano" y variante "M" quedaría con dos
+            // iguales (dos stocks para lo mismo): eso se arregla a mano antes de unir.
+            $this->impedirVariantesRepetidas($conVariantes, $destino);
 
             $this->asignaciones()->update([
                 'etiqueta_valor_id' => $destino->id,
@@ -159,6 +166,32 @@ class EtiquetaValor extends Model
 
             $this->delete();
         });
+    }
+
+    /**
+     * @param int[] $productoIds
+     * @throws \DomainException si alguno queda con dos variantes de la misma combinación
+     */
+    private function impedirVariantesRepetidas(array $productoIds, EtiquetaValor $destino): void
+    {
+        if (empty($productoIds)) {
+            return;
+        }
+
+        $firmas = DB::table('producto_variantes as v')
+            ->join('producto_variante_valores as vv', 'vv.variante_id', '=', 'v.id')
+            ->whereIn('v.producto_id', $productoIds)
+            ->groupBy('v.id', 'v.producto_id')
+            ->selectRaw("v.producto_id, string_agg(vv.etiqueta_id || ':' || vv.etiqueta_valor_id, '|' ORDER BY vv.etiqueta_id) AS firma");
+
+        $repetido = DB::query()->fromSub($firmas, 'f')
+            ->groupBy('f.producto_id', 'f.firma')->havingRaw('count(*) > 1')
+            ->value('f.producto_id');
+
+        if ($repetido) {
+            $producto = Producto::whereKey($repetido)->value('descripcion');
+            throw new \DomainException("No se unieron: «{$producto}» tiene una variante con «{$this->valor}» y otra con «{$destino->valor}», y quedarían dos iguales. Primero dejá una sola en el producto.");
+        }
     }
 
     /**

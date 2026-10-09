@@ -15,7 +15,10 @@ class Handler extends ExceptionHandler
      * @var array<int, class-string<Throwable>>
      */
     protected $dontReport = [
-        //
+        // Un dominio que no es de ninguna tienda (un bot que entra por la IP, un
+        // dominio viejo) se responde con 404 (ver register): no es un error de la
+        // aplicación, y cada uno dejaba su stack trace en laravel.log.
+        TenantCouldNotBeIdentifiedOnDomainException::class,
     ];
 
     /**

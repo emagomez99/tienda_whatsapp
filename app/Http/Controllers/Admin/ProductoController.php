@@ -441,13 +441,24 @@ class ProductoController extends Controller
             ])->withInput();
         }
 
-        $producto->registrarMovimiento(
-            $variacion,
-            StockMovimiento::TIPO_AJUSTE_MANUAL,
-            $validated['descripcion'],
-            null,
-            auth()->id()
-        );
+        // El control de arriba es con el stock de cuando se abrió el producto: si
+        // mientras tanto se vendió, registrarMovimiento (con el stock bloqueado) lo
+        // rechaza, y eso es un aviso, no un error 500.
+        try {
+            $producto->registrarMovimiento(
+                $variacion,
+                StockMovimiento::TIPO_AJUSTE_MANUAL,
+                $validated['descripcion'],
+                null,
+                auth()->id()
+            );
+        } catch (\UnderflowException $e) {
+            $actual = (int) Producto::whereKey($producto->id)->value('stock');
+
+            return back()->withErrors([
+                'cantidad' => 'No se puede egresar ' . $validated['cantidad'] . ': el stock actual es ' . $actual . '.',
+            ])->withInput();
+        }
 
         $destino = $request->input('_redirect') === 'historial'
             ? route('admin.productos.historial', $producto)
