@@ -49,7 +49,14 @@ class EtiquetaController extends Controller
             });
         }
 
-        $etiquetas = $query->orderBy('nombre')->paginate(15);
+        // Filtros del panel: dónde se pide, si se ve en la tienda, si admite varios valores.
+        foreach (['global' => 'global', 'visible' => 'visible_usuarios', 'varios' => 'varios_valores'] as $parametro => $columna) {
+            if (in_array($request->query($parametro), ['0', '1'], true)) {
+                $query->where($columna, (bool) $request->query($parametro));
+            }
+        }
+
+        $etiquetas = $query->orderBy('nombre')->paginate(15)->withQueryString();
 
         $valoresPorEtiqueta = [];
         foreach ($etiquetas as $etiqueta) {
@@ -73,6 +80,11 @@ class EtiquetaController extends Controller
 
         $valores = $etiqueta->valores()
             ->buscar($buscar)
+            ->when(in_array($request->query('visible'), ['0', '1'], true), function ($q) use ($request) {
+                $q->where('visible', (bool) $request->query('visible'));
+            })
+            ->when($request->query('uso') === 'con', function ($q) { $q->has('asignaciones'); })
+            ->when($request->query('uso') === 'sin', function ($q) { $q->doesntHave('asignaciones'); })
             ->withCount('asignaciones')
             ->orderBy('valor')
             ->paginate(self::VALORES_POR_PAGINA)

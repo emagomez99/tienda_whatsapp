@@ -26,21 +26,11 @@
 
 @include('admin.etiquetas.partials.fusion-propuesta')
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form action="{{ route('admin.etiquetas.show', $etiqueta) }}" method="GET" class="row g-2">
-            <div class="col">
-                <input type="text" name="buscar" class="form-control" placeholder="Buscar valor..." value="{{ $buscar }}">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i> Buscar</button>
-                @if($buscar !== '')
-                    <a href="{{ route('admin.etiquetas.show', $etiqueta) }}" class="btn btn-outline-secondary">Limpiar</a>
-                @endif
-            </div>
-        </form>
-    </div>
-</div>
+<x-filtros :url="route('admin.etiquetas.show', $etiqueta)" buscar="Buscar valor" titulo="Filtrar valores"
+           :campos="[
+               ['nombre' => 'visible', 'titulo' => 'En la tienda', 'opciones' => ['1' => 'Se muestran', '0' => 'Ocultos']],
+               ['nombre' => 'uso', 'titulo' => 'Productos', 'opciones' => ['con' => 'Con productos', 'sin' => 'Sin productos']],
+           ]" />
 
 <div class="card">
     <div class="card-header text-muted small">

@@ -29,8 +29,12 @@ class MonedaController extends Controller
             });
         }
 
+        if (in_array($request->query('activa'), ['0', '1'], true)) {
+            $query->where('activa', (bool) $request->query('activa'));
+        }
+
         // La base primero: es la referencia contra la que se leen las demás.
-        $monedas = $query->orderBy('es_base', 'desc')->orderBy('nombre')->paginate(15);
+        $monedas = $query->orderBy('es_base', 'desc')->orderBy('nombre')->paginate(15)->withQueryString();
         $base    = Moneda::base();
 
         // Para la tabla de equivalencias: todas, no sólo la página, y sin el filtro

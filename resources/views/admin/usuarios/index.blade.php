@@ -15,29 +15,11 @@
     </div>
 </div>
 
-@php $filtrosActivos = request()->hasAny(['buscar']); @endphp
-<div class="card mb-4">
-    <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
-         data-bs-toggle="collapse" data-bs-target="#filtros-usuarios"
-         aria-expanded="{{ $filtrosActivos ? 'true' : 'false' }}">
-        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1 badge-chica">activo</span>' : '' !!}</span>
-        <i class="bi bi-chevron-down filtros-chevron"></i>
-    </div>
-    <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-usuarios">
-    <div class="card-body">
-        <form action="{{ route('admin.usuarios.index') }}" method="GET" class="row g-3">
-            <div class="col-md-10">
-                <input type="text" name="buscar" class="form-control" placeholder="Buscar por nombre o email..." value="{{ request('buscar') }}">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-primary w-100">
-                    <i class="bi bi-search"></i> Buscar
-                </button>
-            </div>
-        </form>
-    </div>
-    </div>
-</div>
+<x-filtros :url="route('admin.usuarios.index')" buscar="Buscar por nombre o email" titulo="Filtrar usuarios"
+           :campos="[
+               ['nombre' => 'activo', 'titulo' => 'Estado', 'opciones' => ['1' => 'Activos', '0' => 'Inactivos']],
+               ['nombre' => 'perfil', 'titulo' => 'Perfil', 'lista' => true, 'opciones' => ['sin' => 'Sin perfil (pueden todo)'] + $perfiles->all()],
+           ]" />
 
 <div class="card">
     <div class="card-body">

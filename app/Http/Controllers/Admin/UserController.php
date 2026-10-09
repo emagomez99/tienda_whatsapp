@@ -41,9 +41,22 @@ class UserController extends Controller
             });
         }
 
-        $usuarios = $query->orderBy('name')->paginate(15);
+        if (in_array($request->query('activo'), ['0', '1'], true)) {
+            $query->where('activo', (bool) $request->query('activo'));
+        }
+        // "sin" = administradores sin perfil (pueden todo).
+        if ($request->query('perfil') === 'sin') {
+            $query->whereNull('perfil_id');
+        } elseif (ctype_digit((string) $request->query('perfil'))) {
+            $query->where('perfil_id', (int) $request->query('perfil'));
+        }
 
-        return view('admin.usuarios.index', compact('usuarios'));
+        $usuarios = $query->orderBy('name')->paginate(15)->withQueryString();
+        $perfiles = \App\Models\Perfil::orderBy('nombre')
+            ->when(!auth()->user()->esSuperAdmin(), function ($q) { $q->where('es_superadmin', false); })
+            ->pluck('nombre', 'id');
+
+        return view('admin.usuarios.index', compact('usuarios', 'perfiles'));
     }
 
     public function create()

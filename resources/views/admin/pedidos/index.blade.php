@@ -17,62 +17,42 @@
     </div>
 </div>
 
-{{-- Filtros: búsqueda y rango de fechas. El estado va aparte, en pestañas con contadores. --}}
+{{-- Filtros (el mismo componente de todos los listados): búsqueda arriba, fechas en
+     el panel. El estado va aparte, en pestañas con contadores. Sin fechas elegidas
+     se ven los últimos 30 días; "Todas" viaja como desde/hasta vacíos. --}}
 @php
     $filtrosActivos = request()->filled('buscar') || $rango->estaActivo();
-    // En celular los filtros arrancan cerrados: siempre hay un rango (por defecto los
-    // últimos 30 días) y abiertos ocupan media pantalla. Se abren solos si hay búsqueda.
-    $abrirFiltros = request()->filled('buscar');
     // Parámetros que se conservan al cambiar de pestaña de estado.
     $conBusqueda = array_filter(['buscar' => request('buscar')]);
+
+    $porDefecto = !request()->query->has('desde') && !request()->query->has('hasta');
+    $fichasFechas = [];
+    if ($rango->estaActivo()) {
+        $formato = function ($texto) { return $texto ? \Carbon\Carbon::parse($texto)->format('d/m/Y') : '…'; };
+        $texto = $porDefecto
+            ? 'Últimos 30 días'
+            : ($rango->desdeTexto() === $rango->hastaTexto() ? 'El ' . $formato($rango->desdeTexto()) : 'Del ' . $formato($rango->desdeTexto()) . ' al ' . $formato($rango->hastaTexto()));
+        $todas = array_merge(request()->except(['page', 'desde', 'hasta']), ['desde' => '', 'hasta' => '']);
+        $fichasFechas[] = ['Fechas: ' . $texto, route('admin.pedidos.index') . '?' . http_build_query($todas)];
+    }
 @endphp
-<div class="card mb-3">
-    <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
-         data-bs-toggle="collapse" data-bs-target="#filtros-pedidos"
-         aria-expanded="{{ $abrirFiltros ? 'true' : 'false' }}">
-        <span class="small text-truncate">
-            <i class="bi bi-funnel me-1 text-muted"></i><span class="fw-semibold text-muted">Filtros</span>
-            <span class="text-muted ms-1" id="filtros-resumen"></span>
-        </span>
-        <i class="bi bi-chevron-down filtros-chevron flex-shrink-0 ms-2"></i>
+<x-filtros :url="route('admin.pedidos.index')" buscar="Buscar por nombre, email, celular o #123" titulo="Filtrar pedidos"
+           :conservar="['estado']" :fichas-extra="$fichasFechas" :cantidad-extra="count($fichasFechas)">
+    <div>
+        <label for="fechas" class="form-label small fw-semibold mb-1 d-block">Fechas</label>
+        <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Atajos de fechas">
+            <button type="button" class="btn btn-outline-primary {{ $porDefecto ? 'active' : '' }}" id="fechas-30">Últimos 30 días</button>
+            <button type="button" class="btn btn-outline-primary {{ !$rango->estaActivo() ? 'active' : '' }}" id="fechas-todas">Todas</button>
+        </div>
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+            <input type="text" id="fechas" class="form-control bg-white" placeholder="Elegí desde y hasta" readonly>
+        </div>
+        <small class="text-muted">Tocá el primer día y el último.</small>
+        <input type="hidden" name="desde" id="desde" value="{{ $rango->desdeTexto() }}" {{ $porDefecto ? 'disabled' : '' }} data-viaja-vacio>
+        <input type="hidden" name="hasta" id="hasta" value="{{ $rango->hastaTexto() }}" {{ $porDefecto ? 'disabled' : '' }} data-viaja-vacio>
     </div>
-    <div class="collapse d-md-block{{ $abrirFiltros ? ' show' : '' }}" id="filtros-pedidos">
-    <div class="card-body py-3">
-        <form action="{{ route('admin.pedidos.index') }}" method="GET">
-            @if($estado)
-                <input type="hidden" name="estado" value="{{ $estado }}">
-            @endif
-            <div class="row g-2 align-items-end">
-                <div class="col-md-5">
-                    <label for="buscar" class="form-label small mb-1">Buscar</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="search" name="buscar" id="buscar" class="form-control"
-                               placeholder="Nombre, email, celular o #123" value="{{ request('buscar') }}">
-                    </div>
-                </div>
-                {{-- Un solo campo para el rango: muestra "Todas las fechas" o "1 oct – 15 oct 2026"
-                     y al tocarlo abre un calendario (flatpickr). Lo que viaja son desde/hasta. --}}
-                <div class="col-md-4">
-                    <label for="fechas" class="form-label small mb-1">Fechas</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
-                        <input type="text" id="fechas" class="form-control bg-white" placeholder="Todas las fechas" readonly>
-                        <button type="button" id="fechas-limpiar" class="btn btn-outline-secondary {{ $rango->estaActivo() ? '' : 'd-none' }}" title="Todas las fechas">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-                    <input type="hidden" name="desde" id="desde" value="{{ $rango->desdeTexto() }}">
-                    <input type="hidden" name="hasta" id="hasta" value="{{ $rango->hastaTexto() }}">
-                </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
-                </div>
-            </div>
-        </form>
-    </div>
-    </div>
-</div>
+</x-filtros>
 
 {{-- Estado en pestañas: cada una dice cuántos pedidos hay dentro de la búsqueda y las fechas. --}}
 @php
@@ -184,17 +164,18 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
 <script>
-// Rango de fechas en un solo campo. Al cerrar el calendario con fechas nuevas se
-// filtra; con un solo día marcado se toma ese día completo.
+// Rango de fechas en el panel de filtros. Se aplica con "Ver resultados".
+// "Últimos 30 días" = sin desde/hasta (lo de siempre); "Todas" = desde/hasta vacíos.
 (function () {
-    var desde   = document.getElementById('desde');
-    var hasta   = document.getElementById('hasta');
-    var limpiar = document.getElementById('fechas-limpiar');
-    var form    = desde.form;
-    var inicial = desde.value + '|' + hasta.value;
+    var desde = document.getElementById('desde');
+    var hasta = document.getElementById('hasta');
+    var form  = desde.form;
 
     function aTexto(fecha) {
         return flatpickr.formatDate(fecha, 'Y-m-d');
+    }
+    function usar(habilitados) {
+        desde.disabled = hasta.disabled = !habilitados;
     }
 
     var calendario = flatpickr('#fechas', {
@@ -213,17 +194,21 @@
             if (!fechas.length) return;
             desde.value = aTexto(fechas[0]);
             hasta.value = aTexto(fechas[fechas.length - 1]);
-            if (desde.value + '|' + hasta.value !== inicial) form.submit();
+            usar(true);
         }
     });
 
-    document.getElementById('filtros-resumen').textContent = '· ' + (document.getElementById('fechas').value || 'Todas las fechas');
-
-    limpiar.addEventListener('click', function () {
+    document.getElementById('fechas-30').addEventListener('click', function () {
+        calendario.clear();
+        usar(false);
+        form.requestSubmit ? form.requestSubmit() : form.submit();
+    });
+    document.getElementById('fechas-todas').addEventListener('click', function () {
         calendario.clear();
         desde.value = '';
         hasta.value = '';
-        form.submit();
+        usar(true);
+        form.requestSubmit ? form.requestSubmit() : form.submit();
     });
 })();
 </script>

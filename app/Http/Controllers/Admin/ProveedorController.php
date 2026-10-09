@@ -29,7 +29,11 @@ class ProveedorController extends Controller
             });
         }
 
-        $proveedores = $query->orderBy('nombre')->paginate(15);
+        if (in_array($request->query('activo'), ['0', '1'], true)) {
+            $query->where('activo', (bool) $request->query('activo'));
+        }
+
+        $proveedores = $query->orderBy('nombre')->paginate(15)->withQueryString();
 
         return view('admin.proveedores.index', compact('proveedores'));
     }

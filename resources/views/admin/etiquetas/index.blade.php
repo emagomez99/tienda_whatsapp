@@ -21,21 +21,12 @@
 
 @include('admin.etiquetas.partials.fusion-propuesta')
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form action="{{ route('admin.etiquetas.index') }}" method="GET" class="row g-2">
-            <div class="col">
-                <input type="text" name="buscar" class="form-control" placeholder="Buscar característica o valor (ej: Marca, Asus)..." value="{{ $buscar }}">
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i> Buscar</button>
-                @if($buscar !== '')
-                    <a href="{{ route('admin.etiquetas.index') }}" class="btn btn-outline-secondary">Limpiar</a>
-                @endif
-            </div>
-        </form>
-    </div>
-</div>
+<x-filtros :url="route('admin.etiquetas.index')" buscar="Buscar característica o valor (ej.: Marca, Arcor)" titulo="Filtrar características"
+           :campos="[
+               ['nombre' => 'global', 'titulo' => 'Se pide en', 'todos' => 'Todas', 'opciones' => ['1' => 'Todos los productos', '0' => 'Algunas categorías']],
+               ['nombre' => 'visible', 'titulo' => 'En la tienda', 'todos' => 'Todas', 'opciones' => ['1' => 'Se muestra', '0' => 'Oculta']],
+               ['nombre' => 'varios', 'titulo' => 'Un producto puede tener varios', 'ficha' => 'Varios valores', 'todos' => 'Todas', 'opciones' => ['1' => 'Sí', '0' => 'No']],
+           ]" />
 
 @if($etiquetas->isEmpty())
     <div class="alert alert-info">

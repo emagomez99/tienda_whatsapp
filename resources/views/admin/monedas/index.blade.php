@@ -37,29 +37,8 @@
     </div>
 @endif
 
-@php $filtrosActivos = request()->hasAny(['buscar']); @endphp
-<div class="card mb-4">
-    <div class="card-header d-flex d-md-none justify-content-between align-items-center py-2 px-3"
-         data-bs-toggle="collapse" data-bs-target="#filtros-monedas"
-         aria-expanded="{{ $filtrosActivos ? 'true' : 'false' }}">
-        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i> Filtros{!! $filtrosActivos ? ' <span class="badge bg-primary ms-1 badge-chica">activo</span>' : '' !!}</span>
-        <i class="bi bi-chevron-down filtros-chevron"></i>
-    </div>
-    <div class="collapse d-md-block{{ $filtrosActivos ? ' show' : '' }}" id="filtros-monedas">
-    <div class="card-body">
-        <form action="{{ route('admin.monedas.index') }}" method="GET" class="row g-3">
-            <div class="col-md-10">
-                <input type="text" name="buscar" class="form-control" placeholder="Buscar por nombre o código..." value="{{ request('buscar') }}">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-primary w-100">
-                    <i class="bi bi-search"></i> Buscar
-                </button>
-            </div>
-        </form>
-    </div>
-    </div>
-</div>
+<x-filtros :url="route('admin.monedas.index')" buscar="Buscar por nombre o código" titulo="Filtrar monedas"
+           :campos="[['nombre' => 'activa', 'titulo' => 'Estado', 'todos' => 'Todas', 'opciones' => ['1' => 'Activas', '0' => 'Inactivas']]]" />
 
 <div class="card">
     <div class="card-body">

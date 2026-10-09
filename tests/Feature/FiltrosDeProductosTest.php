@@ -90,8 +90,8 @@ class FiltrosDeProductosTest extends TestCase
         $this->actingAs($usuario)->get($this->urlTenant('admin/productos?buscar=a&stock=poco&foto=con'))->assertOk()
             ->assertSee('Filtrar productos')
             ->assertSee('Filtrar (2 puestos)', false)        // el buscador no cuenta
-            ->assertSee('Poco stock')
-            ->assertSee('Con foto')
+            ->assertSee('Stock: Poco (1 a 5)')
+            ->assertSee('Foto: Con foto')
             ->assertSee('Quitar todos los filtros')
             ->assertSee('Coca-Cola');
 

@@ -138,7 +138,7 @@ class PedidosFiltroFechaTest extends TestCase
     public function test_sin_fechas_el_campo_dice_todas_las_fechas()
     {
         $this->listado(['desde' => '', 'hasta' => ''])->assertOk()
-            ->assertSee('placeholder="Todas las fechas"', false)
+            ->assertDontSee('Fechas: ')   // sin fichita de fechas: son todas
             ->assertSee('name="desde" id="desde" value=""', false);
     }
 
