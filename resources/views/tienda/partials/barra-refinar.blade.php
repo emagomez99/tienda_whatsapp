@@ -35,27 +35,25 @@
     }
 @endphp
 
-<div class="d-flex flex-wrap align-items-center gap-2 mb-2 barra-refinar">
-    <button type="button" class="btn btn-outline-secondary position-relative" data-bs-toggle="offcanvas" data-bs-target="#panel-refinar" aria-controls="panel-refinar">
+{{-- Todo a la derecha, como el embudo del panel: Ordenar por y, al final, Filtrar. --}}
+<div class="d-flex flex-wrap align-items-center justify-content-end gap-2 mb-2 barra-refinar">
+    @if($cascadaEnPanel)
+        <span class="small text-muted me-auto" id="contador-resultados" style="display: none;"><span id="total-productos">0</span> productos</span>
+    @endif
+    <label for="refinar-orden" class="small text-muted text-nowrap mb-0">Ordenar por</label>
+    <select id="refinar-orden" class="form-select form-select-sm" style="width: auto;">
+        @foreach(App\Support\RefinadoDelCatalogo::ORDENES as $valor => $texto)
+            <option value="{{ $valor }}" {{ $refinado->ordenElegido() === $valor ? 'selected' : '' }}>{{ $texto }}</option>
+        @endforeach
+    </select>
+    <button type="button" class="btn btn-outline-secondary btn-sm position-relative" data-bs-toggle="offcanvas" data-bs-target="#panel-refinar" aria-controls="panel-refinar">
         <i class="bi bi-funnel"></i> Filtrar
         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ $refinado->cantidad() ? '' : 'd-none' }}"
               id="refinar-globito" data-servidor="{{ $refinado->cantidad() }}">{{ $refinado->cantidad() }}</span>
     </button>
-
-    <div class="d-flex align-items-center gap-2 ms-auto">
-        @if($cascadaEnPanel)
-            <span class="small text-muted" id="contador-resultados" style="display: none;"><span id="total-productos">0</span> productos</span>
-        @endif
-        <label for="refinar-orden" class="small text-muted text-nowrap mb-0">Ordenar por</label>
-        <select id="refinar-orden" class="form-select form-select-sm" style="width: auto;">
-            @foreach(App\Support\RefinadoDelCatalogo::ORDENES as $valor => $texto)
-                <option value="{{ $valor }}" {{ $refinado->ordenElegido() === $valor ? 'selected' : '' }}>{{ $texto }}</option>
-            @endforeach
-        </select>
-    </div>
 </div>
 
-<div class="d-flex flex-wrap gap-2 mb-3" id="refinar-fichas">
+<div class="d-flex flex-wrap justify-content-end gap-2 mb-3" id="refinar-fichas">
     @foreach($fichas as [$texto, $url])
         <span class="badge rounded-pill text-bg-light border fw-normal d-inline-flex align-items-center gap-1 py-2 px-3">
             {{ $texto }}
