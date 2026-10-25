@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Stancl\Tenancy\Database\Models\Domain;
 use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
@@ -39,29 +40,50 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
-        $this->renderable(function (TenantCouldNotBeIdentifiedOnDomainException $e) {
-            abort(404);
+        $this->renderable(function (TenantCouldNotBeIdentifiedOnDomainException $e, $request) {
+            return $this->dominioSinTienda($request);
         });
 
         $this->renderable(function (NotFoundHttpException $e, $request) {
-            if (!tenancy()->initialized) {
-                try {
-                    $domain = $request->getHost();
-                    $tenant = \App\Models\Tenant::whereHas('domains', function ($q) use ($domain) {
-                        $q->where('domain', $domain);
-                    })->first();
-                    if ($tenant) {
-                        tenancy()->initialize($tenant);
-                    }
-                } catch (\Exception $ex) {
-                    // dominio central o tenant no encontrado, se muestra 404 genérico
-                }
+            if (tenancy()->initialized) {
+                return null;   // errors/404 con el encabezado de la tienda
             }
-            // retorna null para que Laravel siga con el renderizado normal de errors/404.blade.php
+            $host = $request->getHost();
+            if (in_array($host, config('tenancy.central_domains', []), true)) {
+                return null;   // la plataforma: errors/404 de siempre
+            }
+            $tenant = \App\Models\Tenant::whereHas('domains', function ($q) use ($host) {
+                $q->where('domain', $host);
+            })->first();
+            if (!$tenant) {
+                return $this->dominioSinTienda($request);
+            }
+            // Una página que no existe en una tienda: se inicializa para que errors/404
+            // muestre su encabezado.
+            tenancy()->initialize($tenant);
+
+            return null;
         });
 
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    /**
+     * Un dominio que no es de ninguna tienda. Si entraron con "www." y la tienda está
+     * cargada sin él (o al revés), se los manda a la dirección que sí existe, con la
+     * misma página. Si no, una página propia sin el encabezado de ninguna tienda (ni
+     * el de la plataforma).
+     */
+    private function dominioSinTienda($request)
+    {
+        $host = $request->getHost();
+        $otro = strpos($host, 'www.') === 0 ? substr($host, 4) : 'www.' . $host;
+        if (Domain::where('domain', $otro)->exists()) {
+            return redirect()->away($request->getScheme() . '://' . $otro . $request->getRequestUri(), 301);
+        }
+
+        return response()->view('errors.tienda-no-encontrada', [], 404);
     }
 }

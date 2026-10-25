@@ -340,6 +340,18 @@ class SolidezDeStockYConsultasTest extends TestCase
     public function un_dominio_sin_tienda_no_llena_el_log()
     {
         $this->assertFalse(app(ExceptionHandler::class)->shouldReport(new TenantCouldNotBeIdentifiedOnDomainException('nada.test')));
-        $this->get('http://dominio-que-no-es-de-nadie.test/')->assertNotFound();
+        $this->get('http://dominio-que-no-es-de-nadie.test/')->assertNotFound()
+            ->assertSee('No encontramos esta tienda')->assertDontSee('Tienda MC');
+
+        // Con "www." delante (y la tienda cargada sin él): a la dirección que sí existe.
+        $this->get('http://www.' . self::TENANT_DOMAIN . '/carrito?x=1')
+            ->assertRedirect('http://' . self::TENANT_DOMAIN . '/carrito?x=1')->assertStatus(301);
+
+        // Una página que no existe, en un dominio sin tienda: lo mismo.
+        $this->get('http://dominio-que-no-es-de-nadie.test/no/existe')->assertNotFound()
+            ->assertSee('No encontramos esta tienda');
+        $this->get('http://www.' . self::TENANT_DOMAIN . '/no/existe')->assertStatus(301);
+        // Y en una tienda sí es "Página no encontrada", con su encabezado.
+        $this->get($this->urlTenant('no/existe'))->assertNotFound()->assertSee('Página no encontrada');
     }
 }
