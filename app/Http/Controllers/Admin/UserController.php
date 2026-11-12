@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Support\Paginas;
 
 class UserController extends Controller
 {
@@ -51,7 +52,7 @@ class UserController extends Controller
             $query->where('perfil_id', (int) $request->query('perfil'));
         }
 
-        $usuarios = $query->orderBy('name')->paginate(15)->withQueryString();
+        $usuarios = Paginas::enRango($query->orderBy('name')->orderBy('id')->paginate(15)->withQueryString());
         $perfiles = \App\Models\Perfil::orderBy('nombre')
             ->when(!auth()->user()->esSuperAdmin(), function ($q) { $q->where('es_superadmin', false); })
             ->pluck('nombre', 'id');

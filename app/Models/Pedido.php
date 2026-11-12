@@ -27,6 +27,20 @@ class Pedido extends Model
     }
 
     /**
+     * Los totales para mostrar: sin los que dan cero (productos sin precio en esa
+     * moneda), que sólo confunden al lado del total de verdad. Si todos dan cero,
+     * se muestran igual.
+     */
+    public function totalesVisibles()
+    {
+        $conPlata = $this->totales->filter(function ($total) {
+            return (float) $total->total != 0.0;
+        });
+
+        return $conPlata->isNotEmpty() ? $conPlata->values() : $this->totales;
+    }
+
+    /**
      * Meses que se ofrecen para consultar pedidos, del más reciente al más viejo: al
      * menos los últimos 12, o desde el mes del primer pedido si es anterior.
      *

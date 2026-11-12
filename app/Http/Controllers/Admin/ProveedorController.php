@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
+use App\Support\Paginas;
 
 class ProveedorController extends Controller
 {
@@ -33,7 +34,7 @@ class ProveedorController extends Controller
             $query->where('activo', (bool) $request->query('activo'));
         }
 
-        $proveedores = $query->orderBy('nombre')->paginate(15)->withQueryString();
+        $proveedores = Paginas::enRango($query->orderBy('nombre')->orderBy('id')->paginate(15)->withQueryString());
 
         return view('admin.proveedores.index', compact('proveedores'));
     }

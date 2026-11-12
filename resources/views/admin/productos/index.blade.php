@@ -61,22 +61,25 @@
                 </a>
             </div>
         @else
+            {{-- En el celular no hay lugar para ocho columnas (había que deslizar la tabla
+                 para ver el precio y los botones): quedan la foto, el nombre y editar/eliminar,
+                 y el precio, el stock y el estado bajan debajo del nombre. --}}
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
                             @if($puedeEditar)
-                                <th style="width:1%;">
+                                <th class="d-none d-md-table-cell" style="width:1%;">
                                     <input type="checkbox" class="form-check-input" id="masa-todos" title="Marcar los de esta página" aria-label="Marcar los de esta página">
                                 </th>
                             @endif
                             <th>Imagen</th>
                             <th>Descripción</th>
-                            <th>Código</th>
-                            <th>Proveedor</th>
-                            <th>Precio</th>
-                            <th>Stock</th>
-                            <th>Estado</th>
+                            <th class="d-none d-md-table-cell">Código</th>
+                            <th class="d-none d-md-table-cell">Proveedor</th>
+                            <th class="d-none d-md-table-cell">Precio</th>
+                            <th class="d-none d-md-table-cell">Stock</th>
+                            <th class="d-none d-md-table-cell">Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -84,7 +87,7 @@
                         @foreach($productos as $producto)
                             <tr>
                                 @if($puedeEditar)
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <input type="checkbox" class="form-check-input masa-producto" value="{{ $producto->id }}" aria-label="Marcar {{ $producto->descripcion }}">
                                     </td>
                                 @endif
@@ -100,42 +103,49 @@
                                     @if($categorias->isNotEmpty())
                                         <div class="small mt-1">
                                             @forelse($producto->categorias as $suya)
-                                                <span class="text-muted text-nowrap">{{ str_replace(' > ', ' › ', $caminos[$suya->id] ?? '') }}</span>@if(!$loop->last)<span class="text-muted"> · </span>@endif
+                                                <span class="text-muted camino-categoria">{{ str_replace(' > ', ' › ', $caminos[$suya->id] ?? '') }}</span>@if(!$loop->last)<span class="text-muted"> · </span>@endif
                                             @empty
                                                 <span class="text-warning-emphasis"><i class="bi bi-exclamation-circle"></i> Sin categoría</span>
                                             @endforelse
                                         </div>
                                     @endif
+                                    <div class="d-md-none small mt-1">
+                                        <span class="fw-semibold text-nowrap">{{ $producto->precio_con_moneda }}</span>
+                                        <span class="text-muted text-nowrap"> · Stock {{ $producto->stock }}</span>
+                                        @if(!$producto->disponible)
+                                            <span class="badge rounded-pill text-bg-secondary">No disponible</span>
+                                        @endif
+                                    </div>
                                 </td>
-                                <td>{{ $producto->id_proveedor ?? '-' }}</td>
-                                <td>{{ $producto->proveedor->nombre ?? '-' }}</td>
-                                <td>{{ $producto->precio_con_moneda }}</td>
-                                <td>
+                                <td class="d-none d-md-table-cell">{{ $producto->id_proveedor ?? '-' }}</td>
+                                <td class="d-none d-md-table-cell">{{ $producto->proveedor->nombre ?? '-' }}</td>
+                                <td class="d-none d-md-table-cell">{{ $producto->precio_con_moneda }}</td>
+                                <td class="d-none d-md-table-cell">
                                     {{ $producto->stock }}
                                     @if($producto->variantes_count)
                                         <small class="d-block text-muted text-nowrap" title="El stock es la suma de sus variantes">{{ $producto->variantes_count }} {{ $producto->variantes_count === 1 ? 'variante' : 'variantes' }}</small>
                                     @endif
                                 </td>
-                                <td>
-                                    <span class="d-flex flex-column gap-1">
+                                <td class="d-none d-md-table-cell">
+                                    {{-- El estado, en una pastilla; lo de pedir sin stock es un dato
+                                         más: en letra chica, para no llenar la columna de colores. --}}
+                                    <span class="d-flex flex-column align-items-start gap-1">
                                     @if($producto->disponible)
                                         <span class="badge rounded-pill text-bg-success">Disponible</span>
                                     @else
                                         <span class="badge rounded-pill text-bg-secondary">No disponible</span>
                                     @endif
                                     @if($producto->por_encargue)
-                                        <span class="badge rounded-pill text-bg-info">
-                                            <i class="bi bi-clock"></i> Se puede pedir sin stock
-                                        </span>
+                                        <small class="text-muted text-nowrap"><i class="bi bi-clock"></i> Se puede pedir sin stock</small>
                                     @endif
                                     </span>
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="{{ $producto->url() }}" class="btn btn-sm btn-outline-secondary" title="Ver en tienda" target="_blank">
+                                        <a href="{{ $producto->url() }}" class="btn btn-sm btn-outline-secondary d-none d-md-inline-block" title="Ver en tienda" target="_blank">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ route('admin.productos.historial', $producto) }}" class="btn btn-sm btn-outline-secondary" title="Historial de movimientos">
+                                        <a href="{{ route('admin.productos.historial', $producto) }}" class="btn btn-sm btn-outline-secondary d-none d-md-inline-block" title="Historial de movimientos">
                                             <i class="bi bi-clock-history"></i>
                                         </a>
                                         <a href="{{ route('admin.productos.edit', $producto) . (request()->getQueryString() ? '?_back=' . urlencode(request()->getQueryString()) : '') }}" class="btn btn-sm btn-outline-primary" title="Editar">

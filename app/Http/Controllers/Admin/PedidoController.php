@@ -12,6 +12,7 @@ use App\Support\RangoFechas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Support\Paginas;
 
 class PedidoController extends Controller
 {
@@ -58,14 +59,15 @@ class PedidoController extends Controller
             ? $request->query('estado')
             : null;
 
-        $pedidos = $query
+        $pedidos = Paginas::enRango($query
             ->when($estado, function ($q) use ($estado) {
                 $q->where('estado', $estado);
             })
             ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->with('totales.moneda')
             ->paginate(20)
-            ->withQueryString();
+            ->withQueryString());
 
         return view('admin.pedidos.index', compact('pedidos', 'rango', 'porEstado', 'estado'));
     }

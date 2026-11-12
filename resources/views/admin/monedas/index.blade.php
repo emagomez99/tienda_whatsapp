@@ -53,16 +53,16 @@
                         <tr>
                             <th>Moneda</th>
                             <th class="text-end">Cotización</th>
-                            <th>Estado</th>
+                            <th class="d-none d-md-table-cell">Estado</th>
                             {{-- Venta y compra en columnas propias: apiladas en una sola
                                  celda había que pasar el mouse por cada badge para saber
                                  cuál era cuál, y son dos datos que se comparan entre sí
                                  (un proveedor en dólares con precios en pesos es
                                  justamente lo que el modo margen resuelve). --}}
-                            <th class="text-end" title="Productos con precio de venta en esta moneda">
+                            <th class="text-end d-none d-md-table-cell" title="Productos con precio de venta en esta moneda">
                                 Prod. venta
                             </th>
-                            <th class="text-end" title="Productos con precio de compra en esta moneda">
+                            <th class="text-end d-none d-md-table-cell" title="Productos con precio de compra en esta moneda">
                                 Prod. compra
                             </th>
                             <th>Acciones</th>
@@ -82,6 +82,9 @@
                                     @if($moneda->es_default)
                                         <span class="badge bg-info ms-1" title="Viene elegida al cargar un producto nuevo">Favorita</span>
                                     @endif
+                                    @if(!$moneda->activa)
+                                        <span class="badge bg-secondary ms-1 d-md-none">Inactiva</span>
+                                    @endif
                                 </td>
                                 <td class="text-end">
                                     {{-- La base no se cotiza: el "1" que se guarda es
@@ -96,7 +99,7 @@
                                         @endif
                                     @endif
                                 </td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     @if($moneda->activa)
                                         <span class="badge bg-success">Activa</span>
                                     @else
@@ -106,19 +109,19 @@
                                 {{-- El cero se atenúa: en una tabla de conteos lo que se
                                      busca es dónde hay algo, y un cero con el mismo peso
                                      visual que un 30.900 compite por la atención. --}}
-                                <td class="text-end cifras">
+                                <td class="text-end cifras d-none d-md-table-cell">
                                     <span class="{{ $moneda->productos_count > 0 ? 'fw-semibold' : 'text-muted opacity-50' }}">
                                         {{ number_format($moneda->productos_count, 0, ',', '.') }}
                                     </span>
                                 </td>
-                                <td class="text-end cifras">
+                                <td class="text-end cifras d-none d-md-table-cell">
                                     <span class="{{ $moneda->productos_de_compra_count > 0 ? 'fw-semibold' : 'text-muted opacity-50' }}">
                                         {{ number_format($moneda->productos_de_compra_count, 0, ',', '.') }}
                                     </span>
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="{{ route('admin.monedas.edit', $moneda) }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ route('admin.monedas.edit', $moneda) }}" class="btn btn-sm btn-outline-primary" title="Editar" aria-label="Editar {{ $moneda->nombre }}">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         @if($moneda->es_base || $enUso)
@@ -132,7 +135,7 @@
                                                   data-confirmar-boton="Sí, eliminar">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar {{ $moneda->nombre }}">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -157,7 +160,7 @@
      contrastar con la realidad sin sacar la cuenta a mano. --}}
 @if($todas->count() > 1)
 <div class="card mt-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-1">
         <span><i class="bi bi-arrow-left-right"></i> Equivalencias</span>
         <small class="text-muted">Cada fila dice cuánto vale 1 unidad de esa moneda</small>
     </div>
@@ -176,9 +179,11 @@
                     @foreach($todas as $origen)
                         <tr>
                             <th class="text-start fw-normal">
-                                {{ $origen->nombre }} <span class="text-muted">({{ $origen->codigo }})</span>
+                                {{-- En el celular sólo el código: con el nombre entero la tabla no entraba. --}}
+                                <span class="d-none d-sm-inline">{{ $origen->nombre }} <span class="text-muted">({{ $origen->codigo }})</span></span>
+                                <span class="d-sm-none">{{ $origen->codigo }}</span>
                                 @if($origen->es_base)
-                                    <span class="badge bg-primary ms-1">Tu moneda</span>
+                                    <span class="badge bg-primary ms-1 d-none d-sm-inline-block">Tu moneda</span>
                                 @endif
                             </th>
                             @foreach($todas as $destino)

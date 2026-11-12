@@ -33,18 +33,25 @@
                     <thead class="table-light">
                         <tr>
                             <th>Nombre</th>
-                            <th>Email</th>
+                            <th class="d-none d-md-table-cell">Email</th>
                             <th>Perfil</th>
-                            <th>Estado</th>
-                            <th>Fecha Registro</th>
+                            <th class="d-none d-md-table-cell">Estado</th>
+                            <th class="d-none d-md-table-cell">Creado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($usuarios as $usuario)
                             <tr>
-                                <td><strong>{{ $usuario->name }}</strong></td>
-                                <td>{{ $usuario->email }}</td>
+                                {{-- En el celular el email baja debajo del nombre. --}}
+                                <td>
+                                    <strong>{{ $usuario->name }}</strong>
+                                    @if(!$usuario->activo)
+                                        <span class="badge bg-danger d-md-none">Inactivo</span>
+                                    @endif
+                                    <div class="small text-muted text-break d-md-none">{{ $usuario->email }}</div>
+                                </td>
+                                <td class="d-none d-md-table-cell">{{ $usuario->email }}</td>
                                 <td>
                                     @if($usuario->perfil)
                                         <span class="badge {{ $usuario->perfil->es_superadmin ? 'bg-danger' : 'bg-primary' }}">
@@ -56,24 +63,24 @@
                                         <span class="badge bg-light text-dark">Sin perfil</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     @if($usuario->activo)
                                         <span class="badge bg-success">Activo</span>
                                     @else
                                         <span class="badge bg-danger">Inactivo</span>
                                     @endif
                                 </td>
-                                <td>{{ $usuario->created_at->format('d/m/Y H:i') }}</td>
+                                <td class="d-none d-md-table-cell">{{ $usuario->created_at->format('d/m/Y') }}</td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="{{ route('admin.usuarios.edit', $usuario) }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ route('admin.usuarios.edit', $usuario) }}" class="btn btn-sm btn-outline-primary" title="Editar" aria-label="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         @if($usuario->id !== auth()->id())
-                                            <form action="{{ route('admin.usuarios.destroy', $usuario) }}" method="POST" data-confirmar="¿Eliminar este usuario?" data-confirmar-boton="Sí, eliminar">
+                                            <form action="{{ route('admin.usuarios.destroy', $usuario) }}" method="POST" data-confirmar="¿Eliminar el usuario «{{ $usuario->name }}»?" data-confirmar-boton="Sí, eliminar">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>

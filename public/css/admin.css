@@ -490,3 +490,12 @@ a.panel-dato:hover .card { border-color: var(--panel-borde-fuerte); }
 .ayuda-pregunta { background: var(--panel-superficie); border: 1px solid var(--panel-borde); border-radius: var(--panel-radio-control); padding: .65rem .9rem; font-size: .9rem; }
 .ayuda-pregunta summary { font-weight: 600; cursor: pointer; }
 .ayuda-pregunta[open] summary { color: var(--panel-acento-oscuro); }
+
+/* Listados en el celular: celdas más juntas para que la tabla entre sin deslizarla. */
+@media (max-width: 767.98px) {
+    .contenido-panel .card .table > :not(caption) > * > * { padding-left: .4rem; padding-right: .4rem; }
+    .contenido-panel .card .table .panel-miniatura { width: 40px; height: 40px; }
+    #tabla-productos > :not(caption) > * > * { padding-left: .25rem; padding-right: .25rem; }
+}
+/* El camino de una categoría (Bebidas › Gaseosas) no se corta en pantallas grandes. */
+@media (min-width: 768px) { .camino-categoria { white-space: nowrap; } }

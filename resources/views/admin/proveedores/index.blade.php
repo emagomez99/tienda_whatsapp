@@ -30,23 +30,33 @@
                     <thead class="table-light">
                         <tr>
                             <th>Nombre</th>
-                            <th>Contacto</th>
-                            <th>Teléfono</th>
-                            <th>Email</th>
+                            <th class="d-none d-md-table-cell">Contacto</th>
+                            <th class="d-none d-md-table-cell">Teléfono</th>
+                            <th class="d-none d-md-table-cell">Email</th>
                             <th>Productos</th>
-                            <th>Estado</th>
+                            <th class="d-none d-md-table-cell">Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($proveedores as $proveedor)
                             <tr>
-                                <td><strong>{{ $proveedor->nombre }}</strong></td>
-                                <td>{{ $proveedor->contacto ?? '-' }}</td>
-                                <td>{{ $proveedor->telefono ?? '-' }}</td>
-                                <td>{{ $proveedor->email ?? '-' }}</td>
-                                <td><span class="badge bg-info">{{ $proveedor->productos_count }}</span></td>
+                                {{-- En el celular quedan el nombre, cuántos productos tiene y
+                                     los botones; el teléfono baja debajo del nombre. --}}
                                 <td>
+                                    <strong>{{ $proveedor->nombre }}</strong>
+                                    @if(!$proveedor->activo)
+                                        <span class="badge bg-secondary d-md-none">Inactivo</span>
+                                    @endif
+                                    @if($proveedor->telefono)
+                                        <div class="small text-muted d-md-none">{{ $proveedor->telefono }}</div>
+                                    @endif
+                                </td>
+                                <td class="d-none d-md-table-cell">{{ $proveedor->contacto ?? '-' }}</td>
+                                <td class="d-none d-md-table-cell">{{ $proveedor->telefono ?? '-' }}</td>
+                                <td class="d-none d-md-table-cell">{{ $proveedor->email ?? '-' }}</td>
+                                <td><span class="badge rounded-pill bg-light text-dark cifras">{{ number_format($proveedor->productos_count, 0, ',', '.') }}</span></td>
+                                <td class="d-none d-md-table-cell">
                                     @if($proveedor->activo)
                                         <span class="badge bg-success">Activo</span>
                                     @else
@@ -55,13 +65,13 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="{{ route('admin.proveedores.edit', $proveedor) }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ route('admin.proveedores.edit', $proveedor) }}" class="btn btn-sm btn-outline-primary" title="Editar" aria-label="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="{{ route('admin.proveedores.destroy', $proveedor) }}" method="POST" data-confirmar="¿Eliminar este proveedor?" data-confirmar-boton="Sí, eliminar">
+                                        <form action="{{ route('admin.proveedores.destroy', $proveedor) }}" method="POST" data-confirmar="¿Eliminar el proveedor «{{ $proveedor->nombre }}»?" data-confirmar-boton="Sí, eliminar">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>

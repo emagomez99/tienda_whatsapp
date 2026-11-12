@@ -29,19 +29,28 @@
                     <thead class="table-light">
                         <tr>
                             <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th>Tipo</th>
+                            <th class="d-none d-md-table-cell">Descripción</th>
+                            <th class="d-none d-md-table-cell">Tipo</th>
                             <th>Usuarios</th>
-                            <th>Estado</th>
+                            <th class="d-none d-md-table-cell">Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($perfiles as $perfil)
                             <tr>
-                                <td><strong>{{ $perfil->nombre }}</strong></td>
-                                <td class="text-muted">{{ $perfil->descripcion ?? '—' }}</td>
+                                {{-- En el celular la descripción baja debajo del nombre. --}}
                                 <td>
+                                    <strong>{{ $perfil->nombre }}</strong>
+                                    @if(!$perfil->activo)
+                                        <span class="badge bg-danger d-md-none">Inactivo</span>
+                                    @endif
+                                    @if($perfil->descripcion)
+                                        <div class="small text-muted d-md-none">{{ $perfil->descripcion }}</div>
+                                    @endif
+                                </td>
+                                <td class="text-muted d-none d-md-table-cell">{{ $perfil->descripcion ?? '—' }}</td>
+                                <td class="d-none d-md-table-cell">
                                     @if($perfil->es_superadmin)
                                         <span class="badge bg-danger">
                                             <i class="bi bi-star-fill"></i> Superadmin
@@ -53,7 +62,7 @@
                                 <td>
                                     <span class="badge bg-light text-dark">{{ $perfil->usuarios_count }}</span>
                                 </td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     @if($perfil->activo)
                                         <span class="badge bg-success">Activo</span>
                                     @else
@@ -63,14 +72,14 @@
                                 <td>
                                     @if(auth()->user()->puede('perfiles.gestionar'))
                                     <div class="btn-group">
-                                        <a href="{{ route('admin.perfiles.edit', $perfil) }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ route('admin.perfiles.edit', $perfil) }}" class="btn btn-sm btn-outline-primary" title="Editar" aria-label="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         @if($perfil->usuarios_count === 0)
-                                            <form action="{{ route('admin.perfiles.destroy', $perfil) }}" method="POST" data-confirmar="¿Eliminar este perfil?" data-confirmar-boton="Sí, eliminar">
+                                            <form action="{{ route('admin.perfiles.destroy', $perfil) }}" method="POST" data-confirmar="¿Eliminar el perfil «{{ $perfil->nombre }}»?" data-confirmar-boton="Sí, eliminar">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>

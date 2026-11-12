@@ -71,7 +71,7 @@
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <div class="text-end">
                             <div class="panel-rotulo">Total</div>
-                            @foreach($pedido->totales as $pt)
+                            @foreach($pedido->totalesVisibles() as $pt)
                                 <div class="fw-bold fs-6">
                                     {{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}
                                     @if($pt->moneda)<small class="text-muted fw-normal">{{ $pt->moneda->codigo }}</small>@endif
@@ -121,10 +121,12 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Descripción</th>
-                                <th class="text-end">Precio unit.</th>
+                                {{-- En el celular el precio de cada uno baja debajo del nombre:
+                                     con cuatro columnas había que deslizar para ver el subtotal. --}}
+                                <th class="text-end d-none d-sm-table-cell">Precio unit.</th>
                                 <th class="text-center">Cantidad</th>
                                 <th class="text-end">Subtotal</th>
-                                @if($editable)<th style="width:80px"></th>@endif
+                                @if($editable)<th style="width:1%"></th>@endif
                             </tr>
                         </thead>
                         <tbody id="tbody-productos">
@@ -139,8 +141,9 @@
                                         {{ $item->descripcion }}
                                         <small class="text-muted">(producto eliminado)</small>
                                     @endif
+                                    <div class="small text-muted d-sm-none">{{ $item->moneda ? $item->moneda->simbolo : '$' }}{{ number_format($item->precio_unitario, 2, ',', '.') }} c/u</div>
                                 </td>
-                                <td class="text-end">{{ $item->moneda ? $item->moneda->simbolo : '$' }}{{ number_format($item->precio_unitario, 2, ',', '.') }}</td>
+                                <td class="text-end d-none d-sm-table-cell">{{ $item->moneda ? $item->moneda->simbolo : '$' }}{{ number_format($item->precio_unitario, 2, ',', '.') }}</td>
                                 <td class="text-center">
                                     @if($editable)
                                         <form method="POST"
@@ -148,7 +151,7 @@
                                               class="d-inline-flex align-items-center gap-1">
                                             @csrf @method('PUT')
                                             <input type="number" name="cantidad" value="{{ $item->cantidad }}"
-                                                   min="1" class="form-control form-control-sm text-center" style="width:70px">
+                                                   min="1" class="form-control form-control-sm text-center" style="width:52px" aria-label="Cantidad">
                                             <button class="btn btn-sm btn-outline-primary" title="Guardar">
                                                 <i class="bi bi-check"></i>
                                             </button>
@@ -172,9 +175,10 @@
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
-                                <td colspan="3" class="text-end fw-bold">Total</td>
+                                <td class="d-none d-sm-table-cell"></td>
+                                <td colspan="2" class="text-end fw-bold">Total</td>
                                 <td class="text-end fw-bold">
-                                    @foreach($pedido->totales as $pt)
+                                    @foreach($pedido->totalesVisibles() as $pt)
                                         <div>{{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}</div>
                                     @endforeach
                                 </td>
@@ -403,15 +407,16 @@ function confirmarEliminarItem(url) {
         var tr = document.createElement('tr');
         tr.className = 'table-primary';
         tr.innerHTML =
-            '<td colspan="2" class="py-2 ps-3">' +
+            '<td class="py-2 ps-3">' +
                 '<div class="position-relative">' +
                     '<input type="text" class="form-control form-control-sm fila-buscar" placeholder="Buscar por nombre o código..." autocomplete="off">' +
                     '<input type="hidden" class="fila-id">' +
-                    '<div class="fila-dropdown list-group shadow" style="position:fixed;z-index:1055;display:none;min-width:340px;max-height:240px;overflow-y:auto;"></div>' +
+                    '<div class="fila-dropdown list-group shadow" style="position:fixed;z-index:1055;display:none;min-width:min(340px, 90vw);max-height:240px;overflow-y:auto;"></div>' +
                 '</div>' +
             '</td>' +
+            '<td class="d-none d-sm-table-cell"></td>' +
             '<td class="text-center py-2">' +
-                '<input type="number" class="form-control form-control-sm text-center fila-cantidad" value="1" min="1" style="width:70px">' +
+                '<input type="number" class="form-control form-control-sm text-center fila-cantidad" value="1" min="1" style="width:52px">' +
             '</td>' +
             '<td></td>' +
             '<td class="text-end py-2">' +

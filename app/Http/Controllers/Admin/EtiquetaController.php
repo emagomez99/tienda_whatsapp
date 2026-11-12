@@ -8,6 +8,7 @@ use App\Models\Etiqueta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Support\Paginas;
 
 class EtiquetaController extends Controller
 {
@@ -56,7 +57,7 @@ class EtiquetaController extends Controller
             }
         }
 
-        $etiquetas = $query->orderBy('nombre')->paginate(15)->withQueryString();
+        $etiquetas = Paginas::enRango($query->orderBy('nombre')->paginate(15)->withQueryString());
 
         $valoresPorEtiqueta = [];
         foreach ($etiquetas as $etiqueta) {
@@ -78,7 +79,7 @@ class EtiquetaController extends Controller
     {
         $buscar = trim((string) $request->get('buscar', ''));
 
-        $valores = $etiqueta->valores()
+        $valores = Paginas::enRango($etiqueta->valores()
             ->buscar($buscar)
             ->when(in_array($request->query('visible'), ['0', '1'], true), function ($q) use ($request) {
                 $q->where('visible', (bool) $request->query('visible'));
@@ -88,7 +89,7 @@ class EtiquetaController extends Controller
             ->withCount('asignaciones')
             ->orderBy('valor')
             ->paginate(self::VALORES_POR_PAGINA)
-            ->withQueryString();
+            ->withQueryString());
 
         return view('admin.etiquetas.show', compact('etiqueta', 'valores', 'buscar'));
     }

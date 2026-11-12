@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Moneda;
 use App\Models\Producto;
 use Illuminate\Http\Request;
+use App\Support\Paginas;
 
 class MonedaController extends Controller
 {
@@ -34,7 +35,7 @@ class MonedaController extends Controller
         }
 
         // La base primero: es la referencia contra la que se leen las demás.
-        $monedas = $query->orderBy('es_base', 'desc')->orderBy('nombre')->paginate(15)->withQueryString();
+        $monedas = Paginas::enRango($query->orderBy('es_base', 'desc')->orderBy('nombre')->paginate(15)->withQueryString());
         $base    = Moneda::base();
 
         // Para la tabla de equivalencias: todas, no sólo la página, y sin el filtro

@@ -60,7 +60,7 @@ class FiltrosDelPanelTest extends TestCase
         $this->dueno()->get($this->urlTenant('admin/proveedores?activo=0'))->assertOk()
             ->assertSee('Filtrar proveedores')
             ->assertSee('Estado: Inactivos')
-            ->assertSee('Filtrar (1 puestos)', false)
+            ->assertSee('Filtrar (1 puesto)', false)
             ->assertSee('Distribuidora Vieja')
             ->assertDontSee('Distribuidora Activa');
 

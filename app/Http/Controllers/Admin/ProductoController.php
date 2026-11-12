@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Support\Paginas;
 
 class ProductoController extends Controller
 {
@@ -48,11 +49,15 @@ class ProductoController extends Controller
     public function index(Request $request)
     {
         $filtro = new FiltroDeProductos($request->query());
-        $productos = $filtro->consulta()
+        $productos = Paginas::enRango($filtro->consulta()
             ->with(['proveedor', 'moneda', 'categorias:categorias.id'])
             ->withCount('variantes')
             ->orderBy('descripcion')
-            ->paginate(15);
+            // Muchos productos pueden llamarse igual: sin esto, al pasar de página
+            // alguno podía repetirse o no aparecer nunca.
+            ->orderBy('productos.id')
+            ->paginate(15)
+            ->withQueryString());
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
 
         // Los caminos se arman una vez con el árbol en memoria: con el de cada
@@ -398,14 +403,15 @@ class ProductoController extends Controller
 
     public function historial(Producto $producto)
     {
-        $movimientos = $producto->movimientos()
+        $movimientos = Paginas::enRango($producto->movimientos()
             ->with(['pedido', 'user', 'variante.valores.etiqueta'])
             ->orderBy('created_at', 'desc')
             // Varios movimientos del mismo guardado tienen la misma hora: sin esto salían
             // mezclados ("vuelve al producto" debajo de lo que lo causó) y la paginación
             // podía repetir o saltear alguno.
             ->orderBy('id', 'desc')
-            ->paginate(25);
+            ->paginate(25)
+            ->withQueryString());
 
         $totales = [
             'entradas' => $producto->movimientos()->where('variacion', '>', 0)->sum('variacion'),

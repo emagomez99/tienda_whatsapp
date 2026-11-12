@@ -89,7 +89,7 @@
                 </a>
                 @if($hayCampos)
                     <button type="button" class="btn btn-link text-secondary px-2 position-relative" data-bs-toggle="offcanvas" data-bs-target="#{{ $id }}"
-                            title="Filtrar" aria-label="Filtrar{{ $cantidad ? ' (' . $cantidad . ' puestos)' : '' }}">
+                            title="Filtrar" aria-label="Filtrar{{ $cantidad ? ' (' . $cantidad . ($cantidad === 1 ? ' puesto)' : ' puestos)') : '' }}">
                         <i class="bi bi-funnel-fill fs-5"></i>
                         @if($cantidad)
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="margin-left: -6px; margin-top: 6px;">{{ $cantidad }}</span>

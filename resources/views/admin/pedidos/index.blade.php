@@ -77,7 +77,22 @@
 <div class="card border-top-0 rounded-top-0">
     <div class="card-body p-0">
         @if($pedidos->isEmpty())
-            <div class="p-4 text-muted text-center">{{ $filtrosActivos || $estado ? 'No hay pedidos con estos filtros.' : 'No hay pedidos.' }}</div>
+            {{-- Vacío: que se entienda por qué y cómo salir. Lo más común es que no
+                 haya pedidos en los últimos 30 días (lo que se ve al entrar) pero sí antes. --}}
+            @php $verTodos = route('admin.pedidos.index', ['desde' => '', 'hasta' => '']); @endphp
+            <div class="text-center py-5">
+                <i class="bi bi-bag text-muted display-6"></i>
+                @if(!$filtrosActivos && !$estado)
+                    <p class="fw-semibold mt-2 mb-1">Todavía no recibiste ningún pedido</p>
+                    <p class="text-muted small mb-0">Cuando un cliente compre en tu tienda, su pedido aparece acá.</p>
+                @elseif($porDefecto && !request()->filled('buscar') && !$estado)
+                    <p class="fw-semibold mt-2 mb-1">No hay pedidos en los últimos 30 días</p>
+                    <a href="{{ $verTodos }}" class="btn btn-outline-primary btn-sm mt-2">Ver los pedidos de todas las fechas</a>
+                @else
+                    <p class="fw-semibold mt-2 mb-1">Ningún pedido coincide con lo que buscás</p>
+                    <a href="{{ $verTodos }}" class="btn btn-outline-primary btn-sm mt-2">Quitar los filtros y ver todos</a>
+                @endif
+            </div>
         @else
             {{-- Celular: una tarjeta por pedido, sin scroll lateral. --}}
             <div class="list-group list-group-flush d-md-none">
@@ -92,7 +107,7 @@
                             </div>
                             <div class="text-end flex-shrink-0">
                                 @include('admin.pedidos.partials.estado-badge')
-                                @foreach($pedido->totales as $pt)
+                                @foreach($pedido->totalesVisibles() as $pt)
                                     <div class="small fw-semibold mt-1">{{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}</div>
                                 @endforeach
                             </div>
@@ -127,7 +142,7 @@
                             <td>{{ $pedido->localidad ? $pedido->localidad . ($pedido->provincia ? ', ' . $pedido->provincia : '') : ($pedido->provincia ?: '—') }}</td>
                             @endif
                             <td>
-                                @foreach($pedido->totales as $pt)
+                                @foreach($pedido->totalesVisibles() as $pt)
                                     <div class="lh-sm">{{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}</div>
                                 @endforeach
                             </td>

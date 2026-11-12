@@ -143,7 +143,7 @@
                                     <td class="ps-3"><span class="small text-muted cifras">#{{ $pedido->id }}</span></td>
                                     <td class="small">{{ $pedido->nombre }} {{ $pedido->apellido }}</td>
                                     <td class="small d-none d-md-table-cell">
-                                        @foreach($pedido->totales as $pt)
+                                        @foreach($pedido->totalesVisibles() as $pt)
                                             <div class="lh-sm">{{ $pt->moneda ? $pt->moneda->simbolo : '$' }}{{ number_format($pt->total, 2, ',', '.') }}</div>
                                         @endforeach
                                     </td>
