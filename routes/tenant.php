@@ -102,6 +102,7 @@ Route::middleware([PreventAccessFromCentralDomains::class])->group(function () {
         Route::get('/productos/plantilla', [ImportacionController::class, 'plantilla'])->name('importaciones.plantilla');
         Route::get('/productos/exportar', [ImportacionController::class, 'exportar'])->name('importaciones.exportar');
         Route::get('/importaciones/{importacion}', [ImportacionController::class, 'show'])->name('importaciones.show');
+        Route::get('/importaciones/{importacion}/errores', [ImportacionController::class, 'errores'])->name('importaciones.errores');
         Route::post('/importaciones/{importacion}/aplicar', [ImportacionController::class, 'aplicar'])->name('importaciones.aplicar');
         Route::post('/importaciones/{importacion}/cancelar', [ImportacionController::class, 'cancelar'])->name('importaciones.cancelar');
         // Sin "show": ningún controlador del panel lo tiene y nadie enlaza a esas

@@ -58,6 +58,12 @@ class Importacion extends Model
         return $disco->exists($this->rutaFilas()) ? json_decode($disco->get($this->rutaFilas()), true) : [];
     }
 
+    /** Las filas que no le cambian nada al producto: no se aplican (ver AnalisisDeImportacion). */
+    public function sinCambios(): int
+    {
+        return (int) (($this->resumen ?: [])['sin_cambios'] ?? 0);
+    }
+
     public function porcentaje(): int
     {
         return $this->total > 0 ? (int) floor($this->procesadas * 100 / $this->total) : 100;

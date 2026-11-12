@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\FilasParaCorregir;
 use App\Exports\PlantillaDeProductos;
 use App\Exports\ProductosExport;
 use App\Http\Controllers\Controller;
@@ -89,6 +90,23 @@ class ImportacionController extends Controller
         return view('admin.importaciones.show', compact('importacion'));
     }
 
+    /** Las filas que no se cargaron, en un Excel con el motivo de cada una, para corregirlas y volver a subirlas. */
+    public function errores(Importacion $importacion)
+    {
+        $planilla = new FilasParaCorregir($importacion);
+        if (!$planilla->sePuede()) {
+            return redirect()->route('admin.importaciones.show', $importacion)
+                ->with('error', 'Ya no tenemos guardada esa planilla. Corregí las filas en la tuya y volvé a subirla.');
+        }
+
+        $ruta = $this->archivoTemporal();
+        $planilla->escribir($ruta);
+
+        $nombre = 'para-corregir-' . preg_replace('/\.[^.]+$/', '', $importacion->nombre_archivo) . '.xlsx';
+
+        return response()->download($ruta, $nombre)->deleteFileAfterSend();
+    }
+
     /** Aplica la siguiente tanda; la pantalla lo llama hasta que termina. */
     public function aplicar(Importacion $importacion, ImportacionDeProductos $importaciones)
     {
@@ -106,6 +124,7 @@ class ImportacionController extends Controller
             'creados'      => $importacion->creados,
             'actualizados' => $importacion->actualizados,
             'con_error'    => $importacion->con_error,
+            'sin_cambios'  => $importacion->sinCambios(),
         ]);
     }
 

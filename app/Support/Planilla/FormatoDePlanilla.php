@@ -22,17 +22,26 @@ class FormatoDePlanilla
 {
     /** clave => [título, ayuda para la hoja "Cómo completarla"] */
     const COLUMNAS = [
-        'codigo'       => ['Código', 'Con el código, el producto se actualiza si ya existe. Si lo dejás vacío, se crea uno nuevo cada vez que subas la planilla.'],
+        'codigo'       => ['Código', 'Con el código, el producto se actualiza si ya existe. Si lo dejás vacío, lo buscamos por el nombre exacto: si no está, se crea.'],
         'nombre'       => ['Nombre', 'Obligatorio para productos nuevos. Ej: Gaseosa Coca-Cola 1,5 L.'],
         'proveedor'    => ['Proveedor', 'Quién te lo provee. Si no existe, se crea. Obligatorio para productos nuevos, salvo que tengas un solo proveedor.'],
-        'categorias'   => ['Categorías', 'Sus estantes. Uno dentro de otro con ">", varios separados por coma. Ej: Bebidas > Gaseosas, Ofertas. Las que no existen se crean.'],
+        'categorias'   => ['Categorías', 'Sus estantes. Uno dentro de otro con ">", varios separados por coma. Ej: Bebidas > Gaseosas, Ofertas. Las que ya tenés están en la hoja «Categorías», para copiarlas. Las que no existen se crean.'],
         'precio'       => ['Precio', 'Sólo el número, como lo escribís normalmente. Ej: 1.500,50. Vacío en un producto nuevo: sin precio.'],
         'moneda'       => ['Moneda', 'El código de la moneda: ARS, USD… Vacía: la moneda de siempre.'],
+        'costo'        => ['Costo', 'Cuánto te cuesta a vos (no se muestra en la tienda). Si el producto calcula su precio por margen, al cambiar el costo el precio se recalcula solo.'],
+        'moneda_costo' => ['Moneda del costo', 'El código de la moneda en la que lo comprás: ARS, USD… Vacía: la moneda de siempre.'],
+        'margen'       => ['Margen %', 'Cuánto le ganás, en porcentaje. Ej: 35. Un producto nuevo con Costo y Margen y sin Precio calcula su precio solo.'],
         'stock'        => ['Stock', 'Cuántas unidades tenés ahora. Si cambia, queda registrado en el historial del producto.'],
         'disponible'   => ['Se muestra en la tienda', 'Sí o No. Vacío en un producto nuevo: Sí.'],
         'por_encargue' => ['Se puede pedir sin stock', 'Sí o No. Vacío en un producto nuevo: No.'],
         'detalle'      => ['Descripción detallada', 'Texto libre que se ve en la ficha del producto.'],
     ];
+
+    /**
+     * La columna que agrega la planilla de "filas para corregir" (ver
+     * FilasParaCorregir): dice qué pasa con cada fila. Al volver a subirla se ignora.
+     */
+    const QUE_CORREGIR = 'Qué corregir';
 
     /** Prefijo de las columnas de imágenes: "Imagen 1", "Imagen 2"… */
     const IMAGEN = 'Imagen';
@@ -87,7 +96,7 @@ class FormatoDePlanilla
         $desconocidas = [];
         foreach ($titulos as $indice => $titulo) {
             $normal = static::normalizarTitulo((string) $titulo);
-            if ($normal === '') {
+            if ($normal === '' || $normal === static::normalizarTitulo(self::QUE_CORREGIR)) {
                 continue;
             }
             if (isset($fijas[$normal])) {

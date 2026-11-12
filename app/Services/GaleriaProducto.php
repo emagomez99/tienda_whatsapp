@@ -124,6 +124,31 @@ class GaleriaProducto
         return null;
     }
 
+    /** La dirección completa de una imagen guardada: la que se ve y la que se exporta. */
+    public static function urlPublica(string $url): string
+    {
+        return static::esExterna($url) ? $url : url('storage/' . $url);
+    }
+
+    /**
+     * La galería como direcciones completas, la principal primero. Es lo que se
+     * exporta a Excel y contra lo que se compara lo que vuelve en una planilla.
+     *
+     * @param string[] $adicionales las de producto_imagenes, en orden
+     * @return string[]
+     */
+    public static function urlsPublicas(?string $principal, array $adicionales): array
+    {
+        $urls = $principal ? [static::urlPublica($principal)] : [];
+        foreach ($adicionales as $url) {
+            if ($url !== $principal) {
+                $urls[] = static::urlPublica((string) $url);
+            }
+        }
+
+        return $urls;
+    }
+
     public static function esExterna(string $url): bool
     {
         return stripos($url, 'http') === 0;

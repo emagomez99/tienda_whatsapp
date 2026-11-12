@@ -32,7 +32,8 @@ use Throwable;
  *
  * Cada fila se guarda con GuardadoDeProducto, el mismo servicio que el formulario:
  * las reglas son las mismas. Una fila que falla al aplicar no frena a las demás:
- * queda anotada con el motivo.
+ * queda anotada con el motivo. Las filas que no le cambian nada al producto
+ * (acción "igual" del análisis) no se aplican.
  */
 class ImportacionDeProductos
 {
@@ -101,19 +102,36 @@ class ImportacionDeProductos
      */
     public function aplicarLote(Importacion $importacion, ?int $usuarioId): Importacion
     {
-        if ($importacion->terminada()) {
-            return $importacion;
-        }
+        // La tanda entera o nada, y de a una por importación: si el pedido se corta
+        // por la mitad o llegan dos a la vez (doble clic, dos pestañas), ninguna fila
+        // se aplica dos veces (una sin código se crearía repetida).
+        return DB::transaction(function () use ($importacion, $usuarioId) {
+            $importacion = Importacion::whereKey($importacion->id)->lockForUpdate()->firstOrFail();
 
-        $filas = array_slice($importacion->filas(), $importacion->procesadas, self::POR_TANDA);
+            return $importacion->terminada() ? $importacion : $this->aplicarTanda($importacion, $usuarioId);
+        });
+    }
+
+    private function aplicarTanda(Importacion $importacion, ?int $usuarioId): Importacion
+    {
+        $filas = $importacion->filas();
+        $total = count($filas);
         $erroresAlAplicar = [];
         $creados = $actualizados = $conError = 0;
 
-        foreach ($filas as $fila) {
+        // Las filas que no hay que guardar (con error, o iguales al producto) no
+        // cuentan para el tamaño de la tanda: se pasan de largo.
+        $aplicadas = 0;
+        for ($posicion = $importacion->procesadas; $posicion < $total && $aplicadas < self::POR_TANDA; $posicion++) {
+            $fila = $filas[$posicion];
+            if ($fila['accion'] === 'igual') {
+                continue;
+            }
             if ($fila['accion'] === 'error') {
                 $conError++;
                 continue;
             }
+            $aplicadas++;
             try {
                 $this->aplicarFila($fila, $importacion, $usuarioId);
                 $fila['accion'] === 'crear' ? $creados++ : $actualizados++;
@@ -132,10 +150,9 @@ class ImportacionDeProductos
             array_merge($resumen['errores_al_aplicar'] ?? [], $erroresAlAplicar), 0, AnalisisDeImportacion::MAX_ERRORES_A_MOSTRAR
         );
 
-        $procesadas = $importacion->procesadas + count($filas);
         $importacion->update([
-            'estado'       => $procesadas >= $importacion->total ? Importacion::TERMINADA : Importacion::APLICANDO,
-            'procesadas'   => $procesadas,
+            'estado'       => $posicion >= $total ? Importacion::TERMINADA : Importacion::APLICANDO,
+            'procesadas'   => $posicion,
             'creados'      => $importacion->creados + $creados,
             'actualizados' => $importacion->actualizados + $actualizados,
             'con_error'    => $importacion->con_error + $conError,
@@ -168,7 +185,7 @@ class ImportacionDeProductos
             }
 
             if ($fila['imagenes']) {
-                $datos = $datos->conGaleria(array_map(function ($url) { return 'url:' . $url; }, $fila['imagenes']), []);
+                $datos = $datos->conGaleria($this->fichasDeGaleria($fila['imagenes'], $producto), []);
             }
 
             if (!$producto) {
@@ -199,8 +216,37 @@ class ImportacionDeProductos
     }
 
     /**
+     * Las fotos de la fila como fichas de GaleriaProducto. Una foto que el producto
+     * ya tiene (la planilla exportada trae su dirección completa) se reconoce como
+     * suya: tratada como una dirección nueva, la galería borraría el archivo subido
+     * y la foto quedaría rota.
+     *
+     * @param string[] $urls
+     * @return string[]
+     */
+    private function fichasDeGaleria(array $urls, ?Producto $producto): array
+    {
+        $propias = [];
+        if ($producto) {
+            foreach ($producto->imagenes as $imagen) {
+                $propias[GaleriaProducto::urlPublica($imagen->url)] = 'id:' . $imagen->id;
+            }
+            if ($producto->url_imagen) {
+                $propias[GaleriaProducto::urlPublica($producto->url_imagen)] = 'principal';
+            }
+        }
+
+        return array_map(function ($url) use ($propias) {
+            return $propias[$url] ?? 'url:' . $url;
+        }, $urls);
+    }
+
+    /**
      * Los datos del producto que trae la fila. Al actualizar, sólo lo que vino con
      * valor; al crear, con los valores por defecto del formulario.
+     *
+     * El modo del precio no se cambia desde la planilla, salvo al crear: un producto
+     * nuevo con Costo y Margen y sin Precio nace calculando su precio por margen.
      */
     private function atributos(array $v, ?Producto $producto): array
     {
@@ -223,11 +269,16 @@ class ImportacionDeProductos
             }
         }
         if (!empty($v['moneda'])) {
-            $codigo = mb_strtoupper(trim($v['moneda']), 'UTF-8');
-            if (!array_key_exists($codigo, $this->monedas)) {
-                $this->monedas[$codigo] = Moneda::where('codigo', 'ilike', $codigo)->value('id');
-            }
-            $atributos['moneda_id'] = $this->monedas[$codigo];
+            $atributos['moneda_id'] = $this->moneda($v['moneda']);
+        }
+        if (isset($v['costo'])) {
+            $atributos['precio_compra'] = $v['costo'];
+        }
+        if (!empty($v['moneda_costo'])) {
+            $atributos['moneda_compra_id'] = $this->moneda($v['moneda_costo']);
+        }
+        if (isset($v['margen'])) {
+            $atributos['margen_ganancia'] = $v['margen'];
         }
         // A un producto que calcula su precio por margen no se le pisa el precio.
         if (isset($v['precio']) && (!$producto || $producto->modo_precio_venta !== Producto::MODO_PRECIO_MARGEN)) {
@@ -235,17 +286,32 @@ class ImportacionDeProductos
         }
 
         if (!$producto) {
+            $porMargen = isset($v['costo'], $v['margen']) && !isset($v['precio']);
             $atributos += [
                 'proveedor_id'      => Proveedor::count() === 1 ? Proveedor::value('id') : null,
                 'precio'            => 0,
                 'moneda_id'         => Moneda::idPorDefecto(),
-                'modo_precio_venta' => Producto::MODO_PRECIO_MANUAL,
+                'modo_precio_venta' => $porMargen ? Producto::MODO_PRECIO_MARGEN : Producto::MODO_PRECIO_MANUAL,
                 'disponible'        => true,
                 'por_encargue'      => false,
             ];
+            if (isset($v['costo'])) {
+                $atributos += ['moneda_compra_id' => Moneda::idPorDefecto()];
+            }
         }
 
         return $atributos;
+    }
+
+    /** El id de la moneda con ese código (ARS, usd…). */
+    private function moneda(string $codigo): ?int
+    {
+        $codigo = mb_strtoupper(trim($codigo), 'UTF-8');
+        if (!array_key_exists($codigo, $this->monedas)) {
+            $this->monedas[$codigo] = Moneda::where('codigo', 'ilike', $codigo)->value('id');
+        }
+
+        return $this->monedas[$codigo];
     }
 
     /** El proveedor con ese nombre (sin importar mayúsculas), o uno nuevo. */

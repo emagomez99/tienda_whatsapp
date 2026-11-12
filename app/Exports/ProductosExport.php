@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\Categoria;
 use App\Models\Etiqueta;
 use App\Models\Producto;
+use App\Services\GaleriaProducto;
 use App\Support\Planilla\FormatoDePlanilla;
 use Illuminate\Database\Eloquent\Builder;
 use OpenSpout\Writer\Common\Creator\Style\StyleBuilder;
@@ -52,12 +53,13 @@ class ProductosExport
         $escritor->openToFile($ruta);
         $escritor->getCurrentSheet()->setName('Productos');
         AnchosDeColumna::aplicar($escritor);
+        AnchosDeColumna::fijarTitulos($escritor);
 
         $titulos = (new StyleBuilder())->setFontBold()->build();
         $escritor->addRow(WriterEntityFactory::createRowFromArray($this->titulos(), $titulos));
 
         $this->consulta
-            ->with(['proveedor:id,nombre', 'moneda:id,codigo', 'categorias:categorias.id', 'etiquetas', 'imagenes'])
+            ->with(['proveedor:id,nombre', 'moneda:id,codigo', 'monedaCompra:id,codigo', 'categorias:categorias.id', 'etiquetas', 'imagenes'])
             ->orderBy('productos.id')
             ->chunk(1000, function ($productos) use ($escritor) {
                 foreach ($productos as $producto) {
@@ -65,6 +67,7 @@ class ProductosExport
                 }
             });
 
+        HojasDeReferencia::agregar($escritor);
         $escritor->close();
     }
 
@@ -75,40 +78,41 @@ class ProductosExport
 
     public function fila(Producto $producto): array
     {
-        $fila = [
-            (string) $producto->id_proveedor,
-            $producto->descripcion,
-            (string) optional($producto->proveedor)->nombre,
-            $producto->categorias->map(function ($c) { return $this->caminos[$c->id] ?? null; })->filter()->implode(', '),
-            $producto->precio !== null ? (float) $producto->precio : '',
-            (string) optional($producto->moneda)->codigo,
-            (int) $producto->stock,
-            FormatoDePlanilla::escribirSiNo((bool) $producto->disponible),
-            FormatoDePlanilla::escribirSiNo((bool) $producto->por_encargue),
-            (string) $producto->detalle,
+        $valores = [
+            'codigo'       => (string) $producto->id_proveedor,
+            'nombre'       => $producto->descripcion,
+            'proveedor'    => (string) optional($producto->proveedor)->nombre,
+            'categorias'   => $producto->categorias->map(function ($c) { return $this->caminos[$c->id] ?? null; })->filter()->implode(', '),
+            'precio'       => $producto->precio !== null ? (float) $producto->precio : '',
+            'moneda'       => (string) optional($producto->moneda)->codigo,
+            'costo'        => $producto->precio_compra !== null ? (float) $producto->precio_compra : '',
+            'moneda_costo' => (string) optional($producto->monedaCompra)->codigo,
+            'margen'       => $producto->margen_ganancia !== null ? (float) $producto->margen_ganancia : '',
+            'stock'        => (int) $producto->stock,
+            'disponible'   => FormatoDePlanilla::escribirSiNo((bool) $producto->disponible),
+            'por_encargue' => FormatoDePlanilla::escribirSiNo((bool) $producto->por_encargue),
+            'detalle'      => (string) $producto->detalle,
         ];
 
+        // En el orden de las columnas, sea cual sea: si se suma una, no se corre nada.
+        $fila = [];
+        foreach (FormatoDePlanilla::COLUMNAS as $clave => $columna) {
+            $fila[] = $valores[$clave];
+        }
+
         // Las imágenes como direcciones completas: así se pueden volver a importar.
-        $imagenes = [];
-        if ($producto->url_imagen) {
-            $imagenes[] = $producto->imagen_url;
-        }
-        foreach ($producto->imagenes as $imagen) {
-            if ($imagen->url !== $producto->url_imagen) {
-                $imagenes[] = $imagen->imagen_url;
-            }
-        }
+        $imagenes = GaleriaProducto::urlsPublicas($producto->url_imagen, $producto->imagenes->pluck('url')->all());
         for ($i = 0; $i < $this->imagenes; $i++) {
             $fila[] = $imagenes[$i] ?? '';
         }
 
         // Varios valores en una celda: "S; M; L" (se leen igual al volver a subirla).
-        $valores = [];
+        $deCaracteristicas = [];
         foreach ($producto->etiquetas as $e) {
-            $valores[$e->id][] = $e->pivot->valor;
+            $deCaracteristicas[$e->id][] = $e->pivot->valor;
         }
         foreach ($this->caracteristicas as $c) {
-            $fila[] = FormatoDePlanilla::escribirValores($valores[$c['id']] ?? []);
+            $fila[] = FormatoDePlanilla::escribirValores($deCaracteristicas[$c['id']] ?? []);
         }
 
         return $fila;

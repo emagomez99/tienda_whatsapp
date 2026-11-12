@@ -43,6 +43,7 @@ class PlantillaDeProductos
         // Sólo los títulos: una fila de ejemplo se importaría como producto.
         $escritor->getCurrentSheet()->setName('Productos');
         AnchosDeColumna::aplicar($escritor);
+        AnchosDeColumna::fijarTitulos($escritor);
         $escritor->addRow(WriterEntityFactory::createRowFromArray(FormatoDePlanilla::titulos($caracteristicas, true), $negrita));
 
         $escritor->addNewSheetAndMakeItCurrent()->setName('Cómo completarla');
@@ -51,6 +52,10 @@ class PlantillaDeProductos
         foreach ($this->instrucciones($caracteristicas) as $i => $fila) {
             $escritor->addRow(WriterEntityFactory::createRowFromArray($fila, $i === 0 ? $negrita : $ajustado));
         }
+
+        // Para copiar y pegar: las categorías que ya existen y los valores ya usados
+        // de las características de esta plantilla.
+        HojasDeReferencia::agregar($escritor, array_column($caracteristicas, 'id'));
 
         $escritor->close();
     }
@@ -80,7 +85,8 @@ class PlantillaDeProductos
     {
         $ejemplos = [
             'codigo' => 'COCA-15', 'nombre' => 'Gaseosa Coca-Cola 1,5 L', 'proveedor' => 'Distribuidora del Sur',
-            'categorias' => 'Bebidas > Gaseosas, Ofertas', 'precio' => '1.500,50', 'moneda' => 'ARS', 'stock' => '24',
+            'categorias' => 'Bebidas > Gaseosas, Ofertas', 'precio' => '1.500,50', 'moneda' => 'ARS',
+            'costo' => '1.000', 'moneda_costo' => 'ARS', 'margen' => '35', 'stock' => '24',
             'disponible' => 'Sí', 'por_encargue' => 'No', 'detalle' => 'Botella retornable.',
         ];
 
@@ -106,6 +112,8 @@ class PlantillaDeProductos
 
         $filas[] = ['', '', ''];
         $filas[] = ['Importante', 'Una celda vacía no cambia nada: para actualizar sólo los precios, alcanza con las columnas Código y Precio. Los productos que no están en la planilla no se tocan.', ''];
+        $filas[] = ['Para no escribir de más', 'En las hojas «Categorías» y «Valores» están las categorías que ya tenés y los valores que ya usaste (marcas, talles…). Copialos de ahí: si los escribís distinto, se crean repetidos.', ''];
+        $filas[] = ['', 'Antes de aplicar la planilla vas a ver qué cambia en cada producto. Los que quedan igual no se tocan.', ''];
 
         return $filas;
     }

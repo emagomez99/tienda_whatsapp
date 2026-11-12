@@ -46,12 +46,7 @@ class LecturaDePlanilla
     /** Lee el archivo (ruta absoluta, con su extensión). */
     public function leer(string $ruta): void
     {
-        $lector = ReaderEntityFactory::createReaderFromFile($ruta);
-        if ($lector instanceof LectorCsv) {
-            $lector->setFieldDelimiter($this->separadorCsv($ruta));
-        }
-
-        $lector->open($ruta);
+        $lector = static::abrir($ruta);
         foreach ($lector->getSheetIterator() as $hoja) {
             foreach ($hoja->getRowIterator() as $numero => $fila) {
                 $this->procesar((int) $numero, $fila->toArray());
@@ -59,6 +54,23 @@ class LecturaDePlanilla
             break;   // sólo la primera hoja: la segunda de la plantilla es la ayuda
         }
         $lector->close();
+    }
+
+    /**
+     * El lector de la planilla, ya abierto (hay que cerrarlo). El CSV, con el
+     * separador que usa: coma o punto y coma.
+     *
+     * @return \OpenSpout\Reader\ReaderInterface
+     */
+    public static function abrir(string $ruta)
+    {
+        $lector = ReaderEntityFactory::createReaderFromFile($ruta);
+        if ($lector instanceof LectorCsv) {
+            $lector->setFieldDelimiter(static::separadorCsv($ruta));
+        }
+        $lector->open($ruta);
+
+        return $lector;
     }
 
     /** Las columnas reconocidas (para saber, por ejemplo, si vino la columna Código). */
@@ -83,7 +95,7 @@ class LecturaDePlanilla
     }
 
     /** ";" si la primera línea tiene más punto y coma que comas (CSV del Excel en castellano). */
-    private function separadorCsv(string $ruta): string
+    private static function separadorCsv(string $ruta): string
     {
         $archivo = fopen($ruta, 'r');
         $primera = (string) fgets($archivo);
@@ -144,6 +156,25 @@ class LecturaDePlanilla
                     $fila['errores'][] = "{$titulo}: «{$celda}» no es un precio. Escribí sólo el número, por ejemplo 1.500,50.";
                 } else {
                     $fila['valores']['precio'] = $numero;
+                }
+                break;
+
+            case 'costo':
+                $numero = FormatoDePlanilla::leerNumero($celda);
+                if ($numero === false || ($numero !== null && $numero < 0)) {
+                    $fila['errores'][] = "{$titulo}: «{$celda}» no es un importe. Escribí sólo el número, por ejemplo 1.500,50.";
+                } else {
+                    $fila['valores']['costo'] = $numero;
+                }
+                break;
+
+            case 'margen':
+                // "35%" escrito como texto vale 35.
+                $numero = FormatoDePlanilla::leerNumero(is_string($celda) ? str_replace('%', '', $celda) : $celda);
+                if ($numero === false || ($numero !== null && ($numero < 0 || $numero > 99999.99))) {
+                    $fila['errores'][] = "{$titulo}: «{$celda}» no es un porcentaje. Escribí sólo el número, por ejemplo 35.";
+                } else {
+                    $fila['valores']['margen'] = $numero;
                 }
                 break;
 

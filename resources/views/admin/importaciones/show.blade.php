@@ -4,7 +4,8 @@
 
 {{--
     Una planilla subida. Sin aplicar: qué va a pasar (cuántos se crean y actualizan,
-    errores por fila, lo que se va a crear y los valores parecidos), con "Aplicar" y
+    qué cambia en los que ya existen, con el antes y el después, errores por fila
+    (se bajan en Excel para corregirlos), lo que se va a crear y los valores parecidos), con "Aplicar" y
     "No aplicar". Aplicando: la barra de avance, que pide la siguiente tanda hasta
     terminar (ver ImportacionController::aplicar). Terminada: el resultado.
 --}}
@@ -33,21 +34,28 @@
 
 {{-- Los números grandes: qué va a pasar (o qué pasó) --}}
 <div class="row g-3 mb-4">
-    <div class="col-sm-4">
+    <div class="col-6 col-lg-3">
         <div class="card h-100"><div class="card-body">
             <div class="text-muted small">{{ $sinAplicar ? 'Se van a crear' : 'Creados' }}</div>
             <div class="fs-3 fw-semibold" id="numero-creados">{{ number_format($sinAplicar ? ($r['crear'] ?? 0) : $importacion->creados, 0, ',', '.') }}</div>
             <div class="small text-muted">productos nuevos</div>
         </div></div>
     </div>
-    <div class="col-sm-4">
+    <div class="col-6 col-lg-3">
         <div class="card h-100"><div class="card-body">
             <div class="text-muted small">{{ $sinAplicar ? 'Se van a actualizar' : 'Actualizados' }}</div>
             <div class="fs-3 fw-semibold" id="numero-actualizados">{{ number_format($sinAplicar ? ($r['actualizar'] ?? 0) : $importacion->actualizados, 0, ',', '.') }}</div>
-            <div class="small text-muted">productos que ya tenías, por su código</div>
+            <div class="small text-muted">productos que ya tenías (por su código o su nombre)</div>
         </div></div>
     </div>
-    <div class="col-sm-4">
+    <div class="col-6 col-lg-3">
+        <div class="card h-100"><div class="card-body">
+            <div class="text-muted small">Quedan igual</div>
+            <div class="fs-3 fw-semibold">{{ number_format($importacion->sinCambios(), 0, ',', '.') }}</div>
+            <div class="small text-muted">la planilla no les cambia nada: no se tocan</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
         @php $errores = $sinAplicar ? ($r['con_error'] ?? 0) : $importacion->con_error; @endphp
         <div class="card h-100 {{ $errores ? 'border-warning' : '' }}"><div class="card-body">
             <div class="text-muted small">Con algo para corregir</div>
@@ -62,6 +70,40 @@
     @foreach($r['avisos'] ?? [] as $aviso)
         <div class="alert alert-info py-2 small"><i class="bi bi-info-circle"></i> {{ $aviso }}</div>
     @endforeach
+
+    {{-- Qué cambia en los productos que ya tenía: cuántos por dato, y los primeros con su antes y después --}}
+    @if(!empty($r['cambios']))
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-arrow-left-right"></i> Qué va a cambiar en los productos que ya tenés</div>
+            <div class="card-body pb-2">
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach($r['cambios'] as $campo => $cuantos)
+                        <span class="badge rounded-pill text-bg-light border fw-normal fs-6">{{ $campo }}: <strong>{{ $cuenta($cuantos, 'producto', 'productos') }}</strong></span>
+                    @endforeach
+                </div>
+                <div class="small text-muted mt-2">Mirá que sea lo que esperabas. Si ves un dato que no querías cambiar, tocá «No aplicar» y revisá la planilla.</div>
+            </div>
+            <div class="table-responsive" style="max-height: 360px;">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light"><tr><th style="width: 70px;">Fila</th><th>Producto</th><th>Dato</th><th>Ahora</th><th>Va a quedar</th></tr></thead>
+                    <tbody>
+                        @foreach($r['ejemplos'] ?? [] as $cambio)
+                            <tr>
+                                <td>{{ $cambio['fila'] }}</td>
+                                <td>{{ $cambio['producto'] }}</td>
+                                <td>{{ $cambio['campo'] }}</td>
+                                <td class="text-muted">{{ $cambio['antes'] !== '' ? $cambio['antes'] : '—' }}</td>
+                                <td><strong>{{ $cambio['despues'] !== '' ? $cambio['despues'] : '—' }}</strong></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @if(array_sum($r['cambios']) > count($r['ejemplos'] ?? []))
+                <div class="card-body small text-muted py-2">Se muestran los primeros {{ count($r['ejemplos'] ?? []) }} cambios de {{ number_format(array_sum($r['cambios']), 0, ',', '.') }}.</div>
+            @endif
+        </div>
+    @endif
 
     @if(!empty($r['parecidos']))
         <div class="card mb-3 border-warning">
@@ -100,8 +142,13 @@
 @php $listaErrores = array_merge($r['errores'] ?? [], $r['errores_al_aplicar'] ?? []); @endphp
 @if($listaErrores)
     <div class="card mb-3">
-        <div class="card-header"><i class="bi bi-exclamation-triangle text-warning-emphasis"></i> Filas para corregir</div>
-        <div class="card-body small text-muted pb-0">Estas filas no se cargan. Corregilas en la planilla y subila de nuevo: las que ya se cargaron se actualizan, no se duplican.</div>
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span><i class="bi bi-exclamation-triangle text-warning-emphasis"></i> Filas para corregir</span>
+            <a href="{{ route('admin.importaciones.errores', $importacion) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-download"></i> Bajar estas filas en Excel
+            </a>
+        </div>
+        <div class="card-body small text-muted pb-0">Estas filas no se cargan. Bajalas en Excel (la primera columna dice qué corregir en cada una), arreglalas ahí y subí esa planilla: el resto no hace falta subirlo de nuevo.</div>
         <div class="table-responsive" style="max-height: 420px;">
             <table class="table table-sm align-middle">
                 <thead class="table-light"><tr><th style="width: 70px;">Fila</th><th>Qué pasa</th></tr></thead>
@@ -149,10 +196,12 @@
                     data-detalle="{{ ($r['con_error'] ?? 0) ? $cuenta($r['con_error'], 'fila con error no se carga', 'filas con error no se cargan') . '.' : '' }}">
                 <i class="bi bi-check2"></i> Aplicar la planilla
             </button>
+        @elseif(($r['con_error'] ?? 0) === 0)
+            <div class="alert alert-success w-100 mb-0"><i class="bi bi-check-circle"></i> Tus productos ya están como dice la planilla: no hay nada para cambiar.</div>
         @endif
         <form action="{{ route('admin.importaciones.cancelar', $importacion) }}" method="POST" class="m-0">
             @csrf
-            <button type="submit" class="btn btn-outline-secondary">No aplicar</button>
+            <button type="submit" class="btn btn-outline-secondary">{{ $aCargar > 0 ? 'No aplicar' : 'Volver' }}</button>
         </form>
     @elseif($aplicando)
         <button type="button" class="btn btn-primary" id="boton-seguir"><i class="bi bi-play"></i> Seguir</button>

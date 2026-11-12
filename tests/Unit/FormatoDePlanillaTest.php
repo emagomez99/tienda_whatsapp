@@ -43,10 +43,12 @@ class FormatoDePlanillaTest extends TestCase
     public function reconoce_las_columnas_por_su_titulo_sin_importar_tildes_ni_el_asterisco()
     {
         $resultado = FormatoDePlanilla::interpretarTitulos(
-            ['CODIGO', 'Nombre', 'Categorias', 'Imagen 2', 'Sabor *', 'Color raro', ''],
+            ['CODIGO', 'Nombre', 'Categorias', 'Imagen 2', 'Sabor *', 'Color raro', '', 'margen %', 'Qué corregir'],
             ['sabor' => 7]
         );
 
+        $this->assertSame(['tipo' => 'fija', 'clave' => 'margen'], $resultado['columnas'][7]);
+        $this->assertArrayNotHasKey(8, $resultado['columnas']);   // la de "filas para corregir" se ignora sin avisar
         $this->assertSame(['tipo' => 'fija', 'clave' => 'codigo'], $resultado['columnas'][0]);
         $this->assertSame(['tipo' => 'fija', 'clave' => 'categorias'], $resultado['columnas'][2]);
         $this->assertSame(['tipo' => 'imagen', 'clave' => 2], $resultado['columnas'][3]);

@@ -16,7 +16,7 @@
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono">3</span>
-    <div><strong>Subila y mirá qué va a pasar.</strong><br>Antes de cambiar nada te mostramos cuántos productos se crean, cuántos se actualizan y si hay algo para corregir.</div>
+    <div><strong>Subila y mirá qué va a pasar.</strong><br>Antes de cambiar nada te mostramos cuántos productos se crean, y en los que ya tenés, qué cambia: «Precio: de 1.000 a 1.250». Los que quedan igual no se tocan.</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono">4</span>
@@ -25,7 +25,8 @@
 
 <div class="ayuda-ejemplo">
     <div class="fw-semibold mb-1">El código es la clave</div>
-    Si una fila tiene el código de un producto que ya tenés (por ejemplo COCA-15), ese producto se <strong>actualiza</strong>. Si no tiene código, o es uno nuevo, se <strong>crea</strong>.
+    Si una fila tiene el código de un producto que ya tenés (por ejemplo COCA-15), ese producto se <strong>actualiza</strong>. Si la fila no tiene código, lo buscamos por el <strong>nombre exacto</strong>. Si no lo tenés, se <strong>crea</strong>.
+    <div class="mt-1">¿Querés cambiarle el nombre a un producto que no tiene código? Ponele primero un código: sin código, un nombre distinto es un producto nuevo.</div>
 </div>
 
 <h6 class="ayuda-titulo">Para no equivocarte</h6>
@@ -36,6 +37,18 @@
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-arrow-repeat"></i></span>
     <div><strong>Exportar y volver a subir.</strong><br>Desde Productos › Excel › Exportar bajás tus productos en la misma planilla: cambiás lo que quieras y la subís acá.</div>
+</div>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-clipboard-check"></i></span>
+    <div><strong>Copiá en vez de escribir.</strong><br>La planilla trae las hojas «Categorías» y «Valores» con lo que ya tenés cargado, por ejemplo «Bebidas &gt; Gaseosas» o la marca «Arcor». Copialos de ahí y no se crean repetidos.</div>
+</div>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-exclamation-triangle"></i></span>
+    <div><strong>Si hay filas con algo mal, no se cargan.</strong><br>Las bajás en un Excel que dice qué corregir en cada una, las arreglás y subís sólo esas.</div>
+</div>
+<div class="ayuda-item">
+    <span class="ayuda-icono"><i class="bi bi-percent"></i></span>
+    <div><strong>Costo y Margen %.</strong><br>Si un producto calcula su precio por margen, cambiá el Costo (por ejemplo, con la lista nueva de tu proveedor) y el precio se recalcula solo.</div>
 </div>
 <div class="ayuda-item">
     <span class="ayuda-icono"><i class="bi bi-box-seam"></i></span>

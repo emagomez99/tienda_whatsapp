@@ -188,12 +188,146 @@ class ImportacionDeProductosTest extends TestCase
             $importacion = $this->aplicarTodo($this->servicio()->preparar($archivo, null));
 
             $this->assertSame(0, $importacion->con_error, json_encode($importacion->resumen));
-            $this->assertSame(1, $importacion->actualizados);
+            $this->assertSame(0, $importacion->actualizados, json_encode($importacion->resumen));   // queda igual: no se toca
+            $this->assertSame(1, $importacion->sinCambios());
+            $this->assertSame(Importacion::TERMINADA, $importacion->estado);
             $this->assertSame(1, Producto::count());
             $coca = Producto::find($this->ids['existente']);
             $this->assertSame('1000.00', $coca->precio);
             $this->assertSame(10, (int) $coca->stock);
             $this->assertSame(0, StockMovimiento::where('producto_id', $coca->id)->where('tipo', StockMovimiento::TIPO_IMPORTACION)->count());
+        });
+    }
+
+    /** @test */
+    public function la_vista_previa_muestra_que_cambia_y_no_toca_lo_que_queda_igual()
+    {
+        $this->enTenant(function () {
+            $otro = Producto::create(['proveedor_id' => Proveedor::value('id'), 'descripcion' => 'Agua 2 L', 'id_proveedor' => 'AGUA-2',
+                'precio' => 500, 'moneda_id' => Moneda::where('codigo', 'ARS')->value('id'), 'disponible' => true, 'stock' => 3]);
+            $actualizado = $otro->updated_at->subDay();
+            Producto::whereKey($otro->id)->update(['updated_at' => $actualizado]);
+
+            $importacion = $this->servicio()->preparar($this->planilla([
+                ['Código', 'Nombre', 'Categorías', 'Precio', 'Stock', 'Se muestra en la tienda', 'Marca'],
+                ['COCA-15', 'Gaseosa Cola 1,5 L', 'Bebidas > Gaseosas', '1.250', '10', 'Sí', 'arcor'],
+                ['AGUA-2', 'Agua 2 L', '', '500', '3', 'Sí', ''],
+            ]), null);
+
+            $r = $importacion->resumen;
+            $this->assertSame(1, $r['actualizar']);
+            $this->assertSame(1, $r['sin_cambios']);
+            $this->assertSame(['Precio' => 1], $r['cambios']);      // "arcor" es la misma marca
+            $this->assertSame(
+                ['fila' => 2, 'producto' => 'Gaseosa Cola 1,5 L', 'campo' => 'Precio', 'antes' => '1.000,00', 'despues' => '1.250,00'],
+                $r['ejemplos'][0]
+            );
+
+            $importacion = $this->aplicarTodo($importacion);
+            $this->assertSame(1, $importacion->actualizados);
+            $this->assertSame('1250.00', Producto::find($this->ids['existente'])->precio);
+            $this->assertEquals($actualizado->timestamp, Producto::find($otro->id)->updated_at->timestamp);   // ni se guardó
+        });
+    }
+
+    /** @test */
+    public function el_costo_y_el_margen_recalculan_el_precio_de_los_productos_por_margen()
+    {
+        $this->enTenant(function () {
+            $ars = Moneda::where('codigo', 'ARS')->value('id');
+            Moneda::query()->update(['cotizacion' => 1]);
+            Producto::whereKey($this->ids['existente'])->update([
+                'modo_precio_venta' => Producto::MODO_PRECIO_MARGEN, 'precio_compra' => 800, 'moneda_compra_id' => $ars, 'margen_ganancia' => 25,
+            ]);
+
+            $importacion = $this->servicio()->preparar($this->planilla([
+                ['Código', 'Nombre', 'Proveedor', 'Precio', 'Costo', 'Margen %'],
+                ['COCA-15', '', '', '1.000', '1.000', ''],                               // el Precio (el de ahora) se ignora
+                ['NUEVO-1', 'Jugo 1 L', 'Distribuidora del Sur', '', '200', '50%'],      // nace por margen
+                ['NUEVO-2', 'Jugo 2 L', 'Distribuidora del Sur', '900', '400', ''],      // precio fijo, con su costo anotado
+            ]), null);
+            $this->assertSame(['Costo' => 1], $importacion->resumen['cambios']);
+            $this->assertSame([], $importacion->resumen['avisos']);
+            $importacion = $this->aplicarTodo($importacion);
+            $this->assertSame(0, $importacion->con_error, json_encode($importacion->resumen));
+
+            $this->assertSame('1250.00', Producto::find($this->ids['existente'])->precio);
+
+            $jugo = Producto::conCodigo('nuevo-1')->first();
+            $this->assertTrue($jugo->esPrecioPorMargen());
+            $this->assertSame('300.00', $jugo->precio);
+
+            $jugo2 = Producto::conCodigo('nuevo-2')->first();
+            $this->assertFalse($jugo2->esPrecioPorMargen());
+            $this->assertSame('900.00', $jugo2->precio);
+            $this->assertSame('400.00', $jugo2->precio_compra);
+
+            // Y se exportan: lo exportado vuelve a subir sin cambiar nada.
+            $ruta = sys_get_temp_dir() . '/exportado-' . uniqid() . '.xlsx';
+            (new ProductosExport(Producto::query()))->escribir($ruta);
+            $hoja = $this->leerHojas($ruta)[0];
+            $fila = array_combine($hoja[0], $hoja[1]);
+            $this->assertEquals(1000, $fila['Costo']);
+            $this->assertSame('ARS', $fila['Moneda del costo']);
+            $this->assertEquals(25, $fila['Margen %']);
+
+            $deVuelta = $this->servicio()->preparar(new UploadedFile($ruta, 'exportado.xlsx', null, null, true), null);
+            $this->assertSame(3, $deVuelta->resumen['sin_cambios'], json_encode($deVuelta->resumen));
+        });
+    }
+
+    /** @test */
+    public function las_filas_con_error_se_bajan_en_excel_con_que_corregir_y_se_vuelven_a_subir()
+    {
+        $this->como()->post($this->urlTenant('admin/productos/importar'), ['planilla' => $this->planilla([
+            ['Código', 'Nombre', 'Proveedor', 'Precio'],
+            ['BIEN-1', 'Anda bien', 'Distribuidora del Sur', '100'],
+            ['MAL-1', 'Precio mal', 'Distribuidora del Sur', 'mil'],
+        ])]);
+        $importacion = $this->enTenant(function () { return Importacion::latest('id')->first(); });
+
+        $respuesta = $this->como()->get($this->urlTenant('admin/importaciones/' . $importacion->id))
+            ->assertOk()->assertSee('Bajar estas filas en Excel');
+        $descarga = $this->como()->get($this->urlTenant('admin/importaciones/' . $importacion->id . '/errores'))->assertOk();
+
+        $ruta = sys_get_temp_dir() . '/corregir-' . uniqid() . '.xlsx';
+        copy($descarga->baseResponse->getFile()->getPathname(), $ruta);
+        $filas = $this->leerHojas($ruta)[0];
+        $this->assertSame(['Qué corregir', 'Código', 'Nombre', 'Proveedor', 'Precio'], $filas[0]);
+        $this->assertCount(2, $filas);                                   // los títulos y la fila mala
+        $this->assertStringContainsString('«mil» no es un precio', $filas[1][0]);
+        $this->assertSame('MAL-1', $filas[1][1]);
+
+        // Corregida y subida tal cual, con la columna de más: se carga sin avisos.
+        $this->enTenant(function () use ($filas) {
+            $filas[1][4] = '1.000';
+            $corregida = $this->servicio()->preparar($this->planilla($filas), null);
+            $this->assertSame(1, $corregida->resumen['crear']);
+            $this->assertSame([], $corregida->resumen['avisos']);
+        });
+    }
+
+    /** @test */
+    public function una_foto_subida_sobrevive_a_exportar_y_volver_a_subir()
+    {
+        $this->enTenant(function () {
+            \Storage::fake('public');
+            $foto = self::TENANT_ID . '/productos/cola.jpg';
+            \Storage::disk('public')->put($foto, 'x');
+            Producto::whereKey($this->ids['existente'])->update(['url_imagen' => $foto]);
+
+            $ruta = sys_get_temp_dir() . '/exportado-' . uniqid() . '.xlsx';
+            (new ProductosExport(Producto::query()))->escribir($ruta);
+            $hoja = $this->leerHojas($ruta)[0];
+            $hoja[1][array_search('Precio', $hoja[0])] = 2000;             // cambia otra cosa: la fila se aplica
+            $hoja[1][array_search('Imagen 2', $hoja[0])] = 'https://ejemplo.com/otra.jpg';
+
+            $this->aplicarTodo($this->servicio()->preparar($this->planilla($hoja), null));
+
+            $coca = Producto::find($this->ids['existente']);
+            $this->assertSame($foto, $coca->url_imagen);                    // sigue siendo la subida, no su dirección
+            $this->assertTrue(\Storage::disk('public')->exists($foto));
+            $this->assertSame(['https://ejemplo.com/otra.jpg'], $coca->imagenes->pluck('url')->all());
         });
     }
 
@@ -208,6 +342,18 @@ class ImportacionDeProductosTest extends TestCase
             $this->assertContains('Sabor *', $hojas[0][0]);
             $this->assertNotContains('Marca', $hojas[0][0]);     // Marca no la pide Gaseosas
             $this->assertSame('Columna', $hojas[1][0][0]);       // la hoja "Cómo completarla"
+
+            // Para copiar y pegar: las categorías que ya existen (con lo que piden) y los valores usados.
+            $this->assertContains(['Bebidas > Gaseosas', 'Sabor *'], $hojas[2]);
+            $this->assertSame(['Sabor'], $hojas[3][0]);          // sólo las características de esta plantilla
+            $this->assertSame(['Cola'], $hojas[3][1]);
+
+            // La exportación las trae también, con todas las características.
+            $exportado = sys_get_temp_dir() . '/exportado-' . uniqid() . '.xlsx';
+            (new ProductosExport(Producto::query()))->escribir($exportado);
+            $hojas = $this->leerHojas($exportado);
+            $this->assertCount(3, $hojas);
+            $this->assertEqualsCanonicalizing(['Marca', 'Sabor'], $hojas[2][0]);
         });
     }
 
@@ -283,20 +429,34 @@ class ImportacionDeProductosTest extends TestCase
     }
 
     /** @test */
-    public function sin_codigo_no_duplica_un_producto_que_ya_existe()
+    public function sin_codigo_reconoce_el_producto_por_su_nombre_y_no_lo_duplica()
     {
         $this->enTenant(function () {
+            $ars = Moneda::where('codigo', 'ARS')->value('id');
+            foreach (['Yerba 1 kg', 'Yerba 1 kg', 'Azúcar 1 kg'] as $nombre) {
+                Producto::create(['proveedor_id' => Proveedor::value('id'), 'descripcion' => $nombre, 'precio' => 100, 'moneda_id' => $ars, 'disponible' => true]);
+            }
+
             $importacion = $this->servicio()->preparar($this->planilla([
-                ['Código', 'Nombre', 'Proveedor', 'Sabor'],
-                ['', 'Gaseosa Cola 1,5 L', 'Distribuidora del Sur', 'Cola'],      // ya existe (con otro código)
-                ['', 'Agua saborizada', 'Distribuidora del Sur', ''],
-                ['', 'agua saborizada', 'Distribuidora del Sur', ''],              // repetida en la planilla
+                ['Código', 'Nombre', 'Proveedor', 'Precio', 'Sabor'],
+                ['', 'Gaseosa Cola 1,5 L', '', '1.000', 'Cola'],                  // ya existe y queda igual
+                ['', 'Azúcar 1 kg', '', '150', ''],                                // existe sin código: se actualiza
+                ['', 'Azúcar 1 kg', '', '160', ''],                                // el mismo, otra vez
+                ['', 'Yerba 1 kg', '', '200', ''],                                 // hay dos: no se sabe cuál
+                ['', 'Agua saborizada', 'Distribuidora del Sur', '', ''],
+                ['', 'agua saborizada', 'Distribuidora del Sur', '', ''],          // repetida en la planilla
             ]), null);
 
-            $mensajes = array_column($importacion->resumen['errores'], 'mensaje');
-            $this->assertContains('Ya tenés un producto «Gaseosa Cola 1,5 L». Si es ese, poné su código para actualizarlo; si es otro, cambiale el nombre.', $mensajes);
-            $this->assertContains('«agua saborizada» ya aparece sin código en la fila 3: se crearía dos veces. Poneles código.', $mensajes);
-            $this->assertSame(1, $importacion->resumen['crear']);
+            $r = $importacion->resumen;
+            $mensajes = array_column($r['errores'], 'mensaje');
+            $this->assertContains('Este producto ya aparece en la fila 3.', $mensajes);
+            $this->assertContains('Tenés 2 productos que se llaman «Yerba 1 kg» y no se sabe cuál es. Poneles un código distinto a cada uno (en el panel) y usalo en la planilla.', $mensajes);
+            $this->assertContains('«agua saborizada» ya aparece sin código en la fila 6: se crearía dos veces. Poneles código.', $mensajes);
+            $this->assertSame([1, 1, 1, 3], [$r['crear'], $r['actualizar'], $r['sin_cambios'], $r['con_error']], json_encode($r));
+
+            $this->aplicarTodo($importacion);
+            $this->assertSame(1, Producto::where('descripcion', 'Azúcar 1 kg')->count());
+            $this->assertSame('150.00', Producto::where('descripcion', 'Azúcar 1 kg')->value('precio'));
         });
     }
 
