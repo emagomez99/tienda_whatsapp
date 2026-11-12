@@ -1,28 +1,33 @@
 @php
     $tieneHijos = $menu->tieneHijos();
     $collapseId = 'menu-collapse-' . $menu->clave();
+    $actual = $esActual($menu);
+    // La rama donde está el cliente arranca abierta.
+    $abierta = $tieneHijos && $ramaActual($menu);
     // La sangría por nivel la calcula tienda.css (.menu-lateral-opcion) con --nivel.
 @endphp
 
 @if($tieneHijos)
-    {{-- Menú con submenús --}}
-    <li class="list-group-item p-0 border-0">
-        <div class="d-flex align-items-center menu-lateral-fila">
+    {{-- Menú con submenús: el nombre lleva a su página y la flecha abre lo de adentro. --}}
+    <li>
+        <div class="menu-lateral-fila {{ $actual ? 'es-actual' : '' }}">
             @if(!$menu->esContenedor())
-                <a href="{{ $menu->url() }}" class="menu-lateral-opcion flex-grow-1 text-decoration-none py-2" style="--nivel: {{ $nivel }};">
+                <a href="{{ $menu->url() }}" class="menu-lateral-opcion flex-grow-1" style="--nivel: {{ $nivel }};" @if($actual) aria-current="page" @endif>
                     {{ $menu->nombre() }}
                 </a>
             @else
-                <span class="menu-lateral-opcion flex-grow-1 py-2" style="--nivel: {{ $nivel }};">
+                <button type="button" class="menu-lateral-opcion flex-grow-1 text-start border-0 bg-transparent" style="--nivel: {{ $nivel }};"
+                        data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}">
                     {{ $menu->nombre() }}
-                </span>
+                </button>
             @endif
-            <button class="btn btn-sm btn-link text-dark px-3 py-2 border-0" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="false">
+            <button class="menu-lateral-flecha" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}"
+                    aria-expanded="{{ $abierta ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}" aria-label="Ver lo que hay en {{ $menu->nombre() }}">
                 <i class="bi bi-chevron-down"></i>
             </button>
         </div>
-        <div class="collapse" id="{{ $collapseId }}">
-            <ul class="list-group list-group-flush">
+        <div class="collapse {{ $abierta ? 'show' : '' }}" id="{{ $collapseId }}">
+            <ul class="list-unstyled mb-0">
                 @foreach($menu->hijos() as $child)
                     @include('components.menu-sidebar-item', ['menu' => $child, 'nivel' => $nivel + 1])
                 @endforeach
@@ -30,9 +35,9 @@
         </div>
     </li>
 @else
-    {{-- Menú sin submenús --}}
-    <li class="list-group-item border-0 py-2 menu-lateral-opcion menu-lateral-hoja" style="--nivel: {{ $nivel }};">
-        <a href="{{ $menu->url() }}" class="text-decoration-none">
+    {{-- Menú sin submenús: toda la fila es el enlace. --}}
+    <li>
+        <a href="{{ $menu->url() }}" class="menu-lateral-opcion {{ $actual ? 'es-actual' : '' }}" style="--nivel: {{ $nivel }};" @if($actual) aria-current="page" @endif>
             {{ $menu->nombre() }}
         </a>
     </li>

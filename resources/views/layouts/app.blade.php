@@ -255,14 +255,14 @@
     <main class="flex-grow-1">
 
         @if($menuEnSidebar)
+            {{-- El menú al costado sólo en pantallas grandes: más chico se usa el de las
+                 tres rayitas, y los productos ocupan todo el ancho. --}}
             <div class="container py-4">
-                <div class="row">
-                    <div class="col-lg-3 col-md-4 mb-4 mb-md-0">
-                        <div class="sidebar-menu">
-                            @include('components.menu-sidebar')
-                        </div>
-                    </div>
-                    <div class="col-lg-9 col-md-8">
+                <div class="tienda-con-lateral">
+                    <aside class="sidebar-menu d-none d-lg-block">
+                        @include('components.menu-sidebar')
+                    </aside>
+                    <div class="tienda-con-lateral-contenido">
                         @yield('content-inner')
                         @yield('content')
                     </div>
