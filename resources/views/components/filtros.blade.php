@@ -30,7 +30,9 @@
 ])
 
 @php
-    $query = request()->query();
+    // Un parámetro que vino vacío (?desde=) llega como null: se deja en '' para que
+    // siga viajando en el buscador y en los enlaces (en Pedidos, "todas las fechas").
+    $query = array_map(function ($v) { return $v === null ? '' : $v; }, request()->query());
     unset($query['page']);
     $conValor = function ($v) { return $v !== null && $v !== ''; };
 

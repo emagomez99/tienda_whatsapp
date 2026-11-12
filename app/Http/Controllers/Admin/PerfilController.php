@@ -43,7 +43,7 @@ class PerfilController extends Controller
         $perfil = Perfil::create([
             'nombre'        => $request->nombre,
             'descripcion'   => $request->descripcion,
-            'es_superadmin' => $request->boolean('es_superadmin'),
+            'es_superadmin' => $this->puedeTodo() && $request->boolean('es_superadmin'),
             'activo'        => $request->boolean('activo', true),
         ]);
 
@@ -90,7 +90,7 @@ class PerfilController extends Controller
         $perfil->update([
             'nombre'        => $request->nombre,
             'descripcion'   => $request->descripcion,
-            'es_superadmin' => $request->boolean('es_superadmin'),
+            'es_superadmin' => $this->puedeTodo() ? $request->boolean('es_superadmin') : $perfil->es_superadmin,
             'activo'        => $request->boolean('activo'),
         ]);
 
@@ -111,5 +111,16 @@ class PerfilController extends Controller
 
         return redirect()->route('admin.perfiles.index')
             ->with('success', 'Perfil eliminado correctamente');
+    }
+
+    /**
+     * Sólo quien ya puede todo decide qué perfil puede todo: si no, alcanzaba con el
+     * permiso de gestionar perfiles para darse acceso total.
+     */
+    private function puedeTodo(): bool
+    {
+        $usuario = auth()->user();
+
+        return $usuario->esSuperAdmin() || ($usuario->is_admin && !$usuario->perfil_id);
     }
 }

@@ -53,10 +53,10 @@
                                 <td class="d-none d-md-table-cell">
                                     @if($perfil->es_superadmin)
                                         <span class="badge bg-danger">
-                                            <i class="bi bi-star-fill"></i> Superadmin
+                                            <i class="bi bi-star-fill"></i> Puede todo
                                         </span>
                                     @else
-                                        <span class="badge bg-secondary">Estándar</span>
+                                        <span class="badge bg-light text-dark">Según sus permisos</span>
                                     @endif
                                 </td>
                                 <td>

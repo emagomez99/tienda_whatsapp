@@ -91,7 +91,7 @@ class FiltrosDelPanelTest extends TestCase
     public function pedidos_muestra_las_fechas_como_fichita_y_conserva_la_pestana()
     {
         $this->dueno()->get($this->urlTenant('admin/pedidos'))->assertOk()
-            ->assertSee('Fechas: Últimos 30 días')
+            ->assertSee('Estás viendo los pedidos de los últimos 30 días')->assertDontSee('Fechas: Últimos 30 días')
             ->assertSee('Filtrar pedidos');
 
         $this->get($this->urlTenant('admin/pedidos?estado=pendiente&desde=2026-10-01&hasta=2026-10-15'))->assertOk()

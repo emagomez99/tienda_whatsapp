@@ -11,11 +11,11 @@ class PermisoMiddleware
     {
         if (!auth()->check() || !auth()->user()->puede($permiso)) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'No tienes permiso para realizar esta acción.'], 403);
+                return response()->json(['message' => 'No tenés permiso para hacer eso.'], 403);
             }
 
             return redirect()->route('admin.dashboard')
-                ->with('error', 'No tienes permiso para acceder a esa sección.');
+                ->with('error', 'No tenés permiso para entrar ahí.');
         }
 
         return $next($request);

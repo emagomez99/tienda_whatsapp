@@ -50,35 +50,46 @@
                         <input type="password" class="form-control" id="password_confirmation" name="password_confirmation">
                     </div>
                 </div>
+                @if($usuario->id === auth()->id())
+                    <div class="alert alert-light border small mb-0">
+                        <i class="bi bi-info-circle"></i> Éste es tu usuario: tu perfil y tu acceso los cambia otro usuario del panel, para que no te quedes afuera por error.
+                    </div>
+                @else
                 <div class="mb-3">
                     <label for="perfil_id" class="form-label">Perfil</label>
                     <select class="form-select @error('perfil_id') is-invalid @enderror" id="perfil_id" name="perfil_id">
-                        <option value="">-- Sin perfil asignado --</option>
+                        @if($puedeTodo)
+                            <option value="">Sin perfil: puede hacer todo</option>
+                        @else
+                            <option value="" disabled {{ old('perfil_id', $usuario->perfil_id) ? '' : 'selected' }}>Elegí un perfil…</option>
+                        @endif
                         @foreach($perfiles as $perfil)
                             <option value="{{ $perfil->id }}" {{ old('perfil_id', $usuario->perfil_id) == $perfil->id ? 'selected' : '' }}>
                                 {{ $perfil->nombre }}
-                                @if($perfil->es_superadmin) (Superadmin) @endif
+                                @if($perfil->es_superadmin) (puede hacer todo) @endif
                             </option>
                         @endforeach
                     </select>
+                    <div class="form-text">El perfil dice qué puede hacer este usuario en el panel.</div>
                     @error('perfil_id')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin" value="1" {{ old('is_admin', $usuario->is_admin) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="is_admin">Acceso al panel admin</label>
-                        </div>
+                {{-- Apagado y con error de validación tiene que volver apagado: un
+                     interruptor apagado no viaja, así que old() sólo no alcanza. --}}
+                @if(!$usuario->is_admin)
+                    <div class="form-check form-switch mb-3">
+                        <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin" value="1" {{ old('is_admin') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="is_admin">Puede entrar al panel</label>
+                        <div class="form-text">Este usuario todavía no puede entrar. Prendelo para dejarlo pasar.</div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="activo" name="activo" value="1" {{ old('activo', $usuario->activo) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="activo">Usuario activo</label>
-                        </div>
-                    </div>
+                @endif
+                <div class="form-check form-switch mb-3">
+                    <input type="checkbox" class="form-check-input" id="activo" name="activo" value="1" {{ (session()->hasOldInput() ? old('activo') : $usuario->activo) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="activo">Usuario activo</label>
+                    <div class="form-text">Si lo apagás, no puede entrar al panel.</div>
                 </div>
+                @endif
             </div>
         </div>
     </div>

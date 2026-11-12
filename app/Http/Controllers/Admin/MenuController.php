@@ -281,7 +281,7 @@ class MenuController extends Controller
 
         // Evitar que un menú sea su propio padre o descendiente
         if ($validated['parent_id'] == $menu->id || in_array($validated['parent_id'], $this->getDescendantIds($menu))) {
-            return back()->withErrors(['parent_id' => 'No puedes asignar este menú como padre']);
+            return back()->withErrors(['parent_id' => 'Un menú no puede ir dentro de sí mismo']);
         }
 
         $validated['activo'] = $request->boolean('activo');

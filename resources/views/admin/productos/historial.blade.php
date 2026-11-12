@@ -35,13 +35,6 @@
     </div>
 </div>
 
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-@endif
-
 {{-- Resumen de stock --}}
 {{-- Números: mismas tarjetas que en Inicio (.panel-dato). Un cero va sin signo y
      atenuado: "-0" parecía un error. --}}

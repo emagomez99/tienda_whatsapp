@@ -156,11 +156,22 @@
                 </div>
             </div>
         @endif
+        {{-- Un error queda hasta que se cierra: en 4 segundos no se llega a leer. --}}
         @if(session('error'))
-            <div class="toast align-items-center text-bg-danger border-0" role="alert" data-bs-autohide="true" data-bs-delay="4000">
+            <div class="toast align-items-center text-bg-danger border-0" role="alert" data-bs-autohide="false">
                 <div class="d-flex">
                     <div class="toast-body"><i class="bi bi-x-circle me-1"></i> {{ session('error') }}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+                </div>
+            </div>
+        @endif
+        {{-- Lo que no pasó la validación: hay pantallas que no lo muestran al lado del
+             campo (cambiar una cantidad, renombrar un valor) y parecía que no pasaba nada. --}}
+        @if(isset($errors) && $errors->any())
+            <div class="toast align-items-center text-bg-danger border-0" role="alert" data-bs-autohide="false">
+                <div class="d-flex">
+                    <div class="toast-body"><i class="bi bi-x-circle me-1"></i> No se guardó: {{ $errors->first() }}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
                 </div>
             </div>
         @endif

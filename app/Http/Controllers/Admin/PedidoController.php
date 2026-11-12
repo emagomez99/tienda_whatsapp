@@ -8,11 +8,12 @@ use App\Models\PedidoProducto;
 use App\Models\Producto;
 use App\Models\StockMovimiento;
 use App\Models\Variante;
+use App\Support\BusquedaDeTexto;
+use App\Support\Paginas;
 use App\Support\RangoFechas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use App\Support\Paginas;
 
 class PedidoController extends Controller
 {
@@ -35,19 +36,30 @@ class PedidoController extends Controller
         $query = Pedido::query();
         $rango->aplicarA($query, 'created_at');
 
-        if ($request->filled('buscar')) {
-            $buscar = $request->buscar;
-            // Solo buscar por ID si empieza explícitamente con #
-            if (str_starts_with($buscar, '#') && is_numeric(ltrim($buscar, '#'))) {
-                $query->where('id', ltrim($buscar, '#'));
-            } else {
-                $query->where(function ($q) use ($buscar) {
-                    $q->where('nombre',   'ilike', "%{$buscar}%")
-                      ->orWhere('apellido', 'ilike', "%{$buscar}%")
-                      ->orWhere('email',    'ilike', "%{$buscar}%")
-                      ->orWhere('celular',  'ilike', "%{$buscar}%");
+        $buscar = is_string($request->query('buscar')) ? trim($request->query('buscar')) : '';
+        // "#48" o "48": el número de pedido (hasta 18 cifras: más no entra en la columna).
+        $numero = ltrim($buscar, '#');
+        $esNumero = $numero !== '' && ctype_digit($numero) && strlen($numero) <= 18;
+        if ($buscar !== '' && $buscar[0] === '#') {
+            $query->where('id', $esNumero ? $numero : 0);
+        } elseif ($buscar !== '') {
+            // Palabra por palabra y sin tildes: "ana perez" encuentra a "Ana" "Pérez",
+            // que están en dos columnas distintas.
+            $query->where(function ($q) use ($buscar, $numero, $esNumero) {
+                $q->where(function ($q) use ($buscar) {
+                    foreach (BusquedaDeTexto::palabras($buscar) as $palabra) {
+                        $patron = BusquedaDeTexto::patron($palabra);
+                        $q->where(function ($q) use ($patron) {
+                            foreach (['nombre', 'apellido', 'email', 'celular'] as $columna) {
+                                BusquedaDeTexto::contiene($q, $columna, $patron);
+                            }
+                        });
+                    }
                 });
-            }
+                if ($esNumero) {
+                    $q->orWhere('id', $numero);
+                }
+            });
         }
 
         $porEstado = (clone $query)
@@ -67,7 +79,10 @@ class PedidoController extends Controller
             ->orderBy('id', 'desc')
             ->with('totales.moneda')
             ->paginate(20)
-            ->withQueryString());
+            ->withQueryString()
+            // "Todas las fechas" viaja como desde/hasta vacíos, y withQueryString los
+            // pierde: sin esto, la página 2 volvía a "últimos 30 días".
+            ->appends($request->query->has('desde') || $request->query->has('hasta') ? $rango->parametros() : []));
 
         return view('admin.pedidos.index', compact('pedidos', 'rango', 'porEstado', 'estado'));
     }

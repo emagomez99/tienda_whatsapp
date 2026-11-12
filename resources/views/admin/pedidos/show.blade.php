@@ -59,10 +59,13 @@
                                 <div>{{ $pedido->email }}</div>
                             </div>
                         @endif
-                        @if($pedido->localidad || $pedido->provincia)
+                        @if($pedido->direccion || $pedido->localidad || $pedido->provincia || $pedido->cp)
                             <div>
-                                <div class="panel-rotulo">Ubicación</div>
-                                <div>{{ implode(', ', array_filter([$pedido->localidad, $pedido->provincia])) }}</div>
+                                <div class="panel-rotulo">Dirección</div>
+                                <div>
+                                    {{ implode(', ', array_filter([$pedido->direccion, $pedido->localidad, $pedido->provincia])) }}
+                                    @if($pedido->cp)<span class="text-muted">(CP {{ $pedido->cp }})</span>@endif
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -237,7 +240,7 @@
             <div class="modal-body">
                 <p>¿Cancelás el pedido <strong>#{{ $pedido->id }}</strong>?</p>
                 @if($pedido->esConfirmado())
-                    <p class="text-muted mb-0"><i class="bi bi-arrow-counterclockwise"></i> El stock descontado será restaurado automáticamente.</p>
+                    <p class="text-muted mb-0"><i class="bi bi-arrow-counterclockwise"></i> Lo que se descontó vuelve al stock.</p>
                 @endif
             </div>
             <div class="modal-footer border-0">

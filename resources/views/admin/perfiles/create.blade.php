@@ -44,8 +44,8 @@
                                 <input type="checkbox" class="form-check-input" id="es_superadmin"
                                        name="es_superadmin" value="1" {{ old('es_superadmin') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="es_superadmin">
-                                    <i class="bi bi-star-fill text-warning"></i> Superadmin
-                                    <small class="text-muted d-block">Acceso total, ignora permisos individuales</small>
+                                    <i class="bi bi-star-fill text-warning"></i> Puede hacer todo
+                                    <small class="text-muted d-block">Puede hacer todo en el panel, sin importar lo que marques abajo.</small>
                                 </label>
                             </div>
                         </div>
@@ -86,7 +86,6 @@
                                                        {{ in_array($permisos[$slug]->id, old('permisos', [])) ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="perm_{{ $permisos[$slug]->id }}">
                                                     {{ $permisos[$slug]->descripcion }}
-                                                    <small class="text-muted">{{ $slug }}</small>
                                                 </label>
                                             </div>
                                         </div>

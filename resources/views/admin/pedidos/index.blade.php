@@ -22,6 +22,9 @@
      se ven los últimos 30 días; "Todas" viaja como desde/hasta vacíos. --}}
 @php
     $filtrosActivos = request()->filled('buscar') || $rango->estaActivo();
+    // Las fechas tal como vinieron: sin elegir, no viaja ninguna (así "últimos 30
+    // días" se sigue moviendo con el calendario y no queda clavado en dos fechas).
+    $fechasElegidas = (request()->query->has('desde') || request()->query->has('hasta')) ? $rango->parametros() : [];
     // Parámetros que se conservan al cambiar de pestaña de estado.
     $conBusqueda = array_filter(['buscar' => request('buscar')]);
 
@@ -31,13 +34,19 @@
         $formato = function ($texto) { return $texto ? \Carbon\Carbon::parse($texto)->format('d/m/Y') : '…'; };
         $texto = $porDefecto
             ? 'Últimos 30 días'
-            : ($rango->desdeTexto() === $rango->hastaTexto() ? 'El ' . $formato($rango->desdeTexto()) : 'Del ' . $formato($rango->desdeTexto()) . ' al ' . $formato($rango->hastaTexto()));
+            : ($rango->desdeTexto() === $rango->hastaTexto() ? 'El ' . $formato($rango->desdeTexto())
+                : (!$rango->hastaTexto() ? 'Desde el ' . $formato($rango->desdeTexto())
+                : (!$rango->desdeTexto() ? 'Hasta el ' . $formato($rango->hastaTexto())
+                : 'Del ' . $formato($rango->desdeTexto()) . ' al ' . $formato($rango->hastaTexto()))));
         $todas = array_merge(request()->except(['page', 'desde', 'hasta']), ['desde' => '', 'hasta' => '']);
         $fichasFechas[] = ['Fechas: ' . $texto, route('admin.pedidos.index') . '?' . http_build_query($todas)];
     }
+    // Los últimos 30 días son lo que se ve al entrar, no un filtro que alguien puso:
+    // no suman al globito ni ofrecen "quitar los filtros".
+    $fichasPuestas = $porDefecto ? [] : $fichasFechas;
 @endphp
 <x-filtros :url="route('admin.pedidos.index')" buscar="Buscar por nombre, email, celular o #123" titulo="Filtrar pedidos"
-           :conservar="['estado']" :fichas-extra="$fichasFechas" :cantidad-extra="count($fichasFechas)">
+           :conservar="['estado']" :fichas-extra="$fichasPuestas" :cantidad-extra="count($fichasPuestas)">
     <div>
         <label for="fechas" class="form-label small fw-semibold mb-1 d-block">Fechas</label>
         <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Atajos de fechas">
@@ -54,6 +63,13 @@
     </div>
 </x-filtros>
 
+@if($porDefecto)
+    <p class="small text-muted mb-2">
+        <i class="bi bi-calendar3"></i> Estás viendo los pedidos de los últimos 30 días.
+        <a href="{{ $fichasFechas[0][1] }}">Ver los de todas las fechas</a>
+    </p>
+@endif
+
 {{-- Estado en pestañas: cada una dice cuántos pedidos hay dentro de la búsqueda y las fechas. --}}
 @php
     $pestanas = [
@@ -67,7 +83,7 @@
     @foreach($pestanas as $valor => $pestana)
         <li class="nav-item">
             <a class="nav-link {{ $estado === ($valor ?: null) ? 'active' : '' }}"
-               href="{{ route('admin.pedidos.index', array_merge($conBusqueda, $rango->parametros(), array_filter(['estado' => $valor]))) }}">
+               href="{{ route('admin.pedidos.index', array_merge($conBusqueda, $fechasElegidas, array_filter(['estado' => $valor]))) }}">
                 {{ $pestana[0] }} <span class="badge rounded-pill bg-secondary bg-opacity-25 text-body ms-1">{{ $pestana[1] }}</span>
             </a>
         </li>
@@ -82,12 +98,12 @@
             @php $verTodos = route('admin.pedidos.index', ['desde' => '', 'hasta' => '']); @endphp
             <div class="text-center py-5">
                 <i class="bi bi-bag text-muted display-6"></i>
-                @if(!$filtrosActivos && !$estado)
-                    <p class="fw-semibold mt-2 mb-1">Todavía no recibiste ningún pedido</p>
-                    <p class="text-muted small mb-0">Cuando un cliente compre en tu tienda, su pedido aparece acá.</p>
-                @elseif($porDefecto && !request()->filled('buscar') && !$estado)
+                @if($porDefecto && !request()->filled('buscar') && !$estado)
                     <p class="fw-semibold mt-2 mb-1">No hay pedidos en los últimos 30 días</p>
                     <a href="{{ $verTodos }}" class="btn btn-outline-primary btn-sm mt-2">Ver los pedidos de todas las fechas</a>
+                @elseif(!$filtrosActivos && !$estado)
+                    <p class="fw-semibold mt-2 mb-1">Todavía no recibiste ningún pedido</p>
+                    <p class="text-muted small mb-0">Cuando un cliente compre en tu tienda, su pedido aparece acá.</p>
                 @else
                     <p class="fw-semibold mt-2 mb-1">Ningún pedido coincide con lo que buscás</p>
                     <a href="{{ $verTodos }}" class="btn btn-outline-primary btn-sm mt-2">Quitar los filtros y ver todos</a>

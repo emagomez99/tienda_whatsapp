@@ -11,9 +11,9 @@ class AdminMiddleware
     {
         if (!auth()->check() || !auth()->user()->isAdmin()) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'No autorizado'], 403);
+                return response()->json(['message' => 'No tenés permiso para entrar ahí.'], 403);
             }
-            return redirect()->route('login')->with('error', 'Acceso no autorizado');
+            return redirect()->route('login')->with('error', 'Ese usuario no puede entrar al panel.');
         }
 
         // También corta una sesión ya abierta si después se desactivó el usuario o su perfil.

@@ -62,8 +62,10 @@ class UserController extends Controller
 
     public function create()
     {
-        $perfiles = Perfil::where('activo', true)->orderBy('nombre')->get();
-        return view('admin.usuarios.create', compact('perfiles'));
+        $perfiles = $this->perfilesElegibles();
+        $puedeTodo = $this->puedeTodo(auth()->user());
+
+        return view('admin.usuarios.create', compact('perfiles', 'puedeTodo'));
     }
 
     public function store(Request $request)
@@ -72,13 +74,15 @@ class UserController extends Controller
             'name'      => 'required|string|max:255',
             'email'     => 'required|email|unique:users,email',
             'password'  => 'required|string|min:8|confirmed',
-            'is_admin'  => 'boolean',
             'activo'    => 'boolean',
-            'perfil_id' => 'nullable|exists:perfiles,id',
-        ]);
+            'perfil_id' => $this->reglaDePerfil(),
+        ], $this->mensajes());
 
         $validated['password']  = Hash::make($validated['password']);
-        $validated['is_admin']  = $request->boolean('is_admin');
+        // Todo usuario que se crea acá es para entrar al panel: qué puede hacer lo dice
+        // su perfil, y "Usuario activo" lo deja afuera. (Antes había un tercer
+        // interruptor, apagado al crear, que dejaba usuarios que no podían entrar.)
+        $validated['is_admin']  = true;
         $validated['activo']    = $request->boolean('activo');
         $validated['perfil_id'] = $request->filled('perfil_id') ? $request->perfil_id : null;
 
@@ -91,21 +95,28 @@ class UserController extends Controller
     public function edit(User $usuario)
     {
         $this->abortSiSuperadminAjeno($usuario);
-        $perfiles = Perfil::where('activo', true)->orderBy('nombre')->get();
-        return view('admin.usuarios.edit', compact('usuario', 'perfiles'));
+        $perfiles = $this->perfilesElegibles();
+        $puedeTodo = $this->puedeTodo(auth()->user());
+
+        return view('admin.usuarios.edit', compact('usuario', 'perfiles', 'puedeTodo'));
     }
 
     public function update(Request $request, User $usuario)
     {
         $this->abortSiSuperadminAjeno($usuario);
+        // En el usuario propio sólo se cambian el nombre, el email y la contraseña:
+        // nadie se sube el perfil a sí mismo ni se deja afuera por error (en una
+        // tienda con un solo usuario, después no entraba nadie).
+        $propio = $usuario->id === auth()->id();
+
         $validated = $request->validate([
             'name'      => 'required|string|max:255',
             'email'     => ['required', 'email', Rule::unique('users')->ignore($usuario->id)],
             'password'  => 'nullable|string|min:8|confirmed',
             'is_admin'  => 'boolean',
             'activo'    => 'boolean',
-            'perfil_id' => 'nullable|exists:perfiles,id',
-        ]);
+            'perfil_id' => $propio ? 'nullable' : $this->reglaDePerfil(),
+        ], $this->mensajes());
 
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
@@ -113,9 +124,15 @@ class UserController extends Controller
             unset($validated['password']);
         }
 
-        $validated['is_admin']  = $request->boolean('is_admin');
-        $validated['activo']    = $request->boolean('activo');
-        $validated['perfil_id'] = $request->filled('perfil_id') ? $request->perfil_id : null;
+        if ($propio) {
+            unset($validated['is_admin'], $validated['activo'], $validated['perfil_id']);
+        } else {
+            // El acceso al panel sólo se puede dar (a un usuario viejo que no lo tenía);
+            // para sacarlo está "Usuario activo".
+            $validated['is_admin']  = $usuario->is_admin || $request->boolean('is_admin');
+            $validated['activo']    = $request->boolean('activo');
+            $validated['perfil_id'] = $request->filled('perfil_id') ? $request->perfil_id : null;
+        }
 
         $usuario->update($validated);
 
@@ -129,7 +146,7 @@ class UserController extends Controller
 
         if ($usuario->id === auth()->id()) {
             return redirect()->route('admin.usuarios.index')
-                ->with('error', 'No puedes eliminar tu propio usuario');
+                ->with('error', 'No podés eliminar tu propio usuario');
         }
 
         $usuario->delete();
@@ -140,8 +157,44 @@ class UserController extends Controller
 
     private function abortSiSuperadminAjeno(User $usuario)
     {
-        if ($usuario->esSuperAdmin() && !auth()->user()->esSuperAdmin()) {
+        if ($this->puedeTodo($usuario) && !$this->puedeTodo(auth()->user())) {
             abort(403);
         }
+    }
+
+    /** Puede hacer todo: perfil de superadministrador, o administrador sin perfil. */
+    private function puedeTodo(User $usuario): bool
+    {
+        return $usuario->esSuperAdmin() || ($usuario->is_admin && !$usuario->perfil_id);
+    }
+
+    /**
+     * Los perfiles que puede darle a otro quien está en el panel. Sólo quien puede
+     * todo reparte perfiles que pueden todo: si no, cualquiera con permiso para
+     * editar usuarios se daba acceso total.
+     */
+    private function perfilesElegibles()
+    {
+        return Perfil::where('activo', true)
+            ->when(!$this->puedeTodo(auth()->user()), function ($q) { $q->where('es_superadmin', false); })
+            ->orderBy('nombre')
+            ->get();
+    }
+
+    /** "Sin perfil" es poder todo: sólo lo elige quien ya puede todo. */
+    private function reglaDePerfil(): array
+    {
+        return [
+            $this->puedeTodo(auth()->user()) ? 'nullable' : 'required',
+            Rule::in($this->perfilesElegibles()->pluck('id')->all()),
+        ];
+    }
+
+    private function mensajes(): array
+    {
+        return [
+            'perfil_id.required' => 'Elegí un perfil: dice qué puede hacer este usuario.',
+            'perfil_id.in'       => 'Ese perfil no se puede elegir.',
+        ];
     }
 }

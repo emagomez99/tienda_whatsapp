@@ -37,6 +37,12 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
 
+        // Los que se buscan por número: con letras (o un número que no entra en la
+        // columna) la base daba error en vez de "no encontrado".
+        foreach (['pedido', 'proveedor', 'usuario', 'perfil', 'moneda', 'etiqueta', 'valor', 'categoria', 'menu', 'importacion', 'item'] as $parametro) {
+            Route::pattern($parametro, '[0-9]{1,18}');
+        }
+
         $this->routes(function () {
             Route::prefix('api')
                 ->middleware('api')
