@@ -67,8 +67,11 @@
 
         <div id="variantes-propiedades" class="d-flex flex-column gap-2 mb-3"></div>
 
+        {{-- En el celular cada variante es una ficha (nombre arriba y sus datos abajo,
+             cada uno con su rótulo): como tabla, los casilleros quedaban diminutos y
+             había que deslizarla. Ver .tabla-variantes en admin.css. --}}
         <div class="table-responsive d-none" id="variantes-tabla-envoltorio">
-            <table class="table table-sm align-middle mb-1">
+            <table class="table table-sm align-middle mb-1 tabla-variantes">
                 <thead class="table-light">
                     <tr>
                         <th>Variante</th>
@@ -350,22 +353,26 @@
                 var nombre = td.textContent;
 
                 var tdStock = document.createElement('td');
+                tdStock.dataset.rotulo = 'Stock *';
                 tdStock.appendChild(campo('number', 'variantes[' + i + '][stock]', dato.stock === undefined || dato.stock === '' ? '0' : dato.stock,
                     'form-control form-control-sm variante-stock', { min: 0, step: 1, required: 'required', 'aria-label': 'Stock de ' + nombre }));
                 tr.appendChild(tdStock);
 
                 var tdPrecio = document.createElement('td');
+                tdPrecio.dataset.rotulo = 'Precio';
                 tdPrecio.appendChild(campo('number', 'variantes[' + i + '][precio]', dato.precio, 'form-control form-control-sm variante-precio',
                     { min: 0, step: '0.01', placeholder: 'Igual', title: 'Vacío: el precio del producto', 'aria-label': 'Precio de ' + nombre }));
                 tr.appendChild(tdPrecio);
 
                 var tdCodigo = document.createElement('td');
+                tdCodigo.dataset.rotulo = 'Código';
                 tdCodigo.appendChild(campo('text', 'variantes[' + i + '][codigo]', dato.codigo, 'form-control form-control-sm variante-codigo',
                     { maxlength: 100, placeholder: 'Opcional', title: 'Vacío: el código del producto', 'aria-label': 'Código de ' + nombre }));
                 tr.appendChild(tdCodigo);
 
                 var tdActiva = document.createElement('td');
                 tdActiva.className = 'text-center';
+                tdActiva.dataset.rotulo = 'Se vende';
                 var envoltorio = document.createElement('div');
                 envoltorio.className = 'form-check form-switch d-inline-block m-0';
                 envoltorio.appendChild(campo('hidden', 'variantes[' + i + '][activa]', '0', ''));

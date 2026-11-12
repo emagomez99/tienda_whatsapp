@@ -499,3 +499,15 @@ a.panel-dato:hover .card { border-color: var(--panel-borde-fuerte); }
 }
 /* El camino de una categoría (Bebidas › Gaseosas) no se corta en pantallas grandes. */
 @media (min-width: 768px) { .camino-categoria { white-space: nowrap; } }
+
+/* Variantes de un producto en el celular: una ficha por variante, con el nombre
+   arriba y cada dato con su rótulo, en vez de una tabla de casilleros diminutos. */
+@media (max-width: 575.98px) {
+    .tabla-variantes, .tabla-variantes tbody { display: block; }
+    .tabla-variantes thead { display: none; }
+    .tabla-variantes tr { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem .75rem; padding: .75rem 0; border-bottom: 1px solid var(--panel-borde, #dee2e6); }
+    .tabla-variantes tr:last-child { border-bottom: 0; }
+    .tabla-variantes > tbody > tr > td { display: block; padding: 0; border: 0; text-align: left !important; }
+    .tabla-variantes > tbody > tr > td:first-child { grid-column: 1 / -1; }
+    .tabla-variantes td[data-rotulo]::before { content: attr(data-rotulo); display: block; font-size: .75rem; color: var(--bs-secondary-color); margin-bottom: .15rem; }
+}
