@@ -48,16 +48,17 @@
 <x-filtros :url="route('admin.pedidos.index')" buscar="Buscar por nombre, email, celular o #123" titulo="Filtrar pedidos"
            :conservar="['estado']" :fichas-extra="$fichasPuestas" :cantidad-extra="count($fichasPuestas)">
     <div>
-        <label for="fechas" class="form-label small fw-semibold mb-1 d-block">Fechas</label>
+        <div class="form-label small fw-semibold mb-1">Fechas</div>
         <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Atajos de fechas">
             <button type="button" class="btn btn-outline-primary {{ $porDefecto ? 'active' : '' }}" id="fechas-30">Últimos 30 días</button>
             <button type="button" class="btn btn-outline-primary {{ !$rango->estaActivo() ? 'active' : '' }}" id="fechas-todas">Todas</button>
         </div>
-        <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
-            <input type="text" id="fechas" class="form-control bg-white" placeholder="Elegí desde y hasta" readonly>
-        </div>
-        <small class="text-muted">Tocá el primer día y el último.</small>
+        {{-- El calendario va fijo adentro del panel. Como ventanita flotante quedaba
+             fuera del panel: en el celular se cerraba al tocarlo y no acompañaba al
+             deslizar. --}}
+        <small class="text-muted d-block mb-1">O elegí vos: tocá el primer día y el último.</small>
+        <input type="text" id="fechas" class="d-none" aria-hidden="true" tabindex="-1">
+        <div class="small fw-semibold mt-1" id="fechas-elegidas" aria-live="polite"></div>
         <input type="hidden" name="desde" id="desde" value="{{ $rango->desdeTexto() }}" {{ $porDefecto ? 'disabled' : '' }} data-viaja-vacio>
         <input type="hidden" name="hasta" id="hasta" value="{{ $rango->hastaTexto() }}" {{ $porDefecto ? 'disabled' : '' }} data-viaja-vacio>
     </div>
@@ -187,7 +188,8 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 <style>
-    #fechas { cursor: pointer; }
+    /* El calendario de fechas, fijo dentro del panel de filtros y de su ancho. */
+    .offcanvas .flatpickr-calendar.inline { margin: 0 auto; box-shadow: none; border: 1px solid var(--panel-borde, #dee2e6); max-width: 100%; }
 </style>
 @endpush
 
@@ -209,8 +211,17 @@
         desde.disabled = hasta.disabled = !habilitados;
     }
 
+    var elegidas = document.getElementById('fechas-elegidas');
+    function mostrar(fechas) {
+        elegidas.textContent = fechas.length === 2
+            ? (aTexto(fechas[0]) === aTexto(fechas[1]) ? 'El ' + flatpickr.formatDate(fechas[0], 'd/m/Y')
+                : 'Del ' + flatpickr.formatDate(fechas[0], 'd/m/Y') + ' al ' + flatpickr.formatDate(fechas[1], 'd/m/Y'))
+            : (fechas.length === 1 ? 'Ahora tocá el último día' : '');
+    }
+
     var calendario = flatpickr('#fechas', {
         mode: 'range',
+        inline: true,
         // "1 oct 2026 – 15 oct 2026": meses abreviados en minúscula, como se escriben en castellano.
         locale: Object.assign({}, flatpickr.l10ns.es, {
             rangeSeparator: ' – ',
@@ -221,13 +232,15 @@
         }),
         dateFormat: 'j M Y',
         defaultDate: [desde.value, hasta.value].filter(Boolean).map(function (v) { return flatpickr.parseDate(v, 'Y-m-d'); }),
-        onClose: function (fechas) {
-            if (!fechas.length) return;
+        onChange: function (fechas) {
+            mostrar(fechas);
+            if (fechas.length < 2) return;   // falta el último día
             desde.value = aTexto(fechas[0]);
-            hasta.value = aTexto(fechas[fechas.length - 1]);
+            hasta.value = aTexto(fechas[1]);
             usar(true);
         }
     });
+    mostrar(calendario.selectedDates);
 
     document.getElementById('fechas-30').addEventListener('click', function () {
         calendario.clear();
