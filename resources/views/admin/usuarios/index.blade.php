@@ -9,9 +9,11 @@
         <x-ayuda id="ayuda-usuarios" titulo="Cómo funcionan usuarios y perfiles">
             @include('admin.ayudas.usuarios')
         </x-ayuda>
+        @if(auth()->user()->puede('usuarios.crear'))
         <a href="{{ route('admin.usuarios.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Crear usuario
         </a>
+        @endif
     </div>
 </div>
 
@@ -24,9 +26,7 @@
 <div class="card">
     <div class="card-body">
         @if($usuarios->isEmpty())
-            <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle"></i> No se encontraron usuarios.
-            </div>
+            @include('admin.partials.vacio', ['icono' => 'bi-people', 'filtrado' => 'Ningún usuario coincide con lo que buscás', 'nada' => 'Todavía no hay usuarios', 'url' => route('admin.usuarios.index')])
         @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
@@ -73,10 +73,13 @@
                                 <td class="d-none d-md-table-cell">{{ $usuario->created_at->format('d/m/Y') }}</td>
                                 <td>
                                     <div class="btn-group">
+                                        @if(auth()->user()->puede('usuarios.editar'))
                                         <a href="{{ route('admin.usuarios.edit', $usuario) }}" class="btn btn-sm btn-outline-primary" title="Editar" aria-label="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+                                        @endif
                                         @if($usuario->id !== auth()->id())
+                                            @if(auth()->user()->puede('usuarios.eliminar'))
                                             <form action="{{ route('admin.usuarios.destroy', $usuario) }}" method="POST" data-confirmar="¿Eliminar el usuario «{{ $usuario->name }}»?" data-confirmar-boton="Sí, eliminar">
                                                 @csrf
                                                 @method('DELETE')
@@ -84,6 +87,7 @@
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>

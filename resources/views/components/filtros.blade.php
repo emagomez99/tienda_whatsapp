@@ -48,8 +48,13 @@
     $fichas = [];
     foreach ($campos as $campo) {
         if (($campo['tipo'] ?? null) === 'rango') {
-            $desde = $query[$campo['nombre'] . '_desde'] ?? null;
-            $hasta = $query[$campo['nombre'] . '_hasta'] ?? null;
+            // Sólo números: "?precio_desde=abc" no es un filtro, no lleva fichita.
+            $numero = function ($v) { return is_scalar($v) && is_numeric($v) && (float) $v >= 0 ? rtrim(rtrim(number_format((float) $v, 2, ',', '.'), '0'), ',') : null; };
+            $desde = $numero($query[$campo['nombre'] . '_desde'] ?? null);
+            $hasta = $numero($query[$campo['nombre'] . '_hasta'] ?? null);
+            if ($desde !== null && $hasta !== null && (float) $query[$campo['nombre'] . '_desde'] > (float) $query[$campo['nombre'] . '_hasta']) {
+                list($desde, $hasta) = [$hasta, $desde];
+            }
             if ($conValor($desde) || $conValor($hasta)) {
                 $texto = $campo['titulo'] . ': ' . ($conValor($desde) && $conValor($hasta) ? "de {$desde} a {$hasta}" : ($conValor($desde) ? "desde {$desde}" : "hasta {$hasta}"));
                 $fichas[] = [$texto, $sin($parametrosDe($campo))];
@@ -57,8 +62,10 @@
             continue;
         }
         $valor = $query[$campo['nombre']] ?? null;
-        if ($conValor($valor) && is_scalar($valor)) {
-            $texto = $campo['opciones'][$valor] ?? $valor;
+        // Sólo lo que está entre las opciones: "?stock=raro" no filtra nada, así que
+        // tampoco se muestra como filtro puesto.
+        if ($conValor($valor) && is_scalar($valor) && isset($campo['opciones'][$valor])) {
+            $texto = $campo['opciones'][$valor];
             $fichas[] = [($campo['ficha'] ?? $campo['titulo']) . ': ' . $texto, $sin($parametrosDe($campo))];
         }
     }

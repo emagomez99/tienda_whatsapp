@@ -9,9 +9,11 @@
         <x-ayuda id="ayuda-proveedores" titulo="Cómo funcionan los proveedores">
             @include('admin.ayudas.proveedores')
         </x-ayuda>
+        @if(auth()->user()->puede('proveedores.crear'))
         <a href="{{ route('admin.proveedores.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Crear proveedor
         </a>
+        @endif
     </div>
 </div>
 
@@ -21,9 +23,7 @@
 <div class="card">
     <div class="card-body">
         @if($proveedores->isEmpty())
-            <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle"></i> No se encontraron proveedores.
-            </div>
+            @include('admin.partials.vacio', ['icono' => 'bi-truck', 'filtrado' => 'Ningún proveedor coincide con lo que buscás', 'nada' => 'Todavía no cargaste ningún proveedor', 'url' => route('admin.proveedores.index'), 'crear' => auth()->user()->puede('proveedores.crear') ? route('admin.proveedores.create') : null, 'crearTexto' => 'Cargar el primer proveedor'])
         @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
@@ -65,9 +65,12 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
+                                        @if(auth()->user()->puede('proveedores.editar'))
                                         <a href="{{ route('admin.proveedores.edit', $proveedor) }}" class="btn btn-sm btn-outline-primary" title="Editar" aria-label="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+                                        @endif
+                                        @if(auth()->user()->puede('proveedores.eliminar'))
                                         <form action="{{ route('admin.proveedores.destroy', $proveedor) }}" method="POST" data-confirmar="¿Eliminar el proveedor «{{ $proveedor->nombre }}»?" data-confirmar-boton="Sí, eliminar">
                                             @csrf
                                             @method('DELETE')
@@ -75,6 +78,7 @@
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

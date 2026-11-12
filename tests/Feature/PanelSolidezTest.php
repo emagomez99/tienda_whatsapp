@@ -71,7 +71,7 @@ class PanelSolidezTest extends TestCase
         $datos = ['name' => $otro->name, 'email' => $otro->email, 'activo' => '1'];
         $this->actingAs($administrador)->put($this->urlTenant('admin/usuarios/' . $otro->id), $datos + ['perfil_id' => $super])
             ->assertSessionHasErrors('perfil_id');
-        $this->actingAs($administrador)->put($this->urlTenant('admin/usuarios/' . $otro->id), $datos + ['perfil_id' => ''])
+        $this->actingAs($administrador)->put($this->urlTenant('admin/usuarios/' . $otro->id), $datos + ['perfil_id' => 'sin'])
             ->assertSessionHasErrors('perfil_id');
         $this->assertSame($operador, $this->enTenant(function () use ($otro) { return $otro->fresh()->perfil_id; }));
 
@@ -83,6 +83,10 @@ class PanelSolidezTest extends TestCase
         $this->actingAs($duenio)->put($this->urlTenant('admin/usuarios/' . $otro->id), $datos + ['perfil_id' => $super])
             ->assertSessionHasNoErrors();
         $this->assertSame($super, $this->enTenant(function () use ($otro) { return $otro->fresh()->perfil_id; }));
+        // "Sin perfil" se elige a propósito; sin elegir nada, no se guarda.
+        $this->actingAs($duenio)->put($this->urlTenant('admin/usuarios/' . $otro->id), $datos)->assertSessionHasErrors('perfil_id');
+        $this->actingAs($duenio)->put($this->urlTenant('admin/usuarios/' . $otro->id), $datos + ['perfil_id' => 'sin'])->assertSessionHasNoErrors();
+        $this->assertNull($this->enTenant(function () use ($otro) { return $otro->fresh()->perfil_id; }));
     }
 
     /** @test */
@@ -170,5 +174,52 @@ class PanelSolidezTest extends TestCase
                   'etiquetas/abc', 'categorias/abc/edit', 'menus/abc/edit', 'pedidos/99999999999999999999'] as $ruta) {
             $this->actingAs($duenio)->get($this->urlTenant('admin/' . $ruta))->assertNotFound();
         }
+    }
+
+    /** @test */
+    public function un_filtro_que_no_existe_no_se_muestra_como_puesto_ni_rompe()
+    {
+        $duenio = $this->usuario(null);
+
+        $this->actingAs($duenio)->get($this->urlTenant('admin/productos?stock=raro&precio_desde=abc&disponible=quizas&valor=solo'))->assertOk()
+            ->assertDontSee('Stock: raro')->assertDontSee('desde abc')->assertDontSee('Quitar todos los filtros');
+        $this->actingAs($duenio)->get($this->urlTenant('admin/productos?precio_desde=500&precio_hasta=100'))->assertOk()
+            ->assertSee('Precio: de 100 a 500');
+
+        // Una lista donde va un texto (dirección armada a mano) se ignora.
+        foreach (['productos?buscar[]=x&proveedor[]=1&stock[]=con', 'proveedores?buscar[]=x&activo[]=1', 'usuarios?buscar[]=x&perfil[]=1',
+                  'monedas?buscar[]=x', 'etiquetas?buscar[]=x', 'pedidos?buscar[]=x'] as $ruta) {
+            $this->actingAs($duenio)->get($this->urlTenant('admin/' . $ruta))->assertOk();
+        }
+    }
+
+    /** @test */
+    public function cada_perfil_ve_solo_los_botones_que_puede_usar()
+    {
+        $this->enTenant(function () {
+            \App\Models\Proveedor::create(['nombre' => 'Distribuidora Sur']);
+        });
+
+        $html = $this->actingAs($this->usuario('Operador'))->get($this->urlTenant('admin/proveedores'))->assertOk()
+            ->assertSee('Distribuidora Sur')->getContent();
+        $operador = $this->enTenant(function () { return Perfil::where('nombre', 'Operador')->with('permisos')->first(); });
+        foreach (['crear' => 'proveedores/create', 'eliminar' => 'name="_method" value="DELETE"'] as $permiso => $marca) {
+            $this->assertSame($operador->tiene('proveedores.' . $permiso), strpos($html, $marca) !== false, 'proveedores.' . $permiso);
+        }
+
+        $this->actingAs($this->usuario(null))->get($this->urlTenant('admin/proveedores'))->assertOk()
+            ->assertSee('proveedores/create', false)->assertSee('name="_method" value="DELETE"', false);
+    }
+
+    /** @test */
+    public function volver_despues_de_editar_un_producto_solo_lleva_a_pantallas_del_panel()
+    {
+        $this->get($this->urlTenant(''));   // deja armada la dirección de esta tienda
+        $pedido = $this->urlTenant('admin/pedidos/7');
+
+        $this->assertSame($pedido, \App\Http\Controllers\Admin\ProductoController::vueltaAlPanel($pedido));
+        $this->assertNull(\App\Http\Controllers\Admin\ProductoController::vueltaAlPanel('javascript:alert(1)'));
+        $this->assertNull(\App\Http\Controllers\Admin\ProductoController::vueltaAlPanel('https://otro-sitio.com/admin/pedidos/7'));
+        $this->assertNull(\App\Http\Controllers\Admin\ProductoController::vueltaAlPanel(['x']));
     }
 }

@@ -4,8 +4,9 @@
 
 @section('content')
 @php
-    $backUrl = request('_back_url')
-        ? request('_back_url')
+    $vuelta = App\Http\Controllers\Admin\ProductoController::vueltaAlPanel(request('_back_url'));
+    $backUrl = $vuelta
+        ? $vuelta
         : route('admin.productos.index') . (request('_back') ? '?' . request('_back') : '');
 @endphp
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
@@ -36,8 +37,8 @@
 
     @include('admin.productos.partials.formulario')
 
-    @if(request('_back_url'))
-        <input type="hidden" name="_back_url" value="{{ request('_back_url') }}">
+    @if($vuelta)
+        <input type="hidden" name="_back_url" value="{{ $vuelta }}">
     @else
         <input type="hidden" name="_back" value="{{ request('_back', '') }}">
     @endif

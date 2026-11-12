@@ -11,9 +11,11 @@
         <x-ayuda id="ayuda-caracteristicas" titulo="Cómo funcionan las características">
             @include('admin.ayudas.caracteristicas')
         </x-ayuda>
+        @if(auth()->user()->puede('etiquetas.crear'))
         <a href="{{ route('admin.etiquetas.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Crear característica
         </a>
+        @endif
     </div>
 </div>
 
@@ -29,9 +31,7 @@
            ]" />
 
 @if($etiquetas->isEmpty())
-    <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> No se encontraron características.
-    </div>
+    @include('admin.partials.vacio', ['icono' => 'bi-ui-checks', 'filtrado' => 'Ninguna característica coincide con lo que buscás', 'nada' => 'Todavía no cargaste ninguna característica', 'url' => route('admin.etiquetas.index'), 'crear' => auth()->user()->puede('etiquetas.crear') ? route('admin.etiquetas.create') : null, 'crearTexto' => 'Crear la primera característica'])
 @else
     <div class="card">
         <ul class="list-group list-group-flush">
@@ -68,9 +68,12 @@
                         </div>
 
                         <div class="btn-group">
+                            @if(auth()->user()->puede('etiquetas.editar'))
                             <a href="{{ route('admin.etiquetas.edit', $etiqueta) }}" class="btn btn-sm btn-outline-primary" title="Editar característica">
                                 <i class="bi bi-pencil"></i>
                             </a>
+                            @endif
+                            @if(auth()->user()->puede('etiquetas.eliminar'))
                             <form action="{{ route('admin.etiquetas.destroy', $etiqueta) }}" method="POST"
                                   data-confirmar="¿Eliminar la característica «{{ $etiqueta->nombre }}»?"
                                   data-confirmar-detalle="{{ $etiqueta->valores_count === 0
@@ -84,6 +87,7 @@
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </div>
 

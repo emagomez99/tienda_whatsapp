@@ -21,9 +21,11 @@
                 </ul>
             </div>
         @endif
+        @if(auth()->user()->puede('productos.crear'))
         <a href="{{ route('admin.productos.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Crear producto
         </a>
+        @endif
     </div>
 </div>
 
@@ -56,9 +58,11 @@
                 <i class="bi bi-box-seam text-muted display-6"></i>
                 <p class="fw-semibold mt-2 mb-1">Todavía no cargaste ningún producto</p>
                 <p class="text-muted small mb-3">Por ejemplo, una «Gaseosa Coca-Cola 1,5 L»: su nombre, su precio y en qué estante va.</p>
+                @if(auth()->user()->puede('productos.crear'))
                 <a href="{{ route('admin.productos.create') }}" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Cargar el primer producto
                 </a>
+                @endif
             </div>
         @else
             {{-- En el celular no hay lugar para ocho columnas (había que deslizar la tabla
@@ -148,9 +152,12 @@
                                         <a href="{{ route('admin.productos.historial', $producto) }}" class="btn btn-sm btn-outline-secondary d-none d-md-inline-block" title="Historial de movimientos">
                                             <i class="bi bi-clock-history"></i>
                                         </a>
+                                        @if(auth()->user()->puede('productos.editar'))
                                         <a href="{{ route('admin.productos.edit', $producto) . (request()->getQueryString() ? '?_back=' . urlencode(request()->getQueryString()) : '') }}" class="btn btn-sm btn-outline-primary" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+                                        @endif
+                                        @if(auth()->user()->puede('productos.eliminar'))
                                         <form action="{{ route('admin.productos.destroy', $producto) }}" method="POST" data-confirmar="¿Eliminar «{{ $producto->descripcion }}»?" data-confirmar-detalle="No se puede deshacer: se borra con su historial de stock. Los pedidos donde está lo siguen mostrando por su nombre." data-confirmar-boton="Sí, eliminar">
                                             @csrf
                                             @method('DELETE')
@@ -158,6 +165,7 @@
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

@@ -58,17 +58,17 @@
                 <div class="mb-3">
                     <label for="perfil_id" class="form-label">Perfil</label>
                     <select class="form-select @error('perfil_id') is-invalid @enderror" id="perfil_id" name="perfil_id">
-                        @if($puedeTodo)
-                            <option value="">Sin perfil: puede hacer todo</option>
-                        @else
-                            <option value="" disabled {{ old('perfil_id', $usuario->perfil_id) ? '' : 'selected' }}>Elegí un perfil…</option>
-                        @endif
+                        @php $perfilActual = old('perfil_id', $usuario->perfil_id ?: ($usuario->is_admin ? 'sin' : '')); @endphp
+                        <option value="" disabled {{ $perfilActual ? '' : 'selected' }}>Elegí un perfil…</option>
                         @foreach($perfiles as $perfil)
                             <option value="{{ $perfil->id }}" {{ old('perfil_id', $usuario->perfil_id) == $perfil->id ? 'selected' : '' }}>
                                 {{ $perfil->nombre }}
                                 @if($perfil->es_superadmin) (puede hacer todo) @endif
                             </option>
                         @endforeach
+                        @if($puedeTodo)
+                            <option value="sin" {{ $perfilActual === 'sin' ? 'selected' : '' }}>Sin perfil: puede hacer todo</option>
+                        @endif
                     </select>
                     <div class="form-text">El perfil dice qué puede hacer este usuario en el panel.</div>
                     @error('perfil_id')

@@ -15,7 +15,7 @@
 
     $campos = [
         ['nombre' => 'categoria', 'titulo' => 'Categoría', 'todos' => 'Todas', 'lista' => true, 'opciones' => $opcionesCategoria, 'sangria' => $sangria],
-        ['nombre' => 'proveedor', 'titulo' => 'Proveedor', 'lista' => true, 'opciones' => $proveedores->pluck('nombre', 'id')->all()],
+        ['nombre' => 'proveedor', 'titulo' => 'Proveedor', 'lista' => true, 'opciones' => $proveedores->mapWithKeys(function ($p) { return [$p->id => $p->nombre . ($p->activo ? '' : ' (inactivo)')]; })->all()],
         ['nombre' => 'disponible', 'titulo' => 'En la tienda', 'opciones' => ['1' => 'Se muestran', '0' => 'No se muestran']],
         ['nombre' => 'stock', 'titulo' => 'Stock', 'opciones' => ['con' => 'Con stock', 'poco' => 'Poco (1 a ' . App\Support\FiltroDeProductos::POCO_STOCK . ')', 'sin' => 'Sin stock']],
         ['nombre' => 'variantes', 'titulo' => 'Talles, colores…', 'opciones' => ['con' => 'Con variantes', 'sin' => 'Sin variantes']],

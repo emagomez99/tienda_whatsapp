@@ -84,7 +84,7 @@ class UserController extends Controller
         // interruptor, apagado al crear, que dejaba usuarios que no podían entrar.)
         $validated['is_admin']  = true;
         $validated['activo']    = $request->boolean('activo');
-        $validated['perfil_id'] = $request->filled('perfil_id') ? $request->perfil_id : null;
+        $validated['perfil_id'] = $this->perfilElegido($request);
 
         User::create($validated);
 
@@ -131,7 +131,7 @@ class UserController extends Controller
             // para sacarlo está "Usuario activo".
             $validated['is_admin']  = $usuario->is_admin || $request->boolean('is_admin');
             $validated['activo']    = $request->boolean('activo');
-            $validated['perfil_id'] = $request->filled('perfil_id') ? $request->perfil_id : null;
+            $validated['perfil_id'] = $this->perfilElegido($request);
         }
 
         $usuario->update($validated);
@@ -181,13 +181,27 @@ class UserController extends Controller
             ->get();
     }
 
-    /** "Sin perfil" es poder todo: sólo lo elige quien ya puede todo. */
+    /** Lo que viaja en el formulario cuando se elige "Sin perfil: puede hacer todo". */
+    const SIN_PERFIL = 'sin';
+
+    /**
+     * Siempre hay que elegir: un perfil o, a propósito, "sin perfil" (que es poder
+     * todo y sólo lo elige quien ya puede todo). Antes "sin perfil" era lo que
+     * quedaba si no se tocaba nada.
+     */
     private function reglaDePerfil(): array
     {
-        return [
-            $this->puedeTodo(auth()->user()) ? 'nullable' : 'required',
-            Rule::in($this->perfilesElegibles()->pluck('id')->all()),
-        ];
+        $elegibles = $this->perfilesElegibles()->pluck('id')->map(function ($id) { return (string) $id; })->all();
+        if ($this->puedeTodo(auth()->user())) {
+            $elegibles[] = self::SIN_PERFIL;
+        }
+
+        return ['required', Rule::in($elegibles)];
+    }
+
+    private function perfilElegido(Request $request)
+    {
+        return $request->input('perfil_id') === self::SIN_PERFIL ? null : (int) $request->input('perfil_id');
     }
 
     private function mensajes(): array

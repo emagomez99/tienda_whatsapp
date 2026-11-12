@@ -31,12 +31,56 @@ class FiltroDeProductos
     /** @var array */
     private $valores;
 
+    /** Lo que se puede elegir en cada filtro de opciones. Otra cosa no es un filtro. */
+    const OPCIONES = [
+        'disponible' => ['0', '1'],
+        'encargue'   => ['0', '1'],
+        'stock'      => ['con', 'poco', 'sin'],
+        'variantes'  => ['con', 'sin'],
+        'foto'       => ['con', 'sin'],
+    ];
+
+    /**
+     * Se queda sólo con lo que de verdad filtra. Una dirección armada a mano
+     * (?stock=raro, ?precio_desde=abc) antes mostraba una fichita de filtro puesto,
+     * ofrecía "exportar los de este filtro" y no filtraba nada (o filtraba otra cosa).
+     */
     public function __construct(array $valores)
     {
-        $this->valores = array_filter(
+        $v = array_filter(
             array_intersect_key($valores, array_flip(self::CAMPOS)),
-            function ($valor) { return $valor !== null && $valor !== ''; }
+            function ($valor) { return is_scalar($valor) && trim((string) $valor) !== ''; }
         );
+        $v = array_map(function ($valor) { return trim((string) $valor); }, $v);
+
+        foreach (self::OPCIONES as $campo => $opciones) {
+            if (isset($v[$campo]) && !in_array($v[$campo], $opciones, true)) {
+                unset($v[$campo]);
+            }
+        }
+        foreach (['proveedor', 'caracteristica'] as $campo) {
+            if (isset($v[$campo]) && !(ctype_digit($v[$campo]) && strlen($v[$campo]) <= 18)) {
+                unset($v[$campo]);
+            }
+        }
+        if (isset($v['categoria']) && $v['categoria'] !== self::SIN_CATEGORIA && !(ctype_digit($v['categoria']) && strlen($v['categoria']) <= 18)) {
+            unset($v['categoria']);
+        }
+        foreach (['precio_desde', 'precio_hasta'] as $campo) {
+            if (isset($v[$campo]) && !(is_numeric($v[$campo]) && (float) $v[$campo] >= 0 && (float) $v[$campo] < 1e12)) {
+                unset($v[$campo]);
+            }
+        }
+        // "De 500 a 100" es de 100 a 500.
+        if (isset($v['precio_desde'], $v['precio_hasta']) && (float) $v['precio_desde'] > (float) $v['precio_hasta']) {
+            list($v['precio_desde'], $v['precio_hasta']) = [$v['precio_hasta'], $v['precio_desde']];
+        }
+        // El valor sólo dice algo junto a su característica.
+        if (!isset($v['caracteristica'])) {
+            unset($v['valor']);
+        }
+
+        $this->valores = $v;
     }
 
     public function valores(): array

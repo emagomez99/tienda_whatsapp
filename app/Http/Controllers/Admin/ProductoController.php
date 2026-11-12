@@ -58,7 +58,8 @@ class ProductoController extends Controller
             ->orderBy('productos.id')
             ->paginate(15)
             ->withQueryString());
-        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
+        // Para filtrar, todos: los productos de un proveedor inactivo siguen estando.
+        $proveedores = Proveedor::orderBy('nombre')->get();
 
         // Los caminos se arman una vez con el árbol en memoria: con el de cada
         // producto serían varias consultas por fila.
@@ -196,7 +197,7 @@ class ProductoController extends Controller
             'meta_title' => 'nullable|string|max:60',
             'meta_description' => 'nullable|string|max:160',
             'disponible' => 'boolean',
-            'stock' => 'required|integer|min:0',
+            'stock' => 'required|integer|min:0|max:1000000',
             'por_encargue' => 'boolean',
             'categorias' => 'nullable|array',
             'categorias.*' => 'integer|exists:categorias,id',
@@ -280,9 +281,22 @@ class ProductoController extends Controller
 
         $this->guardado->actualizar($producto, $this->datosDelFormulario($request, $validated), auth()->id());
 
+        // Vuelve a donde estaba: al pedido desde el que entró a editar, o al listado
+        // con sus filtros y su página.
         $backParams = $request->input('_back', '');
-        $backUrl = route('admin.productos.index') . ($backParams ? '?' . $backParams : '');
+        $backUrl = self::vueltaAlPanel($request->input('_back_url'))
+            ?: route('admin.productos.index') . ($backParams ? '?' . $backParams : '');
+
         return redirect($backUrl)->with('success', 'Producto actualizado correctamente');
+    }
+
+    /**
+     * La dirección a la que volver, sólo si es una pantalla de este panel: viene en la
+     * URL, y sin revisarla servía para armar un enlace a cualquier lado.
+     */
+    public static function vueltaAlPanel($url): ?string
+    {
+        return is_string($url) && strpos($url, url('/admin') . '/') === 0 ? $url : null;
     }
 
     /**
@@ -366,10 +380,10 @@ class ProductoController extends Controller
 
         return [
             'modo_precio_venta' => 'required|in:' . Producto::MODO_PRECIO_MANUAL . ',' . Producto::MODO_PRECIO_MARGEN,
-            'precio'            => 'nullable|numeric|min:0|required_if:modo_precio_venta,' . Producto::MODO_PRECIO_MANUAL,
+            'precio'            => 'nullable|numeric|min:0|max:999999999999|required_if:modo_precio_venta,' . Producto::MODO_PRECIO_MANUAL,
             'moneda_id'         => ['nullable', 'exists:monedas,id', $monedaVentaObligatoria],
             'moneda_compra_id'  => 'nullable|exists:monedas,id|required_if:modo_precio_venta,' . Producto::MODO_PRECIO_MARGEN,
-            'precio_compra'     => 'nullable|numeric|min:0|required_if:modo_precio_venta,' . Producto::MODO_PRECIO_MARGEN,
+            'precio_compra'     => 'nullable|numeric|min:0|max:999999999999|required_if:modo_precio_venta,' . Producto::MODO_PRECIO_MARGEN,
             'margen_ganancia'   => 'nullable|numeric|min:0|max:99999.99|required_if:modo_precio_venta,' . Producto::MODO_PRECIO_MARGEN,
         ];
     }
@@ -430,7 +444,7 @@ class ProductoController extends Controller
         // y un movimiento sin explicación no se puede reconstruir después.
         $validated = $request->validate([
             'tipo'        => 'required|in:ingreso,egreso',
-            'cantidad'    => 'required|integer|min:1',
+            'cantidad'    => 'required|integer|min:1|max:1000000',
             'descripcion' => 'required|string|max:255',
         ], [
             'cantidad.min'        => 'La cantidad tiene que ser mayor a cero.',

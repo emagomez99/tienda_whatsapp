@@ -67,7 +67,7 @@
 
                 <div class="mb-3">
                     <div class="form-check form-switch">
-                        <input type="checkbox" class="form-check-input" id="activo" name="activo" value="1" {{ old('activo', true) ? 'checked' : '' }}>
+                        <input type="checkbox" class="form-check-input" id="activo" name="activo" value="1" {{ (session()->hasOldInput() ? old('activo') : true) ? 'checked' : '' }}>
                         <label class="form-check-label" for="activo">Proveedor activo</label>
                     </div>
                 </div>

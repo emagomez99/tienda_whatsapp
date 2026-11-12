@@ -9,9 +9,11 @@
         <x-ayuda id="ayuda-monedas" titulo="Cómo funcionan las monedas">
             @include('admin.ayudas.monedas')
         </x-ayuda>
+        @if(auth()->user()->puede('monedas.crear'))
         <a href="{{ route('admin.monedas.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Crear moneda
         </a>
+        @endif
     </div>
 </div>
 
@@ -43,9 +45,7 @@
 <div class="card">
     <div class="card-body">
         @if($monedas->isEmpty())
-            <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle"></i> No se encontraron monedas.
-            </div>
+            @include('admin.partials.vacio', ['icono' => 'bi-currency-exchange', 'filtrado' => 'Ninguna moneda coincide con lo que buscás', 'nada' => 'Todavía no hay monedas', 'url' => route('admin.monedas.index')])
         @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
@@ -121,15 +121,18 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
+                                        @if(auth()->user()->puede('monedas.editar'))
                                         <a href="{{ route('admin.monedas.edit', $moneda) }}" class="btn btn-sm btn-outline-primary" title="Editar" aria-label="Editar {{ $moneda->nombre }}">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+                                        @endif
                                         @if($moneda->es_base || $enUso)
                                             <button type="button" class="btn btn-sm btn-outline-danger" disabled
                                                     title="{{ $moneda->es_base ? 'Es la moneda de tu tienda' : 'Está en uso por productos' }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         @else
+                                            @if(auth()->user()->puede('monedas.eliminar'))
                                             <form action="{{ route('admin.monedas.destroy', $moneda) }}" method="POST"
                                                   data-confirmar="¿Eliminar la moneda {{ $moneda->nombre }}?"
                                                   data-confirmar-boton="Sí, eliminar">
@@ -139,6 +142,7 @@
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>

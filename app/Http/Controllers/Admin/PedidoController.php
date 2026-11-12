@@ -106,7 +106,7 @@ class PedidoController extends Controller
             'productos'            => 'nullable|array',
             'productos.*.id'       => 'required|integer|exists:productos,id',
             'productos.*.variante_id' => 'nullable|integer',
-            'productos.*.cantidad' => 'required|integer|min:1',
+            'productos.*.cantidad' => 'required|integer|min:1|max:1000000',
         ]);
 
         $pedido = \DB::transaction(function () use ($data) {
@@ -333,7 +333,7 @@ class PedidoController extends Controller
                 ->with('error', 'No se puede editar un pedido cancelado.');
         }
 
-        $request->validate(['cantidad' => 'required|integer|min:1']);
+        $request->validate(['cantidad' => 'required|integer|min:1|max:1000000']);
 
         if (! $item->producto) {
             return redirect()->route('admin.pedidos.show', $pedido)
@@ -405,7 +405,7 @@ class PedidoController extends Controller
         $request->validate([
             'producto_id' => 'required|exists:productos,id',
             'variante_id' => 'nullable|integer',
-            'cantidad'    => 'required|integer|min:1',
+            'cantidad'    => 'required|integer|min:1|max:1000000',
         ]);
 
         $producto  = Producto::findOrFail($request->producto_id);

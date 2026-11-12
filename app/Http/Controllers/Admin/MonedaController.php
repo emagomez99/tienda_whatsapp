@@ -156,7 +156,7 @@ class MonedaController extends Controller
             'nombre'     => 'required|string|max:255|unique:monedas,nombre' . $unico,
             'codigo'     => 'required|string|size:3|unique:monedas,codigo' . $unico,
             'simbolo'    => 'required|string|max:3',
-            'cotizacion' => 'required|numeric|min:0.000001',
+            'cotizacion' => 'required|numeric|min:0.000001|max:999999999',
             'activa'     => 'boolean',
             // Contra qué moneda está expresada la cotización que se acaba de cargar.
             // Ausente = contra la base, que es como se guarda internamente.
